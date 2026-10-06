@@ -1,0 +1,247 @@
+/* ==============================================================================
+   TIMEBANK EDU - GIAO DIỆN HỌC ĐƯỜNG HIỆN ĐẠI & THÂN THIỆN
+   Dành cho cuộc thi "Ngày hội Nhà giáo sáng tạo với công nghệ số và AI 2026"
+   Hỗ trợ tùy biến màu sắc thương hiệu linh hoạt qua biến CSS
+   ============================================================================== */
+
+:root {
+  --brand-color: #1e40af;
+  --brand-color-rgb: 30, 64, 175;
+  --brand-hover: #1d4ed8;
+  --accent-gold: #f59e0b;
+  --accent-emerald: #10b981;
+  --bg-light: #f8fafc;
+  --text-dark: #1e293b;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+}
+
+body {
+  font-family: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
+  color: var(--text-dark);
+  background-color: var(--bg-light);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* Navbar */
+.navbar-brand img {
+  transition: transform 0.3s ease;
+}
+.navbar-brand:hover img {
+  transform: rotate(-10deg) scale(1.05);
+}
+.nav-link {
+  font-weight: 500;
+  color: #334155;
+  transition: color 0.2s;
+}
+.nav-link:hover {
+  color: var(--brand-color);
+}
+
+/* Buttons */
+.btn-brand {
+  background-color: var(--brand-color);
+  border-color: var(--brand-color);
+  color: #ffffff;
+  font-weight: 600;
+  border-radius: 50px;
+  padding: 0.65rem 1.6rem;
+  box-shadow: 0 4px 14px rgba(var(--brand-color-rgb), 0.25);
+  transition: all 0.3s ease;
+}
+.btn-brand:hover, .btn-brand:focus {
+  background-color: var(--brand-hover);
+  border-color: var(--brand-hover);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(var(--brand-color-rgb), 0.35);
+}
+
+.btn-outline-brand {
+  border: 2px solid var(--brand-color);
+  color: var(--brand-color);
+  font-weight: 600;
+  border-radius: 50px;
+  padding: 0.6rem 1.5rem;
+  transition: all 0.3s ease;
+}
+.btn-outline-brand:hover {
+  background-color: var(--brand-color);
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+/* Badge AI */
+.badge-ai {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* Hero Section */
+.hero-section {
+  background: linear-gradient(180deg, rgba(var(--brand-color-rgb), 0.05) 0%, rgba(248, 250, 252, 1) 100%);
+  padding: 4.5rem 0 3.5rem 0;
+  position: relative;
+}
+.hero-title {
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 800;
+  line-height: 1.2;
+  color: #0f172a;
+}
+.hero-tagline {
+  font-size: 1.25rem;
+  color: var(--brand-color);
+  font-weight: 600;
+}
+.hero-img-box {
+  animation: float 4s ease-in-out infinite;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Step Card (Mô hình hoạt động) */
+.step-card {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 1.75rem;
+  height: 100%;
+  position: relative;
+  transition: all 0.3s ease;
+}
+.step-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.07);
+  border-color: rgba(var(--brand-color-rgb), 0.3);
+}
+.step-badge {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background-color: rgba(var(--brand-color-rgb), 0.1);
+  color: var(--brand-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin-bottom: 1.2rem;
+}
+
+/* Case study box (Ví dụ An, Bình, Chi) */
+.example-exchange-card {
+  background: linear-gradient(135deg, #eff6ff, #f0fdf4);
+  border: 2px dashed rgba(var(--brand-color-rgb), 0.3);
+  border-radius: 18px;
+  padding: 2rem;
+}
+.exchange-node {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+  border-left: 4px solid var(--brand-color);
+}
+
+/* Counter Card (Số liệu realtime) */
+.stat-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1.75rem 1.25rem;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+.stat-card:hover {
+  transform: translateY(-4px);
+}
+.stat-number {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--brand-color);
+  line-height: 1.1;
+}
+
+/* Leaderboard (Vinh danh tuần) */
+.tutor-card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  padding: 1.5rem;
+  position: relative;
+  transition: all 0.3s ease;
+  height: 100%;
+}
+.tutor-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+.tutor-card.rank-1 {
+  border-top: 5px solid #f59e0b;
+  background: linear-gradient(180deg, #fffbeb 0%, #ffffff 40%);
+}
+.tutor-card.rank-2 {
+  border-top: 5px solid #94a3b8;
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 40%);
+}
+.tutor-card.rank-3 {
+  border-top: 5px solid #b45309;
+  background: linear-gradient(180deg, #fff7ed 0%, #ffffff 40%);
+}
+.medal-badge {
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+/* School Implementation Section */
+.school-benefit-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.benefit-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background-color: rgba(var(--brand-color-rgb), 0.1);
+  color: var(--brand-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+/* Footer */
+footer {
+  background-color: #0f172a;
+  color: #94a3b8;
+  padding: 3.5rem 0 2rem 0;
+}
+footer a {
+  color: #cbd5e1;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+footer a:hover {
+  color: #ffffff;
+}
+
+/* Toast/Alert */
+.toast-container {
+  z-index: 1090;
+}

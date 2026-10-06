@@ -1,32 +1,45 @@
-# Node
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# Environment
+# Môi trường và Khóa bí mật (TUYỆT ĐỐI KHÔNG PUSH .env)
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 
-# Build output
-dist/
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
 build/
-out/
-.next/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# IDE & OS
+# Database SQLite cục bộ
+*.db
+*.sqlite3
+instance/
+
+# IDE & Editor
 .vscode/
 .idea/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-Thumbs.db
-.DS_Store
+*.swp
+*.swo
 
-# Logs
-logs/
-*.log
+# Hệ điều hành
+.DS_Store
+Thumbs.db

@@ -1,0 +1,374 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- ==============================================================================
+     KHỐI 1: HERO BANNER (Đồng hồ, Tên trường, Khẩu hiệu, Nút hành động)
+     ============================================================================== -->
+<section class="hero-section">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-7">
+        <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-white border shadow-sm mb-3">
+          <span class="badge bg-warning text-dark"><i class="bi bi-award-fill"></i> Dự thi Bảng B</span>
+          <span class="small text-muted">Ngày hội Nhà giáo sáng tạo với công nghệ số & AI 2026</span>
+        </div>
+        
+        <h1 class="hero-title mb-3">
+          Ngân hàng Thời gian Học đường
+        </h1>
+        <p class="hero-tagline mb-3">
+          <i class="bi bi-quote fs-4 text-warning"></i> Một giờ bạn dạy — một giờ bạn được học <i class="bi bi-quote fs-4 text-warning"></i>
+        </p>
+        
+        <p class="lead text-secondary mb-4 fs-6">
+          Mô hình giáo dục sáng tạo tại <strong>{{ config.ten_truong }}</strong>: Mỗi học sinh vừa là người học, vừa là người thầy. 
+          Không dùng tiền mặt, mọi tri thức đều được trân trọng công bằng thông qua tín dụng thời gian.
+        </p>
+
+        <div class="d-flex flex-wrap align-items-center gap-3">
+          <button type="button" class="btn btn-brand btn-lg" data-bs-toggle="modal" data-bs-target="#loginModal">
+            <i class="bi bi-rocket-takeoff-fill me-2"></i> Tham gia ngay
+          </button>
+          <a href="#mo-hinh" class="btn btn-outline-brand btn-lg">
+            <i class="bi bi-lightbulb me-2"></i> Khám phá mô hình
+          </a>
+        </div>
+
+        <div class="mt-4 pt-2 d-flex align-items-center gap-3 text-muted small">
+          <span class="d-flex align-items-center gap-1 text-success fw-medium">
+            <i class="bi bi-shield-check-fill"></i> Vận hành độc lập (Single-Tenant)
+          </span>
+          <span>•</span>
+          <span class="badge-ai">
+            <i class="bi bi-stars"></i> Hỗ trợ bởi AI (Gemini)
+          </span>
+        </div>
+      </div>
+
+      <div class="col-lg-5 text-center">
+        <div class="hero-img-box p-4 bg-white rounded-5 shadow-lg border text-center position-relative">
+          <img src="{{ config.logo_path }}" alt="Logo {{ config.ten_truong }}" class="img-fluid mb-3" style="max-height: 220px;">
+          <h5 class="fw-bold text-dark mb-1">{{ config.ten_truong }}</h5>
+          <p class="text-muted small mb-3">Không gian trao đổi kỹ năng số thế hệ mới</p>
+          
+          <div class="d-flex justify-content-around border-top pt-3 text-start">
+            <div>
+              <div class="text-muted small"><i class="bi bi-clock-history text-primary me-1"></i>Định giá</div>
+              <strong class="text-dark">1 giờ = 1 tín dụng</strong>
+            </div>
+            <div class="vr"></div>
+            <div>
+              <div class="text-muted small"><i class="bi bi-gift text-success me-1"></i>Vốn ban đầu</div>
+              <strong class="text-success">+2.0 giờ trải nghiệm</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==============================================================================
+     KHỐI 2: MÔ HÌNH HOẠT ĐỘNG (4 Bước chuẩn sư phạm + Ví dụ thực tế An, Bình, Chi)
+     ============================================================================== -->
+<section id="mo-hinh" class="py-5 bg-white border-bottom">
+  <div class="container py-3">
+    <div class="text-center max-w-700 mx-auto mb-5">
+      <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold px-3 py-2 rounded-pill mb-2">QUY TRÌNH SƯ PHẠM 4 BƯỚC</span>
+      <h2 class="fw-bold display-6">Mô hình hoạt động của Ngân hàng Thời gian</h2>
+      <p class="text-muted">Một vòng tuần hoàn học tập tích cực, giúp học sinh chủ động sẻ chia thế mạnh và hoàn thiện kỹ năng còn thiếu.</p>
+    </div>
+
+    <!-- 4 Bước hoạt động -->
+    <div class="row g-4 mb-5">
+      <div class="col-md-6 col-lg-3">
+        <div class="step-card">
+          <div class="step-badge">1</div>
+          <h5 class="fw-bold mb-2">Đăng kỹ năng</h5>
+          <p class="text-muted small mb-0">Học sinh đăng ký thế mạnh của mình: Toán, Ngữ văn, Lập trình, Vẽ tranh, Đàn guitar, Cờ vua...</p>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-3">
+        <div class="step-card">
+          <div class="step-badge"><i class="bi bi-stars text-warning"></i> 2</div>
+          <h5 class="fw-bold mb-2">AI gợi ý ghép cặp</h5>
+          <p class="text-muted small mb-0">Trợ lý AI (Gemini) tự động phân tích nhu cầu, kiểm duyệt nội dung và ghép cặp đôi bạn cùng tiến tối ưu.</p>
+          <div class="mt-2"><span class="badge-ai" style="font-size: 0.7rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Gemini)</span></div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-3">
+        <div class="step-card">
+          <div class="step-badge">3</div>
+          <h5 class="fw-bold mb-2">Học & Check-in QR</h5>
+          <p class="text-muted small mb-0">Hai bạn gặp gỡ trực tiếp hoặc online. Cùng quét mã QR xác thực 2 chiều để ghi nhận thời gian học chuẩn xác.</p>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-3">
+        <div class="step-card">
+          <div class="step-badge">4</div>
+          <h5 class="fw-bold mb-2">Tích giờ & Đổi kỹ năng</h5>
+          <p class="text-muted small mb-0">Người dạy nhận ngay tín dụng thời gian vào sổ cái; dùng giờ này để "mua" buổi học kỹ năng mới từ bạn khác.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Case Study / Ví dụ minh họa thực tế An - Bình - Chi -->
+    <div class="example-exchange-card">
+      <div class="row align-items-center g-4">
+        <div class="col-lg-4 text-center text-lg-start">
+          <span class="badge bg-success text-white mb-2 px-3 py-1">VÍ DỤ VẬN HÀNH THỰC TẾ</span>
+          <h4 class="fw-bold text-dark mb-2">Vòng tròn tuần hoàn thời gian</h4>
+          <p class="text-secondary small mb-0">
+            Minh chứng sống động cho nguyên lý: <em>"Bất kỳ ai cũng có điều gì đó để dạy, và luôn có điều gì đó cần học hỏi."</em>
+          </p>
+        </div>
+
+        <div class="col-lg-8">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <div class="exchange-node">
+                <div class="fw-bold text-primary"><i class="bi bi-person-circle me-1"></i> An (12A1)</div>
+                <div class="small text-muted my-1">Giỏi <strong>Toán Hình học</strong></div>
+                <div class="badge bg-primary bg-opacity-10 text-primary w-100 py-1">Dạy 1 giờ cho Bình ➔ Nhận +1.0h</div>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="exchange-node">
+                <div class="fw-bold text-success"><i class="bi bi-person-circle me-1"></i> Bình (11B2)</div>
+                <div class="small text-muted my-1">Giỏi <strong>Đàn Guitar</strong></div>
+                <div class="badge bg-success bg-opacity-10 text-success w-100 py-1">Dạy 1 giờ cho Chi ➔ Nhận +1.0h</div>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="exchange-node">
+                <div class="fw-bold text-warning-emphasis"><i class="bi bi-person-circle me-1"></i> Chi (10A3)</div>
+                <div class="small text-muted my-1">Giỏi <strong>Tiếng Anh IELTS</strong></div>
+                <div class="badge bg-warning bg-opacity-25 text-dark w-100 py-1">Dạy 1 giờ cho An ➔ Nhận +1.0h</div>
+              </div>
+            </div>
+          </div>
+          <div class="mt-3 text-center small text-secondary">
+            <i class="bi bi-arrow-repeat text-primary me-1"></i> Vòng lặp khép kín: <strong>An → Bình → Chi → An</strong>. Không một đồng tiền mặt nào phát sinh, chỉ có tri thức và tình bạn lan tỏa!
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==============================================================================
+     KHỐI 3: SỐ LIỆU REALTIME (Query trực tiếp từ SQLite Database)
+     ============================================================================== -->
+<section id="so-lieu" class="py-5 bg-light">
+  <div class="container py-2">
+    <div class="text-center mb-4">
+      <span class="badge bg-info bg-opacity-10 text-info-emphasis fw-semibold px-3 py-2 rounded-pill mb-2">DỮ LIỆU THỜI GIAN THỰC</span>
+      <h2 class="fw-bold">Chỉ số vận hành tại {{ config.ten_truong }}</h2>
+      <p class="text-muted small">Cập nhật trực tiếp từ hệ thống sổ cái tín dụng (credits_ledger) và phiên học</p>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="text-primary mb-2"><i class="bi bi-people-fill fs-2"></i></div>
+          <div class="stat-number">{{ stats.tong_thanh_vien }}</div>
+          <div class="text-muted small fw-medium mt-1">Tổng thành viên</div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="text-success mb-2"><i class="bi bi-patch-check-fill fs-2"></i></div>
+          <div class="stat-number">{{ stats.phien_hoan_thanh }}</div>
+          <div class="text-muted small fw-medium mt-1">Phiên hoàn thành</div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="text-warning mb-2"><i class="bi bi-hourglass-split fs-2"></i></div>
+          <div class="stat-number">{{ stats.gio_luu_thong }}h</div>
+          <div class="text-muted small fw-medium mt-1">Giờ lưu thông</div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="text-indigo mb-2" style="color: #6366f1;"><i class="bi bi-journal-bookmark-fill fs-2"></i></div>
+          <div class="stat-number">{{ stats.ky_nang_san_sang }}</div>
+          <div class="text-muted small fw-medium mt-1">Kỹ năng sẵn sàng</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==============================================================================
+     KHỐI 4: VINH DANH TUẦN (Top 3 gia sư tích cực nhất tự động từ CSDL)
+     ============================================================================== -->
+<section id="vinh-danh" class="py-5 bg-white border-top border-bottom">
+  <div class="container py-2">
+    <div class="text-center mb-5">
+      <span class="badge bg-warning bg-opacity-10 text-dark fw-semibold px-3 py-2 rounded-pill mb-2"><i class="bi bi-trophy-fill text-warning me-1"></i> BẢNG VÀNG THÁNG & TUẦN</span>
+      <h2 class="fw-bold">Vinh danh Gia sư Học đường Tích cực</h2>
+      <p class="text-muted">Ghi nhận những tấm gương học sinh nhiệt huyết cống hiến thời gian giảng dạy cho bạn bè</p>
+    </div>
+
+    <div class="row g-4 justify-content-center align-items-stretch">
+      {% for tutor in top_tutors %}
+      <div class="col-md-4">
+        <div class="tutor-card rank-{{ loop.index }} d-flex flex-column justify-content-between">
+          <div>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <span class="medal-badge">
+                {% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% else %}🥉{% endif %}
+              </span>
+              <span class="badge bg-light text-dark border">
+                Hạng #{{ loop.index }}
+              </span>
+            </div>
+
+            <h5 class="fw-bold mb-1">{{ tutor.ho_ten }}</h5>
+            <div class="text-muted small mb-3">
+              <i class="bi bi-mortarboard me-1"></i>Lớp: <strong>{{ tutor.lop }}</strong> • Mã: <code>{{ tutor.ma_hoc_sinh }}</code>
+            </div>
+
+            <div class="p-3 bg-light rounded-3 mb-3">
+              <div class="d-flex justify-content-between mb-2 small">
+                <span class="text-muted">Số giờ đã dạy:</span>
+                <span class="fw-bold text-success"><i class="bi bi-clock me-1"></i>{{ tutor.so_gio_day }} giờ</span>
+              </div>
+              <div class="d-flex justify-content-between small">
+                <span class="text-muted">Đánh giá trung bình:</span>
+                <span class="fw-bold text-warning">
+                  {% for s in range(tutor.sao_tb|round|int) %}★{% endfor %}
+                  <span class="text-dark">({{ tutor.sao_tb }}/5)</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="text-center pt-2 border-top">
+            <span class="small text-secondary fst-italic">"Sẵn sàng chia sẻ tri thức cùng bạn bè"</span>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ==============================================================================
+     KHỐI 5: DÀNH CHO NHÀ TRƯỜNG (Mô hình triển khai độc lập + Form liên hệ)
+     ============================================================================== -->
+<section id="nha-truong" class="py-5 bg-light">
+  <div class="container py-3">
+    <div class="row g-5 align-items-center">
+      <div class="col-lg-6">
+        <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold px-3 py-2 rounded-pill mb-3">MÔ HÌNH DÀNH CHO NHÀ TRƯỜNG</span>
+        <h2 class="fw-bold display-6 mb-3">Giải pháp sư phạm độc lập cho từng trường học</h2>
+        <p class="text-secondary">
+          TimeBank EDU được thiết kế theo kiến trúc <strong>Single-Tenant</strong> — Mỗi trường học sở hữu một không gian độc lập, 
+          cơ sở dữ liệu riêng biệt tại chỗ, tuyệt đối bảo vệ dữ liệu học sinh theo quy định của Bộ GD&ĐT.
+        </p>
+
+        <div class="mt-4">
+          <div class="school-benefit-item">
+            <div class="benefit-icon"><i class="bi bi-sliders"></i></div>
+            <div>
+              <h6 class="fw-bold mb-1">Đổi thương hiệu chỉ trong 5 phút</h6>
+              <p class="small text-muted mb-0">Chỉ cần chỉnh sửa tệp <code>config.yaml</code> là có ngay hệ thống mang logo, màu sắc và thông điệp riêng của trường.</p>
+            </div>
+          </div>
+
+          <div class="school-benefit-item">
+            <div class="benefit-icon"><i class="bi bi-heart-pulse-fill text-danger"></i></div>
+            <div>
+              <h6 class="fw-bold mb-1">Phòng chống bạo lực học đường qua kết nối bạn bè</h6>
+              <p class="small text-muted mb-0">Học sinh tăng cường tương tác lành mạnh, xóa bỏ rào cản khối lớp qua các buổi trao đổi kỹ năng tích cực.</p>
+            </div>
+          </div>
+
+          <div class="school-benefit-item">
+            <div class="benefit-icon"><i class="bi bi-robot text-primary"></i></div>
+            <div>
+              <h6 class="fw-bold mb-1">Tích hợp Trợ lý AI (Gemini Pro) sư phạm</h6>
+              <p class="small text-muted mb-0">Hỗ trợ kiểm duyệt nội dung kỹ năng, soạn dàn ý bài học chuẩn kiến thức và tạo câu hỏi lượng giá tự động.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="card border-0 shadow-lg rounded-4 p-4 p-md-5">
+          <h4 class="fw-bold text-dark mb-2">Đăng ký tư vấn triển khai</h4>
+          <p class="text-muted small mb-4">Dành cho Ban Giám hiệu, Đoàn Thanh niên hoặc Giáo viên chủ nhiệm muốn áp dụng mô hình tại trường.</p>
+
+          <form id="contactForm" onsubmit="handleContactSubmit(event)">
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Tên trường học / Đơn vị <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="tenTruongInput" placeholder="Ví dụ: THPT Lê Quý Đôn" required>
+            </div>
+
+            <div class="row g-2 mb-3">
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold">Họ tên đại diện <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="hoTenInput" placeholder="Thầy/Cô..." required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold">Số điện thoại / Zalo <span class="text-danger">*</span></label>
+                <input type="tel" class="form-control" id="sdtInput" placeholder="09xxxxxxx" required>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Email công vụ / Liên hệ</label>
+              <input type="email" class="form-control" id="emailInput" placeholder="giaovien@truong.edu.vn">
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label small fw-semibold">Nhu cầu triển khai</label>
+              <textarea class="form-control" id="ghiChuInput" rows="3" placeholder="Mong muốn tổ chức CLB Ngân hàng Thời gian hoặc thử nghiệm tại khối lớp..."></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-brand w-100 py-2 fw-semibold">
+              <i class="bi bi-send-fill me-1"></i> Gửi thông tin liên hệ
+            </button>
+          </form>
+
+          <div id="contactSuccessAlert" class="alert alert-success d-none mt-3 mb-0 small" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <strong>Gửi thành công!</strong> Ban đề án TimeBank EDU đã tiếp nhận thông tin và sẽ liên hệ hỗ trợ nhà trường trong 24 giờ.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function handleContactSubmit(e) {
+    e.preventDefault();
+    const tenTruong = document.getElementById('tenTruongInput').value;
+    const hoTen = document.getElementById('hoTenInput').value;
+    
+    // Giả lập gửi thông tin liên hệ và hiển thị phản hồi ngay lập tức
+    document.getElementById('contactForm').classList.add('d-none');
+    const successAlert = document.getElementById('contactSuccessAlert');
+    successAlert.classList.remove('d-none');
+    successAlert.innerHTML = `
+      <i class="bi bi-check-circle-fill me-2 text-success"></i>
+      <strong>Đã tiếp nhận thành công!</strong> Cảm ơn Thầy/Cô <strong>${hoTen}</strong> (${tenTruong}). Ban tổ chức dự án TimeBank EDU sẽ liên hệ trao đổi phương án chuyển giao phần mềm trong thời gian sớm nhất!
+    `;
+  }
+</script>
+{% endblock %}
