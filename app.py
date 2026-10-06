@@ -10,6 +10,7 @@ Triết lý sư phạm: "Một giờ bạn dạy — một giờ bạn được 
 """
 
 import os
+import time
 import sqlite3
 import yaml
 from pathlib import Path
@@ -682,6 +683,240 @@ def approve_skill_action(skill_id, action):
     action_label = "phê duyệt" if action == "da_duyet" else "từ chối"
     flash(f"Đã {action_label} kỹ năng #{skill_id} thành công.", "success")
     return redirect(url_for("skills_approval"))
+
+
+# ------------------------------------------------------------------------------
+# MILESTONE M2: ĐĂNG KỸ NĂNG, CHỢ KỸ NĂNG, ĐẶT LỊCH & LỊCH CỦA TÔI
+# ------------------------------------------------------------------------------
+
+@app.route("/skills")
+def skills_market():
+    """
+    Chợ Kỹ Năng Học Đường:
+    - CHỈ HIỂN THỊ những kỹ năng có trạng thái 'da_duyet' (đã qua kiểm duyệt sư phạm).
+    - Các kỹ năng 'cho_duyet' hoặc 'tu_choi' tuyệt đối KHÔNG xuất hiện ở chợ.
+    - Hỗ trợ tìm kiếm từ khóa và lọc danh mục: Toán, Lý, Hóa, Văn, Anh, Tin học, Đàn, Vẽ, Thể thao, Khác.
+    """
+    db = get_db()
+    cur = db.cursor()
+    
+    search_query = request.args.get("q", "").strip()
+    selected_category = request.args.get("linh_vuc", "").strip()
+    
+    sql = """
+        SELECT 
+            s.*, 
+            u.ho_ten, 
+            u.ma_hoc_sinh, 
+            u.lop,
+            ROUND(COALESCE(AVG(r.so_sao), 5.0), 1) AS sao_tb
+        FROM skills s
+        JOIN users u ON s.user_id = u.id
+        LEFT JOIN sessions ses ON s.id = ses.skill_id AND ses.trang_thai = 'hoan_thanh'
+        LEFT JOIN ratings r ON ses.id = r.session_id AND r.nguoi_duoc_danh_gia_id = u.id
+        WHERE s.trang_thai_duyet = 'da_duyet'
+    """
+    params = []
+    
+    if selected_category:
+        sql += " AND s.linh_vuc = ?"
+        params.append(selected_category)
+        
+    if search_query:
+        sql += " AND (s.tieu_de LIKE ? OR s.mo_ta LIKE ? OR s.linh_vuc LIKE ?)"
+        like_term = f"%{search_query}%"
+        params.extend([like_term, like_term, like_term])
+        
+    sql += " GROUP BY s.id ORDER BY s.id DESC"
+    cur.execute(sql, params)
+    skills = cur.fetchall()
+    
+    return render_template(
+        "skills_market.html",
+        skills=skills,
+        search_query=search_query,
+        selected_category=selected_category
+    )
+
+
+@app.route("/skills/new", methods=["GET", "POST"])
+@login_required
+def new_skill():
+    """
+    Đăng ký kỹ năng học đường mới:
+    - Học sinh chọn lĩnh vực (Toán, Lý, Hóa, Văn, Anh, Vẽ, Đàn, Thể thao, Tin học, Khác), nhập tiêu đề & mô tả.
+    - Tự động đặt trạng thái ban đầu là 'cho_duyet'.
+    """
+    valid_categories = ('Toán', 'Lý', 'Hóa', 'Văn', 'Anh', 'Vẽ', 'Đàn', 'Thể thao', 'Tin học', 'Khác')
+    
+    if request.method == "POST":
+        linh_vuc = request.form.get("linh_vuc", "").strip()
+        tieu_de = request.form.get("tieu_de", "").strip()
+        mo_ta = request.form.get("mo_ta", "").strip()
+        
+        if not linh_vuc or not tieu_de or not mo_ta:
+            flash("Vui lòng điền đầy đủ lĩnh vực, tiêu đề và mô tả kỹ năng.", "danger")
+            return render_template("skills_new.html")
+            
+        if linh_vuc not in valid_categories:
+            flash("Lĩnh vực đã chọn không hợp lệ.", "danger")
+            return render_template("skills_new.html")
+            
+        db = get_db()
+        cur = db.cursor()
+        
+        cur.execute(
+            """INSERT INTO skills 
+               (user_id, linh_vuc, tieu_de, mo_ta, trang_thai_duyet, ly_do_ai_kiem_duyet) 
+               VALUES (?, ?, ?, ?, 'cho_duyet', ?)""",
+            (session["user_id"], linh_vuc, tieu_de, mo_ta, "Nội dung học tập tích cực, chờ giáo viên phê duyệt")
+        )
+        db.commit()
+        
+        flash("Đăng ký kỹ năng thành công! Kỹ năng đang ở trạng thái 'Chờ duyệt' trước khi hiển thị trên Chợ kỹ năng.", "success")
+        return redirect(url_for("profile"))
+        
+    return render_template("skills_new.html")
+
+
+@app.route("/sessions/book", methods=["POST"])
+@login_required
+def book_session():
+    """
+    Đặt lịch học kỹ năng:
+    - Kiểm tra: Kỹ năng phải có trạng thái 'da_duyet'.
+    - Kiểm tra: Không được tự đặt lịch kỹ năng của chính mình.
+    - Kiểm tra: Thời lượng tối đa 2.0 giờ / phiên (0.5 <= so_gio <= 2.0).
+    - Kiểm tra: Người học phải có đủ số dư giờ tín dụng.
+    - Tạo phiên có trạng thái 'da_dat' để cả 2 bên (người dạy và người học) cùng theo dõi trong 'Lịch của tôi'.
+    """
+    try:
+        skill_id = int(request.form.get("skill_id", 0))
+    except (ValueError, TypeError):
+        flash("Kỹ năng không hợp lệ.", "danger")
+        return redirect(url_for("skills_market"))
+        
+    thoi_gian_bat_dau = request.form.get("thoi_gian_bat_dau", "").strip()
+    try:
+        so_gio = float(request.form.get("so_gio", 1.0))
+    except (ValueError, TypeError):
+        so_gio = 1.0
+        
+    if not thoi_gian_bat_dau:
+        flash("Vui lòng chọn thời gian hẹn học.", "danger")
+        return redirect(url_for("skills_market"))
+        
+    # Giới hạn tối đa 2 giờ / phiên
+    if so_gio <= 0 or so_gio > 2.0:
+        flash("Thời lượng mỗi buổi học tối đa là 2.0 giờ (và tối thiểu 0.5 giờ)!", "danger")
+        return redirect(url_for("skills_market"))
+        
+    db = get_db()
+    cur = db.cursor()
+    
+    # 1. Kiểm tra kỹ năng có tồn tại và đã duyệt chưa
+    cur.execute("SELECT * FROM skills WHERE id = ?", (skill_id,))
+    skill = cur.fetchone()
+    if not skill or skill["trang_thai_duyet"] != "da_duyet":
+        flash("Kỹ năng này chưa sẵn sàng hoặc chưa được phê duyệt sư phạm!", "danger")
+        return redirect(url_for("skills_market"))
+        
+    # 2. Không được tự đặt lịch kỹ năng của chính mình
+    if skill["user_id"] == session["user_id"]:
+        flash("Bạn không thể tự đặt lịch kỹ năng của chính mình!", "warning")
+        return redirect(url_for("skills_market"))
+        
+    # 3. Kiểm tra số dư người học
+    cur.execute("SELECT * FROM users WHERE id = ?", (session["user_id"],))
+    learner = cur.fetchone()
+    if not learner or learner["so_du_gio"] < so_gio:
+        flash(f"Số dư tín dụng của bạn không đủ để đặt lịch buổi học này! (Hiện có: {learner['so_du_gio']:.1f}h, Cần: {so_gio:.1f}h). Hãy dạy kèm bạn bè để tích thêm giờ nhé!", "danger")
+        return redirect(url_for("skills_market"))
+        
+    # 4. Lấy thông tin gia sư
+    cur.execute("SELECT ho_ten FROM users WHERE id = ?", (skill["user_id"],))
+    tutor = cur.fetchone()
+    tutor_name = tutor["ho_ten"] if tutor else "Gia sư"
+    
+    # 5. Tạo mã QR và lưu phiên 'da_dat'
+    ma_qr = f"QR-SES-{skill_id}-{session['user_id']}-{int(time.time())}"
+    
+    cur.execute(
+        """INSERT INTO sessions 
+           (skill_id, nguoi_day_id, nguoi_hoc_id, thoi_gian_bat_dau, so_gio, trang_thai, ma_qr, checkin_day, checkin_hoc, dan_y_ai, quiz_dat_chuan)
+           VALUES (?, ?, ?, ?, ?, 'da_dat', ?, 0, 0, NULL, 0)""",
+        (skill_id, skill["user_id"], session["user_id"], thoi_gian_bat_dau, so_gio, ma_qr)
+    )
+    db.commit()
+    
+    flash(f"Đặt lịch học thành công với {tutor_name} ({so_gio:.1f} giờ)! Cả hai bạn đều có thể theo dõi trong 'Lịch của tôi'.", "success")
+    return redirect(url_for("my_schedule"))
+
+
+@app.route("/my-schedule")
+@login_required
+def my_schedule():
+    """
+    Trang 'Lịch của tôi':
+    - Hiển thị danh sách các phiên học của người dùng hiện tại ở cả 2 vai trò:
+      1. Phiên tôi dạy (Gia sư): Người dạy thấy bạn học nào đã đặt lịch với mình.
+      2. Phiên tôi học (Người học): Người học thấy gia sư nào sẽ kèm cặp mình.
+    - Cả 2 bên đều thấy phiên với trạng thái 'da_dat' và mã QR xác thực.
+    """
+    db = get_db()
+    cur = db.cursor()
+    user_id = session["user_id"]
+    
+    cur.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+    user = cur.fetchone()
+    session["so_du_gio"] = user["so_du_gio"]
+    
+    # 1. Danh sách các phiên người dùng đóng vai trò Người Dạy (Gia sư)
+    cur.execute(
+        """SELECT 
+               s.*, 
+               sk.tieu_de, 
+               sk.linh_vuc, 
+               u.ho_ten AS ten_nguoi_hoc, 
+               u.lop AS lop_nguoi_hoc, 
+               u.ma_hoc_sinh AS ma_nguoi_hoc
+           FROM sessions s
+           JOIN skills sk ON s.skill_id = sk.id
+           JOIN users u ON s.nguoi_hoc_id = u.id
+           WHERE s.nguoi_day_id = ?
+           ORDER BY s.id DESC""",
+        (user_id,)
+    )
+    teaching_sessions = cur.fetchall()
+    
+    # 2. Danh sách các phiên người dùng đóng vai trò Người Học
+    cur.execute(
+        """SELECT 
+               s.*, 
+               sk.tieu_de, 
+               sk.linh_vuc, 
+               u.ho_ten AS ten_nguoi_day, 
+               u.lop AS lop_nguoi_day, 
+               u.ma_hoc_sinh AS ma_nguoi_day
+           FROM sessions s
+           JOIN skills sk ON s.skill_id = sk.id
+           JOIN users u ON s.nguoi_day_id = u.id
+           WHERE s.nguoi_hoc_id = ?
+           ORDER BY s.id DESC""",
+        (user_id,)
+    )
+    learning_sessions = cur.fetchall()
+    
+    upcoming_count = sum(1 for s in teaching_sessions if s["trang_thai"] == "da_dat") + \
+                     sum(1 for s in learning_sessions if s["trang_thai"] == "da_dat")
+                     
+    return render_template(
+        "my_schedule.html",
+        user=user,
+        teaching_sessions=teaching_sessions,
+        learning_sessions=learning_sessions,
+        upcoming_count=upcoming_count
+    )
 
 
 # ------------------------------------------------------------------------------

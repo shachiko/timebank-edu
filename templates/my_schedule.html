@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Lịch của tôi - {{ config.ten_truong }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Tiêu đề trang -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+      <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold px-3 py-1 rounded-pill mb-1">
+        <i class="bi bi-calendar-event me-1"></i> QUẢN LÝ PHIÊN HỌC 2 CHIỀU
+      </span>
+      <h2 class="fw-bold mb-0 text-dark">Lịch Của Tôi</h2>
+      <p class="text-muted small mb-0">{{ user.ho_ten }} (Mã: <code>{{ user.ma_hoc_sinh }}</code>) — Số dư: <strong class="text-success">{{ "%.1f"|format(user.so_du_gio) }} giờ</strong></p>
+    </div>
+
+    <div>
+      <a href="{{ url_for('skills_market') }}" class="btn btn-brand btn-sm">
+        <i class="bi bi-plus-lg me-1"></i> Đặt thêm buổi học mới
+      </a>
+    </div>
+  </div>
+
+  <!-- Thống kê nhanh các buổi học -->
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+        <span class="text-muted small">Buổi tôi dạy (Gia sư)</span>
+        <h3 class="fw-bold mb-0 text-primary">{{ teaching_sessions|length }}</h3>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+        <span class="text-muted small">Buổi tôi học (Người học)</span>
+        <h3 class="fw-bold mb-0 text-success">{{ learning_sessions|length }}</h3>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+        <span class="text-muted small">Phiên đã đặt (Sắp tới)</span>
+        <h3 class="fw-bold mb-0 text-warning">{{ upcoming_count }}</h3>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+        <span class="text-muted small">Số dư giờ khả dụng</span>
+        <h3 class="fw-bold mb-0 text-info-emphasis">{{ "%.1f"|format(user.so_du_gio) }}h</h3>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs chuyển đổi giữa Lịch dạy và Lịch học -->
+  <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+    <div class="card-header bg-white border-bottom p-0">
+      <ul class="nav nav-tabs nav-fill border-bottom-0" id="scheduleTab" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active py-3 fw-semibold border-0 border-bottom border-3" id="teaching-tab" data-bs-toggle="tab" data-bs-target="#teaching-pane" type="button" role="tab" aria-controls="teaching-pane" aria-selected="true">
+            <i class="bi bi-mortarboard me-2 text-primary"></i>Phiên Tôi Dạy (Gia sư) 
+            <span class="badge bg-primary rounded-pill ms-1">{{ teaching_sessions|length }}</span>
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link py-3 fw-semibold border-0 border-bottom border-3" id="learning-tab" data-bs-toggle="tab" data-bs-target="#learning-pane" type="button" role="tab" aria-controls="learning-pane" aria-selected="false">
+            <i class="bi bi-book me-2 text-success"></i>Phiên Tôi Học (Người học) 
+            <span class="badge bg-success rounded-pill ms-1">{{ learning_sessions|length }}</span>
+          </button>
+        </li>
+      </ul>
+    </div>
+
+    <div class="card-body p-4">
+      <div class="tab-content" id="scheduleTabContent">
+        <!-- PANE 1: PHIÊN TÔI DẠY -->
+        <div class="tab-pane fade show active" id="teaching-pane" role="tabpanel" aria-labelledby="teaching-tab" tabindex="0">
+          {% if teaching_sessions %}
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light small text-muted">
+                  <tr>
+                    <th scope="col">Mã phiên</th>
+                    <th scope="col">Kỹ năng giảng dạy</th>
+                    <th scope="col">Bạn học (Học sinh)</th>
+                    <th scope="col">Thời gian hẹn</th>
+                    <th scope="col" class="text-center">Thời lượng</th>
+                    <th scope="col">Trạng thái</th>
+                    <th scope="col" class="text-end">Mã QR xác thực</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for s in teaching_sessions %}
+                  <tr>
+                    <td><code>#{{ s.id }}</code></td>
+                    <td>
+                      <span class="badge bg-light text-secondary border me-1">{{ s.linh_vuc }}</span>
+                      <strong class="text-dark">{{ s.tieu_de }}</strong>
+                    </td>
+                    <td>
+                      <div class="fw-semibold text-dark">{{ s.ten_nguoi_hoc }}</div>
+                      <small class="text-muted">Lớp {{ s.lop_nguoi_hoc }} • <code>{{ s.ma_nguoi_hoc }}</code></small>
+                    </td>
+                    <td>
+                      <span class="text-dark"><i class="bi bi-clock me-1 text-primary"></i>{{ s.thoi_gian_bat_dau }}</span>
+                    </td>
+                    <td class="text-center fw-bold text-success">
+                      +{{ "%.1f"|format(s.so_gio) }}h
+                    </td>
+                    <td>
+                      {% if s.trang_thai == 'da_dat' %}
+                        <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Đã đặt lịch</span>
+                      {% elif s.trang_thai == 'hoan_thanh' %}
+                        <span class="badge bg-success"><i class="bi bi-check-all me-1"></i>Hoàn thành</span>
+                      {% elif s.trang_thai == 'huy' %}
+                        <span class="badge bg-secondary">Đã hủy</span>
+                      {% else %}
+                        <span class="badge bg-info text-dark">Cần xác minh</span>
+                      {% endif %}
+                    </td>
+                    <td class="text-end">
+                      <code class="small bg-light px-2 py-1 rounded border">{{ s.ma_qr if s.ma_qr else 'QR_SESSION_' ~ s.id }}</code>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="text-center py-5 text-muted">
+              <i class="bi bi-calendar-x fs-1 d-block mb-2"></i>
+              Chưa có bạn học nào đặt lịch học với bạn. Hãy <a href="{{ url_for('new_skill') }}" class="text-primary fw-semibold">đăng thêm kỹ năng</a> để nhận các lượt đặt lịch!
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- PANE 2: PHIÊN TÔI HỌC -->
+        <div class="tab-pane fade" id="learning-pane" role="tabpanel" aria-labelledby="learning-tab" tabindex="0">
+          {% if learning_sessions %}
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light small text-muted">
+                  <tr>
+                    <th scope="col">Mã phiên</th>
+                    <th scope="col">Chuyên đề học</th>
+                    <th scope="col">Gia sư (Người dạy)</th>
+                    <th scope="col">Thời gian hẹn</th>
+                    <th scope="col" class="text-center">Thời lượng</th>
+                    <th scope="col">Trạng thái</th>
+                    <th scope="col" class="text-end">Mã QR xác thực</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for s in learning_sessions %}
+                  <tr>
+                    <td><code>#{{ s.id }}</code></td>
+                    <td>
+                      <span class="badge bg-light text-secondary border me-1">{{ s.linh_vuc }}</span>
+                      <strong class="text-dark">{{ s.tieu_de }}</strong>
+                    </td>
+                    <td>
+                      <div class="fw-semibold text-dark">{{ s.ten_nguoi_day }}</div>
+                      <small class="text-muted">Lớp {{ s.lop_nguoi_day }} • <code>{{ s.ma_nguoi_day }}</code></small>
+                    </td>
+                    <td>
+                      <span class="text-dark"><i class="bi bi-clock me-1 text-primary"></i>{{ s.thoi_gian_bat_dau }}</span>
+                    </td>
+                    <td class="text-center fw-bold text-danger">
+                      -{{ "%.1f"|format(s.so_gio) }}h
+                    </td>
+                    <td>
+                      {% if s.trang_thai == 'da_dat' %}
+                        <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Đã đặt lịch</span>
+                      {% elif s.trang_thai == 'hoan_thanh' %}
+                        <span class="badge bg-success"><i class="bi bi-check-all me-1"></i>Hoàn thành</span>
+                      {% elif s.trang_thai == 'huy' %}
+                        <span class="badge bg-secondary">Đã hủy</span>
+                      {% else %}
+                        <span class="badge bg-info text-dark">Cần xác minh</span>
+                      {% endif %}
+                    </td>
+                    <td class="text-end">
+                      <code class="small bg-light px-2 py-1 rounded border">{{ s.ma_qr if s.ma_qr else 'QR_SESSION_' ~ s.id }}</code>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="text-center py-5 text-muted">
+              <i class="bi bi-journal-plus fs-1 d-block mb-2"></i>
+              Bạn chưa đặt lịch học buổi nào. Hãy ghé <a href="{{ url_for('skills_market') }}" class="text-primary fw-semibold">Chợ kỹ năng</a> để chọn môn học thú vị!
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

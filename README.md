@@ -155,5 +155,21 @@ Hệ thống thiết lập sẵn các tài khoản để Ban Giám khảo và gi
 
 ---
 
-## 9. Tính trung thực về AI
+## 9. Đăng kỹ năng, Chợ kỹ năng & Đặt lịch học (Milestone M2)
+
+- **Đăng kỹ năng (`/skills/new`):** Học sinh chia sẻ chuyên đề thế mạnh thuộc 10 lĩnh vực chuẩn (*Toán, Lý, Hóa, Văn, Anh, Vẽ, Đàn, Thể thao, Tin học, Khác*). Khi đăng ký, kỹ năng tự động ở trạng thái `cho_duyet` chờ giáo viên phê duyệt sư phạm.
+- **Chợ kỹ năng (`/skills`):** Chỉ hiển thị các kỹ năng đã được phê duyệt (`da_duyet`). Kỹ năng chưa duyệt bị ẩn hoàn toàn. Hỗ trợ tìm kiếm từ khóa và lọc danh mục lĩnh vực.
+- **Đặt lịch học (`/sessions/book`):**
+  * Học sinh chọn chuyên đề muốn học từ bạn bè.
+  * Giới hạn thời lượng: **Tối đa 2.0 giờ / phiên** (0.5h đến 2.0h).
+  * Kiểm soát số dư: Học sinh phải có đủ giờ tín dụng trong sổ cái.
+  * Bảo đảm tính công bằng: Học sinh không thể tự đặt lịch kỹ năng của chính mình.
+  * Phiên học được khởi tạo với trạng thái `da_dat` và gắn mã QR xác thực định danh.
+- **Lịch của tôi (`/my-schedule`):**
+  * Cả 2 bên (**Người dạy** và **Người học**) đều theo dõi được phiên học trong lịch trình cá nhân.
+  * Phân loại rõ ràng: *Phiên tôi dạy* (vai trò Gia sư) và *Phiên tôi học* (vai trò Học sinh).
+
+---
+
+## 10. Tính trung thực về AI
 Hệ thống tuân thủ nghiêm ngặt nguyên tắc minh bạch: Mọi vị trí có sự tham gia của Trí tuệ nhân tạo (kiểm duyệt, gợi ý ghép cặp, dàn ý buổi học, tạo trắc nghiệm) đều được gắn nhãn nhận diện rõ ràng: **"Hỗ trợ bởi AI (Gemini)"**.

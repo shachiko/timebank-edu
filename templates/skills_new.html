@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Đăng kỹ năng chia sẻ - {{ config.ten_truong }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-7">
+      <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="card-header bg-white border-0 pt-4 pb-2 text-center">
+          <div class="badge bg-primary bg-opacity-10 text-primary fw-semibold px-3 py-2 rounded-pill mb-2">
+            <i class="bi bi-stars me-1"></i> LAN TỎA TRI THỨC — CHIA SẺ THẾ MẠNH
+          </div>
+          <h3 class="fw-bold text-dark mb-1">Đăng ký Kỹ năng Giảng dạy</h3>
+          <p class="text-muted small mb-0">{{ config.ten_truong }} — 1 giờ bạn dạy = 1 tín dụng nhận về</p>
+        </div>
+
+        <div class="card-body p-4 p-md-5 pt-3">
+          <form method="POST" action="{{ url_for('new_skill') }}">
+            <div class="mb-3">
+              <label for="linh_vuc" class="form-label small fw-semibold">Lĩnh vực kỹ năng <span class="text-danger">*</span></label>
+              <select class="form-select" id="linh_vuc" name="linh_vuc" required>
+                <option value="" disabled selected>-- Chọn lĩnh vực thế mạnh của bạn --</option>
+                <option value="Toán">Toán học</option>
+                <option value="Lý">Vật lý</option>
+                <option value="Hóa">Hóa học</option>
+                <option value="Văn">Ngữ văn</option>
+                <option value="Anh">Tiếng Anh</option>
+                <option value="Tin học">Tin học & Lập trình</option>
+                <option value="Đàn">Âm nhạc & Đàn (Guitar, Piano, Organ...)</option>
+                <option value="Vẽ">Mỹ thuật & Vẽ tranh</option>
+                <option value="Thể thao">Thể dục & Thể thao (Cờ vua, Cầu lông, Bóng rổ...)</option>
+                <option value="Khác">Kỹ năng khác (Thuyết trình, Kỹ năng mềm...)</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="tieu_de" class="form-label small fw-semibold">Tiêu đề kỹ năng / Chuyên đề <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="tieu_de" name="tieu_de" placeholder="Ví dụ: Luyện giải bài toán hình không gian lớp 12, Đệm hát guitar cơ bản..." required maxlength="150">
+              <div class="form-text small text-muted">Đặt tiêu đề ngắn gọn, nêu rõ trọng tâm bạn muốn hướng dẫn bạn bè.</div>
+            </div>
+
+            <div class="mb-4">
+              <label for="mo_ta" class="form-label small fw-semibold">Mô tả nội dung & Phương pháp kèm cặp <span class="text-danger">*</span></label>
+              <textarea class="form-control" id="mo_ta" name="mo_ta" rows="4" placeholder="Mô tả cụ thể bạn sẽ giúp bạn học những gì (lý thuyết, bài tập mẫu, mẹo giải nhanh, thực hành nhạc cụ...)" required></textarea>
+            </div>
+
+            <div class="alert alert-warning py-3 px-3 rounded-3 small d-flex align-items-start gap-2 mb-4">
+              <i class="bi bi-shield-check fs-5 text-warning-emphasis flex-shrink-0"></i>
+              <div>
+                <strong>Quy trình phê duyệt sư phạm:</strong>
+                Sau khi gửi, kỹ năng sẽ ở trạng thái <code>Chờ duyệt</code>. Trợ lý AI (Gemini) sẽ quét an toàn nội dung và Thầy/Cô phụ trách sẽ phê duyệt trước khi kỹ năng xuất hiện công khai trên <strong>Chợ kỹ năng</strong> của trường.
+                <div class="mt-1"><span class="badge-ai" style="font-size: 0.68rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Gemini)</span></div>
+              </div>
+            </div>
+
+            <div class="d-flex gap-2">
+              <a href="{{ url_for('skills_market') }}" class="btn btn-outline-secondary w-50 py-2">
+                <i class="bi bi-arrow-left me-1"></i> Quay lại
+              </a>
+              <button type="submit" class="btn btn-brand w-50 py-2 fw-semibold">
+                <i class="bi bi-send-check me-1"></i> Đăng kỹ năng
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

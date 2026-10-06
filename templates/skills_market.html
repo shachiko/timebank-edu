@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}Chợ kỹ năng học đường - {{ config.ten_truong }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Header Banner -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+      <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold px-3 py-1 rounded-pill mb-1">
+        <i class="bi bi-shop me-1"></i> KHÔNG GIAN TRAO ĐỔI TRI THỨC
+      </span>
+      <h2 class="fw-bold mb-0 text-dark">Chợ Kỹ Năng Học Đường</h2>
+      <p class="text-muted small mb-0">Chỉ hiển thị các chuyên đề đã qua kiểm duyệt sư phạm bởi giáo viên {{ config.ten_truong }}</p>
+    </div>
+
+    <div class="d-flex gap-2">
+      {% if current_user %}
+        <a href="{{ url_for('new_skill') }}" class="btn btn-brand">
+          <i class="bi bi-plus-circle me-1"></i> Đăng kỹ năng của bạn
+        </a>
+      {% else %}
+        <a href="{{ url_for('login') }}" class="btn btn-brand">
+          <i class="bi bi-box-arrow-in-right me-1"></i> Đăng nhập để chia sẻ & học
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Thanh tìm kiếm & Bộ lọc lĩnh vực -->
+  <div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-4">
+    <form method="GET" action="{{ url_for('skills_market') }}" class="row g-2 align-items-center">
+      <div class="col-md-6 col-lg-7">
+        <div class="input-group">
+          <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+          <input type="text" class="form-control border-start-0" name="q" placeholder="Tìm kỹ năng theo từ khóa (Toán, Guitar, Python, IELTS...)" value="{{ search_query }}">
+        </div>
+      </div>
+
+      <div class="col-md-4 col-lg-3">
+        <select class="form-select" name="linh_vuc" onchange="this.form.submit()">
+          <option value="">-- Tất cả lĩnh vực --</option>
+          {% for lv in ['Toán', 'Lý', 'Hóa', 'Văn', 'Anh', 'Tin học', 'Đàn', 'Vẽ', 'Thể thao', 'Khác'] %}
+            <option value="{{ lv }}" {% if selected_category == lv %}selected{% endif %}>{{ lv }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-2 col-lg-2 d-flex gap-2">
+        <button type="submit" class="btn btn-brand w-100">
+          <i class="bi bi-funnel me-1"></i> Lọc
+        </button>
+        {% if search_query or selected_category %}
+          <a href="{{ url_for('skills_market') }}" class="btn btn-outline-secondary" title="Xóa bộ lọc">
+            <i class="bi bi-x-lg"></i>
+          </a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  <!-- Danh sách các thẻ kỹ năng -->
+  {% if skills %}
+    <div class="row g-4">
+      {% for skill in skills %}
+      <div class="col-md-6 col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100 p-4 bg-white d-flex flex-column justify-content-between position-relative">
+          <div>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold px-2 py-1 rounded">
+                <i class="bi bi-tag-fill me-1"></i>{{ skill.linh_vuc }}
+              </span>
+              <span class="badge bg-success bg-opacity-10 text-success small">
+                <i class="bi bi-patch-check-fill me-1"></i>Đã duyệt
+              </span>
+            </div>
+
+            <h5 class="fw-bold text-dark mb-2">{{ skill.tieu_de }}</h5>
+            <p class="text-secondary small mb-3" style="min-height: 48px;">{{ skill.mo_ta }}</p>
+
+            <!-- Người dạy -->
+            <div class="p-3 bg-light rounded-3 mb-3">
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px; font-size: 0.85rem;">
+                  {{ skill.ho_ten[0] | upper }}
+                </div>
+                <div>
+                  <div class="fw-bold text-dark small">{{ skill.ho_ten }}</div>
+                  <div class="text-muted" style="font-size: 0.75rem;">Lớp: {{ skill.lop }} • Mã: <code>{{ skill.ma_hoc_sinh }}</code></div>
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-10 small">
+                <span class="text-muted">Đánh giá:</span>
+                <span class="text-warning fw-semibold">
+                  {% for s in range(skill.sao_tb|round|int) %}★{% endfor %}
+                  <span class="text-dark">({{ skill.sao_tb }}/5)</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Nút đặt lịch -->
+          <div>
+            {% if current_user %}
+              {% if current_user.id == skill.user_id %}
+                <button class="btn btn-secondary btn-sm w-100 py-2 disabled" title="Đây là kỹ năng bạn chia sẻ">
+                  <i class="bi bi-person-check me-1"></i> Kỹ năng của bạn
+                </button>
+              {% else %}
+                <button class="btn btn-brand btn-sm w-100 py-2" data-bs-toggle="modal" data-bs-target="#bookModal{{ skill.id }}">
+                  <i class="bi bi-calendar-plus me-1"></i> Đặt lịch học ngay (Tối đa 2h)
+                </button>
+              {% endif %}
+            {% else %}
+              <a href="{{ url_for('login', next=url_for('skills_market')) }}" class="btn btn-outline-brand btn-sm w-100 py-2">
+                <i class="bi bi-box-arrow-in-right me-1"></i> Đăng nhập để đặt lịch
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Đặt lịch học cho từng kỹ năng -->
+      {% if current_user and current_user.id != skill.user_id %}
+      <div class="modal fade" id="bookModal{{ skill.id }}" tabindex="-1" aria-labelledby="bookModalLabel{{ skill.id }}" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content rounded-4 shadow border-0">
+            <div class="modal-header border-bottom-0 pb-0">
+              <div>
+                <span class="badge bg-primary bg-opacity-10 text-primary small mb-1">{{ skill.linh_vuc }}</span>
+                <h5 class="modal-title fw-bold text-dark" id="bookModalLabel{{ skill.id }}">Đặt lịch học kỹ năng</h5>
+              </div>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form method="POST" action="{{ url_for('book_session') }}">
+              <input type="hidden" name="skill_id" value="{{ skill.id }}">
+
+              <div class="modal-body p-4 pt-2">
+                <div class="p-3 bg-light rounded-3 mb-3 small">
+                  <div class="fw-bold text-dark mb-1">{{ skill.tieu_de }}</div>
+                  <div class="text-muted"><i class="bi bi-person-badge me-1"></i>Gia sư bạn học: <strong>{{ skill.ho_ten }}</strong> (Lớp {{ skill.lop }})</div>
+                  <div class="text-muted"><i class="bi bi-wallet2 me-1"></i>Số dư hiện có của bạn: <strong>{{ "%.1f"|format(current_user.so_du_gio) }} giờ</strong></div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="thoi_gian_bat_dau_{{ skill.id }}" class="form-label small fw-semibold">Thời gian hẹn học <span class="text-danger">*</span></label>
+                  <input type="datetime-local" class="form-control" id="thoi_gian_bat_dau_{{ skill.id }}" name="thoi_gian_bat_dau" required>
+                  <div class="form-text small text-muted">Chọn ngày và giờ phù hợp với thời gian rảnh của cả hai bạn.</div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="so_gio_{{ skill.id }}" class="form-label small fw-semibold">Thời lượng buổi học (giờ) <span class="text-danger">*</span></label>
+                  <select class="form-select" id="so_gio_{{ skill.id }}" name="so_gio" required>
+                    <option value="1.0" selected>1.0 giờ (1 tín dụng)</option>
+                    <option value="0.5">0.5 giờ (30 phút - 0.5 tín dụng)</option>
+                    <option value="1.5">1.5 giờ (90 phút - 1.5 tín dụng)</option>
+                    <option value="2.0">2.0 giờ (Tối đa 2h / phiên - 2.0 tín dụng)</option>
+                  </select>
+                  <div class="form-text small text-primary"><i class="bi bi-info-circle me-1"></i>Quy định hệ thống: Tối đa 2.0 giờ/phiên học.</div>
+                </div>
+
+                <div class="alert alert-info py-2 px-3 small mb-0">
+                  <i class="bi bi-shield-lock me-1"></i> Khi hoàn thành buổi học, tín dụng thời gian sẽ tự động chuyển từ bạn sang bạn gia sư theo xác nhận 2 chiều.
+                </div>
+              </div>
+
+              <div class="modal-footer border-top-0 pt-0 px-4 pb-4">
+                <button type="button" class="btn btn-outline-secondary w-50" data-bs-dismiss="modal">Hủy</button>
+                <button type="submit" class="btn btn-brand w-50 fw-semibold">
+                  <i class="bi bi-calendar-check me-1"></i> Xác nhận đặt lịch
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white my-4">
+      <div class="text-muted mb-3">
+        <i class="bi bi-inbox fs-1"></i>
+      </div>
+      <h5 class="fw-bold text-dark mb-1">Chưa có kỹ năng phù hợp</h5>
+      <p class="text-muted small mb-3">Hiện tại chưa có kỹ năng nào thuộc lĩnh vực hoặc từ khóa tìm kiếm của bạn.</p>
+      <div>
+        <a href="{{ url_for('skills_market') }}" class="btn btn-outline-brand btn-sm">
+          <i class="bi bi-arrow-clockwise me-1"></i> Xem tất cả kỹ năng
+        </a>
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -51,6 +51,14 @@
       <div class="collapse navbar-collapse" id="navbarContent">
         <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center gap-lg-3">
           <li class="nav-item">
+            <a class="nav-link fw-semibold text-primary" href="{{ url_for('skills_market') }}"><i class="bi bi-shop me-1"></i>Chợ kỹ năng</a>
+          </li>
+          {% if current_user %}
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('my_schedule') }}"><i class="bi bi-calendar-check me-1"></i>Lịch của tôi</a>
+          </li>
+          {% endif %}
+          <li class="nav-item">
             <a class="nav-link" href="{{ url_for('index') }}#mo-hinh"><i class="bi bi-diagram-3 me-1"></i>Mô hình</a>
           </li>
           <li class="nav-item">
@@ -90,7 +98,18 @@
                     <i class="bi bi-person-circle text-primary me-2"></i>Hồ sơ cá nhân & Sổ cái
                   </a>
                 </li>
+                <li>
+                  <a class="dropdown-item py-2" href="{{ url_for('my_schedule') }}">
+                    <i class="bi bi-calendar2-check text-success me-2"></i>Lịch của tôi (Dạy & Học)
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item py-2" href="{{ url_for('new_skill') }}">
+                    <i class="bi bi-plus-circle text-warning me-2"></i>Đăng kỹ năng mới
+                  </a>
+                </li>
                 {% if current_user.vai_tro in ('giao_vien', 'admin') %}
+                <li><hr class="dropdown-divider my-1"></li>
                 <li>
                   <a class="dropdown-item py-2" href="{{ url_for('skills_approval') }}">
                     <i class="bi bi-check2-square text-success me-2"></i>Duyệt kỹ năng học sinh
