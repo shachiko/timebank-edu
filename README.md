@@ -471,9 +471,93 @@ Nền tảng tích hợp **Trợ lý Học đường AI (TimeBank Assistant)** h
 
 ---
 
-## 17. Tính bảo mật và biến môi trường
+## 17. HƯỚNG DẪN DEPLOY TRÊN RENDER & CẤU HÌNH TÊN MIỀN (Milestone DEPLOY)
+
+Hệ thống được đóng gói sẵn sàng để triển khai trực tuyến trên nền tảng đám mây **Render (PaaS)** với quy trình chuẩn hóa, vận hành ổn định và bảo mật:
+
+### 1. Cấu hình tệp khởi chạy đám mây:
+- **`runtime.txt`**: Khai báo phiên bản môi trường `python-3.11.9`.
+- **`Procfile`**: Lệnh khởi chạy máy chủ WSGI hiệu năng cao: `web: gunicorn app:app`.
+- **`render.yaml`**: Bản thiết kế tự động (Render Blueprint) định nghĩa Web Service, các biến môi trường và thiết lập Production.
+- **Tương thích Cơ sở dữ liệu linh hoạt:**
+  * **Mặc định (Không có `DATABASE_URL`):** Hệ thống vận hành trơn tru với **SQLite cục bộ** (`database/timebank.db`), đảm bảo kiến trúc Single-Tenant chuẩn mực cho từng trường học.
+  * **Khi có `DATABASE_URL`:** Hệ thống tự động kích hoạt bộ điều hợp **PostgreSQL** (`psycopg2-binary`), tự động chuẩn hóa chuỗi kết nối và khởi tạo 13 bảng dữ liệu.
+
+---
+
+### 2. Các bước triển khai chi tiết trên Render (Từng bước cụ thể):
+
+#### Bước 1: Tạo tài khoản và Đăng nhập Render
+1. Truy cập trang chủ [https://render.com](https://render.com).
+2. Chọn **"Get Started for Free"** hoặc đăng nhập nhanh bằng tài khoản **GitHub** của trường học.
+
+#### Bước 2: Kết nối Repository GitHub
+1. Tại bảng điều khiển Render Dashboard, chọn **"New +"** $\rightarrow$ chọn **"Web Service"** (hoặc chọn **"Blueprint"** để Render tự đọc tệp `render.yaml`).
+2. Chọn kho lưu trữ chứa mã nguồn dự án: `timebank-edu`.
+3. Đặt tên dịch vụ: `timebank-edu` (hoặc tên viết tắt của trường, ví dụ: `timebank-thpt-chuyen`).
+4. Chọn vùng triển khai (Region): `Singapore` (để tối ưu hóa tốc độ truy cập từ Việt Nam).
+5. Nhánh (Branch): `main`.
+6. Cấu hình lệnh:
+   - **Build Command:** `pip install -r requirements.txt`
+   - **Start Command:** `gunicorn app:app`
+
+#### Bước 3: Cấu hình Biến Môi trường (Environment Variables)
+Tại mục **"Environment Variables"** trên Render, thêm các khóa bí mật:
+- **`GEMINI_API_KEY`**: Dán mã khóa API Google Gemini Pro (lấy từ [Google AI Studio](https://aistudio.google.com)).
+- **`SECRET_KEY`**: Nhập chuỗi bảo mật phiên ngẫu nhiên (hoặc Render tự sinh tự động nếu dùng `render.yaml`).
+- **`FLASK_DEBUG`**: Đặt giá trị `0` để tắt chế độ gỡ lỗi (bảo mật production).
+- **`DATABASE_URL`** *(Tùy chọn)*: Nếu trường muốn kết nối dịch vụ Render PostgreSQL, dán chuỗi kết nối vào đây; nếu không, để trống để hệ thống tự động sử dụng SQLite.
+
+#### Bước 4: Khởi chạy triển khai (Deploy Web Service)
+1. Bấm nút **"Create Web Service"** (hoặc **"Apply"**).
+2. Render sẽ tự động kéo mã nguồn từ GitHub, cài đặt các gói trong `requirements.txt` và khởi động máy chủ Gunicorn.
+3. Khi màn hình thông báo **"Your service is live 🎉"**, ứng dụng đã chạy công khai tại địa chỉ:
+   `https://timebank-edu.onrender.com`
+
+---
+
+### 3. Hướng dẫn trỏ tên miền chính thức (`timebankedu.com`):
+
+Sau khi ứng dụng đã chạy trên Render, thực hiện các bước sau để gắn tên miền riêng của nhà trường:
+
+1. **Thêm Custom Domain trên Render:**
+   - Vào mục **Settings** của Web Service `timebank-edu` trên Render Dashboard.
+   - Cuộn xuống phần **Custom Domains** $\rightarrow$ Nhấn **"Add Custom Domain"**.
+   - Nhập tên miền: `timebankedu.com` và `www.timebankedu.com` $\rightarrow$ Nhấn **Save**.
+
+2. **Cấu hình bản ghi DNS tại Nhà cung cấp Tên miền (PA Việt Nam, Mắt Bão, Cloudflare...):**
+   Đăng nhập vào trang quản trị DNS của tên miền `timebankedu.com` và tạo các bản ghi sau:
+
+   | Loại bản ghi (Type) | Tên máy chủ (Host / Name) | Giá trị trỏ đến (Value / Target) | Mục đích |
+   |:---:|:---:|:---:|---|
+   | **CNAME** | `www` | `timebank-edu.onrender.com` | Trỏ tên miền phụ www về máy chủ Render |
+   | **ANAME / ALIAS** *(hoặc A Record)* | `@` (root domain) | `timebank-edu.onrender.com` *(hoặc địa chỉ IP Render cung cấp)* | Trỏ tên miền gốc về máy chủ Render |
+
+3. **Xác thực và Kích hoạt SSL/TLS (HTTPS Miễn phí):**
+   - Sau khi cấu hình DNS (khoảng 5 - 15 phút), Render tự động xác minh bản ghi và cấp chứng chỉ bảo mật **SSL Let's Encrypt** hoàn toàn miễn phí.
+   - Truy cập chính thức tại: `https://timebankedu.com` (tất cả kết nối HTTP đều được tự động chuyển hướng an toàn sang HTTPS).
+
+---
+
+### Hướng dẫn kiểm thử nghiệm thu Milestone DEPLOY:
+- **Chạy riêng bộ kiểm thử DEPLOY:**
+  ```bash
+  python test_deploy.py
+  ```
+  * Kết quả: **6/6 test cases đạt chuẩn 100% OK**.
+
+- **Chạy toàn bộ 60 test cases kiểm thử hồi quy hệ thống (M0 -> DEPLOY):**
+  ```bash
+  python test_m0.py ; python test_m1.py ; python test_m2.py ; python test_m3.py ; python test_m3_plus.py ; python test_m4_lite.py ; python test_m_ai.py ; python test_m_ai_plus.py ; python test_m6.py ; python test_m_chat.py ; python test_deploy.py
+  ```
+  * Kết quả: **60/60 test cases đạt chuẩn 100% OK**.
+
+---
+
+## 18. Tính bảo mật và biến môi trường
 - File `.env` chứa `GEMINI_API_KEY` và `FLASK_SECRET_KEY` được bảo vệ nghiêm ngặt bằng `.gitignore`, **TUYỆT ĐỐI KHÔNG BAO GIỜ** được push lên GitHub công khai.
 - Cung cấp file mẫu `.env.example` với hướng dẫn cấu hình chi tiết cho các trường triển khai.
+
 
 
 

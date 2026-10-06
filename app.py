@@ -46,7 +46,8 @@ CONFIG_PATH = BASE_DIR / "config.yaml"
 
 # Khởi tạo ứng dụng Flask
 app = Flask(__name__)
-app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY", "timebank-edu-secret-key-2026")
+# Bảo mật: SECRET_KEY đọc từ biến môi trường khi deploy production
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY") or os.getenv("FLASK_SECRET_KEY") or "timebank-edu-secret-key-2026"
 
 # Bộ nhớ đệm kết quả gợi ý ghép cặp hàng ngày: key = (user_id, YYYY-MM-DD), val = (matches, is_live, subject)
 DAILY_RECOMMENDATION_CACHE = {}
@@ -163,21 +164,149 @@ def handle_forbidden(e):
 
 
 # ==============================================================================
-# QUẢN LÝ KẾT NỐI VÀ KHỞI TẠO CƠ SỞ DỮ LIỆU SQLITE
+# QUẢN LÝ KẾT NỐI VÀ KHỞI TẠO CƠ SỞ DỮ LIỆU (SQLITE & POSTGRESQL DEPLOYMENT)
 # ==============================================================================
+
+def is_postgres_configured():
+    """
+    Kiểm tra xem hệ thống có được cấu hình kết nối PostgreSQL qua biến môi trường DATABASE_URL hay không.
+    - Có DATABASE_URL (ví dụ khi Deploy trên Render) -> Trả về True (dùng PostgreSQL).
+    - Không có DATABASE_URL (mặc định môi trường trường học) -> Trả về False (dùng SQLite cục bộ).
+    """
+    url = os.getenv("DATABASE_URL", "").strip()
+    return bool(url and (url.startswith("postgres://") or url.startswith("postgresql://")))
+
+
+def get_postgres_url():
+    """
+    Chuẩn hóa URL kết nối PostgreSQL (Render thường cung cấp URL bắt đầu bằng postgres://,
+    cần đổi thành postgresql:// để tương thích với thư viện psycopg2).
+    """
+    url = os.getenv("DATABASE_URL", "").strip()
+    if url.startswith("postgres://"):
+        url = url.replace("postgres://", "postgresql://", 1)
+    return url
+
+
+class PostgresCursorWrapper:
+    """
+    Lớp bọc con trỏ PostgreSQL (psycopg2) để tương thích trong suốt với mã nguồn SQLite:
+    - Tự động chuyển đổi ký tự giữ chỗ (placeholder) từ '?' của SQLite sang '%s' của PostgreSQL.
+    - Hỗ trợ thuộc tính lastrowid đối với các câu lệnh INSERT (bằng cách bổ sung RETURNING id).
+    - Hỗ trợ cả truy cập cột theo tên (row['cot']) và theo chỉ số số nguyên (row[0]).
+    """
+    def __init__(self, cursor):
+        self._cur = cursor
+        self._lastrowid = None
+
+    def execute(self, query, params=None):
+        converted_query = query
+        # Chuyển đổi '?' thành '%s' cho psycopg2 nếu có
+        if "?" in converted_query:
+            converted_query = converted_query.replace("?", "%s")
+
+        is_insert = converted_query.strip().upper().startswith("INSERT INTO")
+        has_returning = "RETURNING" in converted_query.upper()
+
+        if is_insert and not has_returning:
+            cleaned = converted_query.rstrip("; \t\n")
+            converted_query = f"{cleaned} RETURNING id;"
+
+        if params is not None:
+            self._cur.execute(converted_query, params)
+        else:
+            self._cur.execute(converted_query)
+
+        if is_insert and not has_returning:
+            try:
+                row = self._cur.fetchone()
+                self._lastrowid = row[0] if row else None
+            except Exception:
+                self._lastrowid = None
+        else:
+            self._lastrowid = None
+
+        return self
+
+    def executemany(self, query, seq_of_params):
+        converted_query = query
+        if "?" in converted_query:
+            converted_query = converted_query.replace("?", "%s")
+        return self._cur.executemany(converted_query, seq_of_params)
+
+    def fetchone(self):
+        return self._cur.fetchone()
+
+    def fetchall(self):
+        return self._cur.fetchall()
+
+    @property
+    def lastrowid(self):
+        return self._lastrowid
+
+    @property
+    def rowcount(self):
+        return self._cur.rowcount
+
+    def close(self):
+        self._cur.close()
+
+
+class PostgresConnectionWrapper:
+    """
+    Lớp bọc kết nối PostgreSQL để cung cấp giao diện tương tự đối tượng connection của sqlite3.
+    """
+    def __init__(self, conn):
+        self._conn = conn
+
+    def cursor(self):
+        import psycopg2.extras
+        raw_cur = self._conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        return PostgresCursorWrapper(raw_cur)
+
+    def execute(self, query, params=None):
+        cur = self.cursor()
+        cur.execute(query, params)
+        return cur
+
+    def commit(self):
+        self._conn.commit()
+
+    def rollback(self):
+        self._conn.rollback()
+
+    def close(self):
+        self._conn.close()
+
+
 def get_db():
     """
-    Mở kết nối tới cơ sở dữ liệu SQLite cục bộ cho mỗi request.
-    Sử dụng sqlite3.Row để dễ dàng truy xuất các cột theo tên.
+    Mở kết nối tới cơ sở dữ liệu cho mỗi request:
+    - Nếu có biến môi trường DATABASE_URL: Tự động kết nối PostgreSQL.
+    - Nếu không có: Sử dụng SQLite cục bộ (database/timebank.db).
     """
     if "db" not in g:
-        g.db = sqlite3.connect(
-            DATABASE_PATH,
-            detect_types=sqlite3.PARSE_DECLTYPES
-        )
-        g.db.row_factory = sqlite3.Row
-        # Kích hoạt tính năng kiểm tra khóa ngoại (Foreign Keys) trong SQLite
-        g.db.execute("PRAGMA foreign_keys = ON")
+        if is_postgres_configured():
+            try:
+                import psycopg2
+                pg_url = get_postgres_url()
+                raw_conn = psycopg2.connect(pg_url)
+                g.db = PostgresConnectionWrapper(raw_conn)
+            except Exception as e:
+                app.logger.warning(f"Lỗi kết nối PostgreSQL ({e}), tự động chuyển về SQLite dự phòng.")
+                g.db = sqlite3.connect(
+                    DATABASE_PATH,
+                    detect_types=sqlite3.PARSE_DECLTYPES
+                )
+                g.db.row_factory = sqlite3.Row
+                g.db.execute("PRAGMA foreign_keys = ON")
+        else:
+            g.db = sqlite3.connect(
+                DATABASE_PATH,
+                detect_types=sqlite3.PARSE_DECLTYPES
+            )
+            g.db.row_factory = sqlite3.Row
+            g.db.execute("PRAGMA foreign_keys = ON")
     return g.db
 
 
@@ -193,11 +322,48 @@ def close_db(error=None):
 
 def init_db():
     """
-    Khởi tạo cấu trúc cơ sở dữ liệu (13 bảng) từ file database/schema.sql.
-    Đồng thời tự động nạp dữ liệu mẫu ban đầu nếu hệ thống chưa có dữ liệu,
-    bao gồm tài khoản quản trị sẵn: admin/admin123.
+    Khởi tạo cấu trúc cơ sở dữ liệu (13 bảng):
+    - Đọc DATABASE_URL từ biến môi trường:
+      + Có -> Kết nối PostgreSQL, tự động chuẩn hóa schema.sql và nạp seed data nếu bảng chưa có.
+      + Không -> Khởi tạo vào SQLite cục bộ (database/timebank.db).
     """
-    # Đảm bảo thư mục database tồn tại
+    global DAILY_RECOMMENDATION_CACHE
+    DAILY_RECOMMENDATION_CACHE.clear()
+
+    if is_postgres_configured():
+        try:
+            import psycopg2
+            pg_url = get_postgres_url()
+            raw_conn = psycopg2.connect(pg_url)
+            conn = PostgresConnectionWrapper(raw_conn)
+
+            with open(SCHEMA_PATH, "r", encoding="utf-8") as f:
+                schema_sql = f.read()
+
+            pg_schema = schema_sql.replace("INTEGER PRIMARY KEY AUTOINCREMENT", "SERIAL PRIMARY KEY")
+            pg_schema = pg_schema.replace("PRAGMA foreign_keys = ON;", "")
+
+            cur = conn.cursor()
+            for stmt in pg_schema.split(";"):
+                stmt = stmt.strip()
+                if stmt:
+                    try:
+                        cur.execute(stmt)
+                    except Exception:
+                        pass
+            conn.commit()
+
+            cur.execute("SELECT COUNT(*) FROM users")
+            row = cur.fetchone()
+            user_count = row[0] if row else 0
+            if user_count == 0:
+                seed_demo_data(conn)
+            conn.close()
+            return
+        except Exception as e:
+            app.logger.warning(f"Không thể khởi tạo CSDL PostgreSQL ({e}), tiếp tục dùng SQLite.")
+
+    # Mặc định: Dùng SQLite cục bộ
     DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
     
     conn = sqlite3.connect(DATABASE_PATH)
@@ -208,11 +374,6 @@ def init_db():
         
     conn.commit()
     
-    # Xóa bộ nhớ đệm gợi ý hàng ngày khi khởi tạo CSDL mới
-    global DAILY_RECOMMENDATION_CACHE
-    DAILY_RECOMMENDATION_CACHE.clear()
-    
-    # Kiểm tra xem đã có dữ liệu người dùng mẫu chưa, nếu chưa thì nạp dữ liệu ban đầu
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) FROM users")
     user_count = cursor.fetchone()[0]
@@ -221,6 +382,7 @@ def init_db():
         seed_demo_data(conn)
         
     conn.close()
+
 
 
 def seed_demo_data(conn):
@@ -3012,16 +3174,23 @@ def api_contact():
 # ĐIỂM KHỞI CHẠY CHÍNH (CHẠY BẰNG ĐÚNG 1 LỆNH)
 # ==============================================================================
 if __name__ == "__main__":
-    # Tự động khởi tạo database nếu chưa có tệp database/timebank.db
+    # Tự động khởi tạo database nếu chưa có tệp database/timebank.db hoặc bảng trên PostgreSQL
     init_db()
     
     config = load_school_config()
+    port = int(os.getenv("PORT", 5000))
+    debug_mode = os.getenv("FLASK_DEBUG", "0").lower() in ("1", "true")
+    db_mode_str = "PostgreSQL (DATABASE_URL)" if is_postgres_configured() else "SQLite cục bộ (Single-Tenant)"
+
     print("=" * 70)
     print("🏫 TIMEBANK EDU - NGÂN HÀNG THỜI GIAN HỌC ĐƯỜNG")
     print(f"📍 Đơn vị: {config.get('ten_truong')}")
-    print("🚀 Máy chủ đang khởi động tại: http://127.0.0.1:5000")
+    print(f"🚀 Máy chủ đang khởi động tại: http://127.0.0.1:{port}")
+    print(f"⚙️ Chế độ cơ sở dữ liệu: {db_mode_str}")
+    print(f"🛡️ Debug Mode: {'BẬT' if debug_mode else 'TẮT (Production)'}")
     print("🔑 Tài khoản quản trị mặc định: admin / admin123")
     print("=" * 70)
     
-    # Khởi chạy Flask Server trên cổng 5000
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    # Khởi chạy Flask Server
+    app.run(host="0.0.0.0", port=port, debug=debug_mode)
+
