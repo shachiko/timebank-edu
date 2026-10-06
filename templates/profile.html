@@ -164,6 +164,55 @@
           {% endif %}
         </div>
       </div>
+
+      <!-- Khối AI Tóm tắt phản hồi học sinh (Điểm chạm 4) -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-chat-heart-fill text-danger me-2"></i>AI Tóm Tắt Phản Hồi</h6>
+          <span class="badge-ai" style="font-size: 0.7rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Gemini)</span>
+        </div>
+        <small class="text-muted d-block mb-3">Đúc kết từ các nhận xét thực tế của bạn bè sau các buổi bạn kèm cặp</small>
+
+        {% if ai_feedback %}
+          <!-- Điểm mạnh -->
+          <div class="mb-3">
+            <span class="badge bg-success bg-opacity-10 text-success fw-semibold mb-1">
+              <i class="bi bi-hand-thumbs-up-fill me-1"></i> Điểm mạnh nổi bật
+            </span>
+            <ul class="list-unstyled small text-secondary mb-0 ps-1">
+              {% for dm in ai_feedback.diem_manh %}
+                <li class="mb-1"><i class="bi bi-check-circle-fill text-success me-1"></i> {{ dm }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+
+          <!-- Gợi ý cải thiện -->
+          <div class="mb-3">
+            <span class="badge bg-warning bg-opacity-10 text-dark fw-semibold mb-1">
+              <i class="bi bi-lightbulb-fill text-warning me-1"></i> Gợi ý hoàn thiện kỹ năng
+            </span>
+            <ul class="list-unstyled small text-secondary mb-0 ps-1">
+              {% for ct in ai_feedback.cai_thien %}
+                <li class="mb-1"><i class="bi bi-arrow-right-circle-fill text-warning me-1"></i> {{ ct }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+
+          <!-- Lời nhắn khích lệ -->
+          {% if ai_feedback.loi_nhan %}
+          <div class="p-2 rounded-3 bg-light border small text-primary fst-italic">
+            <i class="bi bi-quote me-1"></i>{{ ai_feedback.loi_nhan }}
+          </div>
+          {% endif %}
+        {% else %}
+          <div class="text-center py-3 text-muted small">
+            <i class="bi bi-chat-square-text fs-3 d-block mb-1"></i>
+            Bạn chưa nhận được đánh giá nào từ học sinh để AI tổng hợp.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+      </div>
     </div>
   </div>
 </div>

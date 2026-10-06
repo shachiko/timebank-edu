@@ -82,6 +82,81 @@
     </div>
   </div>
 
+  <!-- KHỐI AI CẢNH BÁO SỚM QUẢN TRỊ (ĐIỂM CHẠM 5) -->
+  {% if ai_warnings %}
+  <div class="card border-0 shadow-sm rounded-4 bg-white mb-4 overflow-hidden border-start border-4 border-danger">
+    <div class="card-header bg-white border-bottom py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <div>
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge bg-danger rounded-pill px-2 py-1"><i class="bi bi-shield-exclamation me-1"></i> CẢNH BÁO SỚM SƯ PHẠM</span>
+          <span class="badge-ai" style="font-size: 0.75rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Gemini)</span>
+        </div>
+        <h5 class="fw-bold mb-0 text-dark mt-1">Phát Hiện Nguy Cơ Học Đường Cần Can Thiệp</h5>
+      </div>
+      <small class="text-muted">Tự động quét học sinh ngưng hoạt động (>7 ngày) và cặp đôi xung đột (≤2★)</small>
+    </div>
+
+    <div class="card-body p-4">
+      <div class="row g-4">
+        <!-- 1. Học sinh ngưng hoạt động > 7 ngày -->
+        <div class="col-md-6">
+          <h6 class="fw-bold text-dark mb-2">
+            <i class="bi bi-person-x-fill text-danger me-1"></i>Học sinh > 7 ngày không tham gia phiên ({{ ai_warnings.inactive_students|length }})
+          </h6>
+          {% if ai_warnings.inactive_students %}
+            <div class="list-group list-group-flush border rounded-3 overflow-hidden">
+              {% for s in ai_warnings.inactive_students[:5] %}
+              <div class="list-group-item py-2 px-3">
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="fw-semibold text-dark">{{ s.ho_ten }}</span>
+                  <span class="badge bg-light text-secondary border">Lớp {{ s.lop }}</span>
+                </div>
+                <small class="text-danger d-block">{{ s.ly_do }}</small>
+              </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="p-3 bg-light rounded-3 text-muted small text-center">
+              <i class="bi bi-check-circle-fill text-success me-1"></i> Mọi học sinh đều duy trì hoạt động đều đặn.
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- 2. Cặp đôi bị đánh giá thấp >= 2 lần -->
+        <div class="col-md-6">
+          <h6 class="fw-bold text-dark mb-2">
+            <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>Cặp đôi đánh giá ≤ 2★ từ 2 lần trở lên ({{ ai_warnings.low_rated_pairs|length }})
+          </h6>
+          {% if ai_warnings.low_rated_pairs %}
+            <div class="list-group list-group-flush border rounded-3 overflow-hidden">
+              {% for p in ai_warnings.low_rated_pairs %}
+              <div class="list-group-item py-2 px-3">
+                <div class="fw-semibold text-dark">{{ p.nguoi_danh_gia }} ↔ {{ p.nguoi_duoc_danh_gia }}</div>
+                <small class="text-warning text-dark-emphasis d-block">{{ p.mo_ta }}</small>
+              </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="p-3 bg-light rounded-3 text-muted small text-center">
+              <i class="bi bi-check-circle-fill text-success me-1"></i> Không ghi nhận cặp đôi nào có xung đột đánh giá thấp lặp lại.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Lời khuyên can thiệp sư phạm từ AI -->
+      {% if ai_warnings.ai_recommendations %}
+      <div class="mt-4 p-3 rounded-4 bg-light border">
+        <div class="fw-bold text-primary small mb-1">
+          <i class="bi bi-magic me-1"></i> Đề xuất can thiệp sư phạm nhân văn từ Gemini:
+        </div>
+        <div class="small text-secondary" style="white-space: pre-line;">{{ ai_warnings.ai_recommendations }}</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
   <!-- Danh sách người dùng -->
   <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
     <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">

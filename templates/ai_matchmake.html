@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}AI Gợi ý ghép cặp bạn học - {{ config.ten_truong }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Tiêu đề trang -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+      <a href="{{ url_for('skills_market') }}" class="btn btn-outline-secondary btn-sm mb-2 rounded-pill">
+        <i class="bi bi-arrow-left me-1"></i> Quay lại Chợ kỹ năng
+      </a>
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge-ai fs-6 px-3 py-1"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Gemini)</span>
+        {% if not is_live %}
+          <span class="badge bg-secondary">Chế độ cơ bản</span>
+        {% endif %}
+      </div>
+      <h2 class="fw-bold mb-0 text-dark mt-1">Trợ Lý AI Ghép Cặp Bạn Học</h2>
+      <p class="text-muted small mb-0">Hệ thống phân tích nhu cầu, phong cách học tập và lịch rảnh để gợi ý 3 bạn gia sư tương thích nhất</p>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Cột trái: Form nhập nhu cầu học tập -->
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+        <h5 class="fw-bold text-dark mb-3">
+          <i class="bi bi-sliders text-primary me-2"></i>Nhu Cầu Học Tập Của Bạn
+        </h5>
+
+        <form method="POST" action="{{ url_for('ai_matchmake_view') }}">
+          <div class="mb-3">
+            <label class="form-label fw-semibold text-dark">1. Môn học / Kỹ năng cần tìm gia sư <span class="text-danger">*</span></label>
+            <input type="text" name="mon_hoc" class="form-control" placeholder="Ví dụ: Hình học không gian, Tiếng Anh giao tiếp, Python..." value="{{ form_data.mon_hoc if form_data else '' }}" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold text-dark">2. Trình độ hiện tại của bạn</label>
+            <select name="trinh_do" class="form-select">
+              <option value="Mất gốc / Người mới bắt đầu" {% if form_data and form_data.trinh_do == 'Mất gốc / Người mới bắt đầu' %}selected{% endif %}>Mất gốc / Bắt đầu từ đầu</option>
+              <option value="Cơ bản (Cần luyện thêm bài tập)" {% if not form_data or form_data.trinh_do == 'Cơ bản (Cần luyện thêm bài tập)' %}selected{% endif %}>Cơ bản (Cần luyện thêm bài tập)</option>
+              <option value="Khá (Muốn nâng cao tư duy)" {% if form_data and form_data.trinh_do == 'Khá (Muốn nâng cao tư duy)' %}selected{% endif %}>Khá (Muốn nâng cao tư duy)</option>
+              <option value="Ôn thi học kỳ / Đề thi tốt nghiệp" {% if form_data and form_data.trinh_do == 'Ôn thi học kỳ / Đề thi tốt nghiệp' %}selected{% endif %}>Ôn thi học kỳ / Kỳ thi quan trọng</option>
+            </select>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label fw-semibold text-dark">3. Khung giờ bạn rảnh rỗi</label>
+            <input type="text" name="gio_ranh" class="form-control" placeholder="Ví dụ: Chiều thứ 3, sáng thứ 7, tối thứ 6..." value="{{ form_data.gio_ranh if form_data else user_gio_ranh }}">
+            <div class="form-text small">AI sẽ đối soát với giờ rảnh của các bạn gia sư để tìm người trùng lịch nhất.</div>
+          </div>
+
+          <button type="submit" class="btn btn-brand w-100 py-2 fw-bold shadow-sm">
+            <i class="bi bi-stars me-1"></i> Nhờ Gemini Ghép Cặp Ngay
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Cột phải: Kết quả 3 ứng viên do AI chọn lọc -->
+    <div class="col-lg-7">
+      {% if matches is not none %}
+        <div class="mb-3 d-flex justify-content-between align-items-center">
+          <h5 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-award-fill text-warning me-2"></i>3 Bạn Gia Sư Phù Hợp Nhất Từ AI
+          </h5>
+          <span class="badge bg-light text-primary border">Tìm thấy {{ matches|length }} gợi ý</span>
+        </div>
+
+        {% if matches %}
+          <div class="d-flex flex-column gap-3">
+            {% for item in matches %}
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white position-relative hover-shadow border-start border-4 border-primary">
+              <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-start gap-2 mb-2">
+                <div>
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold">{{ item.linh_vuc }}</span>
+                    <span class="badge bg-warning bg-opacity-25 text-dark fw-bold">
+                      <i class="bi bi-star-fill text-warning me-1"></i>{{ item.sao_tb }}★
+                    </span>
+                  </div>
+                  <h5 class="fw-bold text-dark mb-1">{{ item.tieu_de }}</h5>
+                  <div class="text-muted small">
+                    Gia sư: <strong class="text-dark">{{ item.ho_ten }}</strong> (Lớp {{ item.lop }})
+                    {% if item.gio_ranh %} • <i class="bi bi-clock me-1 text-primary"></i>Rảnh: {{ item.gio_ranh }}{% endif %}
+                  </div>
+                </div>
+
+                <!-- Nút đặt lịch -->
+                <button type="button" class="btn btn-outline-brand btn-sm text-nowrap fw-semibold mt-2 mt-sm-0" data-bs-toggle="modal" data-bs-target="#bookModal{{ item.id }}">
+                  <i class="bi bi-calendar-plus me-1"></i> Đặt lịch ngay
+                </button>
+              </div>
+
+              <!-- Lời giải thích từ AI -->
+              <div class="p-2 rounded-3 bg-light border small mt-2">
+                <span class="badge-ai me-1" style="font-size: 0.65rem;"><i class="bi bi-stars"></i> Đánh giá AI</span>
+                <span class="text-dark fw-medium">{{ item.ai_ly_do }}</span>
+              </div>
+            </div>
+
+            <!-- Modal Đặt lịch nhanh cho kỹ năng này -->
+            <div class="modal fade" id="bookModal{{ item.id }}" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content rounded-4 border-0 shadow">
+                  <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold text-dark">Đặt Lịch Học Kèm Với {{ item.ho_ten }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <form method="POST" action="{{ url_for('book_session') }}">
+                    <input type="hidden" name="skill_id" value="{{ item.id }}">
+                    <div class="modal-body pt-3">
+                      <div class="mb-3">
+                        <label class="form-label small text-muted">Chuyên đề học tập</label>
+                        <input type="text" class="form-control fw-semibold" value="{{ item.tieu_de }}" readonly>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label small text-muted">Thời gian hẹn học <span class="text-danger">*</span></label>
+                        <input type="datetime-local" name="thoi_gian_bat_dau" class="form-control" required>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label small text-muted">Thời lượng học (Tối đa 2.0h/phiên)</label>
+                        <select name="so_gio" class="form-select">
+                          <option value="1.0" selected>1.0 giờ (1 tín dụng)</option>
+                          <option value="1.5">1.5 giờ (1.5 tín dụng)</option>
+                          <option value="2.0">2.0 giờ (2 tín dụng)</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="modal-footer border-top-0 pt-0">
+                      <button type="button" class="btn btn-light" data-bs-dismiss="modal">Đóng</button>
+                      <button type="submit" class="btn btn-brand fw-semibold">Xác nhận đặt lịch</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="card border-0 shadow-sm rounded-4 p-5 bg-white text-center text-muted">
+            <i class="bi bi-search fs-1 d-block mb-2 text-secondary"></i>
+            Chưa tìm thấy gia sư phù hợp với môn học này. Hãy thử tìm kiếm với từ khóa rộng hơn nhé!
+          </div>
+        {% endif %}
+      {% else %}
+        <!-- Trạng thái chờ người dùng nhập thông tin -->
+        <div class="card border-0 shadow-sm rounded-4 p-5 bg-white text-center h-100 d-flex flex-column align-items-center justify-content-center">
+          <div class="p-3 bg-primary bg-opacity-10 text-primary rounded-circle mb-3">
+            <i class="bi bi-cpu fs-1"></i>
+          </div>
+          <h5 class="fw-bold text-dark">Hãy Nhập Nhu Cầu Của Bạn</h5>
+          <p class="text-muted small max-w-sm mb-0">
+            Trợ lý AI sẽ duyệt qua hàng chục chuyên đề trên Chợ kỹ năng, đánh giá số sao và thời gian rảnh để chọn ra 3 người bạn gia sư lý tưởng nhất cho bạn.
+          </p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -26,6 +26,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask import (
     Flask, render_template, request, jsonify, g, flash, redirect, url_for, session, abort
 )
+from ai_service import (
+    ai_moderate_skill, ai_matchmake, ai_generate_lesson_plan, 
+    ai_summarize_feedback, ai_admin_early_warning, is_ai_live
+)
 
 # 1. Tải các biến môi trường từ file .env (nếu có)
 # Lưu ý: File .env chứa API Key tuyệt đối không được đưa lên GitHub
@@ -609,11 +613,22 @@ def profile():
     )
     my_skills = cur.fetchall()
 
+    # Điểm chạm 4: AI Tóm tắt phản hồi học sinh dành cho bạn gia sư (Gemini Pro)
+    cur.execute(
+        """SELECT so_sao, nhan_xet FROM ratings 
+           WHERE nguoi_duoc_danh_gia_id = ? 
+           ORDER BY id DESC LIMIT 20""",
+        (user["id"],)
+    )
+    user_ratings = cur.fetchall()
+    ai_feedback, _ = ai_summarize_feedback(db, user["id"], user_ratings)
+
     return render_template(
         "profile.html",
         user=user,
         ledger_entries=ledger_entries,
-        my_skills=my_skills
+        my_skills=my_skills,
+        ai_feedback=ai_feedback
     )
 
 
@@ -625,6 +640,7 @@ def admin_dashboard():
     - CHỈ ADMIN mới có quyền truy cập. Học sinh và giáo viên bị chặn 403 Forbidden.
     - Thống kê toàn trường: người dùng, số học sinh mở sổ, tổng giờ lưu thông
     - Quản lý danh sách tài khoản người dùng
+    - Điểm chạm 5: AI Cảnh báo sớm quản trị học đường (học sinh ngưng học > 7 ngày, cặp đôi xung đột)
     """
     db = get_db()
     cur = db.cursor()
@@ -640,12 +656,16 @@ def admin_dashboard():
     cur.execute("SELECT COUNT(*) FROM skills WHERE trang_thai_duyet = 'cho_duyet'")
     pending_skills_count = cur.fetchone()[0]
 
+    # Điểm chạm 5: Quét và đưa ra khuyến nghị can thiệp sư phạm sớm từ AI
+    ai_warnings = ai_admin_early_warning(db, session["user_id"])
+
     return render_template(
         "admin.html",
         users=all_users,
         student_count=student_count,
         total_credits=total_credits,
-        pending_skills_count=pending_skills_count
+        pending_skills_count=pending_skills_count,
+        ai_warnings=ai_warnings
     )
 
 
@@ -745,6 +765,59 @@ def skills_market():
     )
 
 
+@app.route("/skills/matchmake", methods=["GET", "POST"])
+@login_required
+def ai_matchmake_view():
+    """
+    Điểm chạm 2: AI Gợi ý ghép cặp bạn học (Gemini Pro):
+    - Học sinh nhập môn cần học, trình độ, khung giờ rảnh.
+    - AI lọc trong danh sách các gia sư có kỹ năng 'da_duyet' và chọn ra 3 người phù hợp nhất.
+    - Trình bày lời nhận xét sư phạm và nút 'Đặt lịch ngay'.
+    """
+    db = get_db()
+    cur = db.cursor()
+    user_id = session["user_id"]
+    
+    cur.execute("SELECT gio_ranh FROM users WHERE id = ?", (user_id,))
+    user_row = cur.fetchone()
+    user_gio_ranh = user_row["gio_ranh"] if user_row and user_row["gio_ranh"] else ""
+    
+    matches = None
+    form_data = None
+    is_live = is_ai_live()
+    
+    if request.method == "POST":
+        mon_hoc = request.form.get("mon_hoc", "").strip()
+        trinh_do = request.form.get("trinh_do", "").strip()
+        gio_ranh = request.form.get("gio_ranh", "").strip()
+        form_data = {"mon_hoc": mon_hoc, "trinh_do": trinh_do, "gio_ranh": gio_ranh}
+        
+        if mon_hoc:
+            # Lấy danh sách kỹ năng đã duyệt của các bạn khác
+            cur.execute("""
+                SELECT s.*, u.ho_ten, u.lop, u.gio_ranh,
+                       ROUND(COALESCE(AVG(r.so_sao), 5.0), 1) AS sao_tb
+                FROM skills s
+                JOIN users u ON s.user_id = u.id
+                LEFT JOIN sessions ses ON s.id = ses.skill_id AND ses.trang_thai = 'hoan_thanh'
+                LEFT JOIN ratings r ON ses.id = r.session_id AND r.nguoi_duoc_danh_gia_id = u.id
+                WHERE s.trang_thai_duyet = 'da_duyet' AND s.user_id != ?
+                GROUP BY s.id
+                ORDER BY s.id DESC
+            """, (user_id,))
+            candidates = cur.fetchall()
+            
+            matches, is_live = ai_matchmake(db, user_id, mon_hoc, trinh_do, gio_ranh, candidates)
+            
+    return render_template(
+        "ai_matchmake.html",
+        matches=matches,
+        form_data=form_data,
+        user_gio_ranh=user_gio_ranh,
+        is_live=is_live
+    )
+
+
 @app.route("/skills/new", methods=["GET", "POST"])
 @login_required
 def new_skill():
@@ -771,15 +844,29 @@ def new_skill():
         db = get_db()
         cur = db.cursor()
         
+        # Điểm chạm 1: AI Kiểm duyệt kỹ năng (Gemini Pro)
+        is_approved, ai_reason, is_live = ai_moderate_skill(
+            db, session["user_id"], linh_vuc, tieu_de, mo_ta
+        )
+        
+        # Nếu PHU_HOP -> da_duyet (sẵn sàng trên Chợ kỹ năng)
+        # Nếu KHONG_PHU_HOP -> cho_duyet (chuyển giáo viên duyệt tay)
+        trang_thai_duyet = "da_duyet" if is_approved else "cho_duyet"
+        ai_tag = "Hỗ trợ bởi AI (Gemini): " if is_live else "Hỗ trợ bởi AI (Chế độ cơ bản): "
+        ly_do_luu = f"{ai_tag}{ai_reason}"
+        
         cur.execute(
             """INSERT INTO skills 
                (user_id, linh_vuc, tieu_de, mo_ta, trang_thai_duyet, ly_do_ai_kiem_duyet) 
-               VALUES (?, ?, ?, ?, 'cho_duyet', ?)""",
-            (session["user_id"], linh_vuc, tieu_de, mo_ta, "Nội dung học tập tích cực, chờ giáo viên phê duyệt")
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            (session["user_id"], linh_vuc, tieu_de, mo_ta, trang_thai_duyet, ly_do_luu)
         )
         db.commit()
         
-        flash("Đăng ký kỹ năng thành công! Kỹ năng đang ở trạng thái 'Chờ duyệt' trước khi hiển thị trên Chợ kỹ năng.", "success")
+        if is_approved:
+            flash(f"Đăng ký thành công! {ly_do_luu}. Kỹ năng đã sẵn sàng trên Chợ kỹ năng.", "success")
+        else:
+            flash(f"Kỹ năng đang ở trạng thái 'Chờ duyệt' để Giáo viên thẩm định thêm. {ly_do_luu}", "warning")
         return redirect(url_for("profile"))
         
     return render_template("skills_new.html")
@@ -1061,6 +1148,57 @@ def session_detail(session_id):
         is_learner=is_learner,
         is_admin=is_admin
     )
+
+
+@app.route("/sessions/<int:session_id>/ai-lesson-plan", methods=["POST"])
+@login_required
+def generate_ai_lesson_plan_route(session_id):
+    """
+    Điểm chạm 3: AI Soạn dàn ý buổi học (Gemini Pro):
+    - Người dạy (Gia sư) hoặc GV/Admin yêu cầu AI soạn dàn ý sư phạm.
+    - Tạo cấu trúc 60 phút: Mở đầu 5', Trọng tâm 25', Luyện tập 20', Tổng kết 10'.
+    - Lưu kết quả vào sessions.dan_y_ai và ghi nhận vào ai_logs.
+    """
+    db = get_db()
+    cur = db.cursor()
+    user_id = session["user_id"]
+    user_role = session.get("vai_tro", "")
+
+    cur.execute(
+        """SELECT s.*, sk.tieu_de, sk.linh_vuc, sk.mo_ta 
+           FROM sessions s
+           JOIN skills sk ON s.skill_id = sk.id
+           WHERE s.id = ?""",
+        (session_id,)
+    )
+    s_row = cur.fetchone()
+    if not s_row:
+        flash("Phiên học không tồn tại!", "danger")
+        return redirect(url_for("my_schedule"))
+
+    # Kiểm tra quyền: người dạy hoặc GV/Admin
+    if s_row["nguoi_day_id"] != user_id and user_role not in ("admin", "giao_vien"):
+        flash("Chỉ người dạy (Gia sư) của phiên học này mới có thể nhờ AI soạn dàn ý!", "danger")
+        return redirect(url_for("session_detail", session_id=session_id))
+
+    dan_y, is_live = ai_generate_lesson_plan(
+        db, user_id, session_id,
+        s_row["tieu_de"], s_row["linh_vuc"], s_row["mo_ta"],
+        s_row["so_gio"]
+    )
+
+    cur.execute(
+        "UPDATE sessions SET dan_y_ai = ? WHERE id = ?",
+        (dan_y, session_id)
+    )
+    db.commit()
+
+    if is_live:
+        flash("AI (Gemini Pro) đã soạn xong dàn ý buổi học 4 bước chuẩn 60 phút!", "success")
+    else:
+        flash("Đã tạo dàn ý buổi học 4 bước chuẩn 60 phút (Hỗ trợ bởi AI - Chế độ cơ bản)!", "info")
+
+    return redirect(url_for("session_detail", session_id=session_id))
 
 
 @app.route("/sessions/<int:session_id>/checkin", methods=["POST"])

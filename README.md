@@ -238,7 +238,57 @@ Hệ thống thiết lập sẵn các tài khoản để Ban Giám khảo và gi
 
 ---
 
-## 12. Tính trung thực về AI
-Hệ thống tuân thủ nghiêm ngặt nguyên tắc minh bạch: Mọi vị trí có sự tham gia của Trí tuệ nhân tạo (kiểm duyệt, gợi ý ghép cặp, dàn ý buổi học, tạo trắc nghiệm) đều được gắn nhãn nhận diện rõ ràng: **"Hỗ trợ bởi AI (Gemini)"**.
+---
+
+## 12. Trợ lý AI Thông minh & 5 Điểm chạm Sư phạm (Milestone M-AI)
+
+Tích hợp Trợ lý Trí tuệ Nhân tạo thế hệ mới (Gemini Pro API) đồng hành cùng học sinh và giáo viên trong toàn bộ chu trình trao đổi tri thức học đường:
+
+### 5 Điểm chạm AI Cốt lõi:
+1. **AI Kiểm duyệt kỹ năng (`ai_moderate_skill`):**
+   - Khi học sinh đăng ký kỹ năng mới (`/skills/new`), AI thẩm định tính phù hợp với môi trường sư phạm phổ thông.
+   - Nội dung tích cực, lành mạnh $\rightarrow$ Phê duyệt tự động (`da_duyet`), hiển thị ngay trên Chợ kỹ năng.
+   - Nội dung có dấu hiệu vi phạm (bạo lực, cờ bạc, gian lận thi cử) $\rightarrow$ Chuyển trạng thái `'cho_duyet'` để Giáo viên duyệt tay, ghi nhận lý do sư phạm vào `ly_do_ai_kiem_duyet`.
+2. **AI Gợi ý ghép cặp bạn học (`ai_matchmake`):**
+   - Nút nổi bật **"AI Gợi Ý Ghép Cặp"** tại Chợ kỹ năng dẫn đến giao diện `/skills/matchmake`.
+   - Học sinh nhập môn học cần bổ trợ, trình độ và khung giờ rảnh.
+   - Gemini chọn lọc 3 gia sư phù hợp nhất, đưa ra lời giải thích sư phạm tiếng Việt ngắn gọn và nút **"Đặt lịch ngay"**.
+3. **AI Soạn dàn ý buổi học 4 bước 60 phút (`ai_generate_lesson_plan`):**
+   - Trong trang chi tiết phiên học (`/sessions/<id>`), người dạy bấm nút **"Nhờ AI soạn dàn ý"**.
+   - Gemini xây dựng cấu trúc bài học chuẩn mực 60 phút: *Mở đầu & Khởi động (5 phút)*, *Kiến thức trọng tâm (25 phút)*, *Kèm cặp & Luyện tập (20 phút)*, *Tổng kết & Đánh giá (10 phút)*.
+   - Dàn ý lưu trực tiếp vào trường `sessions.dan_y_ai` để cả 2 bên cùng theo dõi.
+4. **AI Tóm tắt phản hồi học sinh (`ai_summarize_feedback`):**
+   - Hiển thị tại Dashboard/Hồ sơ người dạy (`/profile`).
+   - Tổng hợp các đánh giá thực tế của bạn bè thành: **Điểm mạnh nổi bật** (2-3 ý) + **Gợi ý hoàn thiện** (2-3 ý) bằng giọng văn sư phạm chân thành, khích lệ.
+5. **AI Cảnh báo sớm quản trị học đường (`ai_admin_early_warning`):**
+   - Hiển thị tại Bảng điều khiển Quản trị (`/admin`) cho Ban Giám Hiệu và Giáo viên chủ nhiệm.
+   - Tự động quét và phát hiện:
+     * Học sinh hơn 7 ngày không tham gia phiên học nào (nguy cơ bị cô lập hoặc quên lịch).
+     * Cặp đôi gia sư - người học bị đánh giá thấp (&le; 2 sao từ 2 lần trở lên).
+   - Đề xuất các giải pháp can thiệp sư phạm nhân văn (nhắn tin riêng, đổi bạn học kèm cặp, mini-workshop).
+
+### Nguyên tắc Vận hành An toàn & Minh bạch:
+- **Cơ chế dự phòng Rule-Based (Graceful Degradation):** Nếu chưa cấu hình `GEMINI_API_KEY` hoặc API bên ngoài gặp sự cố mạng, hệ thống tự động chuyển sang chế độ cơ bản (rule-based heuristic), đảm bảo ứng dụng **KHÔNG BAO GIỜ CRASH**, giao diện hiển thị rõ *"Hỗ trợ bởi AI (Chế độ cơ bản)"*.
+- **Lưu vết kiểm định (`ai_logs`):** 100% các lần gọi AI đều được ghi nhận vào bảng `ai_logs` (`user_id`, `chuc_nang`, `input_tom_tat`, `output_text`, `thoi_gian`).
+- **Trung thực về AI:** Mọi vị trí có sự tham gia của AI trên giao diện đều được gắn nhãn nhận diện đồng bộ: `<span class="badge-ai"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Gemini)</span>`.
+
+- **Chạy kiểm thử nghiệm thu Milestone M-AI:**
+  ```bash
+  python test_m_ai.py
+  ```
+  * Kết quả: 6/6 test cases đạt chuẩn 100%.
+
+- **Chạy toàn bộ bộ kiểm thử hồi quy hệ thống (M0 + M1 + M2 + M3 + M3+ + M-AI):**
+  ```bash
+  python test_m0.py ; python test_m1.py ; python test_m2.py ; python test_m3.py ; python test_m3_plus.py ; python test_m_ai.py
+  ```
+  * Kết quả: 30/30 test cases đạt chuẩn 100%.
+
+---
+
+## 13. Tính bảo mật và biến môi trường
+- File `.env` chứa `GEMINI_API_KEY` và `FLASK_SECRET_KEY` được bảo vệ nghiêm ngặt bằng `.gitignore`, **TUYỆT ĐỐI KHÔNG BAO GIỜ** được push lên GitHub công khai.
+- Cung cấp file mẫu `.env.example` với hướng dẫn cấu hình chi tiết cho các trường triển khai.
+
 
 
