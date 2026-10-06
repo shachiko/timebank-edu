@@ -811,3 +811,179 @@ Nhiệm vụ của bạn:
     )
     return recommended, False
 
+
+# ==============================================================================
+# 8. TRỢ LÝ HỌC ĐƯỜNG ẢO AI CHATBOT (MILESTONE M-CHAT)
+# ==============================================================================
+
+def get_chat_greeting_and_reminder(db, user_id):
+    """
+    Tạo thông điệp chào hỏi và chủ động nhắc nhở lịch hẹn học tập sắp tới
+    mỗi khi học sinh mở khung chat:
+    - Đọc từ bảng sessions với trạng thái 'da_dat'.
+    - Định dạng lời chào thân thiện, hiển thị số lịch hẹn N và chi tiết từng buổi.
+    """
+    cur = db.cursor()
+    cur.execute("SELECT ho_ten, so_du_gio FROM users WHERE id = ?", (user_id,))
+    u = cur.fetchone()
+    ho_ten = u["ho_ten"] if u else "bạn"
+    so_du = round(u["so_du_gio"], 1) if u else 0.0
+
+    # Lấy các lịch hẹn sắp tới (trạng thái 'da_dat')
+    cur.execute("""
+        SELECT s.id, s.thoi_gian_bat_dau, s.so_gio, sk.tieu_de,
+               ud.ho_ten AS ten_nguoi_day, uh.ho_ten AS ten_nguoi_hoc,
+               s.nguoi_day_id, s.nguoi_hoc_id
+        FROM sessions s
+        JOIN skills sk ON s.skill_id = sk.id
+        JOIN users ud ON s.nguoi_day_id = ud.id
+        JOIN users uh ON s.nguoi_hoc_id = uh.id
+        WHERE (s.nguoi_day_id = ? OR s.nguoi_hoc_id = ?) AND s.trang_thai = 'da_dat'
+        ORDER BY s.thoi_gian_bat_dau ASC
+    """, (user_id, user_id))
+    upcoming = cur.fetchall()
+    n = len(upcoming)
+
+    if n > 0:
+        lines = []
+        for s in upcoming:
+            is_tutor = (s["nguoi_day_id"] == user_id)
+            partner = s["ten_nguoi_hoc"] if is_tutor else s["ten_nguoi_day"]
+            role_text = f"Dạy môn '{s['tieu_de']}' cho bạn {partner}" if is_tutor else f"Học môn '{s['tieu_de']}' từ bạn {partner}"
+            lines.append(f"• {role_text} ({s['thoi_gian_bat_dau']})")
+        
+        detail_text = "\n".join(lines)
+        greeting = (
+            f"Xin chào {ho_ten}! Bạn có {n} lịch hẹn sắp tới:\n"
+            f"{detail_text}\n"
+            f"Số dư ví hiện tại: {so_du}h. Bạn cần hỗ trợ gì thêm không?"
+        )
+    else:
+        greeting = (
+            f"Xin chào {ho_ten}! Bạn có 0 lịch hẹn sắp tới. "
+            f"Số dư hiện tại của bạn là {so_du}h. Bạn muốn tìm bạn học môn nào hay cần giải đáp thắc mắc gì?"
+        )
+
+    return {
+        "greeting": greeting,
+        "upcoming_count": n,
+        "so_du_gio": so_du
+    }
+
+
+def ai_chat_assistant(db, user_id, message):
+    """
+    Xử lý câu hỏi của học sinh trong khung chat trợ lý ảo:
+    - Thu thập ngữ cảnh cá nhân: Tên HS, số dư giờ, kỹ năng đã đăng, lịch học sắp tới.
+    - Gọi Gemini Pro API để trả lời mang đậm tính sư phạm và cá nhân hóa.
+    - Tự động chuyển Fallback nếu mất kết nối hoặc thiếu API key.
+    - Lưu nhật ký suy luận vào bảng ai_logs (chuc_nang = 'tro_ly_ao').
+    - Trả về tuple (reply_text, is_live).
+    """
+    cur = db.cursor()
+    # 1. Thu thập ngữ cảnh cá nhân
+    cur.execute("SELECT ma_hoc_sinh, ho_ten, lop, so_du_gio FROM users WHERE id = ?", (user_id,))
+    u = cur.fetchone()
+    ho_ten = u["ho_ten"] if u else "Học sinh"
+    lop = u["lop"] if u else ""
+    ma_hoc_sinh = u["ma_hoc_sinh"] if u else ""
+    so_du_gio = round(u["so_du_gio"], 1) if u else 0.0
+
+    # Kỹ năng đã đăng
+    cur.execute("SELECT linh_vuc, tieu_de FROM skills WHERE user_id = ?", (user_id,))
+    skills = cur.fetchall()
+    skills_str = ", ".join([f"{s['linh_vuc']} - {s['tieu_de']}" for s in skills]) if skills else "Chưa đăng ký kỹ năng"
+
+    # Lịch học sắp tới ('da_dat')
+    cur.execute("""
+        SELECT s.id, s.thoi_gian_bat_dau, s.so_gio, sk.tieu_de,
+               ud.ho_ten AS ten_nguoi_day, uh.ho_ten AS ten_nguoi_hoc,
+               s.nguoi_day_id, s.nguoi_hoc_id
+        FROM sessions s
+        JOIN skills sk ON s.skill_id = sk.id
+        JOIN users ud ON s.nguoi_day_id = ud.id
+        JOIN users uh ON s.nguoi_hoc_id = uh.id
+        WHERE (s.nguoi_day_id = ? OR s.nguoi_hoc_id = ?) AND s.trang_thai = 'da_dat'
+        ORDER BY s.thoi_gian_bat_dau ASC
+    """, (user_id, user_id))
+    upcoming = cur.fetchall()
+    upcoming_lines = []
+    for s in upcoming:
+        is_tutor = (s["nguoi_day_id"] == user_id)
+        partner = s["ten_nguoi_hoc"] if is_tutor else s["ten_nguoi_day"]
+        action = f"Dạy '{s['tieu_de']}' cho bạn {partner}" if is_tutor else f"Học '{s['tieu_de']}' từ bạn {partner}"
+        upcoming_lines.append(f"{action} lúc {s['thoi_gian_bat_dau']}")
+    upcoming_str = "; ".join(upcoming_lines) if upcoming_lines else "Không có lịch hẹn sắp tới"
+
+    input_summary = f"[{ho_ten}] Hỏi: {message[:100]}"
+
+    is_live = is_ai_live()
+    if is_live:
+        system_instruction = f"""
+Bạn là Trợ lý Học đường AI của nền tảng "Ngân hàng Thời gian Học đường (TimeBank EDU)".
+Ngữ cảnh cá nhân của học sinh đang trò chuyện:
+- Họ tên: {ho_ten} (Mã: {ma_hoc_sinh}, Lớp: {lop})
+- Số dư tín dụng thời gian hiện có trong ví: {so_du_gio} giờ
+- Kỹ năng bạn ấy đã đăng tải chia sẻ: {skills_str}
+- Lịch hẹn học tập sắp tới ({len(upcoming)} buổi): {upcoming_str}
+
+Quy tắc ứng xử và nghiệp vụ:
+1. Bạn phải luôn trả lời bằng Tiếng Việt với giọng điệu thân thiện, khích lệ, chuẩn mực sư phạm.
+2. Khi học sinh hỏi về số dư ví / còn bao nhiêu giờ: BẮT BUỘC trả lời chính xác số dư thật là {so_du_gio} giờ.
+3. Khi học sinh hỏi về lịch học sắp tới: Thông báo chính xác danh sách các lịch hẹn ở trên.
+4. Khi học sinh hỏi về cách đăng kỹ năng: Hướng dẫn vào mục "Đăng kỹ năng mới", điền thông tin và chờ duyệt.
+5. Khi học sinh hỏi về gợi ý lộ trình học (ví dụ: Toán trong 4 tuần): Đưa ra lộ trình 4 tuần sư phạm cụ thể, súc tích.
+6. Nguyên tắc nền tảng: 1 giờ dạy = 1 tín dụng, mọi tri thức bình đẳng, không dùng tiền mặt.
+"""
+        reply = call_gemini(message, system_instruction)
+        if reply and len(reply.strip()) > 0:
+            log_ai_interaction(db, user_id, "tro_ly_ao", input_summary, reply.strip())
+            return reply.strip(), True
+
+    # ==========================================================================
+    # CHẾ ĐỘ DỰ PHÒNG THÔNG MINH (RULE-BASED FALLBACK KHI OFFLINE / THIẾU KEY)
+    # ==========================================================================
+    msg_lower = message.lower().strip()
+
+    if any(k in msg_lower for k in ["bao nhiêu giờ", "số dư", "còn bao nhiêu", "ví của tôi", "bao nhiêu credit", "tín dụng"]):
+        reply = (
+            f"Chào {ho_ten}! Hiện tại số dư tín dụng học tập trong ví của bạn là {so_du_gio} giờ. "
+            f"Bạn có thể dùng số giờ này để đặt lịch học kỹ năng mới cùng bạn bè trên Chợ kỹ năng nhé!"
+        )
+    elif any(k in msg_lower for k in ["lịch học", "lịch hẹn", "sắp tới", "khi nào học"]):
+        if upcoming_lines:
+            detail = "\n".join([f"• {u}" for u in upcoming_lines])
+            reply = (
+                f"Bạn có {len(upcoming)} lịch hẹn sắp tới:\n{detail}\n"
+                f"Hãy chuẩn bị chu đáo và tham gia đúng giờ bạn nhé!"
+            )
+        else:
+            reply = (
+                f"Chào {ho_ten}! Hiện tại bạn chưa có lịch hẹn học tập nào sắp tới. "
+                f"Bạn có thể ghé Chợ kỹ năng để đặt lịch học ngay nhé!"
+            )
+    elif any(k in msg_lower for k in ["đăng kỹ năng", "làm sao đăng", "tạo kỹ năng", "chia sẻ kỹ năng"]):
+        reply = (
+            f"Để đăng kỹ năng chia sẻ, bạn bấm vào nút 'Đăng kỹ năng mới' trên thanh điều hướng, "
+            f"chọn lĩnh vực (Toán học, Ngoại ngữ, Tin học...), nhập tiêu đề và thời gian rảnh. "
+            f"Hệ thống AI và Thầy Cô sẽ kiểm duyệt nội dung trước khi đưa lên Chợ kỹ năng!"
+        )
+    elif any(k in msg_lower for k in ["lộ trình", "toán trong 4 tuần", "học toán", "4 tuần"]):
+        reply = (
+            f"Gợi ý lộ trình ôn luyện Toán học 4 tuần cho {ho_ten}:\n"
+            f"• Tuần 1: Rà soát và hệ thống hóa lý thuyết cốt lõi, công thức then chốt.\n"
+            f"• Tuần 2: Luyện giải trắc nghiệm chuyên đề, đặt lịch cùng gia sư giải đáp câu hỏi khó.\n"
+            f"• Tuần 3: Vận dụng kỹ thuật giải nhanh và làm bài kiểm tra lượng giá Quiz để đo lường tiến bộ.\n"
+            f"• Tuần 4: Tổng ôn đề thi thử nghiệm, tự tin chia sẻ lại kinh nghiệm cho bạn bè!"
+        )
+    else:
+        reply = (
+            f"Chào {ho_ten}! Tôi là Trợ lý Học đường TimeBank EDU (Hỗ trợ bởi AI Gemini). "
+            f"Số dư ví hiện tại của bạn là {so_du_gio}h. Bạn có thể hỏi tôi về: số dư giờ, "
+            f"lịch học sắp tới, hướng dẫn đăng kỹ năng hoặc gợi ý lộ trình học tập!"
+        )
+
+    log_ai_interaction(db, user_id, "tro_ly_ao", input_summary, f"[Rule-Based] {reply}")
+    return reply, False
+
+

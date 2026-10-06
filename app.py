@@ -30,7 +30,8 @@ from flask import (
 from ai_service import (
     ai_moderate_skill, ai_matchmake, ai_generate_lesson_plan, 
     ai_summarize_feedback, ai_admin_early_warning, is_ai_live,
-    ai_generate_quiz, ai_recommend_tasks
+    ai_generate_quiz, ai_recommend_tasks, get_chat_greeting_and_reminder,
+    ai_chat_assistant
 )
 
 # 1. Tải các biến môi trường từ file .env (nếu có)
@@ -2868,6 +2869,109 @@ def task_attendance(task_id):
         task=task,
         registrations=registrations
     )
+
+
+# ==============================================================================
+# MILESTONE M-CHAT: KHUNG CHAT TRỢ LÝ HỌC ĐƯỜNG ẢO (GEMINI PRO)
+# ==============================================================================
+
+@app.route("/api/chat/history")
+@login_required
+def api_chat_history():
+    """
+    API lấy lịch sử trò chuyện và thông điệp chào mừng kèm nhắc lịch học sắp tới:
+    - Truy vấn tối đa 50 tin nhắn gần nhất từ bảng chat_messages theo user_id.
+    - Tạo lời chào mừng chủ động nhắc nhở N lịch hẹn sắp tới ('da_dat').
+    """
+    user_id = session["user_id"]
+    db = get_db()
+    cur = db.cursor()
+
+    # 1. Lấy thông điệp chào hỏi và nhắc lịch
+    greeting_info = get_chat_greeting_and_reminder(db, user_id)
+
+    # 2. Lấy lịch sử tin nhắn
+    cur.execute("""
+        SELECT id, vai_tro, noi_dung, thoi_gian
+        FROM chat_messages
+        WHERE user_id = ?
+        ORDER BY id ASC
+        LIMIT 50
+    """, (user_id,))
+    messages = [dict(m) for m in cur.fetchall()]
+
+    return jsonify({
+        "success": True,
+        "greeting": greeting_info["greeting"],
+        "upcoming_count": greeting_info["upcoming_count"],
+        "so_du_gio": greeting_info["so_du_gio"],
+        "is_ai_live": is_ai_live(),
+        "messages": messages
+    })
+
+
+@app.route("/api/chat/send", methods=["POST"])
+@login_required
+def api_chat_send():
+    """
+    API tiếp nhận tin nhắn từ học sinh và phản hồi thông minh:
+    - Nhận câu hỏi qua JSON hoặc Form.
+    - Lưu câu hỏi của học sinh vào bảng chat_messages (vai_tro = 'user').
+    - Gọi hàm ai_chat_assistant với đầy đủ ngữ cảnh cá nhân hóa (số dư thật, lịch học, kỹ năng).
+    - Lưu câu trả lời vào bảng chat_messages (vai_tro = 'assistant').
+    - Ghi nhận nhật ký suy luận minh bạch vào bảng ai_logs (chuc_nang = 'tro_ly_ao').
+    """
+    user_id = session["user_id"]
+    data = request.get_json() or request.form
+    message = (data.get("message") or "").strip()
+
+    if not message:
+        return jsonify({"success": False, "error": "Tin nhắn không được để trống."}), 400
+
+    db = get_db()
+    cur = db.cursor()
+
+    # 1. Lưu câu hỏi của người dùng
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    cur.execute(
+        """INSERT INTO chat_messages (user_id, vai_tro, noi_dung, thoi_gian)
+           VALUES (?, 'user', ?, ?)""",
+        (user_id, message, now_str)
+    )
+    db.commit()
+
+    # 2. Xử lý câu trả lời từ Trợ lý AI (có ngữ cảnh cá nhân)
+    reply, is_live = ai_chat_assistant(db, user_id, message)
+
+    # 3. Lưu câu trả lời của trợ lý
+    now_reply_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    cur.execute(
+        """INSERT INTO chat_messages (user_id, vai_tro, noi_dung, thoi_gian)
+           VALUES (?, 'assistant', ?, ?)""",
+        (user_id, reply, now_reply_str)
+    )
+    db.commit()
+
+    return jsonify({
+        "success": True,
+        "reply": reply,
+        "is_live": is_live,
+        "timestamp": now_reply_str
+    })
+
+
+@app.route("/api/chat/clear", methods=["POST"])
+@login_required
+def api_chat_clear():
+    """
+    API làm mới / xóa lịch sử trò chuyện của học sinh hiện tại.
+    """
+    user_id = session["user_id"]
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("DELETE FROM chat_messages WHERE user_id = ?", (user_id,))
+    db.commit()
+    return jsonify({"success": True, "message": "Đã làm mới cuộc trò chuyện."})
 
 
 # ------------------------------------------------------------------------------

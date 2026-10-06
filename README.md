@@ -429,9 +429,52 @@ Mô hình Ngân hàng Thời gian Học đường được mở rộng vượt b
 
 ---
 
-## 16. Tính bảo mật và biến môi trường
+## 16. Trợ lý Học đường AI — Khung Chat Tương tác Cá nhân hóa (Milestone M-CHAT)
+
+Nền tảng tích hợp **Trợ lý Học đường AI (TimeBank Assistant)** hoạt động 24/7 dưới dạng khung chat nổi tiện lợi (biểu tượng 💬 ở góc dưới bên phải mọi màn hình sau khi đăng nhập):
+
+### 1. Phản hồi thông minh với Ngữ cảnh Cá nhân hóa (Personalized Context):
+- Trợ lý không chỉ trả lời kiến thức chung mà được nạp trực tiếp hồ sơ người học vào System Prompt:
+  * **Họ tên & Lớp của học sinh:** Giao tiếp tự nhiên, gần gũi như người cố vấn học đường thực thụ.
+  * **Số dư tín dụng giờ thực tế:** Đọc trực tiếp từ `users.so_du_gio`. Khi học sinh hỏi *"Tôi còn bao nhiêu giờ?"*, AI trả lời chính xác số dư thật đến từng chữ số thập phân.
+  * **Kỹ năng đã chia sẻ:** Nắm rõ thế mạnh của học sinh để định hướng phát triển.
+  * **Lịch hẹn học tập sắp tới:** Đọc các phiên có trạng thái `da_dat` để giải đáp cụ thể.
+- Mọi tương tác hội thoại được lưu vết vào bảng `chat_messages` (`vai_tro` 'user'/'assistant') và bảng minh bạch `ai_logs` (`chuc_nang = 'tro_ly_ao'`).
+
+### 2. Chủ động nhắc lịch học tập (Smart Greeting & Reminder):
+- Mỗi lần học sinh mở khung chat, Trợ lý chủ động kiểm tra và gửi lời chào kèm lời nhắc:
+  * *"Xin chào [Tên HS]! Bạn có [N] lịch hẹn sắp tới: • [Chi tiết môn, bạn học, thời gian]... Số dư ví hiện tại: [X]h. Bạn cần hỗ trợ gì thêm không?"*
+- Nếu không có lịch hẹn, trợ lý gợi ý học sinh ghé thăm Chợ kỹ năng để ghép cặp đôi bạn cùng tiến.
+
+### 3. Gợi ý câu hỏi nhanh (Quick Prompts):
+- 4 nút bấm gợi ý phổ biến giúp học sinh thao tác nhanh chóng trên cả điện thoại:
+  * *"Tôi còn bao nhiêu giờ?"* $\rightarrow$ Tra cứu số dư tức thì.
+  * *"Lịch học sắp tới của tôi?"* $\rightarrow$ Điểm danh các buổi học đã hẹn.
+  * *"Làm sao đăng kỹ năng?"* $\rightarrow$ Hướng dẫn quy trình chia sẻ tri thức.
+  * *"Gợi ý lộ trình học Toán trong 4 tuần?"* $\rightarrow$ Thiết kế lộ trình sư phạm bài bản từ củng cố lý thuyết đến làm Quiz lượng giá.
+
+### 4. Chế độ dự phòng thông minh (Rule-based Fallback):
+- Khi trường học gặp sự cố mất mạng hoặc chưa cấu hình API Key, Trợ lý tự động chuyển sang chế độ dự phòng theo bộ FAQ sư phạm chuẩn hóa, **cam kết hệ thống không bao giờ gặp lỗi 500 hay gián đoạn trải nghiệm**.
+
+### Hướng dẫn kiểm thử nghiệm thu Milestone M-CHAT:
+- **Chạy riêng bộ kiểm thử M-CHAT:**
+  ```bash
+  python test_m_chat.py
+  ```
+  * Kết quả: **6/6 test cases đạt chuẩn 100% OK**.
+
+- **Chạy toàn bộ 54 test cases kiểm thử hồi quy hệ thống (M0 -> M-CHAT):**
+  ```bash
+  python test_m0.py ; python test_m1.py ; python test_m2.py ; python test_m3.py ; python test_m3_plus.py ; python test_m4_lite.py ; python test_m_ai.py ; python test_m_ai_plus.py ; python test_m6.py ; python test_m_chat.py
+  ```
+  * Kết quả: **54/54 test cases đạt chuẩn 100% OK**.
+
+---
+
+## 17. Tính bảo mật và biến môi trường
 - File `.env` chứa `GEMINI_API_KEY` và `FLASK_SECRET_KEY` được bảo vệ nghiêm ngặt bằng `.gitignore`, **TUYỆT ĐỐI KHÔNG BAO GIỜ** được push lên GitHub công khai.
 - Cung cấp file mẫu `.env.example` với hướng dẫn cấu hình chi tiết cho các trường triển khai.
+
 
 
 

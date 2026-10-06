@@ -279,6 +279,314 @@
       if (modal) modal.hide();
     }
   </script>
+
+  {% if current_user %}
+  <!-- ==============================================================================
+       MILESTONE M-CHAT: KHUNG CHAT TRỢ LÝ HỌC ĐƯỜNG ẢO (GEMINI PRO)
+       Nút tròn nổi góc dưới mọi trang sau khi học sinh/giáo viên đăng nhập
+       ============================================================================== -->
+  <div id="aiChatWidgetContainer">
+    <!-- Nút tròn nổi mở chat -->
+    <button id="aiChatFloatingBtn" class="btn btn-brand rounded-circle shadow-lg" 
+            title="Trò chuyện cùng Trợ lý Học đường AI" onclick="toggleAiChat()">
+      <i class="bi bi-chat-dots-fill fs-4" id="aiChatBtnIcon"></i>
+      <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle d-none" id="chatBadgeDot">
+        <span class="visually-hidden">Tin nhắn mới</span>
+      </span>
+    </button>
+
+    <!-- Khung hội thoại nổi (Chat Widget) -->
+    <div id="aiChatBox" class="card border-0 shadow-lg rounded-4">
+      <!-- Header Khung Chat -->
+      <div class="card-header bg-brand text-white py-3 px-3 border-0 d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, var(--brand-color, #1e40af) 0%, #3b82f6 100%);">
+        <div class="d-flex align-items-center gap-2">
+          <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center shadow-sm" style="width: 36px; height: 36px;">
+            <i class="bi bi-robot fs-5"></i>
+          </div>
+          <div>
+            <div class="fw-bold fs-6 lh-sm mb-0">Trợ lý Học đường AI</div>
+            <span class="badge bg-white bg-opacity-25 text-white" style="font-size: 0.68rem;">
+              <i class="bi bi-stars"></i> Hỗ trợ bởi AI (Gemini)
+            </span>
+          </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-1">
+          <button type="button" class="btn btn-sm btn-link text-white text-opacity-75 p-1" title="Làm mới đoạn chat" onclick="clearAiChat()">
+            <i class="bi bi-arrow-clockwise fs-6"></i>
+          </button>
+          <button type="button" class="btn btn-sm btn-link text-white p-1" title="Đóng khung chat" onclick="toggleAiChat()">
+            <i class="bi bi-dash-lg fs-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Thân Khung Chat (Vùng hiển thị tin nhắn) -->
+      <div class="card-body p-3 d-flex flex-column" id="aiChatBody" style="height: 350px; overflow-y: auto; background-color: #f8fafc;">
+        <!-- Khối Thông báo Nhắc lịch chủ động từ Trợ lý -->
+        <div id="chatReminderCard" class="alert alert-primary border-0 rounded-3 p-2 mb-3 shadow-sm small">
+          <div class="d-flex align-items-start gap-2">
+            <i class="bi bi-bell-fill text-primary mt-1"></i>
+            <div id="chatGreetingText" class="text-dark" style="white-space: pre-line;">
+              Đang kết nối Trợ lý Học đường...
+            </div>
+          </div>
+        </div>
+
+        <!-- Danh sách tin nhắn trò chuyện -->
+        <div id="aiChatMessagesList" class="d-flex flex-column gap-2 mb-2"></div>
+
+        <!-- Trạng thái đang trả lời (Typing Indicator) -->
+        <div id="aiChatTyping" class="d-none align-self-start p-2 rounded-3 bg-white text-muted small border shadow-sm">
+          <span class="spinner-grow spinner-grow-sm text-primary me-1" role="status"></span>
+          Trợ lý AI đang suy nghĩ...
+        </div>
+      </div>
+
+      <!-- Gợi ý câu hỏi nhanh (Quick Prompts) -->
+      <div class="px-3 py-2 bg-light border-top border-bottom small" id="quickPromptsContainer">
+        <div class="text-muted fw-semibold mb-1" style="font-size: 0.72rem;">
+          <i class="bi bi-lightbulb text-warning me-1"></i>Gợi ý câu hỏi nhanh:
+        </div>
+        <div class="d-flex flex-wrap gap-1">
+          <button type="button" class="btn btn-outline-primary btn-sm py-0 px-2 rounded-pill" style="font-size: 0.75rem;" onclick="sendQuickPrompt('Tôi còn bao nhiêu giờ?')">
+            Tôi còn bao nhiêu giờ?
+          </button>
+          <button type="button" class="btn btn-outline-primary btn-sm py-0 px-2 rounded-pill" style="font-size: 0.75rem;" onclick="sendQuickPrompt('Lịch học sắp tới của tôi?')">
+            Lịch học sắp tới của tôi?
+          </button>
+          <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2 rounded-pill" style="font-size: 0.75rem;" onclick="sendQuickPrompt('Làm sao đăng kỹ năng?')">
+            Làm sao đăng kỹ năng?
+          </button>
+          <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2 rounded-pill" style="font-size: 0.75rem;" onclick="sendQuickPrompt('Gợi ý lộ trình học Toán trong 4 tuần?')">
+            Gợi ý lộ trình học Toán trong 4 tuần?
+          </button>
+        </div>
+      </div>
+
+      <!-- Footer Khung Chat (Ô nhập tin nhắn) -->
+      <div class="card-footer bg-white p-2 border-0">
+        <form id="aiChatForm" onsubmit="handleSendAiChat(event)" class="d-flex gap-2">
+          <input type="text" id="aiChatInput" class="form-control form-control-sm rounded-pill px-3" 
+                 placeholder="Hỏi trợ lý (số dư, lịch học, kỹ năng...)" autocomplete="off" required>
+          <button type="submit" id="aiChatSendBtn" class="btn btn-brand btn-sm rounded-circle d-flex align-items-center justify-content-center" style="width: 34px; height: 34px; flex-shrink: 0;">
+            <i class="bi bi-send-fill" style="font-size: 0.85rem;"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* Nút tròn nổi cố định ở góc dưới bên phải */
+    #aiChatFloatingBtn {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 56px;
+      height: 56px;
+      z-index: 1050;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    #aiChatFloatingBtn:hover {
+      transform: scale(1.08);
+      box-shadow: 0 8px 25px rgba(30, 64, 175, 0.35) !important;
+    }
+
+    /* Khung chat nổi popup */
+    #aiChatBox {
+      position: fixed;
+      bottom: 90px;
+      right: 24px;
+      width: 390px;
+      max-width: calc(100vw - 32px);
+      z-index: 1050;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      animation: chatFadeIn 0.25s ease-out;
+      border: 1px solid rgba(0,0,0,0.1) !important;
+    }
+
+    @keyframes chatFadeIn {
+      from { opacity: 0; transform: translateY(12px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* Phong cách bong bóng tin nhắn */
+    .chat-bubble-user {
+      align-self: flex-end;
+      background: var(--brand-color, #1e40af);
+      color: #ffffff;
+      padding: 8px 14px;
+      border-radius: 16px 16px 2px 16px;
+      max-width: 82%;
+      font-size: 0.86rem;
+      word-break: break-word;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .chat-bubble-assistant {
+      align-self: flex-start;
+      background: #ffffff;
+      color: #1e293b;
+      padding: 10px 14px;
+      border-radius: 16px 16px 16px 2px;
+      max-width: 86%;
+      font-size: 0.86rem;
+      border: 1px solid #e2e8f0;
+      word-break: break-word;
+      white-space: pre-line;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    @media (max-width: 576px) {
+      #aiChatBox {
+        bottom: 84px;
+        right: 12px;
+        width: calc(100vw - 24px);
+      }
+      #aiChatFloatingBtn {
+        bottom: 18px;
+        right: 18px;
+      }
+    }
+  </style>
+
+  <script>
+    let chatLoaded = false;
+
+    // Bật/tắt hiển thị khung chat
+    function toggleAiChat() {
+      const box = document.getElementById('aiChatBox');
+      const icon = document.getElementById('aiChatBtnIcon');
+      if (box.style.display === 'flex') {
+        box.style.display = 'none';
+        icon.className = 'bi bi-chat-dots-fill fs-4';
+      } else {
+        box.style.display = 'flex';
+        icon.className = 'bi bi-x-lg fs-4';
+        if (!chatLoaded) {
+          loadChatHistory();
+        } else {
+          scrollToChatBottom();
+        }
+        document.getElementById('aiChatInput').focus();
+      }
+    }
+
+    // Tải lịch sử tin nhắn và lời nhắc lịch từ server
+    async function loadChatHistory() {
+      try {
+        const res = await fetch('/api/chat/history');
+        const data = await res.json();
+        if (data.success) {
+          // Hiển thị lời chào & nhắc lịch
+          document.getElementById('chatGreetingText').innerText = data.greeting;
+          
+          // Hiển thị các tin nhắn trước đó
+          const list = document.getElementById('aiChatMessagesList');
+          list.innerHTML = '';
+          if (data.messages && data.messages.length > 0) {
+            data.messages.forEach(msg => {
+              appendMessageBubble(msg.vai_tro, msg.noi_dung);
+            });
+          }
+          chatLoaded = true;
+          scrollToChatBottom();
+        }
+      } catch (err) {
+        console.error('Không thể nạp lịch sử chat:', err);
+      }
+    }
+
+    // Thêm bong bóng tin nhắn vào giao diện
+    function appendMessageBubble(role, content) {
+      const list = document.getElementById('aiChatMessagesList');
+      const bubble = document.createElement('div');
+      bubble.className = role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant';
+      bubble.innerText = content;
+      list.appendChild(bubble);
+      scrollToChatBottom();
+    }
+
+    // Cuộn khung chat xuống dưới cùng
+    function scrollToChatBottom() {
+      const body = document.getElementById('aiChatBody');
+      setTimeout(() => {
+        body.scrollTop = body.scrollHeight;
+      }, 50);
+    }
+
+    // Gửi câu hỏi nhanh từ các nút gợi ý
+    function sendQuickPrompt(promptText) {
+      document.getElementById('aiChatInput').value = promptText;
+      handleSendAiChat(new Event('submit'));
+    }
+
+    // Xử lý gửi tin nhắn
+    async function handleSendAiChat(e) {
+      e.preventDefault();
+      const input = document.getElementById('aiChatInput');
+      const message = input.value.trim();
+      if (!message) return;
+
+      // 1. Hiển thị tin nhắn người dùng ngay lập tức
+      appendMessageBubble('user', message);
+      input.value = '';
+      input.disabled = true;
+      document.getElementById('aiChatSendBtn').disabled = true;
+
+      // 2. Hiện chỉ báo AI đang suy nghĩ
+      const typing = document.getElementById('aiChatTyping');
+      typing.classList.remove('d-none');
+      scrollToChatBottom();
+
+      try {
+        const res = await fetch('/api/chat/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: message })
+        });
+        const data = await res.json();
+        typing.classList.add('d-none');
+
+        if (data.success) {
+          appendMessageBubble('assistant', data.reply);
+        } else {
+          appendMessageBubble('assistant', 'Rất tiếc, đã có lỗi xảy ra: ' + (data.error || 'Vui lòng thử lại.'));
+        }
+      } catch (err) {
+        typing.classList.add('d-none');
+        appendMessageBubble('assistant', 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng!');
+      } finally {
+        input.disabled = false;
+        document.getElementById('aiChatSendBtn').disabled = false;
+        input.focus();
+        scrollToChatBottom();
+      }
+    }
+
+    // Làm mới / Xóa cuộc trò chuyện
+    async function clearAiChat() {
+      if (confirm('Bạn có muốn làm mới cuộc trò chuyện với Trợ lý AI không?')) {
+        try {
+          await fetch('/api/chat/clear', { method: 'POST' });
+          document.getElementById('aiChatMessagesList').innerHTML = '';
+          loadChatHistory();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  </script>
+  {% endif %}
+
   {% block scripts %}{% endblock %}
 </body>
 </html>
+
