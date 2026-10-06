@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.tieu_de }} — TimeBank EDU{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Thanh điều hướng breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('index') }}" class="text-decoration-none">Trang chủ</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('blog_index') }}" class="text-decoration-none">Bảng tin</a></li>
+      <li class="breadcrumb-item active text-truncate" aria-current="page" style="max-width: 300px;">{{ post.tieu_de }}</li>
+    </ol>
+  </nav>
+
+  <!-- Banner cảnh báo chế độ xem trước (Bản nháp) -->
+  {% if is_preview %}
+  <div class="alert alert-warning border-warning shadow-sm rounded-4 p-4 mb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+      <div>
+        <h5 class="fw-bold mb-1 text-dark">
+          <i class="bi bi-shield-exclamation text-warning me-2 fs-4"></i>CHẾ ĐỘ XEM TRƯỚC (BẢN NHÁP)
+        </h5>
+        <p class="mb-0 text-secondary small">
+          Bài viết này hiện đang ở trạng thái <strong>Bản nháp (Chưa duyệt)</strong> và <strong>KHÔNG</strong> hiển thị công khai trên trang Bảng tin. Học sinh sẽ không thể thấy bài viết này cho đến khi Thầy/Cô bấm duyệt.
+        </p>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="{{ url_for('blog_publish', post_id=post.id) }}" class="btn btn-success fw-bold px-4 py-2 rounded-pill shadow-sm text-nowrap">
+          <i class="bi bi-check2-circle me-1"></i>Duyệt & Đăng ngay (1-Click)
+        </a>
+        <a href="{{ url_for('blog_edit', post_id=post.id) }}" class="btn btn-outline-dark rounded-pill px-3 py-2 text-nowrap">
+          <i class="bi bi-pencil me-1"></i>Sửa nội dung
+        </a>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <article class="bg-white rounded-4 shadow-sm border p-4 p-md-5">
+        <!-- Huy hiệu và Meta info -->
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+          {% if post.tac_gia_ai == 1 %}
+          <span class="badge-ai px-3 py-2 fs-6">
+            <i class="bi bi-stars"></i> Hỗ trợ bởi AI (Gemini)
+          </span>
+          {% else %}
+          <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill fs-6">
+            <i class="bi bi-person-fill me-1"></i>Tác giả: Thầy Cô giáo
+          </span>
+          {% endif %}
+
+          <span class="text-muted small">
+            <i class="bi bi-clock me-1"></i>{{ post.thoi_gian_dang }}
+          </span>
+
+          {% if post.trang_thai == 'da_dang' %}
+          <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-1 rounded-pill small">
+            <i class="bi bi-check-circle me-1"></i>Đã đăng công khai
+          </span>
+          {% else %}
+          <span class="badge bg-warning bg-opacity-25 text-dark border border-warning border-opacity-50 px-3 py-1 rounded-pill small">
+            <i class="bi bi-file-earmark-text me-1"></i>Bản nháp
+          </span>
+          {% endif %}
+        </div>
+
+        <!-- Tiêu đề bài viết -->
+        <h1 class="display-6 fw-bold text-dark lh-base mb-4">{{ post.tieu_de }}</h1>
+
+        <!-- Ảnh minh họa lớn -->
+        {% if post.anh_minh_hoa %}
+        <div class="mb-4 rounded-4 overflow-hidden shadow-sm" style="max-height: 480px; background-color: #f8fafc;">
+          <img src="{{ post.anh_minh_hoa }}" 
+               alt="{{ post.tieu_de }}" 
+               class="w-100 h-100 object-fit-cover"
+               onerror="this.src='{{ url_for('static', filename='img/newsletter_banner.svg') }}'">
+        </div>
+        {% endif %}
+
+        <!-- Nội dung bài viết -->
+        <div class="article-content fs-5 text-dark lh-lg pt-2" style="white-space: pre-line; word-break: break-word;">
+          {{ post.noi_dung }}
+        </div>
+
+        <!-- Chân trang bài viết -->
+        <div class="border-top pt-4 mt-5 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+          <div class="d-flex align-items-center gap-2">
+            <a href="{{ url_for('blog_index') }}" class="btn btn-outline-secondary rounded-pill px-4">
+              <i class="bi bi-arrow-left me-1"></i>Quay lại Bảng tin
+            </a>
+            {% if current_user and current_user.vai_tro in ('admin', 'giao_vien') %}
+            <a href="{{ url_for('blog_manage') }}" class="btn btn-outline-primary rounded-pill px-4">
+              <i class="bi bi-gear me-1"></i>Quản lý bài viết
+            </a>
+            {% endif %}
+          </div>
+
+          {% if current_user and current_user.vai_tro in ('admin', 'giao_vien') %}
+          <div class="d-flex gap-2">
+            {% if post.trang_thai != 'da_dang' %}
+            <a href="{{ url_for('blog_publish', post_id=post.id) }}" class="btn btn-success rounded-pill px-4 fw-bold">
+              <i class="bi bi-check2-circle me-1"></i>Duyệt & Đăng bài
+            </a>
+            {% endif %}
+            <a href="{{ url_for('blog_edit', post_id=post.id) }}" class="btn btn-warning rounded-pill px-3">
+              <i class="bi bi-pencil me-1"></i>Sửa
+            </a>
+            <a href="{{ url_for('blog_delete', post_id=post.id) }}" class="btn btn-outline-danger rounded-pill px-3" onclick="return confirm('Thầy/Cô có chắc chắn muốn xóa bài viết này?')">
+              <i class="bi bi-trash me-1"></i>Xóa
+            </a>
+          </div>
+          {% endif %}
+        </div>
+      </article>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -24,6 +24,7 @@ from pathlib import Path
 from functools import wraps
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from flask import (
     Flask, render_template, request, jsonify, g, flash, redirect, url_for, session, abort, make_response
 )
@@ -31,7 +32,7 @@ from ai_service import (
     ai_moderate_skill, ai_matchmake, ai_generate_lesson_plan, 
     ai_summarize_feedback, ai_admin_early_warning, is_ai_live,
     ai_generate_quiz, ai_recommend_tasks, get_chat_greeting_and_reminder,
-    ai_chat_assistant
+    ai_chat_assistant, ai_generate_weekly_newsletter
 )
 
 # 1. Tải các biến môi trường từ file .env (nếu có)
@@ -43,9 +44,20 @@ BASE_DIR = Path(__file__).resolve().parent
 DATABASE_PATH = BASE_DIR / "database" / "timebank.db"
 SCHEMA_PATH = BASE_DIR / "database" / "schema.sql"
 CONFIG_PATH = BASE_DIR / "config.yaml"
+UPLOAD_BLOG_FOLDER = BASE_DIR / "static" / "uploads" / "blog"
+ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "gif"}
+
+# Đảm bảo thư mục upload tồn tại
+UPLOAD_BLOG_FOLDER.mkdir(parents=True, exist_ok=True)
+
+def allowed_image_file(filename):
+    """Kiểm tra định dạng file ảnh tải lên có hợp lệ hay không."""
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_IMAGE_EXTENSIONS
 
 # Khởi tạo ứng dụng Flask
 app = Flask(__name__)
+# Cấu hình kích thước tải lên tối đa 16MB
+app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024
 # Bảo mật: SECRET_KEY đọc từ biến môi trường khi deploy production
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY") or os.getenv("FLASK_SECRET_KEY") or "timebank-edu-secret-key-2026"
 
@@ -631,6 +643,24 @@ def seed_demo_data(conn):
            (session_id, user_id, tu_danh_gia_truoc, diem_so, thoi_gian_lam) 
            VALUES (?, ?, ?, ?, ?)""",
         quiz_results_data
+    )
+
+    # 12. Thêm bài viết Bảng tin mẫu (blog_posts) - Đã đăng công khai
+    sample_blogs = [
+        (
+            'Khởi động Mô hình Ngân hàng Thời gian Học đường: Một giờ bạn dạy - Một giờ bạn học',
+            'Chào mừng toàn thể Thầy Cô giáo và các bạn học sinh đến với TimeBank EDU! Tại đây, mọi tri thức đều bình đẳng, 1 giờ dạy đổi lấy 1 giờ học. Hãy cùng nhau chia sẻ thế mạnh và giúp đỡ bạn bè cùng tiến bộ nhé!',
+            '/static/img/newsletter_banner.svg',
+            0,
+            'da_dang',
+            '2026-10-01 08:00:00'
+        )
+    ]
+    cur.executemany(
+        """INSERT INTO blog_posts 
+           (tieu_de, noi_dung, anh_minh_hoa, tac_gia_ai, trang_thai, thoi_gian_dang) 
+           VALUES (?, ?, ?, ?, ?, ?)""",
+        sample_blogs
     )
     
     conn.commit()
@@ -3134,6 +3164,249 @@ def api_chat_clear():
     cur.execute("DELETE FROM chat_messages WHERE user_id = ?", (user_id,))
     db.commit()
     return jsonify({"success": True, "message": "Đã làm mới cuộc trò chuyện."})
+
+
+# ------------------------------------------------------------------------------
+# MILESTONE M5-BLOG: BẢNG TIN HỌC ĐƯỜNG & AI SOẠN BẢN TIN TUẦN
+# ------------------------------------------------------------------------------
+
+@app.route("/blog")
+def blog_index():
+    """
+    Trang Bảng tin học đường công khai (/blog):
+    - Liệt kê các bài viết đã duyệt và đăng chính thức (trang_thai = 'da_dang').
+    - Các bài viết bản nháp ('nhap') hoặc chưa duyệt TUYỆT ĐỐI KHÔNG xuất hiện tại đây.
+    - Sắp xếp mới nhất lên đầu, hỗ trợ giao diện responsive chuẩn bị cho thuyết trình.
+    """
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("""
+        SELECT id, tieu_de, noi_dung, anh_minh_hoa, tac_gia_ai, trang_thai, thoi_gian_dang
+        FROM blog_posts
+        WHERE trang_thai = 'da_dang'
+        ORDER BY thoi_gian_dang DESC, id DESC
+    """)
+    posts = cur.fetchall()
+    return render_template("blog_list.html", posts=posts)
+
+
+@app.route("/blog/<int:post_id>")
+def blog_detail(post_id):
+    """
+    Trang xem chi tiết bài viết (/blog/<id>):
+    - Hiển thị toàn văn bài viết, tiêu đề, ảnh minh họa và huy hiệu tác giả.
+    - Nếu tac_gia_ai = 1: Giao diện hiển thị rõ 'Hỗ trợ bởi AI (Gemini)'.
+    - Phân quyền: Nếu bài viết đang là bản nháp ('nhap'), chỉ Giáo viên hoặc Admin
+      mới được xem trước (chế độ Preview) kèm nút 'Duyệt & Đăng ngay'. Học sinh hoặc
+      khách truy cập ngoài sẽ bị từ chối 404 để đảm bảo tính riêng tư trước khi công khai.
+    """
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("SELECT * FROM blog_posts WHERE id = ?", (post_id,))
+    post = cur.fetchone()
+
+    if not post:
+        abort(404)
+
+    is_teacher_or_admin = session.get("vai_tro") in ("admin", "giao_vien")
+    
+    # Kiểm tra quyền xem bản nháp: chưa duyệt thì học sinh/khách không xem được
+    if post["trang_thai"] != "da_dang" and not is_teacher_or_admin:
+        abort(404)
+
+    return render_template(
+        "blog_detail.html", 
+        post=post, 
+        is_preview=(post["trang_thai"] != "da_dang")
+    )
+
+
+@app.route("/blog/manage")
+@teacher_or_admin_required
+def blog_manage():
+    """
+    Bảng điều khiển quản lý bài viết dành riêng cho Giáo viên & Ban Quản trị:
+    - Liệt kê toàn bộ bài viết (kể cả Bản nháp, Đã duyệt, Đã đăng).
+    - Thống kê số lượng bài viết, phân loại bài AI / bài giáo viên.
+    - Cung cấp nút 1-click 'Duyệt & Đăng' cho cô giáo.
+    - Cung cấp nút 'Nhờ AI soạn bản tin tuần' sử dụng mô hình Gemini Pro.
+    """
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("""
+        SELECT id, tieu_de, noi_dung, anh_minh_hoa, tac_gia_ai, trang_thai, thoi_gian_dang
+        FROM blog_posts
+        ORDER BY id DESC
+    """)
+    posts = cur.fetchall()
+
+    total_posts = len(posts)
+    published_count = sum(1 for p in posts if p["trang_thai"] == "da_dang")
+    draft_count = sum(1 for p in posts if p["trang_thai"] == "nhap")
+    ai_count = sum(1 for p in posts if p["tac_gia_ai"] == 1)
+
+    return render_template(
+        "blog_manage.html",
+        posts=posts,
+        total_posts=total_posts,
+        published_count=published_count,
+        draft_count=draft_count,
+        ai_count=ai_count
+    )
+
+
+@app.route("/blog/create", methods=["GET", "POST"])
+@teacher_or_admin_required
+def blog_create():
+    """
+    Tạo bài viết mới thủ công dành cho Giáo viên / Admin:
+    - Nhập tiêu đề, nội dung bài viết.
+    - Hỗ trợ tải lên ảnh minh họa hoặc sử dụng ảnh mặc định của nhà trường.
+    - Lựa chọn trạng thái: Lưu nháp ('nhap') hoặc Đăng ngay ('da_dang').
+    """
+    if request.method == "POST":
+        tieu_de = request.form.get("tieu_de", "").strip()
+        noi_dung = request.form.get("noi_dung", "").strip()
+        trang_thai = request.form.get("trang_thai", "nhap").strip()
+        if trang_thai not in ("nhap", "da_duyet", "da_dang"):
+            trang_thai = "nhap"
+
+        if not tieu_de or not noi_dung:
+            flash("Vui lòng nhập đầy đủ tiêu đề và nội dung bài viết.", "danger")
+            return render_template("blog_form.html", post=None, action="create")
+
+        # Xử lý upload ảnh minh họa
+        anh_minh_hoa = "/static/img/newsletter_banner.svg"
+        if "anh_minh_hoa" in request.files:
+            file = request.files["anh_minh_hoa"]
+            if file and file.filename and allowed_image_file(file.filename):
+                fname = secure_filename(file.filename)
+                _, ext = os.path.splitext(fname)
+                unique_name = f"blog_{int(time.time())}_{secrets.token_hex(4)}{ext}"
+                file.save(str(UPLOAD_BLOG_FOLDER / unique_name))
+                anh_minh_hoa = f"/static/uploads/blog/{unique_name}"
+
+        db = get_db()
+        cur = db.cursor()
+        cur.execute("""
+            INSERT INTO blog_posts (tieu_de, noi_dung, anh_minh_hoa, tac_gia_ai, trang_thai, thoi_gian_dang)
+            VALUES (?, ?, ?, 0, ?, CURRENT_TIMESTAMP)
+        """, (tieu_de, noi_dung, anh_minh_hoa, trang_thai))
+        db.commit()
+
+        flash("Bài viết đã được tạo thành công!", "success")
+        return redirect(url_for("blog_manage"))
+
+    return render_template("blog_form.html", post=None, action="create")
+
+
+@app.route("/blog/<int:post_id>/edit", methods=["GET", "POST"])
+@teacher_or_admin_required
+def blog_edit(post_id):
+    """
+    Chỉnh sửa bài viết hiện có:
+    - Cho phép cập nhật tiêu đề, nội dung, thay ảnh minh họa và đổi trạng thái.
+    """
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("SELECT * FROM blog_posts WHERE id = ?", (post_id,))
+    post = cur.fetchone()
+
+    if not post:
+        abort(404)
+
+    if request.method == "POST":
+        tieu_de = request.form.get("tieu_de", "").strip()
+        noi_dung = request.form.get("noi_dung", "").strip()
+        trang_thai = request.form.get("trang_thai", post["trang_thai"]).strip()
+        if trang_thai not in ("nhap", "da_duyet", "da_dang"):
+            trang_thai = post["trang_thai"]
+
+        if not tieu_de or not noi_dung:
+            flash("Vui lòng nhập đầy đủ tiêu đề và nội dung bài viết.", "danger")
+            return render_template("blog_form.html", post=post, action="edit")
+
+        anh_minh_hoa = post["anh_minh_hoa"]
+        if "anh_minh_hoa" in request.files:
+            file = request.files["anh_minh_hoa"]
+            if file and file.filename and allowed_image_file(file.filename):
+                fname = secure_filename(file.filename)
+                _, ext = os.path.splitext(fname)
+                unique_name = f"blog_{int(time.time())}_{secrets.token_hex(4)}{ext}"
+                file.save(str(UPLOAD_BLOG_FOLDER / unique_name))
+                anh_minh_hoa = f"/static/uploads/blog/{unique_name}"
+
+        cur.execute("""
+            UPDATE blog_posts 
+            SET tieu_de = ?, noi_dung = ?, anh_minh_hoa = ?, trang_thai = ?
+            WHERE id = ?
+        """, (tieu_de, noi_dung, anh_minh_hoa, trang_thai, post_id))
+        db.commit()
+
+        flash("Cập nhật bài viết thành công!", "success")
+        return redirect(url_for("blog_manage"))
+
+    return render_template("blog_form.html", post=post, action="edit")
+
+
+@app.route("/blog/<int:post_id>/delete", methods=["POST", "GET"])
+@teacher_or_admin_required
+def blog_delete(post_id):
+    """
+    Xóa bài viết khỏi cơ sở dữ liệu.
+    """
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("DELETE FROM blog_posts WHERE id = ?", (post_id,))
+    db.commit()
+    flash("Đã xóa bài viết thành công.", "info")
+    return redirect(url_for("blog_manage"))
+
+
+@app.route("/blog/<int:post_id>/publish", methods=["POST", "GET"])
+@teacher_or_admin_required
+def blog_publish(post_id):
+    """
+    Duyệt 1-click bài viết (Milestone M5-blog):
+    - Chuyển trạng thái từ 'nhap' sang 'da_dang' ngay lập tức.
+    - Cập nhật thời gian đăng bài thành thời điểm hiện tại.
+    - Sau khi duyệt, bài viết lập tức hiển thị công khai trên /blog.
+    """
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("""
+        UPDATE blog_posts 
+        SET trang_thai = 'da_dang', thoi_gian_dang = CURRENT_TIMESTAMP 
+        WHERE id = ?
+    """, (post_id,))
+    db.commit()
+
+    flash("Duyệt thành công! Bài viết đã được đăng công khai trên Bảng tin học đường.", "success")
+    return redirect(url_for("blog_detail", post_id=post_id))
+
+
+@app.route("/blog/ai-newsletter", methods=["POST", "GET"])
+@teacher_or_admin_required
+def blog_ai_newsletter():
+    """
+    Nút 'Nhờ AI soạn bản tin tuần' (Gemini Pro API):
+    - Tự động gom dữ liệu 7 ngày qua (phiên học mới, top 3 gia sư, lĩnh vực hot, 2-3 nhận xét 5 sao).
+    - Gọi Gemini Pro API để biên soạn bản tin tiếng Việt có cấu trúc 5 phần chuẩn mực:
+      1. Mở đầu -> 2. Con số nổi bật -> 3. Vinh danh gia sư của tuần -> 4. Câu chuyện tiêu biểu -> 5. Lời kêu gọi.
+    - Tự động lưu với tac_gia_ai = 1, trang_thai = 'nhap'.
+    - Cô giáo xem lại và duyệt 1-click để đăng chính thức.
+    """
+    db = get_db()
+    user_id = session.get("user_id")
+    post_id, title, content, is_live = ai_generate_weekly_newsletter(db, user_id=user_id)
+
+    ai_mode_note = "Gemini Pro" if is_live else "Chế độ dự phòng Sư phạm"
+    flash(
+        f"✨ AI ({ai_mode_note}) đã soạn xong Bản tin tuần với đầy đủ 5 phần! "
+        f"Bản tin hiện đang ở trạng thái 'Bản nháp'. Cô giáo hãy xem lại và bấm 'Duyệt & Đăng ngay' để công khai lên Bảng tin.",
+        "success"
+    )
+    return redirect(url_for("blog_detail", post_id=post_id))
 
 
 # ------------------------------------------------------------------------------

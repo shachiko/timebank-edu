@@ -554,9 +554,63 @@ Sau khi ứng dụng đã chạy trên Render, thực hiện các bước sau đ
 
 ---
 
+---
+
 ## 18. Tính bảo mật và biến môi trường
 - File `.env` chứa `GEMINI_API_KEY` và `FLASK_SECRET_KEY` được bảo vệ nghiêm ngặt bằng `.gitignore`, **TUYỆT ĐỐI KHÔNG BAO GIỜ** được push lên GitHub công khai.
 - Cung cấp file mẫu `.env.example` với hướng dẫn cấu hình chi tiết cho các trường triển khai.
+
+---
+
+## 19. Milestone M5-blog: Bảng tin học đường & AI Soạn bản tin tuần (Gemini Pro)
+
+### 1. Ý nghĩa sư phạm & Triết lý vận hành
+- **Bảng tin học đường (`/blog`):** Không gian truyền thông nội bộ nhà trường nhằm lan tỏa các câu chuyện đẹp về tinh thần chia sẻ kỹ năng, tinh thần trách nhiệm xã hội và văn hóa học tập đồng đẳng không dùng tiền mặt (1 giờ dạy = 1 tín dụng thời gian).
+- **Trợ lý AI Biên tập viên (`bien_tap_vien`):** Hỗ trợ Thầy Cô giáo tự động tổng hợp hoạt động tuần thành bản tin hấp dẫn, chính xác và nhân văn mà không làm mất thời gian viết bài thủ công của giáo viên.
+
+### 2. Các chức năng chính (CRUD Bài viết cho Giáo viên & Admin)
+1. **Trang công khai (`/blog`):**
+   - Liệt kê các bài viết và bản tin đã được duyệt/đăng chính thức (`trang_thai = 'da_dang'`).
+   - Các bài viết bản nháp (`trang_thai = 'nhap'`) **TUYỆT ĐỐI KHÔNG HIỂN THỊ** đối với học sinh và khách vãng lai.
+   - Thẻ bài viết hiển thị ảnh minh họa, tiêu đề, ngày đăng, trích đoạn nội dung và huy hiệu **"Hỗ trợ bởi AI (Gemini)"** đối với các bản tin do AI biên soạn.
+2. **Trang chi tiết bài viết (`/blog/<id>`):**
+   - Đọc toàn văn bài viết, định dạng phân đoạn sư phạm chuẩn mực.
+   - Chế độ **Xem trước (Preview):** Khi bài viết đang là bản nháp, chỉ Giáo viên và Admin mới có thể xem trước, giao diện có banner cảnh báo màu vàng cùng nút nổi bật **"Duyệt & Đăng ngay (1-Click)"**. Học sinh truy cập bài nháp sẽ nhận mã lỗi 404 Not Found.
+3. **Bảng quản lý bài viết (`/blog/manage`):**
+   - Chỉ Giáo viên (`giao_vien`) và Admin (`admin`) mới có quyền truy cập (Học sinh bị chặn 403 Forbidden).
+   - Thống kê tổng số bài, số bài đã đăng, số bản nháp và số bài do AI tạo.
+   - Cung cấp nút 1-click **"Duyệt & Đăng"**, nút Chỉnh sửa (`/blog/<id>/edit`), Xóa bài (`/blog/<id>/delete`) và Viết bài mới (`/blog/create`).
+
+### 3. Nút "Nhờ AI soạn bản tin tuần" (Gemini Pro API)
+- **Cơ chế thu thập dữ liệu tự động 7 ngày gần nhất:**
+  1. **Phiên học mới:** Đếm tổng số phiên và số giờ tín dụng lưu thông trong tuần từ bảng `sessions`.
+  2. **Top 3 gia sư của tuần:** Truy vấn 3 học sinh dạy nhiều giờ nhất và đạt điểm đánh giá cao nhất (kèm họ tên thật, lớp từ bảng `users`).
+  3. **Lĩnh vực hot:** Phân tích môn học/kỹ năng được trao đổi nhiều nhất trong tuần từ bảng `skills`.
+  4. **Nhận xét 5 sao tiêu biểu:** Trích xuất 2-3 lời phản hồi 5 sao xuất sắc nhất từ bảng `ratings` (kèm họ tên người khen và người được khen).
+- **Cấu trúc bản tin BẮT BUỘC ĐỦ 5 PHẦN SƯ PHẠM:**
+  1. **Mở đầu:** Lời chào, không khí học tập tích cực và tinh thần tương trợ học đường.
+  2. **Con số nổi bật:** Tóm tắt các con số thực tế ấn tượng (số phiên, số giờ, môn hot).
+  3. **Vinh danh gia sư của tuần:** Nêu đích danh họ tên thật, lớp và lời khen ngợi cho Top 3 gia sư.
+  4. **Câu chuyện tiêu biểu:** Trích dẫn các phản hồi 5 sao thực tế đầy xúc động giữa bạn bè.
+  5. **Lời kêu gọi:** Động viên học sinh toàn trường tiếp tục mở ví, trao đổi kỹ năng và đồng hành cùng TimeBank EDU.
+- **Quy trình duyệt 1-click (Human-in-the-loop):**
+  - AI sinh bài viết và tự động lưu vào bảng `blog_posts` với `tac_gia_ai = 1`, `trang_thai = 'nhap'`.
+  - Cô giáo chỉ cần xem lại nội dung và nhấn **"Duyệt & Đăng ngay" (1-Click)** $\rightarrow$ Bài chuyển sang `da_dang` và lập tức hiển thị công khai trên `/blog`.
+- **Cơ chế dự phòng Rule-Based (Graceful Degradation):** Nếu chưa cấu hình `GEMINI_API_KEY` hoặc API mất kết nối mạng, thuật toán dự phòng tự động biên soạn bản tin chuẩn mực với đầy đủ 5 phần cấu trúc và dữ liệu học sinh thật, đảm bảo hệ thống không bao giờ gặp sự cố.
+
+### 4. Hướng dẫn kiểm thử nghiệm thu Milestone M5-blog:
+```bash
+python test_m5_blog.py
+```
+* Bộ kiểm thử tự động gồm 6 test cases chuẩn:
+  1. `test_01_access_control_blog_management`: Kiểm tra phân quyền RBAC chặt chẽ (Học sinh 403, Khách 302, GV/Admin 200).
+  2. `test_02_crud_blog_posts`: Kiểm tra các thao tác Thêm, Sửa, Xóa bài viết thành công.
+  3. `test_03_blog_index_filters_drafts`: Xác nhận trang `/blog` chỉ hiển thị bài đã đăng, bài nháp chưa duyệt không xuất hiện.
+  4. `test_04_blog_detail_access_and_preview`: Xác nhận xem chi tiết bài viết và chế độ Preview bài nháp dành cho giáo viên.
+  5. `test_05_ai_weekly_newsletter_generation`: Xác nhận bản tin AI lưu `tac_gia_ai=1`, `trang_thai='nhap'`, đủ 5 phần cấu trúc và chứa tên thật từ dữ liệu CSDL.
+  6. `test_06_one_click_publish_workflow`: Xác nhận cơ chế duyệt 1-click của cô giáo hoạt động chuẩn xác, sau duyệt bài lập tức xuất hiện công khai trên `/blog` kèm huy hiệu AI.
+* Kết quả: **6/6 test cases đạt chuẩn 100% OK**.
+
 
 
 

@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}
+  {% if action == 'create' %}Viết bài mới — Bảng tin Học đường{% else %}Chỉnh sửa bài viết — Bảng tin Học đường{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('index') }}" class="text-decoration-none">Trang chủ</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('blog_manage') }}" class="text-decoration-none">Quản lý Bảng tin</a></li>
+      <li class="breadcrumb-item active" aria-current="page">
+        {% if action == 'create' %}Viết bài mới{% else %}Chỉnh sửa bài #{{ post.id }}{% endif %}
+      </li>
+    </ol>
+  </nav>
+
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+        <div class="card-header bg-primary bg-gradient text-white py-3 px-4">
+          <h4 class="fw-bold mb-0">
+            {% if action == 'create' %}
+              <i class="bi bi-pencil-square me-2"></i>Viết bài mới cho Bảng tin học đường
+            {% else %}
+              <i class="bi bi-pencil me-2"></i>Chỉnh sửa bài viết: {{ post.tieu_de }}
+            {% endif %}
+          </h4>
+        </div>
+
+        <div class="card-body p-4 p-md-5">
+          <form method="POST" enctype="multipart/form-data">
+            <!-- Tiêu đề -->
+            <div class="mb-4">
+              <label for="tieu_de" class="form-label fw-bold text-dark">
+                Tiêu đề bài viết <span class="text-danger">*</span>
+              </label>
+              <input type="text" class="form-control form-control-lg rounded-3" id="tieu_de" name="tieu_de" 
+                     placeholder="Ví dụ: Bản tin Tuần TimeBank EDU: Lan tỏa tri thức học đường..."
+                     value="{{ post.tieu_de if post else '' }}" required>
+            </div>
+
+            <!-- Trạng thái bài viết -->
+            <div class="mb-4">
+              <label for="trang_thai" class="form-label fw-bold text-dark">
+                Trạng thái bài viết <span class="text-danger">*</span>
+              </label>
+              <select class="form-select rounded-3" id="trang_thai" name="trang_thai">
+                <option value="nhap" {% if not post or post.trang_thai == 'nhap' %}selected{% endif %}>
+                  📝 Bản nháp (Chưa công khai - chỉ Giáo viên xem được)
+                </option>
+                <option value="da_dang" {% if post and post.trang_thai == 'da_dang' %}selected{% endif %}>
+                  🚀 Đã đăng (Công khai cho toàn thể học sinh trên trang /blog)
+                </option>
+                <option value="da_duyet" {% if post and post.trang_thai == 'da_duyet' %}selected{% endif %}>
+                  ✅ Đã duyệt (Chờ lịch phát hành)
+                </option>
+              </select>
+              <div class="form-text">Lưu ý: Chỉ các bài viết có trạng thái <strong>"Đã đăng"</strong> mới xuất hiện trên trang Bảng tin công khai.</div>
+            </div>
+
+            <!-- Ảnh minh họa upload -->
+            <div class="mb-4">
+              <label for="anh_minh_hoa" class="form-label fw-bold text-dark">
+                Ảnh minh họa (Banner bài viết)
+              </label>
+              {% if post and post.anh_minh_hoa %}
+              <div class="mb-2 d-flex align-items-center gap-3">
+                <div class="rounded-3 overflow-hidden border shadow-xs" style="width: 120px; height: 70px;">
+                  <img src="{{ post.anh_minh_hoa }}" alt="Current image" class="w-100 h-100 object-fit-cover"
+                       onerror="this.src='{{ url_for('static', filename='img/newsletter_banner.svg') }}'">
+                </div>
+                <small class="text-muted">Ảnh hiện tại đang sử dụng. Chọn file mới bên dưới nếu muốn thay đổi.</small>
+              </div>
+              {% endif %}
+              <input class="form-control rounded-3" type="file" id="anh_minh_hoa" name="anh_minh_hoa" accept="image/*">
+              <div class="form-text">Hỗ trợ các định dạng ảnh: PNG, JPG, JPEG, WEBP, GIF. Kích thước khuyến nghị: 1200x630px. Nếu để trống sẽ sử dụng ảnh mặc định của nhà trường.</div>
+            </div>
+
+            <!-- Nội dung bài viết -->
+            <div class="mb-4">
+              <label for="noi_dung" class="form-label fw-bold text-dark">
+                Nội dung bài viết <span class="text-danger">*</span>
+              </label>
+              <textarea class="form-control rounded-3 font-monospace" id="noi_dung" name="noi_dung" rows="14" 
+                        placeholder="Nhập nội dung bài viết..." required>{{ post.noi_dung if post else '' }}</textarea>
+              <div class="form-text">Hỗ trợ định dạng phân đoạn, tiêu đề theo chuẩn cấu trúc bản tin sư phạm.</div>
+            </div>
+
+            <!-- Nút hành động -->
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+              <a href="{{ url_for('blog_manage') }}" class="btn btn-outline-secondary rounded-pill px-4">
+                <i class="bi bi-x-circle me-1"></i>Hủy bỏ
+              </a>
+              <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">
+                  <i class="bi bi-check-circle me-1"></i>
+                  {% if action == 'create' %}Lưu bài viết{% else %}Cập nhật bài viết{% endif %}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

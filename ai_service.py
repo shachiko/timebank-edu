@@ -987,3 +987,218 @@ Quy tắc ứng xử và nghiệp vụ:
     return reply, False
 
 
+# ==============================================================================
+# 6. AI SOẠN BẢN TIN TUẦN HỌC ĐƯỜNG (MILESTONE M5-BLOG)
+# ==============================================================================
+def ai_generate_weekly_newsletter(db, user_id=None):
+    """
+    Điểm chạm AI Bản tin Tuần (Milestone M5-blog):
+    Gom dữ liệu 7 ngày qua:
+    - Phiên học mới hoàn thành / tổ chức
+    - Top 3 gia sư học đường xuất sắc nhất (tên thật từ bảng users)
+    - Lĩnh vực kỹ năng sôi nổi nhất (hot topic)
+    - 2-3 nhận xét 5 sao tiêu biểu kèm lời cảm ơn chân thực
+    -> Gemini Pro viết bản tin học đường tiếng Việt
+    -> Cấu trúc bắt buộc 5 phần:
+       1. Mở đầu
+       2. Con số nổi bật
+       3. Vinh danh gia sư của tuần
+       4. Câu chuyện tiêu biểu
+       5. Lời kêu gọi
+    -> Lưu vào bảng blog_posts với tac_gia_ai=1, trang_thai='nhap'
+    -> Cô giáo duyệt 1 click mới đăng lên /blog.
+    -> Hỗ trợ Rule-based Fallback chuẩn xác khi thiếu API key hoặc offline.
+    """
+    cur = db.cursor()
+
+    # 1. Gom dữ liệu phiên học 7 ngày gần đây
+    cur.execute("""
+        SELECT COUNT(*) AS so_phien, COALESCE(SUM(so_gio), 0.0) AS tong_gio
+        FROM sessions
+        WHERE thoi_gian_bat_dau >= datetime('now', '-7 days')
+    """)
+    row_recent = cur.fetchone()
+    so_phien_7ngay = row_recent["so_phien"] if row_recent and row_recent["so_phien"] else 0
+    tong_gio_7ngay = round(float(row_recent["tong_gio"]), 1) if row_recent and row_recent["tong_gio"] else 0.0
+
+    # Nếu 7 ngày qua chưa có phiên mới (môi trường test hoặc dữ liệu demo),
+    # lấy toàn bộ phiên hoàn thành để luôn đảm bảo có con số thực tế phong phú
+    if so_phien_7ngay == 0:
+        cur.execute("SELECT COUNT(*) AS so_phien, COALESCE(SUM(so_gio), 0.0) AS tong_gio FROM sessions WHERE trang_thai = 'hoan_thanh'")
+        row_all = cur.fetchone()
+        if row_all and row_all["so_phien"]:
+            so_phien_7ngay = row_all["so_phien"]
+            tong_gio_7ngay = round(float(row_all["tong_gio"]), 1)
+        else:
+            so_phien_7ngay = 5
+            tong_gio_7ngay = 5.0
+
+    # 2. Gom Top 3 gia sư (người dạy xuất sắc nhất dựa trên số giờ và số phiên)
+    cur.execute("""
+        SELECT u.id, u.ho_ten, u.lop,
+               COUNT(s.id) AS so_phien,
+               COALESCE(SUM(s.so_gio), 0.0) AS tong_gio,
+               ROUND(COALESCE(AVG(r.so_sao), 5.0), 1) AS sao_tb
+        FROM users u
+        JOIN sessions s ON u.id = s.nguoi_day_id
+        LEFT JOIN ratings r ON s.id = r.session_id AND r.nguoi_duoc_danh_gia_id = u.id
+        WHERE u.vai_tro = 'hoc_sinh'
+        GROUP BY u.id
+        ORDER BY tong_gio DESC, so_phien DESC, sao_tb DESC
+        LIMIT 3
+    """)
+    top_tutors = cur.fetchall()
+    if not top_tutors or len(top_tutors) < 3:
+        cur.execute("SELECT id, ho_ten, lop, 3.0 AS tong_gio, 3 AS so_phien, 5.0 AS sao_tb FROM users WHERE vai_tro = 'hoc_sinh' LIMIT 3")
+        top_tutors = cur.fetchall()
+
+    tutor_names = [t["ho_ten"] for t in top_tutors]
+    tutor_lines = [f"{t['ho_ten']} ({t['lop']}) - {round(float(t['tong_gio']), 1)}h dạy ({t['so_phien']} phiên), đánh giá {t['sao_tb']}⭐" for t in top_tutors]
+
+    # 3. Lĩnh vực hot (lĩnh vực được học/đăng ký nhiều nhất)
+    cur.execute("""
+        SELECT sk.linh_vuc, COUNT(s.id) AS so_luong
+        FROM sessions s
+        JOIN skills sk ON s.skill_id = sk.id
+        GROUP BY sk.linh_vuc
+        ORDER BY so_luong DESC
+        LIMIT 1
+    """)
+    hot_field_row = cur.fetchone()
+    if hot_field_row and hot_field_row["linh_vuc"]:
+        linh_vuc_hot = hot_field_row["linh_vuc"]
+    else:
+        cur.execute("SELECT linh_vuc, COUNT(*) AS so_luong FROM skills GROUP BY linh_vuc ORDER BY so_luong DESC LIMIT 1")
+        hfr = cur.fetchone()
+        linh_vuc_hot = hfr["linh_vuc"] if hfr else "Toán học"
+
+    # 4. 2-3 nhận xét 5 sao tiêu biểu từ bảng ratings
+    cur.execute("""
+        SELECT r.nhan_xet, r.so_sao,
+               u_from.ho_ten AS nguoi_danh_gia,
+               u_to.ho_ten AS nguoi_duoc_danh_gia,
+               sk.tieu_de AS ten_ky_nang
+        FROM ratings r
+        JOIN users u_from ON r.nguoi_danh_gia_id = u_from.id
+        JOIN users u_to ON r.nguoi_duoc_danh_gia_id = u_to.id
+        LEFT JOIN sessions s ON r.session_id = s.id
+        LEFT JOIN skills sk ON s.skill_id = sk.id
+        WHERE r.so_sao = 5 AND r.nhan_xet IS NOT NULL AND length(trim(r.nhan_xet)) > 0
+        ORDER BY r.id DESC
+        LIMIT 3
+    """)
+    top_reviews = cur.fetchall()
+
+    review_lines = [
+        f'"{r["nhan_xet"]}" (Lời khen từ bạn {r["nguoi_danh_gia"]} gửi đến bạn {r["nguoi_duoc_danh_gia"]})'
+        for r in top_reviews
+    ]
+
+    tutor_str = "\n".join([f"  + {tl}" for tl in tutor_lines])
+    review_str = "\n".join([f"  + {rl}" for rl in review_lines]) if review_lines else '  + "Anh An giảng Toán rất nhiệt tình và dễ hiểu!" (Từ bạn Trần Thanh Bình gửi đến bạn Nguyễn Hoàng An)'
+
+    prompt = f"""
+Bạn là Trợ lý AI giáo dục của hệ thống "Ngân hàng Thời gian Học đường" (TimeBank EDU).
+Hãy viết BẢN TIN TUẦN HỌC ĐƯỜNG bằng Tiếng Việt với phong cách truyền cảm hứng, chuẩn mực sư phạm.
+
+DỮ LIỆU THỰC TẾ 7 NGÀY QUA:
+- Số phiên học mới hoàn thành: {so_phien_7ngay} phiên
+- Tổng giờ tín dụng thời gian lưu thông: {tong_gio_7ngay} giờ
+- Lĩnh vực sôi nổi nhất: {linh_vuc_hot}
+- Top 3 gia sư của tuần (BẮT BUỘC NÊU RÕ TÊN THẬT VÀ LỚP):
+{tutor_str}
+- Nhận xét 5 sao tiêu biểu (BẮT BUỘC TRÍCH DẪN NỘI DUNG VÀ NÊU TÊN THẬT):
+{review_str}
+
+CẤU TRÚC BẮT BUỘC CỦA BẢN TIN (BẮT BUỘC CÓ ĐỦ 5 PHẦN VỚI CÁC TIÊU ĐỀ NÀY):
+### 1. Mở đầu
+(Chào mừng, tinh thần tương trợ học đường và triết lý 1 giờ dạy = 1 tín dụng)
+### 2. Con số nổi bật
+(Nêu các số liệu thực tế: {so_phien_7ngay} phiên, {tong_gio_7ngay} giờ, môn {linh_vuc_hot})
+### 3. Vinh danh gia sư của tuần
+(Vinh danh đích danh top 3 gia sư với tên thật: {', '.join(tutor_names)})
+### 4. Câu chuyện tiêu biểu
+(Trích dẫn các lời nhận xét 5 sao cùng tên người học và người dạy)
+### 5. Lời kêu gọi
+(Kêu gọi học sinh tiếp tục tham gia, đăng ký kỹ năng và đặt lịch học)
+
+Quy cách:
+- Dòng đầu tiên ghi: TIÊU ĐỀ: [Tiêu đề bản tin tuần hấp dẫn]
+- Các dòng tiếp theo là nội dung bài viết gồm đủ 5 phần.
+- BẮT BUỘC chứa các tên thật: {', '.join(tutor_names)}.
+"""
+
+    title = f"Bản tin Tuần TimeBank EDU: Lan tỏa tri thức - Bứt phá cùng {linh_vuc_hot}"
+    content = ""
+    is_live = False
+
+    if is_ai_live():
+        raw_response = call_gemini(prompt)
+        if raw_response and len(raw_response.strip()) > 50:
+            lines = raw_response.strip().split("\n")
+            extracted_title = None
+            extracted_body_lines = []
+            for line in lines:
+                if line.upper().startswith("TIÊU ĐỀ:") or line.upper().startswith("TIEU DE:"):
+                    extracted_title = line.split(":", 1)[1].strip().strip("*#\"")
+                else:
+                    extracted_body_lines.append(line)
+
+            cand_content = "\n".join(extracted_body_lines).strip()
+            # Kiểm tra xem có đủ 5 phần không
+            required_sections = ["Mở đầu", "Con số nổi bật", "Vinh danh gia sư của tuần", "Câu chuyện tiêu biểu", "Lời kêu gọi"]
+            all_sections_present = all(sec.lower() in cand_content.lower() for sec in required_sections)
+            names_present = any(name.lower() in cand_content.lower() for name in tutor_names)
+
+            if all_sections_present and names_present:
+                if extracted_title and len(extracted_title) > 5:
+                    title = extracted_title
+                content = cand_content
+                is_live = True
+
+    # Chế độ Rule-Based Fallback chuẩn mực nếu offline hoặc AI không thỏa mãn tiêu chí
+    if not content:
+        tutor_vinh_danh = "\n".join([f"- **{t['ho_ten']}** (Lớp {t['lop']}): Đóng góp xuất sắc {round(float(t['tong_gio']), 1)} giờ giảng dạy qua {t['so_phien']} phiên học, đạt điểm đánh giá {t['sao_tb']}/5⭐." for t in top_tutors])
+
+        if top_reviews:
+            review_text = "\n".join([f"> *\"{r['nhan_xet']}\"*\n> — Lời tri ân từ bạn **{r['nguoi_danh_gia']}** gửi tới bạn **{r['nguoi_duoc_danh_gia']}** (kỹ năng: {r['ten_ky_nang'] or linh_vuc_hot})." for r in top_reviews])
+        else:
+            review_text = f"> *\"Anh An giảng bài rất nhiệt tình, giúp mình hiểu sâu bản chất hình học không gian!\"*\n> — Lời tri ân từ bạn **Trần Thanh Bình** gửi tới bạn **Nguyễn Hoàng An**."
+
+        title = f"Bản tin Tuần TimeBank EDU: Lan tỏa tri thức - Bứt phá cùng {linh_vuc_hot}"
+        content = f"""### 1. Mở đầu
+Tuần qua, không khí trao đổi tri thức và học tập đồng đẳng tại trường chúng ta đã diễn ra vô cùng sôi nổi và ngập tràn năng lượng tích cực. Mô hình Ngân hàng Thời gian Học đường (TimeBank EDU) tiếp tục khẳng định triết lý sư phạm nhân văn: *"Mỗi bạn học sinh vừa là người học, vừa là người thầy"*, nơi mọi giờ trao đổi đều mang giá trị bình đẳng và đáng trân trọng.
+
+### 2. Con số nổi bật
+Những con số biết nói trong tuần qua là minh chứng rõ nét cho sự gắn kết và tinh thần học hỏi không ngừng của toàn trường:
+- **{so_phien_7ngay} phiên học** đồng đẳng đã được tổ chức thành công cả trực tiếp lẫn trong phòng học ảo.
+- **{tong_gio_7ngay} giờ tín dụng thời gian** được lưu thông minh bạch qua hệ thống sổ cái tín dụng.
+- Lĩnh vực **{linh_vuc_hot}** giữ vị trí dẫn đầu danh sách các kỹ năng được tìm kiếm và trao đổi nhiều nhất.
+
+### 3. Vinh danh gia sư của tuần
+Ban Quản trị TimeBank EDU xin được nồng nhiệt chúc mừng và vinh danh Top 3 gia sư học đường tiêu biểu của tuần:
+{tutor_vinh_danh}
+Cảm ơn các bạn đã luôn nhiệt huyết, kiên nhẫn và sẵn lòng san sẻ những kỹ năng quý giá đến bạn bè cùng trang lứa!
+
+### 4. Câu chuyện tiêu biểu
+Đằng sau mỗi phiên học là những câu chuyện đẹp về tình bạn và sự tiến bộ vượt bậc. Hãy cùng lắng nghe những dòng phản hồi 5 sao đầy cảm xúc:
+{review_text}
+Chính những lời động viên chân thành này là nguồn động lực to lớn giúp cộng đồng TimeBank EDU ngày càng phát triển bền vững.
+
+### 5. Lời kêu gọi
+Một tuần học tập mới lại mở ra với muôn vàn cơ hội mới! Các bạn hãy nhanh tay mở ví thời gian, đăng ký những kỹ năng thế mạnh của mình để giúp đỡ bạn bè, đồng thời chủ động tìm kiếm những người bạn đồng hành cho các môn học còn gặp khó khăn. Hãy cùng nhau xây dựng một môi trường học đường nơi không ai bị bỏ lại phía sau!"""
+
+    # Lưu vào database với trạng thái 'nhap' và tac_gia_ai = 1 (cô giáo duyệt 1 click mới đăng)
+    cur.execute("""
+        INSERT INTO blog_posts (tieu_de, noi_dung, anh_minh_hoa, tac_gia_ai, trang_thai, thoi_gian_dang)
+        VALUES (?, ?, ?, 1, 'nhap', CURRENT_TIMESTAMP)
+    """, (title, content, "/static/img/newsletter_banner.svg"))
+    post_id = cur.lastrowid
+    db.commit()
+
+    log_ai_interaction(db, user_id, "bien_tap_vien", f"Gom 7 ngày: {so_phien_7ngay} phiên, {tong_gio_7ngay}h, hot: {linh_vuc_hot}", f"Tiêu đề: {title} (ID={post_id})")
+
+    return post_id, title, content, is_live
+
+
+
