@@ -11,6 +11,9 @@
       <p class="text-muted small mb-0">{{ config.ten_truong }} — Bản cài đặt độc lập (Single-Tenant)</p>
     </div>
     <div class="d-flex gap-2">
+      <a href="{{ url_for('virtual_rooms_dashboard') }}" class="btn btn-primary btn-sm">
+        <i class="bi bi-camera-video me-1"></i> Giám sát Phòng học ảo
+      </a>
       <a href="{{ url_for('skills_approval') }}" class="btn btn-outline-primary btn-sm">
         <i class="bi bi-patch-check me-1"></i> Duyệt Kỹ Năng
       </a>

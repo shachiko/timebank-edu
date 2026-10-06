@@ -116,9 +116,16 @@
                       {% endif %}
                     </td>
                     <td class="text-end">
-                      <a href="{{ url_for('session_detail', session_id=s.id) }}" class="btn btn-outline-brand btn-sm">
-                        <i class="bi bi-qr-code-scan me-1"></i> Check-in & QR
-                      </a>
+                      <div class="d-inline-flex gap-1">
+                        {% if s.trang_thai in ('da_dat', 'can_xac_minh') %}
+                        <a href="{{ url_for('virtual_room', session_id=s.id) }}" class="btn btn-primary btn-sm" title="Vào phòng học trực tuyến">
+                          <i class="bi bi-camera-video-fill me-1"></i> Phòng ảo
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('session_detail', session_id=s.id) }}" class="btn btn-outline-brand btn-sm">
+                          <i class="bi bi-qr-code-scan me-1"></i> Chi tiết & QR
+                        </a>
+                      </div>
                     </td>
                   </tr>
                   {% endfor %}
@@ -179,9 +186,16 @@
                       {% endif %}
                     </td>
                     <td class="text-end">
-                      <a href="{{ url_for('session_detail', session_id=s.id) }}" class="btn btn-outline-brand btn-sm">
-                        <i class="bi bi-qr-code-scan me-1"></i> Check-in & QR
-                      </a>
+                      <div class="d-inline-flex gap-1">
+                        {% if s.trang_thai in ('da_dat', 'can_xac_minh') %}
+                        <a href="{{ url_for('virtual_room', session_id=s.id) }}" class="btn btn-primary btn-sm" title="Vào phòng học trực tuyến">
+                          <i class="bi bi-camera-video-fill me-1"></i> Phòng ảo
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('session_detail', session_id=s.id) }}" class="btn btn-outline-brand btn-sm">
+                          <i class="bi bi-qr-code-scan me-1"></i> Chi tiết & QR
+                        </a>
+                      </div>
                     </td>
                   </tr>
                   {% endfor %}

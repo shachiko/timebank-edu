@@ -141,13 +141,26 @@
           </div>
         </div>
 
+        <!-- NÚT VÀO PHÒNG HỌC ẢO TRỰC TIẾP (JITSI MEET) -->
+        {% if session_data.trang_thai in ('da_dat', 'can_xac_minh') %}
+          <div class="mb-3">
+            <a href="{{ url_for('virtual_room', session_id=session_data.id) }}" class="btn btn-primary w-100 py-2 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2">
+              <i class="bi bi-camera-video-fill fs-5"></i>
+              <span>Vào Phòng Học Ảo (Jitsi Meet)</span>
+            </a>
+            <div class="text-center small text-muted mt-1">
+              <i class="bi bi-broadcast me-1 text-danger"></i> Tự động điểm danh check-in & tính giờ học online (≥ 80%)
+            </div>
+          </div>
+        {% endif %}
+
         {% if session_data.trang_thai == 'da_dat' %}
           <!-- Các nút Check-in -->
           <div class="mb-3">
             {% if is_teacher and session_data.checkin_day == 0 %}
               <form method="POST" action="{{ url_for('checkin_session', session_id=session_data.id) }}" class="mb-2">
                 <input type="hidden" name="role" value="teacher">
-                <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                <button type="submit" class="btn btn-outline-primary w-100 py-2 fw-semibold">
                   <i class="bi bi-qr-code me-1"></i> Tôi xác nhận Check-in (Người dạy)
                 </button>
               </form>
@@ -160,7 +173,7 @@
             {% if is_learner and session_data.checkin_hoc == 0 %}
               <form method="POST" action="{{ url_for('checkin_session', session_id=session_data.id) }}" class="mb-2">
                 <input type="hidden" name="role" value="learner">
-                <button type="submit" class="btn btn-success w-100 py-2 fw-semibold">
+                <button type="submit" class="btn btn-outline-success w-100 py-2 fw-semibold">
                   <i class="bi bi-qr-code me-1"></i> Tôi xác nhận Check-in (Người học)
                 </button>
               </form>
@@ -190,6 +203,28 @@
               Sau khi cả 2 bạn cùng check-in, bạn gia sư sẽ bấm xác nhận để hoàn tất chuyển giờ tín dụng.
             </p>
           {% endif %}
+
+        {% elif session_data.trang_thai == 'can_xac_minh' %}
+          <div class="alert alert-warning mb-3">
+            <h6 class="fw-bold text-dark mb-1"><i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>Phiên học Cần Xác Minh</h6>
+            <p class="small text-muted mb-2">
+              Thời gian cùng học trực tuyến chưa đạt 80% thời lượng quy định. Phiên học đang chờ Thầy/Cô kiểm tra nhật ký đối soát để duyệt tay.
+            </p>
+            {% if is_admin %}
+              <div class="d-flex gap-2 mt-2">
+                <form method="POST" action="{{ url_for('manual_approve_session', session_id=session_data.id) }}">
+                  <button type="submit" class="btn btn-success btn-sm fw-semibold">
+                    <i class="bi bi-check-lg me-1"></i> Duyệt tay & Chuyển giờ
+                  </button>
+                </form>
+                <form method="POST" action="{{ url_for('manual_reject_session', session_id=session_data.id) }}">
+                  <button type="submit" class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-x-lg me-1"></i> Hủy phiên
+                  </button>
+                </form>
+              </div>
+            {% endif %}
+          </div>
 
         {% elif session_data.trang_thai == 'hoan_thanh' %}
           <div class="alert alert-success mb-0 text-center py-3">

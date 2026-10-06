@@ -205,6 +205,40 @@ Hệ thống thiết lập sẵn các tài khoản để Ban Giám khảo và gi
 
 ---
 
-## 11. Tính trung thực về AI
+## 11. Phòng học ảo trong ứng dụng & Đối soát thời lượng online (Milestone M3+)
+
+- **Phòng học ảo tích hợp (`/sessions/<id>/room`):**
+  * Nhúng trực tiếp giải pháp hội nghị truyền hình Jitsi Meet thông qua iframe HTML chuẩn (`https://meet.jit.si/timebankedu-{ma_qr}`).
+  * Không yêu cầu tài khoản bên thứ ba, bảo mật riêng biệt từng buổi học theo mã định danh `ma_qr`.
+  * Cung cấp giao diện tích hợp: khung video 2 bên, đồng hồ đếm giờ trực tiếp (timer JS), dàn ý gợi ý bài giảng và bảng đối soát quy tắc 80%.
+
+- **Nhật ký vào/ra (`session_attendance`) & Tự động Check-in 2 bên:**
+  * Khi người dạy hoặc người học truy cập phòng học ảo, hệ thống tự động ghi vết thời gian vào (`thoi_gian_vao`) trong bảng `session_attendance`.
+  * Tự động kích hoạt cờ check-in tương ứng: `sessions.checkin_day = 1` và `sessions.checkin_hoc = 1` mà không cần thao tác thủ công.
+
+- **Cơ chế đối soát thông minh: Tiêu chí thời lượng cùng học ≥ 80%:**
+  * Khi bấm **"Kết thúc buổi học"**, hệ thống tự động chốt thời gian ra và tính tổng thời lượng giao nhau (cùng online đồng thời) giữa người dạy và người học.
+  * **Trường hợp cùng online ≥ 80% thời lượng quy định:**
+    - Tự động hoàn thành phiên (`sessions.trang_thai = 'hoan_thanh'`).
+    - Tự động ghi 2 dòng `credits_ledger` (`+so_gio` cho người dạy, `-so_gio` cho người học) và cập nhật số dư tức thì.
+  * **Trường hợp cùng online < 80% thời lượng quy định:**
+    - Tuyệt đối không tự động chuyển giờ!
+    - Phiên học chuyển sang trạng thái `'can_xac_minh'`.
+    - Thông báo rõ ràng cho học sinh và gửi yêu cầu tới Giáo viên / Ban Giám Hiệu để kiểm tra nhật ký và duyệt tay.
+
+- **Dashboard Giám sát phòng học ảo cho Giáo viên & Admin (`/virtual-rooms`):**
+  * Danh sách các lớp học trực tuyến đang diễn ra với tính năng **"Ghé thăm phòng học" (Dự giờ sư phạm)** bất kỳ lúc nào.
+  * Danh sách các phiên học cần xác minh thời lượng (&lt; 80%) với tính năng **"Duyệt tay & Chuyển giờ"** hoặc **"Hủy phiên"**.
+
+- **Chạy kiểm thử nghiệm thu Milestone M3+:**
+  ```bash
+  python test_m3_plus.py
+  ```
+  * Kết quả: 4/4 test cases đạt chuẩn 100%.
+
+---
+
+## 12. Tính trung thực về AI
 Hệ thống tuân thủ nghiêm ngặt nguyên tắc minh bạch: Mọi vị trí có sự tham gia của Trí tuệ nhân tạo (kiểm duyệt, gợi ý ghép cặp, dàn ý buổi học, tạo trắc nghiệm) đều được gắn nhãn nhận diện rõ ràng: **"Hỗ trợ bởi AI (Gemini)"**.
+
 

@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Phòng học ảo: {{ session_data.tieu_de }} - {{ config.ten_truong }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3 px-lg-4">
+  <!-- Thanh tiêu đề điều khiển -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 p-3 bg-white rounded-4 shadow-sm border gap-2">
+    <div class="d-flex align-items-center gap-3">
+      <a href="{{ url_for('session_detail', session_id=session_data.id) }}" class="btn btn-outline-secondary btn-sm rounded-pill">
+        <i class="bi bi-arrow-left me-1"></i> Rời phòng
+      </a>
+      <div>
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge bg-danger rounded-pill px-2 py-1 pulse-badge">
+            <i class="bi bi-broadcast me-1"></i> TRỰC TUYẾN
+          </span>
+          <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold">{{ session_data.linh_vuc }}</span>
+          {% if is_supervisor %}
+            <span class="badge bg-warning text-dark"><i class="bi bi-eye-fill me-1"></i> Chế độ Giám sát Sư phạm (GV/Admin)</span>
+          {% endif %}
+        </div>
+        <h4 class="fw-bold mb-0 text-dark mt-1">{{ session_data.tieu_de }}</h4>
+      </div>
+    </div>
+
+    <!-- Đồng hồ đếm giờ & Nút kết thúc -->
+    <div class="d-flex align-items-center gap-3">
+      <!-- Đồng hồ học tập trực tiếp -->
+      <div class="bg-light px-3 py-2 rounded-3 border text-center">
+        <span class="text-muted d-block small" style="font-size: 0.75rem;">
+          <i class="bi bi-stopwatch me-1 text-primary"></i>Thời gian đã học
+        </span>
+        <span class="fw-bold fs-5 font-monospace text-primary" id="roomTimer">00:00:00</span>
+      </div>
+
+      <!-- Nút kết thúc buổi học -->
+      {% if is_teacher or is_learner or is_supervisor %}
+      <form method="POST" action="{{ url_for('finish_virtual_room', session_id=session_data.id) }}" onsubmit="return confirm('Bạn có chắc chắn muốn kết thúc buổi học này? Hệ thống sẽ tự động đối soát thời lượng cùng online (yêu cầu ≥ 80%) để xử lý chuyển giờ.');">
+        <button type="submit" class="btn btn-danger fw-semibold px-3 py-2 shadow-sm">
+          <i class="bi bi-door-closed me-1"></i> Kết thúc buổi học
+        </button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <!-- Cột trái: Khung Video Jitsi Meet trực tiếp -->
+    <div class="col-lg-9">
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-dark position-relative" style="min-height: 620px;">
+        <!-- Iframe nhúng Jitsi Meet (meet.jit.si) -->
+        <iframe 
+          id="jitsiFrame"
+          src="https://meet.jit.si/{{ room_name }}#userInfo.displayName={{ current_user.ho_ten | urlencode }}&config.prejoinConfig.enabled=false" 
+          allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-write"
+          style="width: 100%; height: 650px; border: 0;"
+          title="Phòng học ảo TimeBank EDU">
+        </iframe>
+      </div>
+      <div class="mt-2 d-flex justify-content-between align-items-center small text-muted px-2">
+        <span><i class="bi bi-shield-check text-success me-1"></i> Phòng học bảo mật độc lập: <code>{{ room_name }}</code></span>
+        <span><span class="badge-ai" style="font-size: 0.7rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Gemini)</span> Giám sát thời lượng tự động</span>
+      </div>
+    </div>
+
+    <!-- Cột phải: Thông tin buổi học, quy định 80% & Dàn ý -->
+    <div class="col-lg-3">
+      <!-- Thẻ thành viên tham gia -->
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-3">
+        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-people-fill text-primary me-2"></i>Thành Viên Lớp Học</h6>
+
+        <!-- Người dạy -->
+        <div class="p-2 bg-light rounded-3 mb-2 border">
+          <div class="d-flex align-items-center justify-content-between">
+            <span class="badge bg-primary text-white" style="font-size: 0.7rem;">Gia sư (Dạy)</span>
+            <span class="badge bg-success-subtle text-success small"><i class="bi bi-check-circle-fill me-1"></i>Đã Check-in</span>
+          </div>
+          <div class="fw-bold text-dark mt-1">{{ session_data.ten_nguoi_day }}</div>
+          <div class="text-muted small">Lớp: {{ session_data.lop_nguoi_day }} • <code>{{ session_data.ma_nguoi_day }}</code></div>
+        </div>
+
+        <!-- Người học -->
+        <div class="p-2 bg-light rounded-3 border">
+          <div class="d-flex align-items-center justify-content-between">
+            <span class="badge bg-success text-white" style="font-size: 0.7rem;">Học sinh (Học)</span>
+            <span class="badge bg-success-subtle text-success small"><i class="bi bi-check-circle-fill me-1"></i>Đã Check-in</span>
+          </div>
+          <div class="fw-bold text-dark mt-1">{{ session_data.ten_nguoi_hoc }}</div>
+          <div class="text-muted small">Lớp: {{ session_data.lop_nguoi_hoc }} • <code>{{ session_data.ma_nguoi_hoc }}</code></div>
+        </div>
+      </div>
+
+      <!-- Thẻ quy tắc chuyển giờ 80% -->
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-3">
+        <h6 class="fw-bold text-dark mb-2">
+          <i class="bi bi-clock-history text-warning me-2"></i>Tiêu Chuẩn Chuyển Giờ
+        </h6>
+        <div class="small text-muted mb-2">
+          Quy định thời lượng: <strong>{{ "%.1f"|format(session_data.so_gio) }} giờ ({{ "%.0f"|format(session_data.so_gio * 60) }} phút)</strong>
+        </div>
+
+        <div class="alert alert-warning py-2 px-3 small mb-2 border-0 bg-warning bg-opacity-10 text-dark">
+          <i class="bi bi-info-circle-fill text-warning me-1"></i>
+          <strong>Tiêu chí ≥ 80%:</strong> Cả hai cần cùng online tối thiểu <strong>{{ "%.0f"|format(session_data.so_gio * 60 * 0.8) }} phút</strong> để hệ thống tự động chuyển tín dụng thời gian.
+        </div>
+
+        <div class="small text-secondary" style="font-size: 0.8rem;">
+          <i class="bi bi-shield-exclamation me-1 text-danger"></i>
+          Nếu dưới 80%, phiên sẽ chuyển trạng thái <strong>'Cần xác minh'</strong> để Giáo viên duyệt tay nhằm đảm bảo chất lượng học tập thực chất.
+        </div>
+      </div>
+
+      <!-- Dàn ý buổi học gợi ý bởi AI -->
+      {% if session_data.dan_y_ai %}
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+        <h6 class="fw-bold text-dark mb-2">
+          <span class="badge-ai" style="font-size: 0.7rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Gemini)</span> Dàn ý gợi ý
+        </h6>
+        <div class="small text-muted" style="max-height: 180px; overflow-y: auto;">
+          {{ session_data.dan_y_ai }}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Đồng hồ bấm giờ trực tiếp trên trình duyệt -->
+<script>
+  (function() {
+    let seconds = 0;
+    const timerEl = document.getElementById("roomTimer");
+    
+    setInterval(function() {
+      seconds++;
+      const hrs = String(Math.floor(seconds / 3600)).padStart(2, '0');
+      const mins = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+      const secs = String(seconds % 60).padStart(2, '0');
+      if (timerEl) {
+        timerEl.textContent = `${hrs}:${mins}:${secs}`;
+      }
+    }, 1000);
+  })();
+</script>
+
+<style>
+  .pulse-badge {
+    animation: pulseAnimation 2s infinite;
+  }
+  @keyframes pulseAnimation {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+  }
+</style>
+{% endblock %}

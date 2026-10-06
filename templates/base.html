@@ -119,6 +119,11 @@
                 {% if current_user.vai_tro in ('giao_vien', 'admin') %}
                 <li><hr class="dropdown-divider my-1"></li>
                 <li>
+                  <a class="dropdown-item py-2" href="{{ url_for('virtual_rooms_dashboard') }}">
+                    <i class="bi bi-camera-video text-primary me-2"></i>Giám sát phòng học ảo (Dự giờ)
+                  </a>
+                </li>
+                <li>
                   <a class="dropdown-item py-2" href="{{ url_for('skills_approval') }}">
                     <i class="bi bi-check2-square text-success me-2"></i>Duyệt kỹ năng học sinh
                   </a>

@@ -11,12 +11,14 @@ Triết lý sư phạm: "Một giờ bạn dạy — một giờ bạn được 
 
 import os
 import io
+import re
 import time
 import base64
 import secrets
 import sqlite3
 import yaml
 import qrcode
+from datetime import datetime
 from pathlib import Path
 from functools import wraps
 from dotenv import load_dotenv
@@ -1212,6 +1214,381 @@ def complete_session(session_id):
         flash(f"Có lỗi xảy ra trong quá trình hoàn thành phiên học: {e}", "danger")
         
     return redirect(url_for("session_detail", session_id=session_id))
+
+
+# ==============================================================================
+# MILESTONE M3+: PHÒNG HỌC ẢO TRỰC TUYẾN, SESSION ATTENDANCE & ĐỐI SOÁT 80% THỜI LƯỢNG
+# ==============================================================================
+
+def record_attendance_entry(db, session_id, user_id):
+    """
+    Ghi nhận lượt tham gia phòng học ảo của học sinh vào bảng session_attendance.
+    Đồng thời tự động cập nhật cờ check-in trong bảng sessions:
+    - Nếu là người dạy: sessions.checkin_day = 1
+    - Nếu là người học: sessions.checkin_hoc = 1
+    """
+    cur = db.cursor()
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    # 1. Ghi nhận thời gian vào phòng
+    cur.execute(
+        """INSERT INTO session_attendance (session_id, user_id, thoi_gian_vao, thoi_gian_ra)
+           VALUES (?, ?, ?, NULL)""",
+        (session_id, user_id, now_str)
+    )
+    att_id = cur.lastrowid
+    
+    # 2. Tự động cập nhật checkin cho người tương ứng
+    cur.execute("SELECT nguoi_day_id, nguoi_hoc_id FROM sessions WHERE id = ?", (session_id,))
+    s = cur.fetchone()
+    if s:
+        if s["nguoi_day_id"] == user_id:
+            cur.execute("UPDATE sessions SET checkin_day = 1 WHERE id = ?", (session_id,))
+        elif s["nguoi_hoc_id"] == user_id:
+            cur.execute("UPDATE sessions SET checkin_hoc = 1 WHERE id = ?", (session_id,))
+            
+    db.commit()
+    return att_id
+
+
+def close_attendance_entries(db, session_id, user_id=None):
+    """
+    Chốt thời gian ra (thoi_gian_ra) cho các bản ghi attendance đang mở.
+    """
+    cur = db.cursor()
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    if user_id:
+        cur.execute(
+            """UPDATE session_attendance 
+               SET thoi_gian_ra = ? 
+               WHERE session_id = ? AND user_id = ? AND (thoi_gian_ra IS NULL OR thoi_gian_ra = '')""",
+            (now_str, session_id, user_id)
+        )
+    else:
+        cur.execute(
+            """UPDATE session_attendance 
+               SET thoi_gian_ra = ? 
+               WHERE session_id = ? AND (thoi_gian_ra IS NULL OR thoi_gian_ra = '')""",
+            (now_str, session_id)
+        )
+    db.commit()
+
+
+def calculate_session_online_overlap(db, session_id, nguoi_day_id, nguoi_hoc_id):
+    """
+    Tính tổng thời gian (giây) mà cả Người dạy và Người học cùng có mặt đồng thời
+    trong phòng học ảo, dựa trên dữ liệu nhật ký session_attendance.
+    """
+    cur = db.cursor()
+    cur.execute(
+        """SELECT user_id, thoi_gian_vao, thoi_gian_ra 
+           FROM session_attendance 
+           WHERE session_id = ? AND user_id IN (?, ?) 
+           ORDER BY id ASC""",
+        (session_id, nguoi_day_id, nguoi_hoc_id)
+    )
+    rows = cur.fetchall()
+    
+    now = datetime.now()
+    
+    def parse_dt(s):
+        if not s:
+            return now
+        for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M"):
+            try:
+                return datetime.strptime(s, fmt)
+            except ValueError:
+                pass
+        return now
+
+    teacher_spans = []
+    learner_spans = []
+    
+    for r in rows:
+        start_t = parse_dt(r["thoi_gian_vao"])
+        end_t = parse_dt(r["thoi_gian_ra"]) if r["thoi_gian_ra"] else now
+        if end_t > start_t:
+            if r["user_id"] == nguoi_day_id:
+                teacher_spans.append((start_t, end_t))
+            elif r["user_id"] == nguoi_hoc_id:
+                learner_spans.append((start_t, end_t))
+                
+    # Gộp các khoảng thời gian bị lồng/chồng nhau của từng người
+    def merge_spans(spans):
+        if not spans:
+            return []
+        spans = sorted(spans, key=lambda x: x[0])
+        merged = [spans[0]]
+        for cur_start, cur_end in spans[1:]:
+            last_start, last_end = merged[-1]
+            if cur_start <= last_end:
+                merged[-1] = (last_start, max(last_end, cur_end))
+            else:
+                merged.append((cur_start, cur_end))
+        return merged
+
+    merged_t = merge_spans(teacher_spans)
+    merged_l = merge_spans(learner_spans)
+    
+    total_overlap_sec = 0.0
+    for ts, te in merged_t:
+        for ls, le in merged_l:
+            overlap_s = max(ts, ls)
+            overlap_e = min(te, le)
+            if overlap_e > overlap_s:
+                total_overlap_sec += (overlap_e - overlap_s).total_seconds()
+                
+    return total_overlap_sec
+
+
+@app.route("/sessions/<int:session_id>/room")
+@login_required
+def virtual_room(session_id):
+    """
+    Phòng học ảo trong ứng dụng (Milestone M3+):
+    - Nhúng Jitsi Meet (meet.jit.si) qua iframe, tên phòng = 'timebankedu-' + ma_qr.
+    - Không cần tài khoản Jitsi.
+    - Tự động ghi session_attendance (vào phòng) và cập nhật check-in cho 2 bên.
+    - Giáo viên / Admin có quyền ghé thăm bất kỳ phòng học nào để dự giờ sư phạm.
+    """
+    db = get_db()
+    cur = db.cursor()
+    user_id = session["user_id"]
+    user_role = session.get("vai_tro", "")
+    
+    cur.execute(
+        """SELECT 
+               s.*,
+               sk.tieu_de,
+               sk.linh_vuc,
+               sk.mo_ta,
+               ud.ho_ten AS ten_nguoi_day,
+               ud.lop AS lop_nguoi_day,
+               ud.ma_hoc_sinh AS ma_nguoi_day,
+               uh.ho_ten AS ten_nguoi_hoc,
+               uh.lop AS lop_nguoi_hoc,
+               uh.ma_hoc_sinh AS ma_nguoi_hoc
+           FROM sessions s
+           JOIN skills sk ON s.skill_id = sk.id
+           JOIN users ud ON s.nguoi_day_id = ud.id
+           JOIN users uh ON s.nguoi_hoc_id = uh.id
+           WHERE s.id = ?""",
+        (session_id,)
+    )
+    session_data = cur.fetchone()
+    
+    if not session_data:
+        flash("Phiên học không tồn tại!", "danger")
+        return redirect(url_for("my_schedule"))
+        
+    is_teacher = (session_data["nguoi_day_id"] == user_id)
+    is_learner = (session_data["nguoi_hoc_id"] == user_id)
+    is_supervisor = (user_role in ("admin", "giao_vien"))
+    
+    if not (is_teacher or is_learner or is_supervisor):
+        flash("Bạn không có quyền tham gia phòng học ảo của phiên này!", "danger")
+        return redirect(url_for("my_schedule"))
+        
+    # Ghi nhận lượt tham gia vào session_attendance và tự động check-in
+    record_attendance_entry(db, session_id, user_id)
+    
+    # Sinh tên phòng chuẩn hóa cho Jitsi Meet
+    raw_ma_qr = session_data["ma_qr"] or f"SES_{session_id}"
+    clean_ma_qr = re.sub(r'[^a-zA-Z0-9_-]', '', raw_ma_qr)
+    room_name = f"timebankedu-{clean_ma_qr}"
+    
+    return render_template(
+        "virtual_room.html",
+        session_data=session_data,
+        room_name=room_name,
+        is_teacher=is_teacher,
+        is_learner=is_learner,
+        is_supervisor=is_supervisor
+    )
+
+
+@app.route("/sessions/<int:session_id>/finish", methods=["POST"])
+@login_required
+def finish_virtual_room(session_id):
+    """
+    Kết thúc buổi học từ phòng ảo:
+    - Chốt thoi_gian_ra trong session_attendance.
+    - Tính tổng thời gian cùng online giữa người dạy và người học.
+    - Tiêu chí: cùng online >= 80% so_gio:
+      + Đạt (>= 80%): Tự động chuyển giờ tín dụng (ghi 2 dòng credits_ledger, cập nhật số dư, sessions -> 'hoan_thanh').
+      + Không đạt (< 80%): Phiên chuyển sang 'can_xac_minh' để Giáo viên/Admin kiểm tra và duyệt tay.
+    """
+    db = get_db()
+    cur = db.cursor()
+    user_id = session["user_id"]
+    user_role = session.get("vai_tro", "")
+    
+    cur.execute("SELECT * FROM sessions WHERE id = ?", (session_id,))
+    s_row = cur.fetchone()
+    if not s_row:
+        flash("Phiên học không tồn tại!", "danger")
+        return redirect(url_for("my_schedule"))
+        
+    is_teacher = (s_row["nguoi_day_id"] == user_id)
+    is_learner = (s_row["nguoi_hoc_id"] == user_id)
+    is_admin = (user_role in ("admin", "giao_vien"))
+    
+    if not (is_teacher or is_learner or is_admin):
+        flash("Bạn không có quyền thao tác trên phiên học này!", "danger")
+        return redirect(url_for("my_schedule"))
+        
+    # 1. Chốt thời gian ra cho các bản ghi attendance đang mở
+    close_attendance_entries(db, session_id)
+    
+    so_gio = float(s_row["so_gio"])
+    nguoi_day_id = s_row["nguoi_day_id"]
+    nguoi_hoc_id = s_row["nguoi_hoc_id"]
+    
+    # 2. Tính tổng thời gian cùng online giữa 2 bên
+    overlap_seconds = calculate_session_online_overlap(db, session_id, nguoi_day_id, nguoi_hoc_id)
+    so_gio_quy_dinh_seconds = so_gio * 3600.0
+    ti_le = (overlap_seconds / so_gio_quy_dinh_seconds) if so_gio_quy_dinh_seconds > 0 else 0.0
+    
+    # 3. Kiểm tra tiêu chí 80%
+    if ti_le >= 0.80:
+        # Đạt chuẩn >= 80%: Tự động chuyển giờ
+        cur.execute(
+            """INSERT INTO credits_ledger (user_id, bien_dong, ly_do, session_id, thoi_gian) 
+               VALUES (?, ?, 'day_hoc', ?, CURRENT_TIMESTAMP)""",
+            (nguoi_day_id, so_gio, session_id)
+        )
+        cur.execute(
+            """INSERT INTO credits_ledger (user_id, bien_dong, ly_do, session_id, thoi_gian) 
+               VALUES (?, ?, 'hoc', ?, CURRENT_TIMESTAMP)""",
+            (nguoi_hoc_id, -so_gio, session_id)
+        )
+        cur.execute("UPDATE users SET so_du_gio = so_du_gio + ? WHERE id = ?", (so_gio, nguoi_day_id))
+        cur.execute("UPDATE users SET so_du_gio = so_du_gio - ? WHERE id = ?", (so_gio, nguoi_hoc_id))
+        cur.execute("UPDATE sessions SET trang_thai = 'hoan_thanh' WHERE id = ?", (session_id,))
+        db.commit()
+        
+        flash(f"Buổi học đã hoàn thành xuất sắc! Thời lượng cùng học online đạt {ti_le*100:.1f}% (≥ 80%), giờ tín dụng đã được tự động chuyển thành công.", "success")
+    else:
+        # Không đạt < 80%: Chuyển sang 'can_xac_minh'
+        cur.execute("UPDATE sessions SET trang_thai = 'can_xac_minh' WHERE id = ?", (session_id,))
+        db.commit()
+        
+        flash(f"Thời lượng cùng học trực tuyến chưa đạt 80% quy định (chỉ đạt {ti_le*100:.1f}% / 80%). Phiên học đã chuyển sang trạng thái 'Cần xác minh' để Thầy/Cô kiểm tra và phê duyệt tay.", "warning")
+        
+    return redirect(url_for("session_detail", session_id=session_id))
+
+
+@app.route("/admin/sessions/<int:session_id>/approve-transfer", methods=["POST"])
+@teacher_or_admin_required
+def manual_approve_session(session_id):
+    """
+    Giáo viên / Admin duyệt tay phiên học 'can_xac_minh':
+    - Chuyển sessions.trang_thai = 'hoan_thanh'
+    - Ghi nhận 2 dòng credits_ledger và cộng/trừ giờ cho hai học sinh.
+    """
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("SELECT * FROM sessions WHERE id = ?", (session_id,))
+    s_row = cur.fetchone()
+    if not s_row:
+        flash("Phiên học không tồn tại!", "danger")
+        return redirect(url_for("virtual_rooms_dashboard"))
+        
+    so_gio = float(s_row["so_gio"])
+    nguoi_day_id = s_row["nguoi_day_id"]
+    nguoi_hoc_id = s_row["nguoi_hoc_id"]
+    
+    cur.execute(
+        """INSERT INTO credits_ledger (user_id, bien_dong, ly_do, session_id, thoi_gian) 
+           VALUES (?, ?, 'day_hoc', ?, CURRENT_TIMESTAMP)""",
+        (nguoi_day_id, so_gio, session_id)
+    )
+    cur.execute(
+        """INSERT INTO credits_ledger (user_id, bien_dong, ly_do, session_id, thoi_gian) 
+           VALUES (?, ?, 'hoc', ?, CURRENT_TIMESTAMP)""",
+        (nguoi_hoc_id, -so_gio, session_id)
+    )
+    cur.execute("UPDATE users SET so_du_gio = so_du_gio + ? WHERE id = ?", (so_gio, nguoi_day_id))
+    cur.execute("UPDATE users SET so_du_gio = so_du_gio - ? WHERE id = ?", (so_gio, nguoi_hoc_id))
+    cur.execute("UPDATE sessions SET trang_thai = 'hoan_thanh' WHERE id = ?", (session_id,))
+    db.commit()
+    
+    flash(f"Đã duyệt tay thành công phiên #{session_id}! Giờ tín dụng đã được chuyển cho hai học sinh.", "success")
+    return redirect(request.referrer or url_for("virtual_rooms_dashboard"))
+
+
+@app.route("/admin/sessions/<int:session_id>/reject", methods=["POST"])
+@teacher_or_admin_required
+def manual_reject_session(session_id):
+    """
+    Giáo viên / Admin hủy phiên học 'can_xac_minh' nếu không hợp lệ.
+    """
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("UPDATE sessions SET trang_thai = 'huy' WHERE id = ?", (session_id,))
+    db.commit()
+    flash(f"Đã hủy phiên học #{session_id}.", "info")
+    return redirect(request.referrer or url_for("virtual_rooms_dashboard"))
+
+
+@app.route("/virtual-rooms")
+@teacher_or_admin_required
+def virtual_rooms_dashboard():
+    """
+    Dashboard Giáo viên/Admin: Danh sách các phòng học đang diễn ra
+    + Ghé thăm dự giờ bất kỳ phòng nào + Duyệt tay các phiên 'can_xac_minh'.
+    """
+    db = get_db()
+    cur = db.cursor()
+    
+    # 1. Các phòng đang diễn ra (da_dat)
+    cur.execute(
+        """SELECT s.*, sk.tieu_de, sk.linh_vuc,
+                  ud.ho_ten AS ten_nguoi_day, ud.lop AS lop_nguoi_day,
+                  uh.ho_ten AS ten_nguoi_hoc, uh.lop AS lop_nguoi_hoc
+           FROM sessions s
+           JOIN skills sk ON s.skill_id = sk.id
+           JOIN users ud ON s.nguoi_day_id = ud.id
+           JOIN users uh ON s.nguoi_hoc_id = uh.id
+           WHERE s.trang_thai = 'da_dat'
+           ORDER BY s.id DESC"""
+    )
+    live_rooms = cur.fetchall()
+    
+    # 2. Các phòng cần xác minh (< 80%)
+    cur.execute(
+        """SELECT s.*, sk.tieu_de, sk.linh_vuc,
+                  ud.ho_ten AS ten_nguoi_day, ud.lop AS lop_nguoi_day,
+                  uh.ho_ten AS ten_nguoi_hoc, uh.lop AS lop_nguoi_hoc
+           FROM sessions s
+           JOIN skills sk ON s.skill_id = sk.id
+           JOIN users ud ON s.nguoi_day_id = ud.id
+           JOIN users uh ON s.nguoi_hoc_id = uh.id
+           WHERE s.trang_thai = 'can_xac_minh'
+           ORDER BY s.id DESC"""
+    )
+    verification_rooms = cur.fetchall()
+    
+    # 3. Các phòng đã hoàn thành gần đây
+    cur.execute(
+        """SELECT s.*, sk.tieu_de, sk.linh_vuc,
+                  ud.ho_ten AS ten_nguoi_day, ud.lop AS lop_nguoi_day,
+                  uh.ho_ten AS ten_nguoi_hoc, uh.lop AS lop_nguoi_hoc
+           FROM sessions s
+           JOIN skills sk ON s.skill_id = sk.id
+           JOIN users ud ON s.nguoi_day_id = ud.id
+           JOIN users uh ON s.nguoi_hoc_id = uh.id
+           WHERE s.trang_thai = 'hoan_thanh'
+           ORDER BY s.id DESC LIMIT 10"""
+    )
+    completed_rooms = cur.fetchall()
+    
+    return render_template(
+        "virtual_rooms_dashboard.html",
+        live_rooms=live_rooms,
+        verification_rooms=verification_rooms,
+        completed_rooms=completed_rooms
+    )
 
 
 # ------------------------------------------------------------------------------
