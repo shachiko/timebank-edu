@@ -377,9 +377,62 @@ Hệ thống hoàn thiện chu trình vận hành sư phạm và xuất báo cá
 
 ---
 
-## 15. Tính bảo mật và biến môi trường
+## 15. Hoạt động Vì cộng đồng & Giờ công ích Học đường (Milestone M6)
+
+Mô hình Ngân hàng Thời gian Học đường được mở rộng vượt bậc từ việc trao đổi kỹ năng giữa 2 bạn học sinh sang **hoạt động phụng sự cộng đồng và trường học ("giờ công ích")**:
+
+### 1. Giáo viên / Quản trị viên khởi tạo nhiệm vụ cộng đồng:
+- Thầy cô và Đoàn trường tạo các hoạt động cống hiến thực tế:
+  * *"Dọn rác bãi biển Hạ Long sáng Chủ nhật"* (+2.0h thưởng)
+  * *"Hỗ trợ thư viện trường sắp xếp sách"* (+1.5h thưởng)
+  * *"Dạy kỹ năng số cho các em khối Tiểu học"* (+2.0h thưởng)
+- Thuộc tính nhiệm vụ: Tiêu đề, mô tả yêu cầu, địa điểm, số giờ thưởng, số lượng học sinh tối đa, hạn đăng ký.
+- Nhiệm vụ tạo xong tự động chuyển sang trạng thái `mo_dang_ky`.
+- **Phân quyền chặt chẽ:** Chỉ Giáo viên (`giao_vien`) hoặc Quản trị viên (`admin`) mới có quyền tạo nhiệm vụ; học sinh cố tình thao tác sẽ bị hệ thống chặn với mã lỗi **403 Forbidden**.
+
+### 2. Không gian "Vì cộng đồng" (`/community`) & Đăng ký tham gia:
+- Liệt kê toàn bộ các hoạt động công ích đang mở với số lượng chỉ tiêu và thời hạn rõ ràng.
+- Học sinh bấm **"Đăng ký tham gia"** chỉ với 1 click.
+- **Cơ chế kiểm soát tự động:**
+  * **Khóa khi đủ số lượng:** Nếu số bạn đăng ký đã đạt `so_luong_toi_da`, nút chuyển sang trạng thái vô hiệu hóa kèm nhãn *"Đã đủ số lượng"*.
+  * **Khóa khi quá hạn:** Nếu ngày hiện tại vượt quá `han_dang_ky`, nút chuyển sang vô hiệu hóa kèm nhãn *"Đã hết hạn đăng ký"*.
+  * **Chống trùng lặp:** Học sinh đã đăng ký sẽ hiển thị nhãn *"Bạn đã đăng ký tham gia"*.
+
+### 3. Giáo viên điểm danh sau hoạt động & Cơ chế Sổ cái Tín dụng:
+- Giáo viên truy cập giao diện điểm danh `/community/tasks/<id>/attendance` để ghi nhận kết quả tham gia thực tế:
+  * **'hoan_thanh' (Tham gia đầy đủ):** Hệ thống lập tức `INSERT credits_ledger` với nguyên tắc bất biến: `bien_dong = +so_gio_thuong`, `ly_do = 'nhiem_vu_cong_dong'`, đồng thời cập nhật tăng trực tiếp vào `users.so_du_gio`. Học sinh có thể dùng ngay số giờ thưởng này để đổi lấy các buổi học kỹ năng từ bạn bè.
+  * **'vang_mat' (Vắng mặt không lý do):** Cập nhật trạng thái `vang_mat`, **tuyệt đối KHÔNG cộng giờ thưởng**, đảm bảo tính nghiêm minh và công bằng sư phạm.
+
+### 4. Điểm chạm AI: "Việc phù hợp với bạn" (Gemini Pro):
+- Tại trang `/community`, Trợ lý AI Cố vấn Học đường tự động phân tích hồ sơ của học sinh: thế mạnh kỹ năng đang sở hữu, sở thích cá nhân, các phiên học đã trao đổi.
+- AI (Gemini Pro) đề xuất **3 nhiệm vụ phù hợp nhất** kèm lời giải thích ngắn gọn, ấm áp và khích lệ bằng tiếng Việt:
+  * Ví dụ: *"Tận dụng tốt thế mạnh kỹ năng số và tin học của bạn để đóng góp vào hoạt động chuyển đổi số của trường."*
+- Minh bạch: Giao diện gắn huy hiệu `Hỗ trợ bởi AI (Gemini Pro)` hoặc `Chế độ cơ bản (Rule-based)`.
+- Ghi vết suy luận của AI vào bảng `ai_logs` với `chuc_nang = 'goi_y_nhiem_vu'`.
+
+### 5. Khối "Vì cộng đồng" trên Landing Page (`/`):
+- Hiển thị tổng số giờ công ích đã đóng góp trên toàn trường (tổng hợp realtime từ `credits_ledger`).
+- Trình bày 3 nhiệm vụ cộng đồng gần nhất để phụ huynh, giáo viên và học sinh toàn trường cùng theo dõi, hưởng ứng.
+
+### Hướng dẫn kiểm thử nghiệm thu Milestone M6:
+- **Chạy riêng bộ kiểm thử M6:**
+  ```bash
+  python test_m6.py
+  ```
+  * Kết quả: **6/6 test cases đạt chuẩn 100% OK**.
+
+- **Chạy toàn bộ 48 test cases kiểm thử hồi quy hệ thống (M0 -> M6):**
+  ```bash
+  python test_m0.py ; python test_m1.py ; python test_m2.py ; python test_m3.py ; python test_m3_plus.py ; python test_m4_lite.py ; python test_m_ai.py ; python test_m_ai_plus.py ; python test_m6.py
+  ```
+  * Kết quả: **48/48 test cases đạt chuẩn 100% OK**.
+
+---
+
+## 16. Tính bảo mật và biến môi trường
 - File `.env` chứa `GEMINI_API_KEY` và `FLASK_SECRET_KEY` được bảo vệ nghiêm ngặt bằng `.gitignore`, **TUYỆT ĐỐI KHÔNG BAO GIỜ** được push lên GitHub công khai.
 - Cung cấp file mẫu `.env.example` với hướng dẫn cấu hình chi tiết cho các trường triển khai.
+
 
 
 

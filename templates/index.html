@@ -274,6 +274,86 @@
 </section>
 
 <!-- ==============================================================================
+     KHỐI VÌ CỘNG ĐỒNG: TỔNG GIỜ CÔNG ÍCH & NHIỆM VỤ GẦN NHẤT (MILESTONE M6)
+     ============================================================================== -->
+<section id="vi-cong-dong" class="py-5" style="background: linear-gradient(180deg, #ffffff 0%, #fdf2f2 100%);">
+  <div class="container py-3">
+    <div class="row align-items-center mb-5 g-4">
+      <div class="col-lg-8">
+        <span class="badge bg-danger bg-opacity-10 text-danger fw-semibold px-3 py-2 rounded-pill mb-2">
+          <i class="bi bi-heart-fill me-1"></i> VÌ CỘNG ĐỒNG & GIỜ CÔNG ÍCH
+        </span>
+        <h2 class="fw-bold display-6 text-dark">Lan tỏa trách nhiệm xã hội cùng TimeBank EDU</h2>
+        <p class="text-muted mb-0">
+          Không chỉ trao đổi kiến thức giữa học sinh, Ngân hàng Thời gian mở rộng sang các hoạt động công ích học đường:
+          thu gom rác bãi biển, hỗ trợ thư viện, phụ đạo tin học cho thiếu nhi để nhận tín dụng thời gian.
+        </p>
+      </div>
+
+      <div class="col-lg-4 text-lg-end">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center d-inline-block border-start border-4 border-danger">
+          <div class="text-muted small fw-medium"><i class="bi bi-clock-history text-danger me-1"></i>Tổng giờ công ích toàn trường</div>
+          <div class="display-6 fw-bold text-danger my-1" id="totalCommunityHours">{{ community_stats.tong_gio_cong_ich }}h</div>
+          <a href="{{ url_for('community_tasks_view') }}" class="btn btn-sm btn-outline-danger rounded-pill px-3 mt-1 fw-semibold">
+            <i class="bi bi-arrow-right me-1"></i> Tham gia ngay
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Danh sách nhiệm vụ gần nhất -->
+    <div class="row g-4">
+      {% if community_stats.nhiem_vu_gan_nhat %}
+        {% for task in community_stats.nhiem_vu_gan_nhat %}
+        <div class="col-md-4">
+          <div class="card h-100 border-0 shadow-sm rounded-4 p-3 bg-white d-flex flex-column justify-content-between hover-shadow transition">
+            <div>
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="badge bg-danger bg-opacity-10 text-danger fw-semibold px-2 py-1 rounded">
+                  <i class="bi bi-gift-fill me-1"></i>+{{ "%.1f"|format(task.so_gio_thuong) }}h thưởng
+                </span>
+                <span class="badge bg-light text-muted border small">
+                  {{ task.so_luong_da_dang_ky }}/{{ task.so_luong_toi_da }} bạn
+                </span>
+              </div>
+
+              <h6 class="fw-bold text-dark mb-2">{{ task.tieu_de }}</h6>
+              <p class="text-muted small mb-2 text-truncate-2" style="min-height: 38px;">
+                {{ task.mo_ta or 'Cùng thầy cô và bạn bè tham gia hoạt động cống hiến cho nhà trường và xã hội.' }}
+              </p>
+
+              <div class="small text-muted mb-1">
+                <i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ task.dia_diem or 'Tại trường học' }}
+              </div>
+              <div class="small text-muted mb-3">
+                <i class="bi bi-calendar-event text-primary me-1"></i>Hạn đăng ký: <strong>{{ task.han_dang_ky or 'Đang mở' }}</strong>
+              </div>
+            </div>
+
+            <div class="pt-2 border-top">
+              <a href="{{ url_for('community_tasks_view') }}" class="btn btn-sm btn-outline-danger w-100 rounded-pill fw-semibold">
+                <i class="bi bi-pencil-square me-1"></i> Chi tiết & Đăng ký
+              </a>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="col-12 text-center py-4 text-muted">
+          <p>Hiện chưa có nhiệm vụ nào được mở. Vui lòng quay lại sau.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="text-center mt-4">
+      <a href="{{ url_for('community_tasks_view') }}" class="btn btn-brand px-4 py-2 rounded-pill fw-semibold shadow-sm">
+        <i class="bi bi-grid-fill me-1"></i> Khám phá tất cả nhiệm vụ Vì cộng đồng
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ==============================================================================
      KHỐI 5: DÀNH CHO NHÀ TRƯỜNG (Mô hình triển khai độc lập + Form liên hệ)
      ============================================================================== -->
 <section id="nha-truong" class="py-5 bg-light">

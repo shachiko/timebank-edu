@@ -30,7 +30,7 @@ from flask import (
 from ai_service import (
     ai_moderate_skill, ai_matchmake, ai_generate_lesson_plan, 
     ai_summarize_feedback, ai_admin_early_warning, is_ai_live,
-    ai_generate_quiz
+    ai_generate_quiz, ai_recommend_tasks
 )
 
 # 1. Tải các biến môi trường từ file .env (nếu có)
@@ -336,8 +336,10 @@ def seed_demo_data(conn):
 
     # 7. Thêm nhiệm vụ cộng đồng mẫu (community_tasks)
     community_tasks = [
-        ('Hỗ trợ số hóa tài liệu thư viện trường', 'Quét và phân loại sách tham khảo vào hệ thống thư viện điện tử', 'Phòng Thư viện - Tầng 2', 2.0, 4, '2026-10-15', 2, 'mo', '2026-10-05 08:00:00'),
-        ('Phụ đạo Tin học văn phòng cho CLB Học tập', 'Hướng dẫn trình bày slide và bảng tính Excel căn bản', 'Phòng máy số 3', 1.5, 3, '2026-10-20', 2, 'mo', '2026-10-05 09:00:00')
+        ('Dọn rác bãi biển Hạ Long sáng Chủ nhật', 'Hoạt động thanh niên tình nguyện thu gom rác thải nhựa tại bờ biển, làm sạch cảnh quan môi trường.', 'Bãi tắm Bãi Cháy, TP. Hạ Long', 2.0, 10, '2026-10-25', 2, 'mo_dang_ky', '2026-10-05 08:00:00'),
+        ('Hỗ trợ thư viện trường sắp xếp sách', 'Phân loại sách giáo khoa mới, dán mã định danh và sắp xếp lên giá sách theo chuẩn thư viện xanh.', 'Phòng Thư viện - Tầng 2', 1.5, 5, '2026-10-20', 2, 'mo_dang_ky', '2026-10-05 08:30:00'),
+        ('Dạy kỹ năng số cho các em khối Tiểu học', 'Phụ đạo tin học, hướng dẫn các em học sinh lớp 3-4 gõ bàn phím 10 ngón và tra cứu tài liệu học tập an toàn.', 'Phòng máy Tin học số 2', 2.0, 4, '2026-10-30', 2, 'mo_dang_ky', '2026-10-05 09:00:00'),
+        ('Hỗ trợ số hóa tài liệu thư viện trường', 'Quét và phân loại sách tham khảo vào hệ thống thư viện điện tử.', 'Phòng Thư viện - Tầng 2', 2.0, 4, '2026-10-15', 2, 'hoan_thanh', '2026-10-04 08:00:00')
     ]
     cur.executemany(
         """INSERT INTO community_tasks 
@@ -347,8 +349,11 @@ def seed_demo_data(conn):
     )
 
     # 8. Thêm đăng ký nhiệm vụ cộng đồng (task_registrations)
+    # Học sinh An (id=3) đã hoàn thành nhiệm vụ số 4 (đã cộng giờ ở credits_ledger)
+    # Học sinh Bình (id=4) đăng ký tham gia nhiệm vụ số 2
     task_regs = [
-        (1, 3, 'da_duyet', '2026-10-05 08:45:00')
+        (4, 3, 'hoan_thanh', '2026-10-04 08:15:00'),
+        (2, 4, 'da_dang_ky', '2026-10-05 08:45:00')
     ]
     cur.executemany(
         "INSERT INTO task_registrations (task_id, user_id, trang_thai, thoi_gian_dang_ky) VALUES (?, ?, ?, ?)",
@@ -536,16 +541,43 @@ def get_top_tutors(db, limit=3):
 def index():
     """
     Trang chủ (Landing Page) của Ngân hàng Thời gian Học đường.
-    Gồm 6 khối chức năng sư phạm hoàn chỉnh.
+    Gồm các khối chức năng sư phạm hoàn chỉnh, tích hợp số liệu thời gian thực
+    và khối 'Vì cộng đồng' (tổng giờ công ích + nhiệm vụ gần nhất).
     """
     db = get_db()
     stats = get_realtime_stats(db)
     top_tutors = get_top_tutors(db, limit=3)
     
+    # Số liệu cho khối 'Vì cộng đồng' trên Landing Page (Milestone M6)
+    cur = db.cursor()
+    cur.execute("""
+        SELECT COALESCE(SUM(bien_dong), 0.0) 
+        FROM credits_ledger 
+        WHERE bien_dong > 0 AND (ly_do = 'nhiem_vu_cong_dong' OR ly_do LIKE '%nhiem_vu_cong_dong%')
+    """)
+    tong_gio_cong_ich = cur.fetchone()[0]
+
+    cur.execute("""
+        SELECT t.*, u.ho_ten AS ten_nguoi_tao,
+               (SELECT COUNT(*) FROM task_registrations r WHERE r.task_id = t.id AND r.trang_thai NOT IN ('huy')) AS so_luong_da_dang_ky
+        FROM community_tasks t
+        JOIN users u ON t.nguoi_tao_id = u.id
+        WHERE t.trang_thai IN ('mo_dang_ky', 'mo')
+        ORDER BY t.id DESC
+        LIMIT 3
+    """)
+    nhiem_vu_gan_nhat = cur.fetchall()
+
+    community_stats = {
+        "tong_gio_cong_ich": round(tong_gio_cong_ich, 1),
+        "nhiem_vu_gan_nhat": nhiem_vu_gan_nhat
+    }
+    
     return render_template(
         "index.html",
         stats=stats,
-        top_tutors=top_tutors
+        top_tutors=top_tutors,
+        community_stats=community_stats
     )
 
 
@@ -2541,6 +2573,300 @@ def virtual_rooms_dashboard():
         live_rooms=live_rooms,
         verification_rooms=verification_rooms,
         completed_rooms=completed_rooms
+    )
+
+
+# ==============================================================================
+# MILESTONE M6: MÔ HÌNH VÌ CỘNG ĐỒNG (HOẠT ĐỘNG GIỜ CÔNG ÍCH HỌC ĐƯỜNG)
+# ==============================================================================
+
+@app.route("/community")
+def community_tasks_view():
+    """
+    Trang 'Vì cộng đồng' (Community Tasks):
+    - Liệt kê toàn bộ nhiệm vụ cộng đồng đang mở ('mo_dang_ky', 'mo').
+    - Hiển thị mục 'Việc phù hợp với bạn' — Trợ lý AI (Gemini Pro) phân tích kỹ năng,
+      sở thích và lịch sử học tập của học sinh để gợi ý 3 việc phù hợp nhất.
+    - Học sinh bấm 'Đăng ký tham gia' (nút bị khóa khi đủ số lượng hoặc quá hạn).
+    - Giáo viên / Admin có quyền tạo nhiệm vụ mới và tiến hành điểm danh cộng giờ.
+    """
+    db = get_db()
+    cur = db.cursor()
+
+    # Truy vấn danh sách nhiệm vụ đang mở
+    cur.execute("""
+        SELECT t.*, u.ho_ten AS ten_nguoi_tao,
+               (SELECT COUNT(*) FROM task_registrations r WHERE r.task_id = t.id AND r.trang_thai NOT IN ('huy')) AS so_luong_da_dang_ky
+        FROM community_tasks t
+        JOIN users u ON t.nguoi_tao_id = u.id
+        WHERE t.trang_thai IN ('mo_dang_ky', 'mo')
+        ORDER BY t.id DESC
+    """)
+    open_tasks = [dict(row) for row in cur.fetchall()]
+
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    for t in open_tasks:
+        t["is_full"] = t["so_luong_da_dang_ky"] >= t["so_luong_toi_da"]
+        t["is_expired"] = bool(t["han_dang_ky"] and t["han_dang_ky"] < today_str)
+
+    # Truy vấn danh sách nhiệm vụ đã hoàn thành để thống kê và tham khảo
+    cur.execute("""
+        SELECT t.*, u.ho_ten AS ten_nguoi_tao,
+               (SELECT COUNT(*) FROM task_registrations r WHERE r.task_id = t.id AND r.trang_thai = 'hoan_thanh') AS so_luong_hoan_thanh
+        FROM community_tasks t
+        JOIN users u ON t.nguoi_tao_id = u.id
+        WHERE t.trang_thai = 'hoan_thanh'
+        ORDER BY t.id DESC
+        LIMIT 6
+    """)
+    completed_tasks = cur.fetchall()
+
+    # Lấy thông tin đăng ký của người dùng hiện tại
+    user_registrations = {}
+    ai_recommended = []
+    is_ai_live_flag = False
+
+    if "user_id" in session:
+        cur.execute("SELECT task_id, trang_thai FROM task_registrations WHERE user_id = ?", (session["user_id"],))
+        for r in cur.fetchall():
+            user_registrations[r["task_id"]] = r["trang_thai"]
+
+        # Nếu là học sinh, kích hoạt Trợ lý AI gợi ý 3 việc phù hợp
+        if session.get("vai_tro") == "hoc_sinh" and open_tasks:
+            ai_recommended, is_ai_live_flag = ai_recommend_tasks(db, session["user_id"], open_tasks)
+            for t in ai_recommended:
+                t["is_full"] = t.get("so_luong_da_dang_ky", 0) >= t.get("so_luong_toi_da", 1)
+                t["is_expired"] = bool(t.get("han_dang_ky") and t["han_dang_ky"] < today_str)
+
+    # Số liệu tổng hợp toàn trường
+    cur.execute("""
+        SELECT COALESCE(SUM(bien_dong), 0.0) 
+        FROM credits_ledger 
+        WHERE bien_dong > 0 AND (ly_do = 'nhiem_vu_cong_dong' OR ly_do LIKE '%nhiem_vu_cong_dong%')
+    """)
+    tong_gio_cong_ich = round(cur.fetchone()[0], 1)
+
+    cur.execute("SELECT COUNT(DISTINCT user_id) FROM task_registrations WHERE trang_thai = 'hoan_thanh'")
+    so_hs_tham_gia = cur.fetchone()[0]
+
+    return render_template(
+        "community.html",
+        open_tasks=open_tasks,
+        completed_tasks=completed_tasks,
+        ai_recommended=ai_recommended,
+        is_ai_live=is_ai_live_flag,
+        user_registrations=user_registrations,
+        tong_gio_cong_ich=tong_gio_cong_ich,
+        so_hs_tham_gia=so_hs_tham_gia,
+        today_str=today_str
+    )
+
+
+@app.route("/community/tasks/new", methods=["POST"])
+@teacher_or_admin_required
+def create_community_task():
+    """
+    Giáo viên / Quản trị viên tạo nhiệm vụ cộng đồng:
+    - Tiêu đề, mô tả, địa điểm, số giờ thưởng, số lượng tối đa, hạn đăng ký.
+    - Trạng thái mặc định: 'mo_dang_ky'.
+    - Học sinh không có quyền sẽ nhận mã lỗi 403 Forbidden.
+    """
+    tieu_de = request.form.get("tieu_de", "").strip()
+    mo_ta = request.form.get("mo_ta", "").strip()
+    dia_diem = request.form.get("dia_diem", "").strip()
+    
+    try:
+        so_gio_thuong = float(request.form.get("so_gio_thuong", 1.0))
+        if so_gio_thuong <= 0:
+            so_gio_thuong = 1.0
+    except ValueError:
+        so_gio_thuong = 1.0
+
+    try:
+        so_luong_toi_da = int(request.form.get("so_luong_toi_da", 5))
+        if so_luong_toi_da <= 0:
+            so_luong_toi_da = 5
+    except ValueError:
+        so_luong_toi_da = 5
+
+    han_dang_ky = request.form.get("han_dang_ky", "").strip()
+
+    if not tieu_de:
+        flash("Vui lòng nhập tiêu đề cho nhiệm vụ cộng đồng.", "danger")
+        return redirect(url_for("community_tasks_view"))
+
+    db = get_db()
+    cur = db.cursor()
+    cur.execute(
+        """INSERT INTO community_tasks 
+           (tieu_de, mo_ta, dia_diem, so_gio_thuong, so_luong_toi_da, han_dang_ky, nguoi_tao_id, trang_thai) 
+           VALUES (?, ?, ?, ?, ?, ?, ?, 'mo_dang_ky')""",
+        (tieu_de, mo_ta, dia_diem, so_gio_thuong, so_luong_toi_da, han_dang_ky, session["user_id"])
+    )
+    db.commit()
+
+    flash(f"Đã tạo thành công nhiệm vụ: '{tieu_de}' (+{so_gio_thuong}h thưởng)!", "success")
+    return redirect(url_for("community_tasks_view"))
+
+
+@app.route("/community/tasks/<int:task_id>/register", methods=["POST"])
+@login_required
+def register_community_task(task_id):
+    """
+    Học sinh đăng ký tham gia nhiệm vụ cộng đồng:
+    - Kiểm tra trạng thái đang mở đăng ký.
+    - Khóa khi đủ số lượng tối đa hoặc quá hạn đăng ký.
+    - Ghi nhận vào bảng task_registrations (trang_thai = 'da_dang_ky').
+    """
+    user_id = session["user_id"]
+    db = get_db()
+    cur = db.cursor()
+
+    cur.execute("SELECT * FROM community_tasks WHERE id = ?", (task_id,))
+    task = cur.fetchone()
+    if not task:
+        flash("Nhiệm vụ cộng đồng không tồn tại.", "danger")
+        return redirect(url_for("community_tasks_view"))
+
+    if task["trang_thai"] not in ("mo_dang_ky", "mo"):
+        flash("Nhiệm vụ này hiện đã đóng đăng ký.", "warning")
+        return redirect(url_for("community_tasks_view"))
+
+    # Kiểm tra hạn đăng ký
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    if task["han_dang_ky"] and task["han_dang_ky"] < today_str:
+        flash("Rất tiếc! Đã quá hạn đăng ký cho nhiệm vụ này.", "danger")
+        return redirect(url_for("community_tasks_view"))
+
+    # Kiểm tra số lượng người tham gia
+    cur.execute(
+        "SELECT COUNT(*) FROM task_registrations WHERE task_id = ? AND trang_thai NOT IN ('huy')",
+        (task_id,)
+    )
+    so_luong_hien_tai = cur.fetchone()[0]
+    if so_luong_hien_tai >= task["so_luong_toi_da"]:
+        flash(f"Nhiệm vụ đã đủ số lượng người đăng ký ({task['so_luong_toi_da']} bạn).", "warning")
+        return redirect(url_for("community_tasks_view"))
+
+    # Kiểm tra xem đã đăng ký trước đó chưa
+    cur.execute("SELECT id, trang_thai FROM task_registrations WHERE task_id = ? AND user_id = ?", (task_id, user_id))
+    existing = cur.fetchone()
+    if existing:
+        if existing["trang_thai"] != "huy":
+            flash("Bạn đã đăng ký nhiệm vụ này rồi!", "info")
+            return redirect(url_for("community_tasks_view"))
+        else:
+            cur.execute("UPDATE task_registrations SET trang_thai = 'da_dang_ky' WHERE id = ?", (existing["id"],))
+            db.commit()
+            flash("Đã kích hoạt lại đăng ký tham gia nhiệm vụ thành công!", "success")
+            return redirect(url_for("community_tasks_view"))
+
+    # Thêm bản ghi đăng ký mới
+    cur.execute(
+        "INSERT INTO task_registrations (task_id, user_id, trang_thai) VALUES (?, ?, 'da_dang_ky')",
+        (task_id, user_id)
+    )
+    db.commit()
+
+    flash(f"Đăng ký tham gia '{task['tieu_de']}' thành công! Hãy có mặt đúng giờ nhé.", "success")
+    return redirect(url_for("community_tasks_view"))
+
+
+@app.route("/community/tasks/<int:task_id>/attendance", methods=["GET", "POST"])
+@teacher_or_admin_required
+def task_attendance(task_id):
+    """
+    Giáo viên / Quản trị viên điểm danh học sinh sau hoạt động cộng đồng:
+    - 'hoan_thanh': INSERT credits_ledger (bien_dong = +so_gio_thuong, ly_do = 'nhiem_vu_cong_dong')
+      và cập nhật users.so_du_gio.
+    - 'vang_mat': Cập nhật trang_thai = 'vang_mat', tuyệt đối không cộng giờ.
+    """
+    db = get_db()
+    cur = db.cursor()
+
+    cur.execute("""
+        SELECT t.*, u.ho_ten AS ten_nguoi_tao 
+        FROM community_tasks t 
+        JOIN users u ON t.nguoi_tao_id = u.id 
+        WHERE t.id = ?
+    """, (task_id,))
+    task = cur.fetchone()
+    if not task:
+        flash("Không tìm thấy nhiệm vụ cộng đồng.", "danger")
+        return redirect(url_for("community_tasks_view"))
+
+    if request.method == "POST":
+        reg_id = request.form.get("registration_id")
+        single_status = request.form.get("status")
+
+        items_to_process = []
+        if reg_id and single_status:
+            try:
+                items_to_process.append((int(reg_id), single_status))
+            except ValueError:
+                pass
+        else:
+            for key, val in request.form.items():
+                if key.startswith("status_"):
+                    try:
+                        rid = int(key.replace("status_", ""))
+                        items_to_process.append((rid, val))
+                    except ValueError:
+                        pass
+
+        so_gio_thuong = float(task["so_gio_thuong"])
+        so_ban_hoan_thanh = 0
+        so_ban_vang = 0
+
+        for rid, st in items_to_process:
+            cur.execute("SELECT * FROM task_registrations WHERE id = ? AND task_id = ?", (rid, task_id))
+            reg = cur.fetchone()
+            if not reg:
+                continue
+
+            current_reg_status = reg["trang_thai"]
+
+            if st == "hoan_thanh":
+                if current_reg_status != "hoan_thanh":
+                    cur.execute("UPDATE task_registrations SET trang_thai = 'hoan_thanh' WHERE id = ?", (rid,))
+                    # Ghi sổ cái credits_ledger: bien_dong = +so_gio_thuong, ly_do = 'nhiem_vu_cong_dong'
+                    cur.execute(
+                        """INSERT INTO credits_ledger (user_id, bien_dong, ly_do, session_id) 
+                           VALUES (?, ?, 'nhiem_vu_cong_dong', NULL)""",
+                        (reg["user_id"], so_gio_thuong)
+                    )
+                    # Cập nhật số dư giờ của học sinh
+                    cur.execute(
+                        "UPDATE users SET so_du_gio = so_du_gio + ? WHERE id = ?",
+                        (so_gio_thuong, reg["user_id"])
+                    )
+                    so_ban_hoan_thanh += 1
+            elif st == "vang_mat":
+                cur.execute("UPDATE task_registrations SET trang_thai = 'vang_mat' WHERE id = ?", (rid,))
+                so_ban_vang += 1
+
+        # Cập nhật trạng thái nhiệm vụ nếu hoàn tất toàn bộ hoạt động
+        if request.form.get("hoan_thanh_nhiem_vu") == "1":
+            cur.execute("UPDATE community_tasks SET trang_thai = 'hoan_thanh' WHERE id = ?", (task_id,))
+
+        db.commit()
+        flash(f"Điểm danh thành công! Đã ghi nhận {so_ban_hoan_thanh} bạn hoàn thành (+{so_gio_thuong}h vào ví) và {so_ban_vang} bạn vắng mặt.", "success")
+        return redirect(url_for("task_attendance", task_id=task_id))
+
+    # Lấy danh sách học sinh đăng ký
+    cur.execute("""
+        SELECT r.*, u.ma_hoc_sinh, u.ho_ten, u.lop, u.so_du_gio
+        FROM task_registrations r
+        JOIN users u ON r.user_id = u.id
+        WHERE r.task_id = ?
+        ORDER BY r.id ASC
+    """, (task_id,))
+    registrations = cur.fetchall()
+
+    return render_template(
+        "community_attendance.html",
+        task=task,
+        registrations=registrations
     )
 
 

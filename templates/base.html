@@ -53,6 +53,9 @@
           <li class="nav-item">
             <a class="nav-link fw-semibold text-primary" href="{{ url_for('skills_market') }}"><i class="bi bi-shop me-1"></i>Chợ kỹ năng</a>
           </li>
+          <li class="nav-item">
+            <a class="nav-link fw-semibold text-danger" href="{{ url_for('community_tasks_view') }}"><i class="bi bi-heart-fill me-1 text-danger"></i>Vì cộng đồng</a>
+          </li>
           {% if current_user %}
           <li class="nav-item">
             <a class="nav-link" href="{{ url_for('my_schedule') }}"><i class="bi bi-calendar-check me-1"></i>Lịch của tôi</a>
@@ -114,6 +117,11 @@
                 <li>
                   <a class="dropdown-item py-2" href="{{ url_for('new_skill') }}">
                     <i class="bi bi-plus-circle text-warning me-2"></i>Đăng kỹ năng mới
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item py-2" href="{{ url_for('community_tasks_view') }}">
+                    <i class="bi bi-heart-fill text-danger me-2"></i>Hoạt động Vì cộng đồng
                   </a>
                 </li>
                 {% if current_user.vai_tro in ('giao_vien', 'admin') %}

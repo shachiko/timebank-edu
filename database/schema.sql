@@ -158,7 +158,7 @@ CREATE TABLE IF NOT EXISTS community_tasks (
     so_luong_toi_da INTEGER DEFAULT 5,
     han_dang_ky TEXT,
     nguoi_tao_id INTEGER NOT NULL,
-    trang_thai TEXT CHECK(trang_thai IN ('mo', 'dong', 'hoan_thanh', 'huy')) DEFAULT 'mo',
+    trang_thai TEXT CHECK(trang_thai IN ('mo_dang_ky', 'mo', 'dong', 'hoan_thanh', 'huy')) DEFAULT 'mo_dang_ky',
     thoi_gian_tao TEXT DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (nguoi_tao_id) REFERENCES users(id)
 );
@@ -168,7 +168,7 @@ CREATE TABLE IF NOT EXISTS task_registrations (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     task_id INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
-    trang_thai TEXT CHECK(trang_thai IN ('da_dang_ky', 'da_duyet', 'hoan_thanh', 'huy')) DEFAULT 'da_dang_ky',
+    trang_thai TEXT CHECK(trang_thai IN ('da_dang_ky', 'da_duyet', 'hoan_thanh', 'huy', 'vang_mat')) DEFAULT 'da_dang_ky',
     thoi_gian_dang_ky TEXT DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (task_id) REFERENCES community_tasks(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
