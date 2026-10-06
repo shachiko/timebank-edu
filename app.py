@@ -28,7 +28,8 @@ from flask import (
 )
 from ai_service import (
     ai_moderate_skill, ai_matchmake, ai_generate_lesson_plan, 
-    ai_summarize_feedback, ai_admin_early_warning, is_ai_live
+    ai_summarize_feedback, ai_admin_early_warning, is_ai_live,
+    ai_generate_quiz
 )
 
 # 1. Tải các biến môi trường từ file .env (nếu có)
@@ -361,6 +362,106 @@ def seed_demo_data(conn):
     cur.executemany(
         "INSERT INTO chat_messages (user_id, vai_tro, noi_dung, thoi_gian) VALUES (?, ?, ?, ?)",
         chat_samples
+    )
+
+    # 10. Thêm bộ câu hỏi trắc nghiệm mẫu (quiz_questions) do AI tạo
+    # Session 1: Toán Hình học 12 (5 câu từ dễ đến khó)
+    sample_questions = [
+        (1, "Khái niệm góc giữa hai mặt phẳng trong không gian được đo bằng góc giữa:", 
+         "Hai đường thẳng bất kỳ trên hai mặt phẳng", 
+         "Hai đường thẳng lần lượt vuông góc với giao tuyến tại cùng một điểm", 
+         "Hai vectơ chỉ phương ngẫu nhiên", 
+         "Giao tuyến của hai mặt phẳng", "B"),
+        (1, "Khi hai mặt phẳng vuông góc với nhau, góc giữa chúng bằng bao nhiêu độ?", 
+         "0 độ", "45 độ", "90 độ", "180 độ", "C"),
+        (1, "Để tính khoảng cách từ một điểm M đến mặt phẳng (P), ta cần dựng:", 
+         "Đoạn vuông góc kẻ từ M đến mặt phẳng (P)", 
+         "Một đường thẳng xiên bất kỳ", 
+         "Đường thẳng song song với (P)", 
+         "Đoạn nối M với trọng tâm tam giác đáy", "A"),
+        (1, "Cho hình chóp S.ABC có SA vuông góc với đáy (ABC). Góc giữa đường thẳng SB và đáy là:", 
+         "Góc SBA", "Góc SAB", "Góc ASB", "Góc SCB", "A"),
+        (1, "Tuyệt chiêu nhận diện nhanh góc giữa mặt bên và mặt đáy trong hình chóp đều là gì?", 
+         "Xác định trung điểm cạnh đáy rồi nối với đỉnh", 
+         "Kẻ bừa một đường thẳng nối tâm đáy", 
+         "Không thể xác định", 
+         "Dùng thước đo độ trên giấy", "A"),
+
+        # Session 2: Đệm hát Guitar (5 câu)
+        (2, "Hợp âm Đô trưởng (C) cơ bản gồm những nốt nào trong âm giai?", 
+         "Đô - Mi - Son (C - E - G)", 
+         "Đô - Rê - Mi (C - D - E)", 
+         "La - Đô - Mi (A - C - E)", 
+         "Son - Si - Rê (G - B - D)", "A"),
+        (2, "Khi bấm hợp âm La thứ (Am), ngón trỏ thường đặt ở vị trí nào?", 
+         "Ngăn 1 dây 2 (nốt Đô)", 
+         "Ngăn 2 dây 3", 
+         "Ngăn 3 dây 1", 
+         "Ngăn 1 dây 6", "A"),
+        (2, "Điệu Disco cơ bản thường có nhịp phách như thế nào?", 
+         "Nhịp 2/4 hoặc 4/4 rộn rã, dứt khoát", 
+         "Nhịp 3/4 êm dịu điệu Valse", 
+         "Nhịp 6/8 chậm rãi", 
+         "Không có nhịp phách cố định", "A"),
+        (2, "Bí quyết để chuyển nhanh giữa các hợp âm mà không bị vấp tiếng là gì?", 
+         "Giữ ngón tay sát phím đàn và tìm ngón chung làm trụ", 
+         "Nhấc toàn bộ cả bàn tay ra thật xa cần đàn", 
+         "Dừng gảy 5 giây để nhìn tay", 
+         "Bấm thật mạnh cho đau ngón tay", "A"),
+        (2, "Khi ngón tay bị đau lúc mới tập guitar, cách khắc phục khoa học nhất là:", 
+         "Tập đều đặn mỗi ngày 20-30 phút để hình thành vết chai tự nhiên", 
+         "Bỏ đàn 2 tháng", 
+         "Dùng băng keo quấn kín các đầu ngón tay", 
+         "Bôi dầu hỏa vào ngón tay", "A"),
+
+        # Session 3: IELTS Speaking (5 câu)
+        (3, "Trong bài thi IELTS Speaking Part 1, độ dài lý tưởng cho mỗi câu trả lời là:", 
+         "Khoảng 2 đến 3 câu hoàn chỉnh có mở rộng ý tự nhiên", 
+         "Chỉ trả lời đúng 'Yes' hoặc 'No'", 
+         "Nói độc thoại liên tục 10 phút", 
+         "Im lặng mỉm cười chờ giám khảo hỏi tiếp", "A"),
+        (3, "Để nâng cao điểm tiêu chí Từ vựng (Lexical Resource), bạn nên sử dụng:", 
+         "Collocations và từ đồng nghĩa ngữ cảnh tự nhiên", 
+         "Từ cổ điển thế kỷ 18 khó hiểu", 
+         "Từ viết tắt tiếng lóng tin nhắn", 
+         "Lặp lại 1 từ duy nhất nhiều lần", "A"),
+        (3, "Khi gặp câu hỏi bất ngờ trong Speaking Part 1, chiến thuật câu giờ thông minh là:", 
+         "Dùng filler phrase tự nhiên như 'That’s an interesting question...'", 
+         "Nói to 'I don't know' rồi ngồi im", 
+         "Xin phép giám khảo tra từ điển Google", 
+         "Hỏi ngược lại giám khảo", "A"),
+        (3, "Tiêu chí 'Fluency and Coherence' (Trôi chảy và mạch lạc) đánh giá điều gì?", 
+         "Khả năng diễn đạt liên tục, có liên kết ý logic, ít ngập ngừng kéo dài", 
+         "Nói thật nhanh như đọc ráp dù sai ngữ pháp", 
+         "Giọng điệu phải giống 100% người bản xứ", 
+         "Số lượng từ ngữ phát âm to nhất", "A"),
+        (3, "Bí quyết tự tin luyện nói tiếng Anh hằng ngày cùng bạn bè là gì?", 
+         "Tạo môi trường trao đổi thoải mái, không sợ mắc lỗi sai", 
+         "Chỉ nói khi thuộc lòng 100% kịch bản", 
+         "Chỉ luyện nói một mình trước gương trong bóng tối", 
+         "Không bao giờ nói chuyện với ai", "A")
+    ]
+    cur.executemany(
+        """INSERT INTO quiz_questions 
+           (session_id, cau_hoi, lua_chon_a, lua_chon_b, lua_chon_c, lua_chon_d, dap_an_dung) 
+           VALUES (?, ?, ?, ?, ?, ?, ?)""",
+        sample_questions
+    )
+
+    # 11. Thêm kết quả trắc nghiệm mẫu (quiz_results)
+    # Session 1: Bình làm quiz Hình học -> 4/5 điểm (80%), tự tin trước = 2★
+    # Session 2: Chi làm quiz Guitar -> 5/5 điểm (100%), tự tin trước = 3★
+    # Session 3: An làm quiz Tiếng Anh -> 4/5 điểm (80%), tự tin trước = 2★
+    quiz_results_data = [
+        (1, 4, 2.0, 4.0, '2026-09-28 15:15:00'),
+        (2, 5, 3.0, 5.0, '2026-09-29 16:45:00'),
+        (3, 3, 2.0, 4.0, '2026-10-01 17:15:00')
+    ]
+    cur.executemany(
+        """INSERT INTO quiz_results 
+           (session_id, user_id, tu_danh_gia_truoc, diem_so, thoi_gian_lam) 
+           VALUES (?, ?, ?, ?, ?)""",
+        quiz_results_data
     )
     
     conn.commit()
@@ -759,13 +860,82 @@ def admin_dashboard():
     # Điểm chạm 5: Quét và đưa ra khuyến nghị can thiệp sư phạm sớm từ AI
     ai_warnings = ai_admin_early_warning(db, session["user_id"])
 
+    # Milestone M-AI+: Thống kê khối "Kết quả học tập" lượng giá qua Quiz
+    # 1. Điểm TB theo môn (linh_vuc) và % đạt >= 4/5 theo môn
+    cur.execute("""
+        SELECT 
+            sk.linh_vuc,
+            COUNT(qr.id) AS so_bai_lam,
+            ROUND(AVG(qr.diem_so), 2) AS diem_tb,
+            SUM(CASE WHEN qr.diem_so >= 4.0 THEN 1 ELSE 0 END) AS so_luong_gioi,
+            SUM(CASE WHEN qr.diem_so >= 3.0 THEN 1 ELSE 0 END) AS so_luong_dat_chuan,
+            ROUND(AVG(qr.tu_danh_gia_truoc), 2) AS tu_tin_truoc_tb
+        FROM quiz_results qr
+        JOIN sessions s ON qr.session_id = s.id
+        JOIN skills sk ON s.skill_id = sk.id
+        GROUP BY sk.linh_vuc
+        ORDER BY so_bai_lam DESC, diem_tb DESC
+    """)
+    subject_stats_rows = cur.fetchall()
+
+    subject_stats = []
+    total_quizzes = 0
+    total_ge_4 = 0
+    for r in subject_stats_rows:
+        cnt = r["so_bai_lam"]
+        total_quizzes += cnt
+        total_ge_4 += r["so_luong_gioi"]
+        pct_gioi = round((r["so_luong_gioi"] / cnt * 100), 1) if cnt > 0 else 0.0
+        pct_chuan_mon = round((r["so_luong_dat_chuan"] / cnt * 100), 1) if cnt > 0 else 0.0
+        subject_stats.append({
+            "linh_vuc": r["linh_vuc"],
+            "so_bai_lam": cnt,
+            "diem_tb": r["diem_tb"] or 0.0,
+            "pct_gioi": pct_gioi,
+            "pct_chuan": pct_chuan_mon,
+            "tu_tin_truoc_tb": r["tu_tin_truoc_tb"] or 0.0
+        })
+
+    # % đạt >= 4/5 toàn trường
+    pct_ge_4 = round((total_ge_4 / total_quizzes * 100), 1) if total_quizzes > 0 else 0.0
+
+    # % phiên đạt chuẩn quiz (sessions.quiz_dat_chuan = 1)
+    cur.execute("SELECT COUNT(*) FROM sessions WHERE trang_thai = 'hoan_thanh'")
+    completed_sessions_count = cur.fetchone()[0]
+
+    cur.execute("SELECT COUNT(*) FROM sessions WHERE trang_thai = 'hoan_thanh' AND quiz_dat_chuan = 1")
+    passed_quiz_sessions_count = cur.fetchone()[0]
+
+    pct_dat_chuan = round((passed_quiz_sessions_count / completed_sessions_count * 100), 1) if completed_sessions_count > 0 else 0.0
+
+    # So sánh tự đánh giá trước vs điểm sau
+    cur.execute("SELECT AVG(tu_danh_gia_truoc), AVG(diem_so) FROM quiz_results")
+    avg_row = cur.fetchone()
+    avg_before = round(avg_row[0], 2) if avg_row and avg_row[0] is not None else 0.0
+    avg_after = round(avg_row[1], 2) if avg_row and avg_row[1] is not None else 0.0
+    growth_diff = round(avg_after - avg_before, 2)
+
+    learning_stats = {
+        "subject_stats": subject_stats,
+        "total_quizzes": total_quizzes,
+        "total_ge_4": total_ge_4,
+        "pct_ge_4": pct_ge_4,
+        "completed_sessions_count": completed_sessions_count,
+        "passed_quiz_sessions_count": passed_quiz_sessions_count,
+        "pct_dat_chuan": pct_dat_chuan,
+        "avg_before": avg_before,
+        "avg_after": avg_after,
+        "growth_diff": growth_diff
+    }
+
     return render_template(
         "admin.html",
         users=all_users,
         student_count=student_count,
         total_credits=total_credits,
         pending_skills_count=pending_skills_count,
-        ai_warnings=ai_warnings
+        ai_warnings=ai_warnings,
+        learning_stats=learning_stats
     )
 
 
@@ -1269,6 +1439,18 @@ def session_detail(session_id):
         flash("Bạn không có quyền truy cập thông tin phiên học này!", "danger")
         return redirect(url_for("my_schedule"))
         
+    # Kiểm tra số lượng câu hỏi quiz và kết quả làm bài (Milestone M-AI+)
+    cur.execute("SELECT COUNT(*) FROM quiz_questions WHERE session_id = ?", (session_id,))
+    quiz_question_count = cur.fetchone()[0]
+
+    cur.execute(
+        """SELECT * FROM quiz_results 
+           WHERE session_id = ? AND user_id = ? 
+           ORDER BY id DESC LIMIT 1""",
+        (session_id, session_data["nguoi_hoc_id"])
+    )
+    quiz_result = cur.fetchone()
+
     # Tạo mã QR dạng Base64 để hiển thị trực quan
     qr_b64 = generate_qr_base64(session_data["ma_qr"] or f"TB-SES-{session_id}")
     
@@ -1278,7 +1460,9 @@ def session_detail(session_id):
         qr_b64=qr_b64,
         is_teacher=is_teacher,
         is_learner=is_learner,
-        is_admin=is_admin
+        is_admin=is_admin,
+        quiz_question_count=quiz_question_count,
+        quiz_result=quiz_result
     )
 
 
@@ -1484,6 +1668,221 @@ def complete_session(session_id):
         flash(f"Có lỗi xảy ra trong quá trình hoàn thành phiên học: {e}", "danger")
         
     return redirect(url_for("session_detail", session_id=session_id))
+
+
+# ==============================================================================
+# MILESTONE M-AI+: TRẮC NGHIỆM AI (QUIZ ADAPTIVE) & LƯỢNG GIÁ KẾT QUẢ HỌC TẬP
+# ==============================================================================
+
+@app.route("/sessions/<int:session_id>/ai-generate-quiz", methods=["POST"])
+@login_required
+def generate_ai_quiz_route(session_id):
+    """
+    Điểm chạm AI+: Người dạy bấm 'Nhờ AI tạo quiz' sau phiên hoàn thành:
+    - Gemini đọc dan_y_ai + mo_ta kỹ năng -> tạo 5 câu trắc nghiệm 4 lựa chọn (dễ->khó, TV, giọng vui vẻ)
+    - Lưu vào quiz_questions và ghi vết vào ai_logs (chuc_nang = 'tao_quiz')
+    - Phân quyền: Người dạy của phiên hoặc Giáo viên / Admin
+    """
+    db = get_db()
+    cur = db.cursor()
+    user_id = session["user_id"]
+    user_role = session.get("vai_tro", "")
+
+    cur.execute(
+        """SELECT s.*, sk.tieu_de, sk.linh_vuc, sk.mo_ta 
+           FROM sessions s
+           JOIN skills sk ON s.skill_id = sk.id
+           WHERE s.id = ?""",
+        (session_id,)
+    )
+    s_row = cur.fetchone()
+    if not s_row:
+        flash("Phiên học không tồn tại!", "danger")
+        return redirect(url_for("my_schedule"))
+
+    # Phân quyền: người dạy hoặc GV/Admin
+    if s_row["nguoi_day_id"] != user_id and user_role not in ("admin", "giao_vien"):
+        flash("Chỉ bạn gia sư (người dạy) hoặc Giáo viên mới có thể nhờ AI tạo bộ câu hỏi quiz!", "danger")
+        return redirect(url_for("session_detail", session_id=session_id))
+
+    if s_row["trang_thai"] != "hoan_thanh":
+        flash("Buổi học cần được xác nhận hoàn thành trước khi tạo Quiz lượng giá!", "warning")
+        return redirect(url_for("session_detail", session_id=session_id))
+
+    questions, is_live = ai_generate_quiz(
+        db, user_id, session_id,
+        s_row["tieu_de"], s_row["linh_vuc"], s_row["mo_ta"],
+        s_row["dan_y_ai"] or ""
+    )
+
+    if is_live:
+        flash("Trợ lý AI (Gemini Pro) đã thiết kế thành công bộ 5 câu hỏi trắc nghiệm lượng giá vui nhộn!", "success")
+    else:
+        flash("Đã khởi tạo bộ 5 câu hỏi trắc nghiệm chuẩn sư phạm (Hỗ trợ bởi AI - Chế độ cơ bản)!", "info")
+
+    return redirect(url_for("session_quiz_view", session_id=session_id))
+
+
+@app.route("/sessions/<int:session_id>/quiz")
+@login_required
+def session_quiz_view(session_id):
+    """
+    Trang làm và xem kết quả Quiz trắc nghiệm:
+    - Người học: Tự đánh giá mức độ tự tin trước buổi học (1-5 sao) và làm 5 câu trắc nghiệm (1 lần duy nhất).
+    - Sau khi làm: Hiển thị điểm số, tỷ lệ %, đáp án đúng/sai để học sinh ôn lại.
+    - Người dạy / GV / Admin: Có thể vào xem trước câu hỏi hoặc xem kết quả làm bài của học sinh.
+    """
+    db = get_db()
+    cur = db.cursor()
+    user_id = session["user_id"]
+    user_role = session.get("vai_tro", "")
+
+    cur.execute(
+        """SELECT 
+               s.*,
+               sk.tieu_de,
+               sk.linh_vuc,
+               sk.mo_ta,
+               ud.ho_ten AS ten_nguoi_day,
+               ud.lop AS lop_nguoi_day,
+               ud.ma_hoc_sinh AS ma_nguoi_day,
+               uh.ho_ten AS ten_nguoi_hoc,
+               uh.lop AS lop_nguoi_hoc,
+               uh.ma_hoc_sinh AS ma_nguoi_hoc
+           FROM sessions s
+           JOIN skills sk ON s.skill_id = sk.id
+           JOIN users ud ON s.nguoi_day_id = ud.id
+           JOIN users uh ON s.nguoi_hoc_id = uh.id
+           WHERE s.id = ?""",
+        (session_id,)
+    )
+    session_data = cur.fetchone()
+    if not session_data:
+        flash("Phiên học không tồn tại!", "danger")
+        return redirect(url_for("my_schedule"))
+
+    is_teacher = (session_data["nguoi_day_id"] == user_id)
+    is_learner = (session_data["nguoi_hoc_id"] == user_id)
+    is_admin = (user_role in ("admin", "giao_vien"))
+
+    if not (is_teacher or is_learner or is_admin):
+        flash("Bạn không có quyền truy cập bài kiểm tra của phiên học này!", "danger")
+        return redirect(url_for("my_schedule"))
+
+    # Lấy danh sách câu hỏi
+    cur.execute(
+        """SELECT * FROM quiz_questions 
+           WHERE session_id = ? 
+           ORDER BY id ASC""",
+        (session_id,)
+    )
+    questions = cur.fetchall()
+
+    # Lấy kết quả làm bài của học sinh (nếu có)
+    cur.execute(
+        """SELECT * FROM quiz_results 
+           WHERE session_id = ? AND user_id = ? 
+           ORDER BY id DESC LIMIT 1""",
+        (session_id, session_data["nguoi_hoc_id"])
+    )
+    quiz_result = cur.fetchone()
+
+    return render_template(
+        "session_quiz.html",
+        session_data=session_data,
+        questions=questions,
+        quiz_result=quiz_result,
+        is_teacher=is_teacher,
+        is_learner=is_learner,
+        is_admin=is_admin
+    )
+
+
+@app.route("/sessions/<int:session_id>/quiz/submit", methods=["POST"])
+@login_required
+def submit_quiz_route(session_id):
+    """
+    Nộp bài làm Quiz trắc nghiệm:
+    1. Kiểm tra quyền: Người học của phiên (hoặc admin kiểm thử).
+    2. CHẶN LÀM LẦN 2: Kiểm tra bảng quiz_results, nếu đã có kết quả -> Chặn lại và cảnh báo.
+    3. Ghi nhận 'tu_danh_gia_truoc' (1-5 sao).
+    4. Chấm điểm tự động từng câu (so khớp dap_an_dung).
+    5. Đạt >= 60% (>= 3/5 câu) -> cập nhật sessions.quiz_dat_chuan = 1.
+    6. Quiz dùng để xác nhận kết quả cho giáo viên thấy, KHÔNG chặn việc cộng/trừ giờ của học sinh.
+    """
+    db = get_db()
+    cur = db.cursor()
+    user_id = session["user_id"]
+    user_role = session.get("vai_tro", "")
+
+    cur.execute("SELECT * FROM sessions WHERE id = ?", (session_id,))
+    s_row = cur.fetchone()
+    if not s_row:
+        flash("Phiên học không tồn tại!", "danger")
+        return redirect(url_for("my_schedule"))
+
+    is_learner = (s_row["nguoi_hoc_id"] == user_id)
+    is_admin = (user_role in ("admin", "giao_vien"))
+
+    if not (is_learner or is_admin):
+        flash("Chỉ người học trong phiên mới có quyền nộp bài làm Quiz!", "danger")
+        return redirect(url_for("session_detail", session_id=session_id))
+
+    # CHẶN LÀM LẦN 2 (YÊU CẦU NGHIỆM THU BẮT BUỘC)
+    cur.execute(
+        "SELECT * FROM quiz_results WHERE session_id = ? AND user_id = ?",
+        (session_id, user_id)
+    )
+    existing_result = cur.fetchone()
+    if existing_result:
+        flash("Bạn đã hoàn thành bài quiz này rồi! Mỗi học sinh chỉ được làm bài 1 lần duy nhất để đảm bảo tính khách quan sư phạm.", "warning")
+        return redirect(url_for("session_quiz_view", session_id=session_id))
+
+    # Lấy danh sách câu hỏi
+    cur.execute("SELECT * FROM quiz_questions WHERE session_id = ? ORDER BY id ASC", (session_id,))
+    questions = cur.fetchall()
+    if not questions:
+        flash("Chưa có bộ câu hỏi nào được tạo cho buổi học này!", "warning")
+        return redirect(url_for("session_detail", session_id=session_id))
+
+    # Lấy tự đánh giá trước (1-5 sao)
+    try:
+        tu_danh_gia_truoc = float(request.form.get("tu_danh_gia_truoc", 3.0))
+        if tu_danh_gia_truoc < 1.0 or tu_danh_gia_truoc > 5.0:
+            tu_danh_gia_truoc = 3.0
+    except (ValueError, TypeError):
+        tu_danh_gia_truoc = 3.0
+
+    # Chấm điểm tự động
+    correct_count = 0
+    total_count = len(questions)
+    for q in questions:
+        field_name = f"question_{q['id']}"
+        selected = request.form.get(field_name, "").strip().upper()
+        if selected and selected == q["dap_an_dung"].strip().upper():
+            correct_count += 1
+
+    diem_so = float(correct_count)
+
+    # Lưu kết quả vào quiz_results
+    cur.execute(
+        """INSERT INTO quiz_results 
+           (session_id, user_id, tu_danh_gia_truoc, diem_so, thoi_gian_lam) 
+           VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)""",
+        (session_id, user_id, tu_danh_gia_truoc, diem_so)
+    )
+
+    # Đạt >= 60% (tức >= 3/5 câu) -> cập nhật sessions.quiz_dat_chuan = 1
+    pct = (correct_count / total_count) if total_count > 0 else 0.0
+    if pct >= 0.60:
+        cur.execute("UPDATE sessions SET quiz_dat_chuan = 1 WHERE id = ?", (session_id,))
+        db.commit()
+        flash(f"Chúc mừng em! Em đã làm đúng {correct_count}/{total_count} câu ({pct*100:.0f}%) — ĐẠT CHUẨN KIẾN THỨC!", "success")
+    else:
+        db.commit()
+        flash(f"Em đã hoàn thành bài quiz: đúng {correct_count}/{total_count} câu ({pct*100:.0f}%). Hãy ôn lại các đáp án giải thích để nắm vững kiến thức hơn nhé!", "info")
+
+    return redirect(url_for("session_quiz_view", session_id=session_id))
 
 
 # ==============================================================================

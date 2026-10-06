@@ -286,7 +286,50 @@ Tích hợp Trợ lý Trí tuệ Nhân tạo thế hệ mới (Gemini Pro API) �
 
 ---
 
-## 13. Tính bảo mật và biến môi trường
+## 13. Quiz Trắc Nghiệm AI Adaptive & Đo lường Kết quả Học tập (Milestone M-AI+)
+
+Hệ thống bổ sung chu trình khép kín đánh giá lượng giá năng lực học sinh sau mỗi buổi trao đổi tri thức bằng Quiz trắc nghiệm thông minh:
+
+### Quy trình Sư phạm & Kỹ thuật:
+1. **Khởi tạo Quiz bằng Trí tuệ Nhân tạo (`ai_generate_quiz`):**
+   - Sau khi buổi học được xác nhận hoàn thành, người dạy (hoặc Giáo viên) bấm **"Nhờ AI tạo quiz"** tại trang chi tiết phiên (`/sessions/<id>`).
+   - Gemini Pro phân tích nội dung dàn ý buổi học (`sessions.dan_y_ai`) và mô tả kỹ năng (`skills.mo_ta`) để biên soạn **5 câu trắc nghiệm 4 lựa chọn** (A, B, C, D) theo mức độ nhận thức từ dễ đến khó.
+   - Ngôn ngữ tiếng Việt tự nhiên, giọng văn vui tươi, gần gũi, khích lệ như trò chơi trí tuệ học đường.
+   - Câu hỏi được lưu tự động vào bảng `quiz_questions` và ghi vết minh bạch vào `ai_logs` (`chuc_nang = 'tao_quiz'`).
+2. **Tự đánh giá mức độ tự tin đầu vào (`tu_danh_gia_truoc`):**
+   - Trước khi làm bài, học sinh tự đánh giá: *"Trước buổi học, em tự tin ở mức nào về chuyên đề này? (1 - 5 sao)"*.
+   - Chỉ số này giúp đo lường mức độ tiến bộ năng lực và giá trị gia tăng tri thức mà buổi học đem lại.
+3. **Làm bài và chấm điểm tự động trong app (Chặn làm lại lần 2):**
+   - Học sinh thực hiện bài kiểm tra trực tiếp trên nền tảng web tại `/sessions/<id>/quiz`.
+   - **Chặn làm lại lần 2:** Mỗi học sinh chỉ được làm bài **1 lần duy nhất** nhằm đảm bảo tính khách quan và trung thực sư phạm.
+   - Hệ thống tự động chấm điểm, hiển thị tỷ lệ % đạt được, giải thích đáp án đúng/sai để học sinh ôn tập củng cố bài giảng.
+   - Nếu đạt $\ge 60\%$ ($\ge 3/5$ câu đúng): Hệ thống tự động cập nhật cờ `sessions.quiz_dat_chuan = 1`.
+4. **Bảng điều khiển "Kết quả học tập" cho Giáo viên & Quản trị viên (`/admin`):**
+   - Thống kê trực quan 4 chỉ số cốt lõi:
+     * **% Phiên đạt chuẩn Quiz (≥60%):** Tỷ lệ phiên học sinh nắm vững kiến thức trọng tâm.
+     * **% Đạt điểm Giỏi (≥4/5 điểm):** Tỷ lệ học sinh tiếp thu xuất sắc.
+     * **So sánh Tự đánh giá trước vs Điểm thực tế sau:** Minh chứng trực quan sự tiến bộ năng lực của học sinh.
+     * **Điểm trung bình theo từng môn học:** Toán, Lý, Hóa, Ngoại ngữ, Tin học, Năng khiếu...
+5. **Nguyên tắc Sư phạm Nhân văn Cốt lõi:**
+   - Quiz trắc nghiệm dùng để **XÁC NHẬN kết quả học tập** cho giáo viên theo dõi và định hướng hỗ trợ, **TUYỆT ĐỐI KHÔNG CHẶN** việc cộng/trừ giờ tín dụng của học sinh (đã được ghi nhận vào sổ cái lúc hoàn thành phiên).
+   - Quy tắc này giúp tránh phạt oan học sinh có xuất phát điểm còn yếu, khuyến khích tinh thần dám học hỏi và tự tin trao đổi tri thức.
+
+### Hướng dẫn kiểm thử nghiệm thu Milestone M-AI+:
+- **Chạy riêng bộ kiểm thử M-AI+:**
+  ```bash
+  python test_m_ai_plus.py
+  ```
+  * Kết quả: 6/6 test cases đạt chuẩn 100%.
+
+- **Chạy toàn bộ bộ kiểm thử hồi quy hệ thống (M0 + M1 + M2 + M3 + M3+ + M-AI + M-AI+):**
+  ```bash
+  python test_m0.py ; python test_m1.py ; python test_m2.py ; python test_m3.py ; python test_m3_plus.py ; python test_m_ai.py ; python test_m_ai_plus.py
+  ```
+  * Kết quả: 36/36 test cases đạt chuẩn 100%.
+
+---
+
+## 14. Tính bảo mật và biến môi trường
 - File `.env` chứa `GEMINI_API_KEY` và `FLASK_SECRET_KEY` được bảo vệ nghiêm ngặt bằng `.gitignore`, **TUYỆT ĐỐI KHÔNG BAO GIỜ** được push lên GitHub công khai.
 - Cung cấp file mẫu `.env.example` với hướng dẫn cấu hình chi tiết cho các trường triển khai.
 

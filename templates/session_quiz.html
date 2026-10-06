@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz Trắc Nghiệm - {{ session_data.tieu_de }} - {{ config.ten_truong }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+      <!-- Nút quay lại chi tiết phiên học -->
+      <div class="mb-3 d-flex justify-content-between align-items-center">
+        <a href="{{ url_for('session_detail', session_id=session_data.id) }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+          <i class="bi bi-arrow-left me-1"></i> Quay lại Chi tiết Phiên học
+        </a>
+        <span class="badge-ai" style="font-size: 0.75rem;">
+          <i class="bi bi-stars"></i> Hỗ trợ bởi AI (Gemini)
+        </span>
+      </div>
+
+      <!-- Thẻ thông tin phiên học -->
+      <div class="card border-0 shadow-sm rounded-4 bg-white mb-4 overflow-hidden border-start border-4 border-primary">
+        <div class="card-body p-4">
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+            <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold">{{ session_data.linh_vuc }}</span>
+            {% if session_data.quiz_dat_chuan == 1 %}
+              <span class="badge bg-success-subtle text-success border border-success fw-bold">
+                <i class="bi bi-patch-check-fill me-1"></i> Phiên học Đạt Chuẩn Quiz (≥60%)
+              </span>
+            {% else %}
+              <span class="badge bg-light text-muted border">
+                <i class="bi bi-hourglass-split me-1"></i> Trạng thái: Chưa đạt chuẩn / Chờ làm bài
+              </span>
+            {% endif %}
+          </div>
+          <h4 class="fw-bold text-dark mb-1">{{ session_data.tieu_de }}</h4>
+          <p class="text-muted small mb-3">{{ session_data.mo_ta }}</p>
+
+          <div class="d-flex flex-wrap gap-4 small text-secondary p-3 bg-light rounded-3">
+            <div>
+              <i class="bi bi-person-badge text-primary me-1"></i>Gia sư: <strong>{{ session_data.ten_nguoi_day }}</strong> (Lớp {{ session_data.lop_nguoi_day }})
+            </div>
+            <div>
+              <i class="bi bi-person-fill text-success me-1"></i>Người học: <strong>{{ session_data.ten_nguoi_hoc }}</strong> (Lớp {{ session_data.lop_nguoi_hoc }})
+            </div>
+            <div>
+              <i class="bi bi-clock-history text-warning me-1"></i>Thời lượng: <strong>{{ "%.1f"|format(session_data.so_gio) }} giờ</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {% if quiz_result %}
+        <!-- BẢNG KẾT QUẢ ĐÃ LÀM (CHỈ ĐƯỢC LÀM 1 LẦN DUY NHẤT) -->
+        <div class="card border-0 shadow-sm rounded-4 bg-white mb-4 p-4 text-center">
+          <div class="mb-3">
+            {% if quiz_result.diem_so >= 3.0 %}
+              <div class="badge bg-success-subtle text-success p-3 rounded-circle mb-2" style="font-size: 2rem;">
+                <i class="bi bi-trophy-fill"></i>
+              </div>
+              <h4 class="fw-bold text-success">Xuất Sắc Đạt Chuẩn Sư Phạm!</h4>
+              <p class="text-muted small">Bạn đã hoàn thành bài lượng giá đạt tiêu chuẩn kiến thức (≥60%).</p>
+            {% else %}
+              <div class="badge bg-warning-subtle text-warning p-3 rounded-circle mb-2" style="font-size: 2rem;">
+                <i class="bi bi-lightbulb-fill"></i>
+              </div>
+              <h4 class="fw-bold text-warning">Cần Cố Gắng Ôn Luyện Thêm!</h4>
+              <p class="text-muted small">Hãy xem lại các câu trả lời chi tiết bên dưới để bổ sung kiến thức nhé.</p>
+            {% endif %}
+          </div>
+
+          <div class="row g-3 justify-content-center mb-3">
+            <div class="col-sm-4">
+              <div class="p-3 bg-light rounded-4 border">
+                <span class="text-muted small d-block">Điểm số đạt được</span>
+                <span class="display-6 fw-bold text-primary">{{ "%.1f"|format(quiz_result.diem_so) }}</span>
+                <span class="text-muted fs-6">/ 5.0</span>
+                <div class="small fw-semibold text-secondary">
+                  ({{ "%.0f"|format(quiz_result.diem_so / 5.0 * 100) }}%)
+                </div>
+              </div>
+            </div>
+
+            <div class="col-sm-4">
+              <div class="p-3 bg-light rounded-4 border">
+                <span class="text-muted small d-block">Tự tin trước buổi học</span>
+                <span class="display-6 fw-bold text-warning">{{ "%.1f"|format(quiz_result.tu_danh_gia_truoc) }}</span>
+                <span class="text-warning fs-5">★</span>
+                <div class="small text-muted">Thang điểm 1 - 5 sao</div>
+              </div>
+            </div>
+
+            <div class="col-sm-4">
+              <div class="p-3 bg-light rounded-4 border">
+                <span class="text-muted small d-block">Mức độ tiến bộ</span>
+                {% set diff = quiz_result.diem_so - quiz_result.tu_danh_gia_truoc %}
+                <span class="display-6 fw-bold {% if diff >= 0 %}text-success{% else %}text-secondary{% endif %}">
+                  {% if diff >= 0 %}+{% endif %}{{ "%.1f"|format(diff) }}
+                </span>
+                <div class="small text-muted">So với tự đánh giá trước</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-3 rounded-3 bg-primary bg-opacity-10 border border-primary border-opacity-25 small text-primary mb-2">
+            <i class="bi bi-shield-check me-1"></i><strong>Quy tắc sư phạm nhân văn:</strong> Kết quả quiz dùng để xác nhận mức độ tiếp thu cho giáo viên theo dõi, <strong>không chặn</strong> việc chuyển giờ tín dụng cho người dạy và người học.
+          </div>
+          <div class="text-muted small">
+            <i class="bi bi-lock-fill me-1"></i>Bài làm đã hoàn tất vào lúc: <code>{{ quiz_result.thoi_gian_lam }}</code>. Form đã được khóa (chỉ làm 1 lần duy nhất).
+          </div>
+        </div>
+
+        <!-- CHI TIẾT CÂU HỎI & ĐÁP ÁN ĐÚNG ĐỂ ÔN LẠI -->
+        <h5 class="fw-bold text-dark mb-3"><i class="bi bi-journal-check text-primary me-2"></i>Chi Tiết Câu Hỏi & Đáp Án Ôn Tập</h5>
+        <div class="d-flex flex-column gap-3 mb-4">
+          {% for q in questions %}
+          <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="badge bg-light text-primary border fw-bold">Câu {{ loop.index }} / {{ questions|length }}</span>
+              <span class="badge bg-success-subtle text-success small">Đáp án đúng: {{ q.dap_an_dung }}</span>
+            </div>
+            <h6 class="fw-bold text-dark mb-3">{{ q.cau_hoi }}</h6>
+
+            <div class="list-group list-group-flush border rounded-3 overflow-hidden small">
+              <div class="list-group-item py-2 px-3 {% if q.dap_an_dung == 'A' %}bg-success bg-opacity-10 text-success fw-bold{% endif %}">
+                <strong>A.</strong> {{ q.lua_chon_a }}
+                {% if q.dap_an_dung == 'A' %}<i class="bi bi-check-circle-fill text-success ms-2"></i>{% endif %}
+              </div>
+              <div class="list-group-item py-2 px-3 {% if q.dap_an_dung == 'B' %}bg-success bg-opacity-10 text-success fw-bold{% endif %}">
+                <strong>B.</strong> {{ q.lua_chon_b }}
+                {% if q.dap_an_dung == 'B' %}<i class="bi bi-check-circle-fill text-success ms-2"></i>{% endif %}
+              </div>
+              <div class="list-group-item py-2 px-3 {% if q.dap_an_dung == 'C' %}bg-success bg-opacity-10 text-success fw-bold{% endif %}">
+                <strong>C.</strong> {{ q.lua_chon_c }}
+                {% if q.dap_an_dung == 'C' %}<i class="bi bi-check-circle-fill text-success ms-2"></i>{% endif %}
+              </div>
+              <div class="list-group-item py-2 px-3 {% if q.dap_an_dung == 'D' %}bg-success bg-opacity-10 text-success fw-bold{% endif %}">
+                <strong>D.</strong> {{ q.lua_chon_d }}
+                {% if q.dap_an_dung == 'D' %}<i class="bi bi-check-circle-fill text-success ms-2"></i>{% endif %}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+      {% else %}
+
+        {% if is_learner %}
+          <!-- FORM LÀM BÀI CHO NGƯỜI HỌC (CHƯA LÀM) -->
+          <form method="POST" action="{{ url_for('submit_quiz_route', session_id=session_data.id) }}">
+            <!-- 1. Tự đánh giá mức độ tự tin trước buổi học -->
+            <div class="card border-0 shadow-sm rounded-4 bg-white mb-4 p-4">
+              <h5 class="fw-bold text-dark mb-2">
+                <i class="bi bi-speedometer2 text-warning me-2"></i>1. Tự Đánh Giá Mức Độ Tự Tin Trước Buổi Học
+              </h5>
+              <p class="text-muted small mb-3">Trước khi học cùng bạn gia sư, em tự tin ở mức nào về chuyên đề này? (Thang 1-5 sao)</p>
+
+              <div class="d-flex flex-wrap gap-2">
+                <div class="form-check form-check-inline p-2 border rounded-3 flex-grow-1 text-center bg-light">
+                  <input class="form-check-input ms-0 me-2" type="radio" name="tu_danh_gia_truoc" id="rate1" value="1" required>
+                  <label class="form-check-label small fw-semibold" for="rate1">1★ Rất bỡ ngỡ</label>
+                </div>
+                <div class="form-check form-check-inline p-2 border rounded-3 flex-grow-1 text-center bg-light">
+                  <input class="form-check-input ms-0 me-2" type="radio" name="tu_danh_gia_truoc" id="rate2" value="2">
+                  <label class="form-check-label small fw-semibold" for="rate2">2★ Chưa tự tin</label>
+                </div>
+                <div class="form-check form-check-inline p-2 border rounded-3 flex-grow-1 text-center bg-light">
+                  <input class="form-check-input ms-0 me-2" type="radio" name="tu_danh_gia_truoc" id="rate3" value="3" checked>
+                  <label class="form-check-label small fw-semibold" for="rate3">3★ Tạm ổn</label>
+                </div>
+                <div class="form-check form-check-inline p-2 border rounded-3 flex-grow-1 text-center bg-light">
+                  <input class="form-check-input ms-0 me-2" type="radio" name="tu_danh_gia_truoc" id="rate4" value="4">
+                  <label class="form-check-label small fw-semibold" for="rate4">4★ Khá tự tin</label>
+                </div>
+                <div class="form-check form-check-inline p-2 border rounded-3 flex-grow-1 text-center bg-light">
+                  <input class="form-check-input ms-0 me-2" type="radio" name="tu_danh_gia_truoc" id="rate5" value="5">
+                  <label class="form-check-label small fw-semibold" for="rate5">5★ Rất tự tin</label>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. Danh sách 5 câu hỏi trắc nghiệm -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="fw-bold text-dark mb-0"><i class="bi bi-controller text-primary me-2"></i>2. Bộ Câu Hỏi Trắc Nghiệm (5 Câu)</h5>
+              <span class="badge bg-light text-primary border">Tiêu chuẩn: Đạt ≥60% (3/5 câu)</span>
+            </div>
+
+            <div class="d-flex flex-column gap-3 mb-4">
+              {% for q in questions %}
+              <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span class="badge bg-primary bg-opacity-10 text-primary fw-bold">Câu {{ loop.index }}</span>
+                  <small class="text-muted">Chọn 1 phương án đúng nhất</small>
+                </div>
+                <h6 class="fw-bold text-dark mb-3">{{ q.cau_hoi }}</h6>
+
+                <div class="d-flex flex-column gap-2">
+                  <div class="form-check p-3 border rounded-3 bg-light hover-bg">
+                    <input class="form-check-input ms-0 me-2" type="radio" name="question_{{ q.id }}" id="q_{{ q.id }}_A" value="A" required>
+                    <label class="form-check-label small text-dark fw-medium" for="q_{{ q.id }}_A">
+                      <strong>A.</strong> {{ q.lua_chon_a }}
+                    </label>
+                  </div>
+                  <div class="form-check p-3 border rounded-3 bg-light hover-bg">
+                    <input class="form-check-input ms-0 me-2" type="radio" name="question_{{ q.id }}" id="q_{{ q.id }}_B" value="B" required>
+                    <label class="form-check-label small text-dark fw-medium" for="q_{{ q.id }}_B">
+                      <strong>B.</strong> {{ q.lua_chon_b }}
+                    </label>
+                  </div>
+                  <div class="form-check p-3 border rounded-3 bg-light hover-bg">
+                    <input class="form-check-input ms-0 me-2" type="radio" name="question_{{ q.id }}" id="q_{{ q.id }}_C" value="C" required>
+                    <label class="form-check-label small text-dark fw-medium" for="q_{{ q.id }}_C">
+                      <strong>C.</strong> {{ q.lua_chon_c }}
+                    </label>
+                  </div>
+                  <div class="form-check p-3 border rounded-3 bg-light hover-bg">
+                    <input class="form-check-input ms-0 me-2" type="radio" name="question_{{ q.id }}" id="q_{{ q.id }}_D" value="D" required>
+                    <label class="form-check-label small text-dark fw-medium" for="q_{{ q.id }}_D">
+                      <strong>D.</strong> {{ q.lua_chon_d }}
+                    </label>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+
+            <!-- Nút Nộp Bài -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white text-center mb-4">
+              <p class="text-muted small mb-3">
+                <i class="bi bi-exclamation-circle text-warning me-1"></i>
+                Lưu ý: Bạn chỉ được nộp bài 1 lần duy nhất. Hãy kiểm tra kỹ các câu trả lời trước khi bấm hoàn tất.
+              </p>
+              <button type="submit" class="btn btn-brand btn-lg py-2 px-5 fw-bold shadow-sm mx-auto">
+                <i class="bi bi-send-check-fill me-2"></i>Nộp Bài & Chấm Điểm Ngay
+              </button>
+            </div>
+          </form>
+
+        {% else %}
+          <!-- DÀNH CHO GIA SƯ / GV / ADMIN KHI HỌC SINH CHƯA LÀM -->
+          <div class="card border-0 shadow-sm rounded-4 bg-white mb-4 p-4 text-center">
+            <div class="py-4">
+              <i class="bi bi-hourglass-split text-warning display-4 mb-2 d-block"></i>
+              <h5 class="fw-bold text-dark">Học sinh chưa hoàn thành bài Quiz</h5>
+              <p class="text-muted small mb-3">Bạn học <strong>{{ session_data.ten_nguoi_hoc }}</strong> chưa tham gia làm bài lượng giá cho phiên này.</p>
+              <span class="badge bg-light text-secondary border p-2">Bộ Quiz gồm {{ questions|length }} câu hỏi do AI biên soạn đã sẵn sàng</span>
+            </div>
+          </div>
+
+          <!-- Hiển thị bộ câu hỏi mẫu cho người dạy tham khảo -->
+          <h5 class="fw-bold text-dark mb-3"><i class="bi bi-eye text-primary me-2"></i>Nội Dung Bộ Câu Hỏi Lượng Giá (Tham khảo)</h5>
+          <div class="d-flex flex-column gap-3 mb-4">
+            {% for q in questions %}
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge bg-light text-primary border">Câu {{ loop.index }}</span>
+                <span class="badge bg-success-subtle text-success small">Đáp án đúng: {{ q.dap_an_dung }}</span>
+              </div>
+              <div class="fw-semibold text-dark small mb-2">{{ q.cau_hoi }}</div>
+              <div class="row g-2 small text-secondary">
+                <div class="col-sm-6">A. {{ q.lua_chon_a }}</div>
+                <div class="col-sm-6">B. {{ q.lua_chon_b }}</div>
+                <div class="col-sm-6">C. {{ q.lua_chon_c }}</div>
+                <div class="col-sm-6">D. {{ q.lua_chon_d }}</div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -494,3 +494,150 @@ Hãy đưa ra các GỢI Ý CAN THIỆP SƯ PHẠM NHÂN VĂN cho Ban Giám Hi�
         "ai_recommendations": fallback_recs,
         "is_live": False
     }
+
+
+# ==============================================================================
+# 6. AI TẠO QUIZ TRẮC NGHIỆM THÍCH ỨNG (MILESTONE M-AI+)
+# ==============================================================================
+def ai_generate_quiz(db, user_id, session_id, tieu_de, linh_vuc, mo_ta, dan_y_ai=""):
+    """
+    Điểm chạm AI+: Người dạy yêu cầu AI tạo bộ câu hỏi lượng giá sau buổi học:
+    - Gemini đọc dan_y_ai + mo_ta -> tạo 5 câu trắc nghiệm 4 lựa chọn (A, B, C, D).
+    - Phân cấp dễ -> khó, ngôn ngữ tiếng Việt, giọng VUI VẺ, khích lệ như trò chơi ("Game hóa học đường").
+    - Lưu trực tiếp vào bảng quiz_questions.
+    - Lưu nhật ký vào bảng ai_logs (chuc_nang = 'tao_quiz').
+    """
+    input_summary = f"Quiz phiên #{session_id}: {tieu_de} ({linh_vuc})"
+    cur = db.cursor()
+
+    is_live = is_ai_live()
+    if is_live:
+        prompt = f"""
+Bạn là Trợ lý AI giáo dục truyền cảm hứng của nền tảng TimeBank EDU.
+Sau một buổi học trao đổi tri thức giữa 2 bạn học sinh:
+- Chuyên đề: {tieu_de}
+- Lĩnh vực: {linh_vuc}
+- Mục tiêu buổi học: {mo_ta}
+- Dàn ý đã học:
+{dan_y_ai if dan_y_ai else "Buổi học kèm 1-1 về kiến thức trọng tâm và bài tập thực hành."}
+
+Nhiệm vụ:
+Hãy tạo một bộ QUIZ 5 CÂU HỎI TRẮC NGHIỆM để người học ôn tập lại kiến thức vừa học:
+1. Độ khó tăng dần:
+   - Câu 1: Dễ - Khởi động vui vẻ, kiểm tra sự hào hứng và khái niệm cơ bản.
+   - Câu 2: Dễ - Nhận biết kiến thức cốt lõi.
+   - Câu 3: Trung bình - Vận dụng vào bài tập hoặc tình huống thực tế.
+   - Câu 4: Trung bình - Phân tích, suy luận hoặc mẹo tránh lỗi sai.
+   - Câu 5: Khó & Vui vẻ - Thử thách tư duy sáng tạo, lời khuyên thực tế.
+2. Phong cách: Tiếng Việt, giọng VUI VẺ, khích lệ, thân thiện như một trò chơi đố vui học đường, không gây áp lực thi cử.
+3. Mỗi câu có đúng 4 lựa chọn (lua_chon_a, lua_chon_b, lua_chon_c, lua_chon_d) và đáp án đúng là "A", "B", "C", hoặc "D".
+
+Xuất kết quả đúng định dạng JSON sau:
+[
+  {{
+    "cau_hoi": "Nội dung câu hỏi vui vẻ?",
+    "lua_chon_a": "Đáp án A",
+    "lua_chon_b": "Đáp án B",
+    "lua_chon_c": "Đáp án C",
+    "lua_chon_d": "Đáp án D",
+    "dap_an_dung": "A"
+  }}
+]
+"""
+        response_text = call_gemini(prompt)
+        if response_text:
+            try:
+                clean_json = response_text.strip()
+                if "```json" in clean_json:
+                    clean_json = clean_json.split("```json")[1].split("```")[0].strip()
+                elif "```" in clean_json:
+                    clean_json = clean_json.split("```")[1].split("```")[0].strip()
+                quiz_data = json.loads(clean_json)
+                if isinstance(quiz_data, list) and len(quiz_data) >= 5:
+                    cur.execute("DELETE FROM quiz_questions WHERE session_id = ?", (session_id,))
+                    questions_to_insert = []
+                    for q in quiz_data[:5]:
+                        ans = str(q.get("dap_an_dung", "A")).strip().upper()
+                        if ans not in ("A", "B", "C", "D"):
+                            ans = "A"
+                        questions_to_insert.append((
+                            session_id,
+                            str(q.get("cau_hoi", "")),
+                            str(q.get("lua_chon_a", "")),
+                            str(q.get("lua_chon_b", "")),
+                            str(q.get("lua_chon_c", "")),
+                            str(q.get("lua_chon_d", "")),
+                            ans
+                        ))
+                    cur.executemany(
+                        """INSERT INTO quiz_questions 
+                           (session_id, cau_hoi, lua_chon_a, lua_chon_b, lua_chon_c, lua_chon_d, dap_an_dung)
+                           VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                        questions_to_insert
+                    )
+                    db.commit()
+                    log_ai_interaction(db, user_id, "tao_quiz", input_summary, f"Tạo thành công 5 câu hỏi từ Gemini cho phiên #{session_id}")
+                    cur.execute("SELECT * FROM quiz_questions WHERE session_id = ? ORDER BY id ASC", (session_id,))
+                    return [dict(r) for r in cur.fetchall()], True
+            except Exception as e:
+                print(f"[AI Quiz JSON Parse Error]: {e}")
+
+    # CHẾ ĐỘ DỰ PHÒNG (RULE-BASED FALLBACK)
+    cur.execute("DELETE FROM quiz_questions WHERE session_id = ?", (session_id,))
+    fallback_questions = [
+        (
+            session_id,
+            f"🌟 [Khởi động vui vẻ] Theo bạn, mục tiêu quan trọng và thú vị nhất khi cùng học chuyên đề '{tieu_de}' là gì?",
+            f"Nắm vững phương pháp căn bản và tự tin làm bài tập",
+            f"Học thuộc vẹt mọi công thức mà không cần hiểu bản chất",
+            f"Chỉ cần chép lại lời giải mẫu của bạn gia sư",
+            f"Đợi đến sát ngày thi mới bắt đầu mở vở ra xem",
+            "A"
+        ),
+        (
+            session_id,
+            f"💡 [Nhận biết kiến thức] Khi tìm hiểu về {tieu_de} ({linh_vuc}), đâu là nguyên lý trọng tâm cần ghi nhớ?",
+            f"Bỏ qua các bước cơ bản để làm ngay dạng nâng cao",
+            f"Hiểu rõ khái niệm then chốt và các bước thực hiện tuần tự",
+            f"Học thuộc lòng đáp án trắc nghiệm không cần tư duy",
+            f"Mỗi bài tập đều dùng duy nhất một cách giải duy nhất",
+            "B"
+        ),
+        (
+            session_id,
+            f"🚀 [Vận dụng thực hành] Nếu gặp một câu hỏi hoặc bài tập mới liên quan đến {tieu_de}, bạn nên bắt đầu từ đâu?",
+            f"Đọc kỹ đề bài, xác định dữ kiện đã cho và mục tiêu cần tìm",
+            f"Bấm máy tính bừa hoặc chọn ngẫu nhiên một đáp án",
+            f"Bỏ qua ngay và chuyển sang môn học khác",
+            f"Chờ bạn khác làm xong rồi xin kết quả",
+            "A"
+        ),
+        (
+            session_id,
+            f"🎯 [Phân tích & Tránh bẫy] Lỗi sai phổ biến mà học sinh thường gặp khi rèn luyện {tieu_de} là gì?",
+            f"Quá cẩn thận kiểm tra lại các bước tính toán",
+            f"Vẽ hình minh họa rõ ràng và đặt điều kiện xác định",
+            f"Vội vàng bỏ sót điều kiện biên hoặc nhầm lẫn đơn vị",
+            f"Thường xuyên trao đổi, hỏi bạn gia sư khi chưa hiểu",
+            "C"
+        ),
+        (
+            session_id,
+            f"🏆 [Thử thách & Bí kíp vui] 'Bí kíp vàng' để tiến bộ vượt bậc sau mỗi buổi học tại TimeBank EDU là gì?",
+            f"Tự luyện tập lại ít nhất 1 bài tương tự và sẵn sàng chia sẻ, dạy lại cho bạn khác",
+            f"Cất sách vở vào ngăn bàn và không bao giờ ôn lại",
+            f"Nghĩ rằng mình đã giỏi rồi nên không cần rèn luyện thêm",
+            f"Chỉ học khi có người nhắc nhở",
+            "A"
+        )
+    ]
+    cur.executemany(
+        """INSERT INTO quiz_questions 
+           (session_id, cau_hoi, lua_chon_a, lua_chon_b, lua_chon_c, lua_chon_d, dap_an_dung)
+           VALUES (?, ?, ?, ?, ?, ?, ?)""",
+        fallback_questions
+    )
+    db.commit()
+    log_ai_interaction(db, user_id, "tao_quiz", input_summary, f"[Rule-Based] Tạo 5 câu hỏi trắc nghiệm vui vẻ theo chuẩn {linh_vuc}")
+    cur.execute("SELECT * FROM quiz_questions WHERE session_id = ? ORDER BY id ASC", (session_id,))
+    return [dict(r) for r in cur.fetchall()], False
