@@ -17,6 +17,7 @@ import base64
 import secrets
 import sqlite3
 import yaml
+import csv
 import qrcode
 from datetime import datetime
 from pathlib import Path
@@ -24,7 +25,7 @@ from functools import wraps
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import (
-    Flask, render_template, request, jsonify, g, flash, redirect, url_for, session, abort
+    Flask, render_template, request, jsonify, g, flash, redirect, url_for, session, abort, make_response
 )
 from ai_service import (
     ai_moderate_skill, ai_matchmake, ai_generate_lesson_plan, 
@@ -821,6 +822,36 @@ def profile():
 
         DAILY_RECOMMENDATION_CACHE[cache_key] = (daily_matches, is_live_rec, target_subject)
 
+    # Milestone M4-lite: Thống kê cá nhân học sinh: Giờ đã dạy, Giờ đã học, Sao trung bình
+    # 1. Tổng giờ đã dạy (các phiên hoàn thành đóng vai trò người dạy)
+    cur.execute(
+        """SELECT COALESCE(SUM(so_gio), 0.0) 
+           FROM sessions 
+           WHERE nguoi_day_id = ? AND trang_thai = 'hoan_thanh'""",
+        (user["id"],)
+    )
+    hours_taught = cur.fetchone()[0]
+
+    # 2. Tổng giờ đã học (các phiên hoàn thành đóng vai trò người học)
+    cur.execute(
+        """SELECT COALESCE(SUM(so_gio), 0.0) 
+           FROM sessions 
+           WHERE nguoi_hoc_id = ? AND trang_thai = 'hoan_thanh'""",
+        (user["id"],)
+    )
+    hours_learned = cur.fetchone()[0]
+
+    # 3. Số sao đánh giá trung bình nhận được từ bạn bè
+    cur.execute(
+        """SELECT ROUND(AVG(so_sao), 1), COUNT(*) 
+           FROM ratings 
+           WHERE nguoi_duoc_danh_gia_id = ?""",
+        (user["id"],)
+    )
+    rating_row = cur.fetchone()
+    avg_rating = rating_row[0] if rating_row and rating_row[0] is not None else 5.0
+    rating_count = rating_row[1] if rating_row else 0
+
     return render_template(
         "profile.html",
         user=user,
@@ -829,7 +860,11 @@ def profile():
         ai_feedback=ai_feedback,
         daily_matches=daily_matches,
         is_live_rec=is_live_rec,
-        target_subject=target_subject
+        target_subject=target_subject,
+        hours_taught=hours_taught,
+        hours_learned=hours_learned,
+        avg_rating=avg_rating,
+        rating_count=rating_count
     )
 
 
@@ -928,15 +963,176 @@ def admin_dashboard():
         "growth_diff": growth_diff
     }
 
+    # Milestone M4-lite: Thống kê quản trị cấp trường
+    # 1. Tổng số phiên học trong hệ thống
+    cur.execute("SELECT COUNT(*) FROM sessions")
+    total_sessions_count = cur.fetchone()[0]
+
+    # 2. Tổng số giờ lưu thông thực tế (từ các phiên hoàn thành)
+    cur.execute("SELECT COALESCE(SUM(so_gio), 0.0) FROM sessions WHERE trang_thai = 'hoan_thanh'")
+    total_hours_circulated = cur.fetchone()[0]
+
+    # 3. Top học sinh tích cực nhất (theo giờ dạy và cống hiến)
+    cur.execute("""
+        SELECT 
+            u.id, u.ma_hoc_sinh, u.ho_ten, u.lop, u.so_du_gio,
+            COALESCE(SUM(CASE WHEN s.nguoi_day_id = u.id AND s.trang_thai = 'hoan_thanh' THEN s.so_gio ELSE 0 END), 0.0) AS gio_day,
+            COALESCE(SUM(CASE WHEN s.nguoi_hoc_id = u.id AND s.trang_thai = 'hoan_thanh' THEN s.so_gio ELSE 0 END), 0.0) AS gio_hoc,
+            COUNT(DISTINCT CASE WHEN s.trang_thai = 'hoan_thanh' THEN s.id END) AS so_phien,
+            ROUND(COALESCE((SELECT AVG(so_sao) FROM ratings WHERE nguoi_duoc_danh_gia_id = u.id), 5.0), 1) AS sao_tb
+        FROM users u
+        LEFT JOIN sessions s ON (s.nguoi_day_id = u.id OR s.nguoi_hoc_id = u.id)
+        WHERE u.vai_tro = 'hoc_sinh'
+        GROUP BY u.id
+        ORDER BY gio_day DESC, u.so_du_gio DESC
+        LIMIT 5
+    """)
+    top_active_students = cur.fetchall()
+
     return render_template(
         "admin.html",
         users=all_users,
         student_count=student_count,
         total_credits=total_credits,
+        total_sessions_count=total_sessions_count,
+        total_hours_circulated=total_hours_circulated,
+        top_active_students=top_active_students,
         pending_skills_count=pending_skills_count,
         ai_warnings=ai_warnings,
         learning_stats=learning_stats
     )
+
+
+@app.route("/admin/export-csv")
+@teacher_or_admin_required
+def export_data_csv():
+    """
+    Xuất dữ liệu toàn diện phục vụ nghiên cứu sư phạm và báo cáo (Milestone M4-lite):
+    - Gộp 5 bảng: sessions + credits_ledger + ratings + quiz_results + ai_logs
+    - NGUYÊN TẮC BẢO MẬT: Họ tên -> Mã học sinh ẩn danh (CSV TUYỆT ĐỐI KHÔNG LỘ TÊN THẬT)
+    - Tương thích 100% với Microsoft Excel (UTF-8 with BOM utf-8-sig)
+    """
+    db = get_db()
+    cur = db.cursor()
+
+    # Lấy bản đồ tên thật -> mã học sinh để lọc sạch mọi trường hợp lộ danh tính
+    cur.execute("SELECT id, ma_hoc_sinh, ho_ten FROM users")
+    all_users_meta = cur.fetchall()
+    name_to_code = {u["ho_ten"]: u["ma_hoc_sinh"] for u in all_users_meta if u["ho_ten"]}
+
+    def sanitize_text(text):
+        if not text:
+            return ""
+        sanitized = str(text)
+        for real_name, student_code in name_to_code.items():
+            if len(real_name.strip()) > 1 and real_name in sanitized:
+                sanitized = sanitized.replace(real_name, student_code)
+        return sanitized
+
+    output = io.StringIO()
+    writer = csv.writer(output, lineterminator="\r\n")
+
+    # Header báo cáo
+    writer.writerow(["# NGAN HANG THOI GIAN HOC DUONG (TIMEBANK EDU) - DU LIEU NGHIEN CUU SU PHAM (DA AN DANH)"])
+    writer.writerow(["# Thoi gian xuat:", datetime.now().strftime("%Y-%m-%d %H:%M:%S")])
+    writer.writerow([])
+
+    # 1. BẢNG SESSIONS
+    writer.writerow(["=== 1. BANG PHIEN HOC (SESSIONS) ==="])
+    writer.writerow([
+        "session_id", "ma_nguoi_day", "ma_nguoi_hoc", "linh_vuc", "tieu_de",
+        "thoi_gian_bat_dau", "so_gio", "trang_thai", "checkin_day", "checkin_hoc", "quiz_dat_chuan"
+    ])
+    cur.execute("""
+        SELECT 
+            s.id, ud.ma_hoc_sinh AS ma_day, uh.ma_hoc_sinh AS ma_hoc, 
+            sk.linh_vuc, sk.tieu_de, s.thoi_gian_bat_dau, s.so_gio, 
+            s.trang_thai, s.checkin_day, s.checkin_hoc, s.quiz_dat_chuan
+        FROM sessions s
+        JOIN skills sk ON s.skill_id = sk.id
+        JOIN users ud ON s.nguoi_day_id = ud.id
+        JOIN users uh ON s.nguoi_hoc_id = uh.id
+        ORDER BY s.id ASC
+    """)
+    for row in cur.fetchall():
+        writer.writerow([
+            row["id"], row["ma_day"], row["ma_hoc"], row["linh_vuc"],
+            sanitize_text(row["tieu_de"]), row["thoi_gian_bat_dau"],
+            row["so_gio"], row["trang_thai"], row["checkin_day"],
+            row["checkin_hoc"], row["quiz_dat_chuan"]
+        ])
+    writer.writerow([])
+
+    # 2. BẢNG CREDITS_LEDGER
+    writer.writerow(["=== 2. BANG SO CAI TIN DUNG (CREDITS_LEDGER) ==="])
+    writer.writerow(["ledger_id", "ma_hoc_sinh", "bien_dong_gio", "ly_do", "session_id", "thoi_gian"])
+    cur.execute("""
+        SELECT cl.id, u.ma_hoc_sinh, cl.bien_dong, cl.ly_do, cl.session_id, cl.thoi_gian
+        FROM credits_ledger cl
+        JOIN users u ON cl.user_id = u.id
+        ORDER BY cl.id ASC
+    """)
+    for row in cur.fetchall():
+        writer.writerow([
+            row["id"], row["ma_hoc_sinh"], row["bien_dong"],
+            sanitize_text(row["ly_do"]), row["session_id"] or "", row["thoi_gian"]
+        ])
+    writer.writerow([])
+
+    # 3. BẢNG RATINGS
+    writer.writerow(["=== 3. BANG DANH GIA TUONG HO (RATINGS) ==="])
+    writer.writerow(["rating_id", "session_id", "ma_nguoi_danh_gia", "ma_nguoi_duoc_danh_gia", "so_sao", "nhan_xet"])
+    cur.execute("""
+        SELECT r.id, r.session_id, uf.ma_hoc_sinh AS ma_from, ut.ma_hoc_sinh AS ma_to, r.so_sao, r.nhan_xet
+        FROM ratings r
+        JOIN users uf ON r.nguoi_danh_gia_id = uf.id
+        JOIN users ut ON r.nguoi_duoc_danh_gia_id = ut.id
+        ORDER BY r.id ASC
+    """)
+    for row in cur.fetchall():
+        writer.writerow([
+            row["id"], row["session_id"], row["ma_from"], row["ma_to"],
+            row["so_sao"], sanitize_text(row["nhan_xet"])
+        ])
+    writer.writerow([])
+
+    # 4. BẢNG QUIZ_RESULTS
+    writer.writerow(["=== 4. BANG KET QUA QUIZ TRAC NGHIEM (QUIZ_RESULTS) ==="])
+    writer.writerow(["quiz_result_id", "session_id", "ma_hoc_sinh", "tu_danh_gia_truoc", "diem_so", "thoi_gian_lam"])
+    cur.execute("""
+        SELECT qr.id, qr.session_id, u.ma_hoc_sinh, qr.tu_danh_gia_truoc, qr.diem_so, qr.thoi_gian_lam
+        FROM quiz_results qr
+        JOIN users u ON qr.user_id = u.id
+        ORDER BY qr.id ASC
+    """)
+    for row in cur.fetchall():
+        writer.writerow([
+            row["id"], row["session_id"], row["ma_hoc_sinh"],
+            row["tu_danh_gia_truoc"], row["diem_so"], row["thoi_gian_lam"]
+        ])
+    writer.writerow([])
+
+    # 5. BẢNG AI_LOGS
+    writer.writerow(["=== 5. BANG NHAT KY MINH BACH AI (AI_LOGS) ==="])
+    writer.writerow(["log_id", "ma_nguoi_dung", "chuc_nang", "input_tom_tat", "output_text", "thoi_gian"])
+    cur.execute("""
+        SELECT al.id, COALESCE(u.ma_hoc_sinh, 'He_thong') AS ma_user, al.chuc_nang, al.input_tom_tat, al.output_text, al.thoi_gian
+        FROM ai_logs al
+        LEFT JOIN users u ON al.user_id = u.id
+        ORDER BY al.id ASC
+    """)
+    for row in cur.fetchall():
+        writer.writerow([
+            row["id"], row["ma_user"], row["chuc_nang"],
+            sanitize_text(row["input_tom_tat"]), sanitize_text(row["output_text"]), row["thoi_gian"]
+        ])
+
+    csv_data = output.getvalue()
+    # Mã hóa utf-8-sig để Excel mở không lỗi font tiếng Việt
+    response = make_response(csv_data.encode("utf-8-sig"))
+    response.headers["Content-Disposition"] = "attachment; filename=timebank_edu_export_anonymized.csv"
+    response.headers["Content-Type"] = "text/csv; charset=utf-8-sig"
+    return response
 
 
 @app.route("/skills/approve")
@@ -1451,6 +1647,20 @@ def session_detail(session_id):
     )
     quiz_result = cur.fetchone()
 
+    # Truy vấn thông tin đánh giá tương hỗ của phiên (Milestone M4-lite)
+    cur.execute(
+        """SELECT r.*, u_from.ho_ten AS ten_nguoi_danh_gia, u_to.ho_ten AS ten_nguoi_duoc_danh_gia
+           FROM ratings r
+           JOIN users u_from ON r.nguoi_danh_gia_id = u_from.id
+           JOIN users u_to ON r.nguoi_duoc_danh_gia_id = u_to.id
+           WHERE r.session_id = ?""",
+        (session_id,)
+    )
+    all_session_ratings = cur.fetchall()
+
+    my_rating = next((r for r in all_session_ratings if r["nguoi_danh_gia_id"] == user_id), None)
+    partner_rating = next((r for r in all_session_ratings if r["nguoi_duoc_danh_gia_id"] == user_id), None)
+
     # Tạo mã QR dạng Base64 để hiển thị trực quan
     qr_b64 = generate_qr_base64(session_data["ma_qr"] or f"TB-SES-{session_id}")
     
@@ -1462,7 +1672,10 @@ def session_detail(session_id):
         is_learner=is_learner,
         is_admin=is_admin,
         quiz_question_count=quiz_question_count,
-        quiz_result=quiz_result
+        quiz_result=quiz_result,
+        all_session_ratings=all_session_ratings,
+        my_rating=my_rating,
+        partner_rating=partner_rating
     )
 
 
@@ -1667,6 +1880,77 @@ def complete_session(session_id):
         app.logger.error(f"Lỗi khi hoàn thành phiên học và chuyển giờ: {e}")
         flash(f"Có lỗi xảy ra trong quá trình hoàn thành phiên học: {e}", "danger")
         
+    return redirect(url_for("session_detail", session_id=session_id))
+
+
+@app.route("/sessions/<int:session_id>/rate", methods=["POST"])
+@login_required
+def rate_session(session_id):
+    """
+    Đánh giá tương hỗ sau khi phiên học hoàn thành (Milestone M4-lite):
+    - Người dạy đánh giá Người học (1-5 sao + nhận xét)
+    - Người học đánh giá Người dạy (1-5 sao + nhận xét)
+    - Mỗi chiều CHỈ ĐƯỢC 1 LẦN DUY NHẤT. Nếu gửi lần 2 -> Bị chặn và cảnh báo.
+    """
+    db = get_db()
+    cur = db.cursor()
+    user_id = session["user_id"]
+    user_role = session.get("vai_tro", "")
+
+    cur.execute("SELECT * FROM sessions WHERE id = ?", (session_id,))
+    s_row = cur.fetchone()
+    if not s_row:
+        flash("Phiên học không tồn tại!", "danger")
+        return redirect(url_for("my_schedule"))
+
+    if s_row["trang_thai"] != "hoan_thanh":
+        flash("Chỉ có thể đánh giá sau khi buổi học đã hoàn thành!", "warning")
+        return redirect(url_for("session_detail", session_id=session_id))
+
+    is_teacher = (s_row["nguoi_day_id"] == user_id)
+    is_learner = (s_row["nguoi_hoc_id"] == user_id)
+    is_admin = (user_role in ("admin", "giao_vien"))
+
+    if not (is_teacher or is_learner or is_admin):
+        flash("Bạn không phải thành viên tham gia phiên học này!", "danger")
+        return redirect(url_for("session_detail", session_id=session_id))
+
+    # Xác định người được đánh giá
+    if is_teacher:
+        target_id = s_row["nguoi_hoc_id"]
+    elif is_learner:
+        target_id = s_row["nguoi_day_id"]
+    else:
+        # Admin kiểm thử
+        target_id = s_row["nguoi_hoc_id"] if request.form.get("target_role") == "learner" else s_row["nguoi_day_id"]
+
+    # ĐIỀU KIỆN TIÊN QUYẾT: CHẶN ĐÁNH GIÁ LẦN 2
+    cur.execute(
+        "SELECT id FROM ratings WHERE session_id = ? AND nguoi_danh_gia_id = ?",
+        (session_id, user_id)
+    )
+    existing = cur.fetchone()
+    if existing:
+        flash("Bạn đã đánh giá buổi học này rồi! Mỗi thành viên chỉ được đánh giá 1 lần duy nhất để bảo đảm tính khách quan.", "warning")
+        return redirect(url_for("session_detail", session_id=session_id))
+
+    try:
+        so_sao = int(request.form.get("so_sao", 5))
+        if so_sao < 1 or so_sao > 5:
+            so_sao = 5
+    except (ValueError, TypeError):
+        so_sao = 5
+
+    nhan_xet = request.form.get("nhan_xet", "").strip()
+
+    cur.execute(
+        """INSERT INTO ratings (session_id, nguoi_danh_gia_id, nguoi_duoc_danh_gia_id, so_sao, nhan_xet)
+           VALUES (?, ?, ?, ?, ?)""",
+        (session_id, user_id, target_id, so_sao, nhan_xet)
+    )
+    db.commit()
+
+    flash("Cảm ơn bạn đã gửi đánh giá tương hỗ! Phản hồi của bạn giúp cộng đồng học tập ngày càng gắn kết và tiến bộ.", "success")
     return redirect(url_for("session_detail", session_id=session_id))
 
 

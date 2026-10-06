@@ -71,6 +71,85 @@
     </div>
   </div>
 
+  <!-- THỐNG KÊ HOẠT ĐỘNG SƯ PHẠM CỦA HỌC SINH (MILESTONE M4-LITE) -->
+  <div class="row g-3 mb-4">
+    <!-- 1. Giờ đã dạy -->
+    <div class="col-sm-6 col-lg-3">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <span class="text-muted small">Tổng giờ đã dạy</span>
+            <div class="d-flex align-items-baseline gap-1">
+              <h3 class="fw-bold mb-0 text-primary">{{ "%.1f"|format(hours_taught) }}</h3>
+              <span class="text-muted small">giờ</span>
+            </div>
+            <small class="text-muted">Kèm cặp & sẻ chia</small>
+          </div>
+          <div class="p-3 bg-primary bg-opacity-10 text-primary rounded-3">
+            <i class="bi bi-person-video3 fs-4"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Giờ đã học -->
+    <div class="col-sm-6 col-lg-3">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <span class="text-muted small">Tổng giờ đã học</span>
+            <div class="d-flex align-items-baseline gap-1">
+              <h3 class="fw-bold mb-0 text-success">{{ "%.1f"|format(hours_learned) }}</h3>
+              <span class="text-muted small">giờ</span>
+            </div>
+            <small class="text-muted">Tiếp thu tri thức</small>
+          </div>
+          <div class="p-3 bg-success bg-opacity-10 text-success rounded-3">
+            <i class="bi bi-book-half fs-4"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Đánh giá trung bình (Sao TB) -->
+    <div class="col-sm-6 col-lg-3">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <span class="text-muted small">Đánh giá trung bình</span>
+            <div class="d-flex align-items-baseline gap-1">
+              <h3 class="fw-bold mb-0 text-warning">{{ "%.1f"|format(avg_rating) }}</h3>
+              <span class="text-warning fs-5">★</span>
+            </div>
+            <small class="text-muted">Từ {{ rating_count }} lượt đánh giá</small>
+          </div>
+          <div class="p-3 bg-warning bg-opacity-10 text-warning rounded-3">
+            <i class="bi bi-star-fill fs-4"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Kỹ năng đang chia sẻ -->
+    <div class="col-sm-6 col-lg-3">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <span class="text-muted small">Kỹ năng sẵn sàng</span>
+            <div class="d-flex align-items-baseline gap-1">
+              <h3 class="fw-bold mb-0 text-info">{{ my_skills|length }}</h3>
+              <span class="text-muted small">kỹ năng</span>
+            </div>
+            <small class="text-muted">Đóng góp cho trường</small>
+          </div>
+          <div class="p-3 bg-info bg-opacity-10 text-info rounded-3">
+            <i class="bi bi-lightbulb-fill fs-4"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- KHỐI GỢI Ý CHO BẠN HÔM NAY (ĐIỂM CHẠM GHÉP CẶP TỰ ĐỘNG) -->
   {% if daily_matches %}
   <div class="card border-0 shadow-sm rounded-4 bg-white mb-4 overflow-hidden border-start border-4 border-primary">

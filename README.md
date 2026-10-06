@@ -329,7 +329,55 @@ Hệ thống bổ sung chu trình khép kín đánh giá lượng giá năng l�
 
 ---
 
-## 14. Tính bảo mật và biến môi trường
+## 14. Đánh giá Tương hỗ, Dashboard Nâng cao & Xuất CSV Nghiên cứu Sư phạm (Milestone M4-lite)
+
+Hệ thống hoàn thiện chu trình vận hành sư phạm và xuất báo cáo khoa học phục vụ nghiên cứu thực nghiệm:
+
+### 1. Đánh giá tương hỗ 2 chiều sau hoàn thành (`/sessions/<id>/rate`):
+- Sau khi phiên học được xác nhận hoàn thành, cả 2 bên (Người dạy và Người học) thực hiện đánh giá lẫn nhau:
+  * Số sao: 1 - 5 sao
+  * Nhận xét định tính chân thành, khích lệ
+- **Chặn đánh giá 2 lần (Tiêu chí nghiệm thu):** Mỗi thành viên chỉ được đánh giá 1 lần duy nhất cho mỗi phiên học để đảm bảo tính khách quan và tin cậy sư phạm.
+
+### 2. Dashboard Học sinh & Quản trị nâng cao:
+- **Dashboard Học sinh (`/profile`):**
+  * **Tổng giờ đã dạy:** Giờ công hiến kèm cặp bạn học.
+  * **Tổng giờ đã học:** Giờ tham gia tiếp thu tri thức.
+  * **Sao trung bình (Sao TB):** Điểm uy tín sư phạm trung bình nhận được từ bạn bè.
+- **Dashboard Giáo viên / Quản trị viên (`/admin`):**
+  * **Tổng phiên học:** Số phiên trao đổi tri thức trên toàn trường.
+  * **Tổng giờ lưu thông:** Tổng số giờ trao đổi thành công từ các phiên hoàn thành.
+  * **Bảng vinh danh Top học sinh tích cực nhất:** Top 5 gương sáng học đường cống hiến nhiều giờ dạy nhất.
+  * **AI Cảnh báo sớm:** Quét học sinh ngưng học & cặp đôi xung đột.
+  * **Kết quả học tập:** Phân tích điểm trung bình và chuẩn đầu ra qua Quiz.
+
+### 3. Nút "Xuất CSV" Dữ liệu Nghiên cứu Sư phạm (`/admin/export-csv`):
+- Nút bấm **"Xuất CSV (Nghiên cứu sư phạm)"** nổi bật tại thanh tác vụ Bảng điều khiển Quản trị.
+- Gộp đầy đủ 5 bảng dữ liệu cốt lõi:
+  1. `SESSIONS` (Phiên học)
+  2. `CREDITS_LEDGER` (Sổ cái biến động giờ)
+  3. `RATINGS` (Đánh giá tương hỗ 2 chiều)
+  4. `QUIZ_RESULTS` (Lượng giá Quiz)
+  5. `AI_LOGS` (Nhật ký minh bạch tương tác AI)
+- **Chuẩn hóa mở bằng Excel:** Tệp xuất mã hóa chuẩn UTF-8 with BOM (`utf-8-sig`), mở trực tiếp bằng Microsoft Excel trên Windows hoàn toàn không bị lỗi font tiếng Việt.
+- **BẢO MẬT PII NGHIÊM NGẶT (Tiêu chí nghiệm thu):** Toàn bộ họ tên thật của học sinh và giáo viên đều được **ẩn danh hóa 100%** thành mã định danh (`HS12001`, `HS11002`, `GV001`...), tuyệt đối không lộ danh tính cá nhân trong tệp nghiên cứu xuất ra.
+
+### Hướng dẫn kiểm thử nghiệm thu Milestone M4-lite:
+- **Chạy riêng bộ kiểm thử M4-lite:**
+  ```bash
+  python test_m4_lite.py
+  ```
+  * Kết quả: 6/6 test cases đạt chuẩn 100%.
+
+- **Chạy toàn bộ 42 test cases kiểm thử hồi quy hệ thống (M0 -> M4-lite):**
+  ```bash
+  python test_m0.py ; python test_m1.py ; python test_m2.py ; python test_m3.py ; python test_m3_plus.py ; python test_m_ai.py ; python test_m_ai_plus.py ; python test_m4_lite.py
+  ```
+  * Kết quả: 42/42 test cases đạt chuẩn 100%.
+
+---
+
+## 15. Tính bảo mật và biến môi trường
 - File `.env` chứa `GEMINI_API_KEY` và `FLASK_SECRET_KEY` được bảo vệ nghiêm ngặt bằng `.gitignore`, **TUYỆT ĐỐI KHÔNG BAO GIỜ** được push lên GitHub công khai.
 - Cung cấp file mẫu `.env.example` với hướng dẫn cấu hình chi tiết cho các trường triển khai.
 

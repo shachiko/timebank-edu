@@ -319,7 +319,7 @@
           </div>
 
         {% elif session_data.trang_thai == 'hoan_thanh' %}
-          <div class="alert alert-success mb-0 text-center py-3">
+          <div class="alert alert-success mb-3 text-center py-3">
             <i class="bi bi-patch-check-fill fs-3 text-success d-block mb-1"></i>
             <strong>Phiên học đã hoàn thành thành công!</strong>
             <div class="small mt-1 text-muted">
@@ -330,6 +330,84 @@
                 <i class="bi bi-wallet2 me-1"></i> Xem biến động trong Ví
               </a>
             </div>
+          </div>
+
+          <!-- KHỐI ĐÁNH GIÁ TƯƠNG HỖ SAU HOÀN THÀNH (MILESTONE M4-LITE) -->
+          <div class="p-3 bg-light rounded-4 border">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h6 class="fw-bold text-dark mb-0">
+                <i class="bi bi-star-half text-warning me-1"></i> Đánh Giá Tương Hỗ (1 Lần Duy Nhất)
+              </h6>
+              <span class="badge bg-secondary-subtle text-secondary small">Mỗi chiều 1 lần</span>
+            </div>
+
+            {% if my_rating %}
+              <!-- Bạn đã gửi đánh giá -->
+              <div class="p-3 bg-white rounded-3 border mb-2">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <span class="small fw-semibold text-success">
+                    <i class="bi bi-check-circle-fill me-1"></i> Bạn đã hoàn tất đánh giá:
+                  </span>
+                  <span class="text-warning fw-bold">
+                    {% for _ in range(my_rating.so_sao) %}★{% endfor %}
+                    <small class="text-muted">({{ my_rating.so_sao }}/5)</small>
+                  </span>
+                </div>
+                <div class="small text-secondary fst-italic">"{{ my_rating.nhan_xet if my_rating.nhan_xet else 'Không có nhận xét thêm' }}"</div>
+              </div>
+            {% else %}
+              <!-- Form gửi đánh giá cho đối phương -->
+              {% if is_teacher or is_learner or is_admin %}
+                <form method="POST" action="{{ url_for('rate_session', session_id=session_data.id) }}" class="mb-2">
+                  <p class="small text-muted mb-2">
+                    {% if is_teacher %}
+                      Bạn hãy đánh giá thái độ học tập và mức độ tương tác của bạn học <strong>{{ session_data.ten_nguoi_hoc }}</strong>:
+                    {% else %}
+                      Bạn hãy đánh giá kỹ năng truyền đạt và sự nhiệt tình của bạn gia sư <strong>{{ session_data.ten_nguoi_day }}</strong>:
+                    {% endif %}
+                  </p>
+
+                  <div class="mb-2">
+                    <label class="form-label small fw-semibold text-dark mb-1">Mức độ hài lòng (1 - 5 sao):</label>
+                    <div class="d-flex justify-content-between gap-1 p-2 bg-white rounded-3 border text-center">
+                      {% for star in range(1, 6) %}
+                      <div class="form-check form-check-inline m-0 flex-grow-1">
+                        <input class="form-check-input" type="radio" name="so_sao" id="star_{{ star }}" value="{{ star }}" {% if star == 5 %}checked{% endif %} required>
+                        <label class="form-check-label small text-warning fw-bold" for="star_{{ star }}">
+                          {{ star }}★
+                        </label>
+                      </div>
+                      {% endfor %}
+                    </div>
+                  </div>
+
+                  <div class="mb-2">
+                    <label class="form-label small fw-semibold text-dark mb-1">Nhận xét, góp ý chân thành:</label>
+                    <textarea class="form-control form-control-sm" name="nhan_xet" rows="2" placeholder="Ví dụ: Giảng bài rất kiên nhẫn, chuẩn bị tài liệu chu đáo..."></textarea>
+                  </div>
+
+                  <button type="submit" class="btn btn-warning w-100 btn-sm fw-bold text-dark shadow-sm">
+                    <i class="bi bi-send-fill me-1"></i> Gửi đánh giá tương hỗ
+                  </button>
+                </form>
+              {% endif %}
+            {% endif %}
+
+            <!-- Nhận xét từ đối phương dành cho mình (nếu có) -->
+            {% if partner_rating %}
+              <div class="p-3 bg-white rounded-3 border border-primary border-opacity-25 mt-2">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <span class="small fw-semibold text-primary">
+                    <i class="bi bi-chat-quote-fill me-1"></i> {{ partner_rating.ten_nguoi_danh_gia }} nhận xét về bạn:
+                  </span>
+                  <span class="text-warning fw-bold">
+                    {% for _ in range(partner_rating.so_sao) %}★{% endfor %}
+                    <small class="text-muted">({{ partner_rating.so_sao }}/5)</small>
+                  </span>
+                </div>
+                <div class="small text-dark fst-italic">"{{ partner_rating.nhan_xet if partner_rating.nhan_xet else 'Không có nhận xét thêm' }}"</div>
+              </div>
+            {% endif %}
           </div>
         {% endif %}
       </div>
