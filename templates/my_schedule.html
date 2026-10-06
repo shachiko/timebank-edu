@@ -82,8 +82,8 @@
                     <th scope="col">Bạn học (Học sinh)</th>
                     <th scope="col">Thời gian hẹn</th>
                     <th scope="col" class="text-center">Thời lượng</th>
-                    <th scope="col">Trạng thái</th>
-                    <th scope="col" class="text-end">Mã QR xác thực</th>
+                    <th scope="col" class="text-center">Trạng thái</th>
+                    <th scope="col" class="text-end">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -104,7 +104,7 @@
                     <td class="text-center fw-bold text-success">
                       +{{ "%.1f"|format(s.so_gio) }}h
                     </td>
-                    <td>
+                    <td class="text-center">
                       {% if s.trang_thai == 'da_dat' %}
                         <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Đã đặt lịch</span>
                       {% elif s.trang_thai == 'hoan_thanh' %}
@@ -116,7 +116,9 @@
                       {% endif %}
                     </td>
                     <td class="text-end">
-                      <code class="small bg-light px-2 py-1 rounded border">{{ s.ma_qr if s.ma_qr else 'QR_SESSION_' ~ s.id }}</code>
+                      <a href="{{ url_for('session_detail', session_id=s.id) }}" class="btn btn-outline-brand btn-sm">
+                        <i class="bi bi-qr-code-scan me-1"></i> Check-in & QR
+                      </a>
                     </td>
                   </tr>
                   {% endfor %}
@@ -143,8 +145,8 @@
                     <th scope="col">Gia sư (Người dạy)</th>
                     <th scope="col">Thời gian hẹn</th>
                     <th scope="col" class="text-center">Thời lượng</th>
-                    <th scope="col">Trạng thái</th>
-                    <th scope="col" class="text-end">Mã QR xác thực</th>
+                    <th scope="col" class="text-center">Trạng thái</th>
+                    <th scope="col" class="text-end">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -165,7 +167,7 @@
                     <td class="text-center fw-bold text-danger">
                       -{{ "%.1f"|format(s.so_gio) }}h
                     </td>
-                    <td>
+                    <td class="text-center">
                       {% if s.trang_thai == 'da_dat' %}
                         <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Đã đặt lịch</span>
                       {% elif s.trang_thai == 'hoan_thanh' %}
@@ -177,7 +179,9 @@
                       {% endif %}
                     </td>
                     <td class="text-end">
-                      <code class="small bg-light px-2 py-1 rounded border">{{ s.ma_qr if s.ma_qr else 'QR_SESSION_' ~ s.id }}</code>
+                      <a href="{{ url_for('session_detail', session_id=s.id) }}" class="btn btn-outline-brand btn-sm">
+                        <i class="bi bi-qr-code-scan me-1"></i> Check-in & QR
+                      </a>
                     </td>
                   </tr>
                   {% endfor %}

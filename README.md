@@ -171,5 +171,40 @@ Hệ thống thiết lập sẵn các tài khoản để Ban Giám khảo và gi
 
 ---
 
-## 10. Tính trung thực về AI
+## 10. Ví tín dụng thời gian & Điểm danh Check-in QR 2 chiều (Milestone M3)
+
+- **Trang chi tiết phiên học (`/sessions/<id>`):**
+  * Hiển thị toàn bộ thông tin buổi học: chuyên đề, thời gian hẹn, thời lượng, gia sư và bạn học.
+  * Sinh mã QR ngẫu nhiên an toàn (`ma_qr`), chuyển đổi thành ảnh Base64 PNG hiển thị trực quan ngay trên điện thoại hoặc trình duyệt máy tính.
+  * Điểm danh 2 chiều: Cung cấp nút Check-in cho cả Người dạy (`checkin_day = 1`) và Người học (`checkin_hoc = 1`).
+  * Nút **"Xác nhận hoàn thành & Chuyển giờ"**: Chỉ cho phép người dạy thao tác khi **CẢ HAI BÊN ĐÃ CHECK-IN**.
+
+- **Cơ chế chuyển giờ tín dụng & Sổ cái bất biến:**
+  * Khi người dạy bấm xác nhận sau khi cả hai đã check-in:
+    - Ghi nhận nguyên tử 2 dòng vào bảng `credits_ledger`:
+      + Người dạy: nhận `+so_gio` giờ với lý do `'day_hoc'`.
+      + Người học: trừ `-so_gio` giờ với lý do `'hoc'`.
+    - Tự động cộng/trừ số dư `so_du_gio` trong bảng `users`.
+    - Chuyển trạng thái phiên học `sessions` sang `'hoan_thanh'`.
+  * **Ràng buộc an toàn:** Nếu chỉ có 1 bên check-in hoặc chưa ai check-in, hệ thống kiên quyết chặn lại, không chuyển giờ và hiển thị cảnh báo tiếng Việt rõ ràng.
+
+- **Chặn đặt lịch khi số dư không đủ:**
+  * Khi học sinh có số dư không đủ (ví dụ có 0.5h nhưng đặt phiên 1.0h), hệ thống lập tức chặn đặt lịch tại `/sessions/book` và hướng dẫn bạn học đăng ký kỹ năng để dạy kèm tích thêm giờ.
+
+- **Trang "Ví của tôi" (`/wallet`):**
+  * Hiển thị số dư khả dụng hiện tại với định dạng trực quan.
+  * Thống kê tổng giờ đã tích lũy (`+h`) và tổng giờ đã trao đổi (`-h`).
+  * Danh sách lịch sử biến động sổ cái tín dụng (`credits_ledger`) sắp xếp theo thời gian mới nhất xếp trước (`ORDER BY id DESC`).
+  * Tuân thủ nghiêm ngặt nguyên tắc **Append-Only** (chỉ `INSERT`, không `UPDATE`/`DELETE`).
+
+- **Chạy kiểm thử nghiệm thu Milestone M3:**
+  ```bash
+  python test_m3.py
+  ```
+  * Kết quả: 6/6 test cases đạt chuẩn 100%.
+
+---
+
+## 11. Tính trung thực về AI
 Hệ thống tuân thủ nghiêm ngặt nguyên tắc minh bạch: Mọi vị trí có sự tham gia của Trí tuệ nhân tạo (kiểm duyệt, gợi ý ghép cặp, dàn ý buổi học, tạo trắc nghiệm) đều được gắn nhãn nhận diện rõ ràng: **"Hỗ trợ bởi AI (Gemini)"**.
+

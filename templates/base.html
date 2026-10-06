@@ -57,6 +57,9 @@
           <li class="nav-item">
             <a class="nav-link" href="{{ url_for('my_schedule') }}"><i class="bi bi-calendar-check me-1"></i>Lịch của tôi</a>
           </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('wallet') }}"><i class="bi bi-wallet2 me-1"></i>Ví của tôi</a>
+          </li>
           {% endif %}
           <li class="nav-item">
             <a class="nav-link" href="{{ url_for('index') }}#mo-hinh"><i class="bi bi-diagram-3 me-1"></i>Mô hình</a>
@@ -94,13 +97,18 @@
                   </div>
                 </li>
                 <li>
+                  <a class="dropdown-item py-2" href="{{ url_for('wallet') }}">
+                    <i class="bi bi-wallet2 text-success me-2"></i>Ví của tôi (Số dư: {{ "%.1f"|format(current_user.so_du_gio) }}h)
+                  </a>
+                </li>
+                <li>
                   <a class="dropdown-item py-2" href="{{ url_for('profile') }}">
-                    <i class="bi bi-person-circle text-primary me-2"></i>Hồ sơ cá nhân & Sổ cái
+                    <i class="bi bi-person-circle text-primary me-2"></i>Hồ sơ cá nhân & Cài đặt
                   </a>
                 </li>
                 <li>
                   <a class="dropdown-item py-2" href="{{ url_for('my_schedule') }}">
-                    <i class="bi bi-calendar2-check text-success me-2"></i>Lịch của tôi (Dạy & Học)
+                    <i class="bi bi-calendar2-check text-info me-2"></i>Lịch của tôi (Dạy & Học)
                   </a>
                 </li>
                 <li>

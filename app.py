@@ -10,9 +10,13 @@ Triết lý sư phạm: "Một giờ bạn dạy — một giờ bạn được 
 """
 
 import os
+import io
 import time
+import base64
+import secrets
 import sqlite3
 import yaml
+import qrcode
 from pathlib import Path
 from functools import wraps
 from dotenv import load_dotenv
@@ -838,8 +842,8 @@ def book_session():
     tutor = cur.fetchone()
     tutor_name = tutor["ho_ten"] if tutor else "Gia sư"
     
-    # 5. Tạo mã QR và lưu phiên 'da_dat'
-    ma_qr = f"QR-SES-{skill_id}-{session['user_id']}-{int(time.time())}"
+    # 5. Tạo mã QR ngẫu nhiên và lưu phiên 'da_dat'
+    ma_qr = f"TB-QR-{skill_id}-{secrets.token_hex(4).upper()}"
     
     cur.execute(
         """INSERT INTO sessions 
@@ -917,6 +921,297 @@ def my_schedule():
         learning_sessions=learning_sessions,
         upcoming_count=upcoming_count
     )
+
+
+# ==============================================================================
+# MILESTONE M3: VÍ TÍN DỤNG, CHI TIẾT PHIÊN HỌC & ĐIỂM DANH CHECK-IN QR 2 CHIỀU
+# ==============================================================================
+
+def generate_qr_base64(data_text):
+    """
+    Tạo ảnh mã QR từ chuỗi dữ liệu (mã ngẫu nhiên ma_qr) và chuyển đổi thành
+    định dạng ảnh Base64 (PNG) hiển thị trực tiếp trên giao diện HTML.
+    
+    Ý nghĩa sư phạm và kỹ thuật:
+    - Học sinh không cần kết nối máy in hay tạo file tạm trên máy chủ.
+    - Mã QR hiển thị trực tiếp trên điện thoại để bạn học cùng quét và xác thực.
+    """
+    if not data_text:
+        return ""
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        box_size=8,
+        border=3,
+    )
+    qr.add_data(data_text)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="#0f172a", back_color="#ffffff")
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    return base64.b64encode(buf.getvalue()).decode("utf-8")
+
+
+@app.route("/wallet")
+@login_required
+def wallet():
+    """
+    Trang 'Ví của tôi' (Sổ cái tín dụng thời gian):
+    - Hiển thị số dư khả dụng hiện tại của học sinh / giáo viên.
+    - Thống kê tổng giờ đã nhận (+) từ các buổi dạy kèm hoặc công tác phục vụ cộng đồng.
+    - Thống kê tổng giờ đã dùng (-) cho việc tham gia các khóa trao đổi tri thức.
+    - Liệt kê toàn bộ lịch sử biến động trong sổ cái credits_ledger theo thứ tự
+      mới nhất xếp trước (ORDER BY id DESC).
+    - Tuân thủ nguyên tắc 'Append-Only': Sổ cái chỉ ghi nhận thêm dòng mới, không sửa/xóa.
+    """
+    db = get_db()
+    cur = db.cursor()
+    user_id = session["user_id"]
+    
+    # 1. Truy vấn thông tin tài khoản và cập nhật số dư phiên làm việc
+    cur.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+    user = cur.fetchone()
+    if not user:
+        flash("Không tìm thấy thông tin người dùng!", "danger")
+        return redirect(url_for("index"))
+    session["so_du_gio"] = user["so_du_gio"]
+    
+    # 2. Truy vấn lịch sử biến động sổ cái tín dụng (mới nhất xếp trước)
+    cur.execute(
+        """SELECT * FROM credits_ledger 
+           WHERE user_id = ? 
+           ORDER BY id DESC""",
+        (user_id,)
+    )
+    ledger_entries = cur.fetchall()
+    
+    # 3. Tính toán tổng tích lũy nhận và tổng giờ đã trao đổi
+    total_earned = sum(item["bien_dong"] for item in ledger_entries if item["bien_dong"] > 0)
+    total_spent = abs(sum(item["bien_dong"] for item in ledger_entries if item["bien_dong"] < 0))
+    
+    return render_template(
+        "wallet.html",
+        user=user,
+        total_earned=total_earned,
+        total_spent=total_spent,
+        ledger_entries=ledger_entries
+    )
+
+
+@app.route("/sessions/<int:session_id>")
+@login_required
+def session_detail(session_id):
+    """
+    Trang chi tiết phiên học và xác thực check-in:
+    - Hiển thị thông tin phiên: kỹ năng trao đổi, gia sư, học sinh, thời gian hẹn.
+    - Hiển thị mã QR xác thực 2 bên (sinh ngẫu nhiên bằng chuỗi base64).
+    - Thể hiện trạng thái check-in của cả 2 bên (checkin_day, checkin_hoc).
+    - Cung cấp nút Check-in cho từng bên và nút 'Xác nhận hoàn thành' cho người dạy.
+    - Phân quyền: Chỉ người dạy, người học trong phiên, hoặc Giáo viên/Admin mới được xem.
+    """
+    db = get_db()
+    cur = db.cursor()
+    user_id = session["user_id"]
+    user_role = session.get("vai_tro", "")
+    
+    cur.execute(
+        """SELECT 
+               s.*,
+               sk.tieu_de,
+               sk.linh_vuc,
+               sk.mo_ta,
+               ud.ho_ten AS ten_nguoi_day,
+               ud.lop AS lop_nguoi_day,
+               ud.ma_hoc_sinh AS ma_nguoi_day,
+               uh.ho_ten AS ten_nguoi_hoc,
+               uh.lop AS lop_nguoi_hoc,
+               uh.ma_hoc_sinh AS ma_nguoi_hoc
+           FROM sessions s
+           JOIN skills sk ON s.skill_id = sk.id
+           JOIN users ud ON s.nguoi_day_id = ud.id
+           JOIN users uh ON s.nguoi_hoc_id = uh.id
+           WHERE s.id = ?""",
+        (session_id,)
+    )
+    session_data = cur.fetchone()
+    
+    if not session_data:
+        flash("Phiên học không tồn tại trong hệ thống!", "danger")
+        return redirect(url_for("my_schedule"))
+        
+    is_teacher = (session_data["nguoi_day_id"] == user_id)
+    is_learner = (session_data["nguoi_hoc_id"] == user_id)
+    is_admin = (user_role in ("admin", "giao_vien"))
+    
+    # Bảo mật: Không cho học sinh ngoài cuộc xem chi tiết phiên của người khác
+    if not (is_teacher or is_learner or is_admin):
+        flash("Bạn không có quyền truy cập thông tin phiên học này!", "danger")
+        return redirect(url_for("my_schedule"))
+        
+    # Tạo mã QR dạng Base64 để hiển thị trực quan
+    qr_b64 = generate_qr_base64(session_data["ma_qr"] or f"TB-SES-{session_id}")
+    
+    return render_template(
+        "session_detail.html",
+        session_data=session_data,
+        qr_b64=qr_b64,
+        is_teacher=is_teacher,
+        is_learner=is_learner,
+        is_admin=is_admin
+    )
+
+
+@app.route("/sessions/<int:session_id>/checkin", methods=["POST"])
+@login_required
+def checkin_session(session_id):
+    """
+    Xử lý điểm danh check-in phiên học (quét mã QR / bấm nút xác thực):
+    - Người dạy xác thực: cập nhật checkin_day = 1.
+    - Người học xác thực: cập nhật checkin_hoc = 1.
+    - Điều kiện: Phiên học phải đang ở trạng thái 'da_dat'.
+    """
+    db = get_db()
+    cur = db.cursor()
+    user_id = session["user_id"]
+    user_role = session.get("vai_tro", "")
+    role_claim = request.form.get("role", "").strip()
+    
+    cur.execute("SELECT * FROM sessions WHERE id = ?", (session_id,))
+    s_row = cur.fetchone()
+    if not s_row:
+        flash("Phiên học không tồn tại!", "danger")
+        return redirect(url_for("my_schedule"))
+        
+    if s_row["trang_thai"] != "da_dat":
+        flash(f"Phiên học hiện đang ở trạng thái '{s_row['trang_thai']}', không thể điểm danh check-in!", "warning")
+        return redirect(url_for("session_detail", session_id=session_id))
+        
+    updated = False
+    
+    # 1. Trường hợp người dạy check-in
+    if role_claim == "teacher" or (not role_claim and s_row["nguoi_day_id"] == user_id):
+        if s_row["nguoi_day_id"] == user_id or user_role in ("admin", "giao_vien"):
+            cur.execute("UPDATE sessions SET checkin_day = 1 WHERE id = ?", (session_id,))
+            updated = True
+            flash("Người dạy (Gia sư) đã check-in xác nhận thành công!", "success")
+        else:
+            flash("Bạn không phải người dạy trong phiên học này!", "danger")
+            return redirect(url_for("session_detail", session_id=session_id))
+            
+    # 2. Trường hợp người học check-in
+    elif role_claim == "learner" or (not role_claim and s_row["nguoi_hoc_id"] == user_id):
+        if s_row["nguoi_hoc_id"] == user_id or user_role in ("admin", "giao_vien"):
+            cur.execute("UPDATE sessions SET checkin_hoc = 1 WHERE id = ?", (session_id,))
+            updated = True
+            flash("Người học (Học sinh) đã check-in xác nhận thành công!", "success")
+        else:
+            flash("Bạn không phải người học trong phiên học này!", "danger")
+            return redirect(url_for("session_detail", session_id=session_id))
+    else:
+        flash("Thông tin vai trò điểm danh không hợp lệ!", "danger")
+        return redirect(url_for("session_detail", session_id=session_id))
+        
+    if updated:
+        db.commit()
+        
+    return redirect(url_for("session_detail", session_id=session_id))
+
+
+@app.route("/sessions/<int:session_id>/complete", methods=["POST"])
+@login_required
+def complete_session(session_id):
+    """
+    Xác nhận hoàn thành phiên học & Chuyển giờ tín dụng:
+    1. Kiểm tra quyền thao tác: Chỉ người dạy (hoặc Quản trị viên/Giáo viên) mới được xác nhận hoàn thành.
+    2. Kiểm tra điều kiện bắt buộc: CẢ HAI BÊN ĐỀU PHẢI CHECK-IN (checkin_day == 1 VÀ checkin_hoc == 1).
+       Nếu chỉ 1 bên hoặc chưa bên nào check-in -> Chặn lại và báo lỗi tiếng Việt.
+    3. Thực hiện giao dịch nguyên tử (Atomic Transaction):
+       - INSERT 2 dòng vào sổ cái tín dụng (credits_ledger):
+         + Người dạy nhận +so_gio với ly_do = 'day_hoc'
+         + Người học đổi -so_gio với ly_do = 'hoc'
+       - Cập nhật số dư so_du_gio trong bảng users cho cả 2 bạn.
+       - Cập nhật trạng thái phiên sessions.trang_thai = 'hoan_thanh'.
+       - Commit cơ sở dữ liệu.
+    """
+    db = get_db()
+    cur = db.cursor()
+    user_id = session["user_id"]
+    user_role = session.get("vai_tro", "")
+    
+    cur.execute("SELECT * FROM sessions WHERE id = ?", (session_id,))
+    s_row = cur.fetchone()
+    if not s_row:
+        flash("Phiên học không tồn tại!", "danger")
+        return redirect(url_for("my_schedule"))
+        
+    is_teacher = (s_row["nguoi_day_id"] == user_id)
+    is_admin = (user_role in ("admin", "giao_vien"))
+    
+    if not (is_teacher or is_admin):
+        flash("Chỉ bạn gia sư (người dạy) hoặc Quản trị viên mới có quyền xác nhận hoàn thành buổi học!", "danger")
+        return redirect(url_for("session_detail", session_id=session_id))
+        
+    if s_row["trang_thai"] != "da_dat":
+        flash(f"Phiên học này hiện đang ở trạng thái '{s_row['trang_thai']}', không thể xác nhận hoàn thành lại!", "warning")
+        return redirect(url_for("session_detail", session_id=session_id))
+        
+    # ĐIỀU KIỆN TIÊN QUYẾT NGHIỆM THU: CẢ HAI BÊN ĐỀU PHẢI CHECK-IN
+    if s_row["checkin_day"] != 1 or s_row["checkin_hoc"] != 1:
+        flash("Chưa thể hoàn thành! Yêu cầu cả hai bên (Người dạy và Người học) đều phải check-in.", "danger")
+        return redirect(url_for("session_detail", session_id=session_id))
+        
+    so_gio = float(s_row["so_gio"])
+    nguoi_day_id = s_row["nguoi_day_id"]
+    nguoi_hoc_id = s_row["nguoi_hoc_id"]
+    
+    try:
+        # Ghi nhận 2 dòng credits_ledger (Append-Only)
+        # Dòng 1: Người dạy nhận +so_gio
+        cur.execute(
+            """INSERT INTO credits_ledger (user_id, bien_dong, ly_do, session_id, thoi_gian) 
+               VALUES (?, ?, 'day_hoc', ?, CURRENT_TIMESTAMP)""",
+            (nguoi_day_id, so_gio, session_id)
+        )
+        
+        # Dòng 2: Người học dùng -so_gio
+        cur.execute(
+            """INSERT INTO credits_ledger (user_id, bien_dong, ly_do, session_id, thoi_gian) 
+               VALUES (?, ?, 'hoc', ?, CURRENT_TIMESTAMP)""",
+            (nguoi_hoc_id, -so_gio, session_id)
+        )
+        
+        # Cập nhật số dư người dạy (+so_gio)
+        cur.execute(
+            "UPDATE users SET so_du_gio = so_du_gio + ? WHERE id = ?",
+            (so_gio, nguoi_day_id)
+        )
+        
+        # Cập nhật số dư người học (-so_gio)
+        cur.execute(
+            "UPDATE users SET so_du_gio = so_du_gio - ? WHERE id = ?",
+            (so_gio, nguoi_hoc_id)
+        )
+        
+        # Cập nhật trạng thái phiên thành 'hoan_thanh'
+        cur.execute(
+            "UPDATE sessions SET trang_thai = 'hoan_thanh' WHERE id = ?",
+            (session_id,)
+        )
+        
+        db.commit()
+        
+        # Đồng bộ số dư trong session người dùng đang đăng nhập
+        if user_id == nguoi_day_id:
+            cur.execute("SELECT so_du_gio FROM users WHERE id = ?", (user_id,))
+            session["so_du_gio"] = cur.fetchone()[0]
+            
+        flash(f"Buổi học đã hoàn thành xuất sắc! Đã cộng +{so_gio:.1f}h cho người dạy và trừ -{so_gio:.1f}h của người học.", "success")
+    except Exception as e:
+        db.rollback()
+        app.logger.error(f"Lỗi khi hoàn thành phiên học và chuyển giờ: {e}")
+        flash(f"Có lỗi xảy ra trong quá trình hoàn thành phiên học: {e}", "danger")
+        
+    return redirect(url_for("session_detail", session_id=session_id))
 
 
 # ------------------------------------------------------------------------------

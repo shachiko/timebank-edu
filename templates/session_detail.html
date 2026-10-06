@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}Chi tiết phiên học #{{ session_data.id }} - {{ config.ten_truong }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Thanh điều hướng phụ -->
+  <div class="mb-3">
+    <a href="{{ url_for('my_schedule') }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left me-1"></i> Quay lại Lịch của tôi
+    </a>
+  </div>
+
+  <div class="row g-4">
+    <!-- Cột trái: Thông tin chuyên đề & 2 bên tham gia -->
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div>
+            <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold px-2 py-1 rounded mb-1">
+              {{ session_data.linh_vuc }}
+            </span>
+            <h3 class="fw-bold text-dark mb-1">{{ session_data.tieu_de }}</h3>
+            <span class="text-muted small">Mã phiên: <code>#{{ session_data.id }}</code></span>
+          </div>
+
+          <div>
+            {% if session_data.trang_thai == 'da_dat' %}
+              <span class="badge bg-warning text-dark fs-6 px-3 py-2"><i class="bi bi-hourglass-split me-1"></i>Đã đặt lịch</span>
+            {% elif session_data.trang_thai == 'hoan_thanh' %}
+              <span class="badge bg-success fs-6 px-3 py-2"><i class="bi bi-check-all me-1"></i>Hoàn thành</span>
+            {% elif session_data.trang_thai == 'huy' %}
+              <span class="badge bg-secondary fs-6 px-3 py-2">Đã hủy</span>
+            {% else %}
+              <span class="badge bg-info text-dark fs-6 px-3 py-2">Cần xác minh</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <p class="text-secondary small mb-4">{{ session_data.mo_ta }}</p>
+
+        <!-- Thông tin chi tiết 2 người tham gia -->
+        <div class="row g-3 mb-4">
+          <div class="col-sm-6">
+            <div class="p-3 bg-light rounded-3 border">
+              <span class="badge bg-primary text-white mb-2"><i class="bi bi-mortarboard-fill me-1"></i> Người dạy (Gia sư)</span>
+              <h5 class="fw-bold text-dark mb-1">{{ session_data.ten_nguoi_day }}</h5>
+              <div class="text-muted small">Lớp: {{ session_data.lop_nguoi_day }} • Mã: <code>{{ session_data.ma_nguoi_day }}</code></div>
+              <div class="mt-2 text-success small fw-semibold">
+                <i class="bi bi-arrow-up-circle me-1"></i>Nhận +{{ "%.1f"|format(session_data.so_gio) }} giờ khi xong
+              </div>
+            </div>
+          </div>
+
+          <div class="col-sm-6">
+            <div class="p-3 bg-light rounded-3 border">
+              <span class="badge bg-success text-white mb-2"><i class="bi bi-book-fill me-1"></i> Người học (Học sinh)</span>
+              <h5 class="fw-bold text-dark mb-1">{{ session_data.ten_nguoi_hoc }}</h5>
+              <div class="text-muted small">Lớp: {{ session_data.lop_nguoi_hoc }} • Mã: <code>{{ session_data.ma_nguoi_hoc }}</code></div>
+              <div class="mt-2 text-danger small fw-semibold">
+                <i class="bi bi-arrow-down-circle me-1"></i>Đổi -{{ "%.1f"|format(session_data.so_gio) }} giờ khi xong
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Thông số buổi học -->
+        <div class="d-flex justify-content-around py-3 border rounded-3 bg-light small mb-3">
+          <div>
+            <span class="text-muted d-block"><i class="bi bi-calendar-event me-1"></i>Thời gian hẹn:</span>
+            <strong class="text-dark">{{ session_data.thoi_gian_bat_dau }}</strong>
+          </div>
+          <div class="vr"></div>
+          <div>
+            <span class="text-muted d-block"><i class="bi bi-clock me-1"></i>Thời lượng:</span>
+            <strong class="text-dark">{{ "%.1f"|format(session_data.so_gio) }} giờ ({{ "%.0f"|format(session_data.so_gio * 60) }} phút)</strong>
+          </div>
+        </div>
+
+        {% if session_data.dan_y_ai %}
+        <div class="p-3 rounded-3 bg-light border small">
+          <div class="fw-bold text-dark mb-1"><span class="badge-ai" style="font-size: 0.7rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Gemini)</span> Dàn ý buổi học gợi ý:</div>
+          <div class="text-muted">{{ session_data.dan_y_ai }}</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Cột phải: Mã QR và Bảng Check-in 2 chiều -->
+    <div class="col-lg-5">
+      <!-- Thẻ Mã QR Điểm Danh -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white text-center mb-4">
+        <h5 class="fw-bold text-dark mb-1"><i class="bi bi-qr-code-scan text-primary me-2"></i>Mã QR Phiên Học</h5>
+        <p class="text-muted small mb-3">Cả hai bạn cùng xác thực check-in qua mã định danh này</p>
+
+        <div class="p-3 bg-white border rounded-4 d-inline-block mx-auto shadow-sm mb-3">
+          {% if qr_b64 %}
+            <img src="data:image/png;base64,{{ qr_b64 }}" alt="Mã QR Phiên Học" class="img-fluid" style="width: 200px; height: 200px;">
+          {% else %}
+            <div class="p-4 bg-light text-muted">Không tạo được ảnh QR</div>
+          {% endif %}
+        </div>
+
+        <div>
+          <code class="d-inline-block p-2 bg-light rounded border small text-dark fw-bold">
+            {{ session_data.ma_qr }}
+          </code>
+        </div>
+      </div>
+
+      <!-- Thẻ Trạng thái Check-in 2 bên & Nút hành động -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+        <h5 class="fw-bold text-dark mb-3"><i class="bi bi-shield-check text-success me-2"></i>Xác Thực Check-in 2 Chiều</h5>
+
+        <!-- Danh sách trạng thái checkin -->
+        <div class="list-group list-group-flush mb-4">
+          <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+            <div>
+              <span class="fw-semibold text-dark">1. Người dạy ({{ session_data.ten_nguoi_day }}):</span>
+            </div>
+            <div>
+              {% if session_data.checkin_day == 1 %}
+                <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i>Đã Check-in</span>
+              {% else %}
+                <span class="badge bg-warning text-dark"><i class="bi bi-clock-history me-1"></i>Chưa Check-in</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+            <div>
+              <span class="fw-semibold text-dark">2. Người học ({{ session_data.ten_nguoi_hoc }}):</span>
+            </div>
+            <div>
+              {% if session_data.checkin_hoc == 1 %}
+                <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i>Đã Check-in</span>
+              {% else %}
+                <span class="badge bg-warning text-dark"><i class="bi bi-clock-history me-1"></i>Chưa Check-in</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        {% if session_data.trang_thai == 'da_dat' %}
+          <!-- Các nút Check-in -->
+          <div class="mb-3">
+            {% if is_teacher and session_data.checkin_day == 0 %}
+              <form method="POST" action="{{ url_for('checkin_session', session_id=session_data.id) }}" class="mb-2">
+                <input type="hidden" name="role" value="teacher">
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                  <i class="bi bi-qr-code me-1"></i> Tôi xác nhận Check-in (Người dạy)
+                </button>
+              </form>
+            {% elif is_teacher and session_data.checkin_day == 1 %}
+              <div class="alert alert-success py-2 small mb-2 text-center">
+                <i class="bi bi-check2-circle me-1"></i> Bạn (Người dạy) đã check-in thành công!
+              </div>
+            {% endif %}
+
+            {% if is_learner and session_data.checkin_hoc == 0 %}
+              <form method="POST" action="{{ url_for('checkin_session', session_id=session_data.id) }}" class="mb-2">
+                <input type="hidden" name="role" value="learner">
+                <button type="submit" class="btn btn-success w-100 py-2 fw-semibold">
+                  <i class="bi bi-qr-code me-1"></i> Tôi xác nhận Check-in (Người học)
+                </button>
+              </form>
+            {% elif is_learner and session_data.checkin_hoc == 1 %}
+              <div class="alert alert-success py-2 small mb-2 text-center">
+                <i class="bi bi-check2-circle me-1"></i> Bạn (Người học) đã check-in thành công!
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Nút Xác nhận hoàn thành (Dành cho Người dạy hoặc Admin) -->
+          {% if is_teacher or is_admin %}
+            {% if session_data.checkin_day == 1 and session_data.checkin_hoc == 1 %}
+              <form method="POST" action="{{ url_for('complete_session', session_id=session_data.id) }}">
+                <button type="submit" class="btn btn-brand w-100 py-2 fw-bold shadow-sm">
+                  <i class="bi bi-check2-all me-1"></i> Xác nhận hoàn thành buổi học & Chuyển giờ
+                </button>
+              </form>
+            {% else %}
+              <div class="alert alert-warning py-2 px-3 small mb-0">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                <strong>Chưa đủ điều kiện:</strong> Yêu cầu <strong>CẢ HAI BÊN</strong> cùng check-in xác thực trước khi người dạy có thể bấm hoàn thành và chuyển giờ tín dụng.
+              </div>
+            {% endif %}
+          {% else %}
+            <p class="text-muted small mb-0 text-center">
+              Sau khi cả 2 bạn cùng check-in, bạn gia sư sẽ bấm xác nhận để hoàn tất chuyển giờ tín dụng.
+            </p>
+          {% endif %}
+
+        {% elif session_data.trang_thai == 'hoan_thanh' %}
+          <div class="alert alert-success mb-0 text-center py-3">
+            <i class="bi bi-patch-check-fill fs-3 text-success d-block mb-1"></i>
+            <strong>Phiên học đã hoàn thành thành công!</strong>
+            <div class="small mt-1 text-muted">
+              Đã ghi nhận 2 giao dịch vào Sổ cái tín dụng: +{{ "%.1f"|format(session_data.so_gio) }}h cho {{ session_data.ten_nguoi_day }} và -{{ "%.1f"|format(session_data.so_gio) }}h cho {{ session_data.ten_nguoi_hoc }}.
+            </div>
+            <div class="mt-2">
+              <a href="{{ url_for('wallet') }}" class="btn btn-sm btn-outline-success">
+                <i class="bi bi-wallet2 me-1"></i> Xem biến động trong Ví
+              </a>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
