@@ -667,6 +667,18 @@ def seed_demo_data(conn):
 
 
 # ==============================================================================
+# TỰ ĐỘNG KHỞI TẠO CƠ SỞ DỮ LIỆU Ở CẤP MODULE (DÀNH CHO GUNICORN / RENDER PAAS)
+# ==============================================================================
+# Gunicorn (gunicorn app:app) chỉ import module mà không chạy khối __main__.
+# Khởi tạo tại đây giúp 13 bảng luôn được tạo sẵn sàng trước request đầu tiên,
+# bọc try/except an toàn để không bao giờ làm sập ứng dụng.
+try:
+    init_db()
+except Exception as e:
+    app.logger.warning(f"Lỗi khởi tạo CSDL ở cấp module: {e}")
+
+
+# ==============================================================================
 # HÀM TRUY VẤN SỐ LIỆU THỐNG KÊ REALTIME VÀ VINH DANH GIA SƯ
 # ==============================================================================
 def get_realtime_stats(db):

@@ -142,6 +142,18 @@ class TestMilestoneDeploy(unittest.TestCase):
         self.assertIn("GEMINI_API_KEY", readme_content, "README phải hướng dẫn nhập GEMINI_API_KEY!")
         self.assertIn("CNAME", readme_content, "README phải hướng dẫn trỏ tên miền bằng bản ghi CNAME!")
 
+    def test_07_gunicorn_module_import_initializes_database(self):
+        """
+        [TEST CASE 7]: Kiểm tra cơ chế chạy của Gunicorn (gunicorn app:app)
+        Chỉ import app mà KHÔNG chạy __main__, app.test_client().get('/') phải trả về 200 OK,
+        không bao giờ bị lỗi 'no such table: users'.
+        """
+        client = app.test_client()
+        response = client.get("/")
+        self.assertEqual(response.status_code, 200, "Request đầu tiên qua Gunicorn phải trả về 200 OK!")
+        html = response.get_data(as_text=True)
+        self.assertIn("TimeBank EDU", html, "Giao diện phải render thành công đầy đủ dữ liệu người dùng và thống kê!")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
