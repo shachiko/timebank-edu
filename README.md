@@ -93,7 +93,7 @@ timebankEDU/
 ├── .gitignore              # Loại trừ .env, database sqlite, cache
 ├── README.md               # Hướng dẫn chi tiết bằng tiếng Việt
 ├── database/
-│   ├── schema.sql          # Định nghĩa 10 bảng SQLite chuẩn theo đặc tả
+│   ├── schema.sql          # Định nghĩa 13 bảng SQLite chuẩn theo đặc tả kiến trúc M0-BS
 │   └── timebank.db         # File CSDL SQLite (tự động tạo khi chạy app)
 ├── static/
 │   ├── css/
@@ -107,18 +107,21 @@ timebankEDU/
 
 ---
 
-## 6. Cấu trúc Cơ sở dữ liệu (Đủ 10 bảng chuẩn)
+## 6. Cấu trúc Cơ sở dữ liệu (Đủ 13 bảng chuẩn)
 
-1. `users`: Thông tin học sinh, giáo viên, quản trị viên; số dư ban đầu mặc định 2.0 giờ.
+1. `users`: Thông tin học sinh, giáo viên, quản trị viên; số dư mặc định 2.0 giờ; thêm `gio_ranh` (thời gian rảnh để AI ghép cặp).
 2. `skills`: Danh mục kỹ năng học sinh đăng ký chia sẻ hoặc cần học.
-3. `sessions`: Các phiên học kết nối 1-1, mã QR xác thực và dàn ý bài học từ AI.
+3. `sessions`: Các phiên học kết nối 1-1, mã QR xác thực, dàn ý bài học từ AI và `quiz_dat_chuan`.
 4. `session_attendance`: Ghi nhận chi tiết thời gian ra/vào buổi học.
-5. `credits_ledger`: Sổ cái tín dụng bất biến (**CHỈ INSERT**, không sửa/xóa) bảo đảm minh bạch.
+5. `credits_ledger`: Sổ cái tín dụng bất biến (**CHỈ INSERT**, không sửa/xóa) bảo đảm minh bạch; hỗ trợ lý do `nhiem_vu_cong_dong`.
 6. `ratings`: Đánh giá chất lượng và số sao sau mỗi buổi học.
 7. `quiz_questions`: Câu hỏi trắc nghiệm đánh giá kiến thức do AI biên soạn.
 8. `quiz_results`: Kết quả làm bài lượng giá của học sinh.
-9. `ai_logs`: Nhật ký minh bạch ghi vết các tác vụ của Trợ lý AI Gemini.
+9. `ai_logs`: Nhật ký minh bạch ghi vết AI (hỗ trợ thêm `goi_y_nhiem_vu` và `tro_ly_ao`).
 10. `blog_posts`: Bảng tin học đường, gương sáng gia sư và tin tức chuyển đổi số.
+11. `community_tasks`: Hoạt động, nhiệm vụ tình nguyện hỗ trợ nhà trường nhận giờ tín dụng.
+12. `task_registrations`: Ghi nhận đăng ký và phê duyệt tham gia nhiệm vụ cộng đồng.
+13. `chat_messages`: Lịch sử tương tác giữa học sinh/giáo viên với Trợ lý ảo AI học đường.
 
 ---
 

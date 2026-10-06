@@ -136,18 +136,18 @@ def seed_demo_data(conn):
     """
     cur = conn.cursor()
     
-    # 1. Thêm người dùng mẫu
+    # 1. Thêm người dùng mẫu (có thêm trường gio_ranh)
     users = [
-        ('HS12001', 'Nguyễn Hoàng An', '12A1', 'hoc_sinh', 3.5),
-        ('HS11002', 'Trần Thanh Bình', '11B2', 'hoc_sinh', 2.5),
-        ('HS10003', 'Lê Kim Chi', '10A3', 'hoc_sinh', 3.0),
-        ('HS11004', 'Phạm Quang Minh', '11A1', 'hoc_sinh', 2.0),
-        ('HS12005', 'Vũ Thu Hà', '12D2', 'hoc_sinh', 2.0),
-        ('GV001', 'Thầy Nguyễn Văn Đức', 'Tổ Toán - Tin', 'giao_vien', 10.0),
-        ('ADMIN01', 'Quản trị viên Nhà trường', 'BGH', 'admin', 100.0)
+        ('HS12001', 'Nguyễn Hoàng An', '12A1', 'hoc_sinh', 3.5, 'Chiều thứ 3, sáng thứ 7'),
+        ('HS11002', 'Trần Thanh Bình', '11B2', 'hoc_sinh', 2.5, 'Sáng Chủ nhật, tối thứ 5'),
+        ('HS10003', 'Lê Kim Chi', '10A3', 'hoc_sinh', 3.0, 'Chiều thứ 6, sáng Chủ nhật'),
+        ('HS11004', 'Phạm Quang Minh', '11A1', 'hoc_sinh', 2.0, 'Tối thứ 2, tối thứ 4'),
+        ('HS12005', 'Vũ Thu Hà', '12D2', 'hoc_sinh', 2.0, 'Sáng thứ 7, chiều Chủ nhật'),
+        ('GV001', 'Thầy Nguyễn Văn Đức', 'Tổ Toán - Tin', 'giao_vien', 10.0, 'Các buổi chiều trong tuần'),
+        ('ADMIN01', 'Quản trị viên Nhà trường', 'BGH', 'admin', 100.0, 'Toàn thời gian')
     ]
     cur.executemany(
-        "INSERT INTO users (ma_hoc_sinh, ho_ten, lop, vai_tro, so_du_gio) VALUES (?, ?, ?, ?, ?)",
+        "INSERT INTO users (ma_hoc_sinh, ho_ten, lop, vai_tro, so_du_gio, gio_ranh) VALUES (?, ?, ?, ?, ?, ?)",
         users
     )
     
@@ -164,23 +164,23 @@ def seed_demo_data(conn):
         skills
     )
     
-    # 3. Thêm các phiên học hoàn thành thực tế (Sessions)
+    # 3. Thêm các phiên học hoàn thành thực tế (Sessions) - có quiz_dat_chuan
     # Session 1: An dạy Toán cho Bình (1.0 giờ)
     # Session 2: Bình dạy Đàn cho Chi (1.0 giờ)
     # Session 3: Chi dạy Tiếng Anh cho An (1.0 giờ)
     # Session 4: An dạy Toán cho Minh (1.0 giờ)
     # Session 5: Minh dạy Python cho Hà (1.0 giờ)
     sessions = [
-        (1, 1, 2, '2026-09-28 14:00:00', 1.0, 'hoan_thanh', 'QR_SES_001', 1, 1, 'Dàn ý AI: Khái niệm góc giữa hai mặt phẳng + 3 bài tập mẫu'),
-        (2, 2, 3, '2026-09-29 15:30:00', 1.0, 'hoan_thanh', 'QR_SES_002', 1, 1, 'Dàn ý AI: Hợp âm C-Am-Dm-G7 + bài tập bấm tay'),
-        (3, 3, 1, '2026-10-01 16:00:00', 1.0, 'hoan_thanh', 'QR_SES_003', 1, 1, 'Dàn ý AI: Chủ đề Hometown & Hobbies'),
-        (1, 1, 4, '2026-10-03 09:00:00', 1.0, 'hoan_thanh', 'QR_SES_004', 1, 1, 'Dàn ý AI: Góc giữa đường thẳng và mặt phẳng'),
-        (4, 4, 5, '2026-10-04 14:30:00', 1.0, 'hoan_thanh', 'QR_SES_005', 1, 1, 'Dàn ý AI: Biến số và lệnh input/print trong Python')
+        (1, 1, 2, '2026-09-28 14:00:00', 1.0, 'hoan_thanh', 'QR_SES_001', 1, 1, 'Dàn ý AI: Khái niệm góc giữa hai mặt phẳng + 3 bài tập mẫu', 1),
+        (2, 2, 3, '2026-09-29 15:30:00', 1.0, 'hoan_thanh', 'QR_SES_002', 1, 1, 'Dàn ý AI: Hợp âm C-Am-Dm-G7 + bài tập bấm tay', 1),
+        (3, 3, 1, '2026-10-01 16:00:00', 1.0, 'hoan_thanh', 'QR_SES_003', 1, 1, 'Dàn ý AI: Chủ đề Hometown & Hobbies', 1),
+        (1, 1, 4, '2026-10-03 09:00:00', 1.0, 'hoan_thanh', 'QR_SES_004', 1, 1, 'Dàn ý AI: Góc giữa đường thẳng và mặt phẳng', 1),
+        (4, 4, 5, '2026-10-04 14:30:00', 1.0, 'hoan_thanh', 'QR_SES_005', 1, 1, 'Dàn ý AI: Biến số và lệnh input/print trong Python', 1)
     ]
     cur.executemany(
         """INSERT INTO sessions 
-           (skill_id, nguoi_day_id, nguoi_hoc_id, thoi_gian_bat_dau, so_gio, trang_thai, ma_qr, checkin_day, checkin_hoc, dan_y_ai) 
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+           (skill_id, nguoi_day_id, nguoi_hoc_id, thoi_gian_bat_dau, so_gio, trang_thai, ma_qr, checkin_day, checkin_hoc, dan_y_ai, quiz_dat_chuan) 
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         sessions
     )
     
@@ -195,7 +195,8 @@ def seed_demo_data(conn):
         (1, 1.0, 'Dạy Toán cho Phạm Quang Minh', 4, '2026-10-03 10:00:00'),
         (4, -1.0, 'Học Toán từ Nguyễn Hoàng An', 4, '2026-10-03 10:00:00'),
         (4, 1.0, 'Dạy Python cho Vũ Thu Hà', 5, '2026-10-04 15:30:00'),
-        (5, -1.0, 'Học Python từ Phạm Quang Minh', 5, '2026-10-04 15:30:00')
+        (5, -1.0, 'Học Python từ Phạm Quang Minh', 5, '2026-10-04 15:30:00'),
+        (1, 2.0, 'nhiem_vu_cong_dong: Hỗ trợ số hóa tài liệu thư viện', None, '2026-10-05 11:00:00')
     ]
     cur.executemany(
         "INSERT INTO credits_ledger (user_id, bien_dong, ly_do, session_id, thoi_gian) VALUES (?, ?, ?, ?, ?)",
@@ -217,15 +218,48 @@ def seed_demo_data(conn):
         ratings
     )
     
-    # 6. Ghi nhật ký AI minh bạch (ai_logs)
+    # 6. Ghi nhật ký AI minh bạch (ai_logs) - bao gồm goi_y_nhiem_vu, tro_ly_ao
     ai_logs = [
         (1, 'dan_y_buoi_hoc', 'Soạn dàn ý buổi học Toán Hình học 12', 'Đã sinh cấu trúc 3 phần: Lý thuyết định nghĩa, bài tập mẫu và mẹo giải nhanh.', '2026-09-28 13:50:00'),
         (2, 'dan_y_buoi_hoc', 'Soạn dàn ý hướng dẫn đệm đàn Guitar', 'Đã sinh danh sách hợp âm C, Am, Dm, G7 và bài tập bấm gam.', '2026-09-29 15:10:00'),
-        (3, 'kiem_duyet', 'Kiểm duyệt nội dung chia sẻ kỹ năng tiếng Anh', 'Nội dung giáo dục an toàn, tích cực, không vi phạm chuẩn mực sư phạm.', '2026-10-01 10:00:00')
+        (3, 'kiem_duyet', 'Kiểm duyệt nội dung chia sẻ kỹ năng tiếng Anh', 'Nội dung giáo dục an toàn, tích cực, không vi phạm chuẩn mực sư phạm.', '2026-10-01 10:00:00'),
+        (1, 'goi_y_nhiem_vu', 'Gợi ý nhiệm vụ cộng đồng phù hợp học sinh', 'Đã đề xuất nhiệm vụ hỗ trợ số hóa sách thư viện dựa trên kỹ năng tin học.', '2026-10-05 08:30:00'),
+        (1, 'tro_ly_ao', 'Tư vấn lộ trình trao đổi kỹ năng học đường', 'Trợ lý ảo đã giải đáp thắc mắc về quy chế tín dụng thời gian cho học sinh.', '2026-10-05 09:15:00')
     ]
     cur.executemany(
         "INSERT INTO ai_logs (user_id, chuc_nang, input_tom_tat, output_text, thoi_gian) VALUES (?, ?, ?, ?, ?)",
         ai_logs
+    )
+
+    # 7. Thêm nhiệm vụ cộng đồng mẫu (community_tasks)
+    community_tasks = [
+        ('Hỗ trợ số hóa tài liệu thư viện trường', 'Quét và phân loại sách tham khảo vào hệ thống thư viện điện tử', 'Phòng Thư viện - Tầng 2', 2.0, 4, '2026-10-15', 6, 'mo', '2026-10-05 08:00:00'),
+        ('Phụ đạo Tin học văn phòng cho CLB Học tập', 'Hướng dẫn trình bày slide và bảng tính Excel căn bản', 'Phòng máy số 3', 1.5, 3, '2026-10-20', 6, 'mo', '2026-10-05 09:00:00')
+    ]
+    cur.executemany(
+        """INSERT INTO community_tasks 
+           (tieu_de, mo_ta, dia_diem, so_gio_thuong, so_luong_toi_da, han_dang_ky, nguoi_tao_id, trang_thai, thoi_gian_tao) 
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        community_tasks
+    )
+
+    # 8. Thêm đăng ký nhiệm vụ cộng đồng (task_registrations)
+    task_regs = [
+        (1, 1, 'da_duyet', '2026-10-05 08:45:00')
+    ]
+    cur.executemany(
+        "INSERT INTO task_registrations (task_id, user_id, trang_thai, thoi_gian_dang_ky) VALUES (?, ?, ?, ?)",
+        task_regs
+    )
+
+    # 9. Thêm tin nhắn Trợ lý ảo (chat_messages)
+    chat_samples = [
+        (1, 'user', 'Em muốn học thêm kỹ năng giao tiếp tiếng Anh thì nên tìm bạn nào?', '2026-10-01 09:00:00'),
+        (1, 'assistant', 'Chào An! Dựa trên hệ thống, bạn Lê Kim Chi (10A3) đang chia sẻ kỹ năng Luyện phản xạ IELTS Speaking rất phù hợp với em nhé!', '2026-10-01 09:00:05')
+    ]
+    cur.executemany(
+        "INSERT INTO chat_messages (user_id, vai_tro, noi_dung, thoi_gian) VALUES (?, ?, ?, ?)",
+        chat_samples
     )
     
     conn.commit()

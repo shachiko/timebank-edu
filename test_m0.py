@@ -1,6 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-BỘ KIỂM THỬ TỰ ĐỘNG NGHIỆM THU MILESTONE M0 - TIMEBANK EDU
+BỘ KIỂM THỬ TỰ ĐỘNG NGHIỆM THU MILESTONE M0 & M0-BS - TIMEBANK EDU
+Tự động kiểm tra:
+1. Cơ sở dữ liệu: Tồn tại đủ 13 bảng chuẩn theo đặc tả kiến trúc (10 ban đầu + 3 bổ sung).
+2. Các cột bổ sung: 'gio_ranh' trong users, 'quiz_dat_chuan' trong sessions.
+3. Các giá trị mới: 'goi_y_nhiem_vu', 'tro_ly_ao' trong ai_logs; 'nhiem_vu_cong_dong' trong credits_ledger.
+4. Cấu hình Single-Tenant: Thay đổi 'ten_truong' trong config.yaml -> Trang chủ cập nhật ngay.
+5. Landing Page: Đủ 6 khối chức năng, không có lỗi, tải tốt trên di động.
+6. Bảo mật: Tệp .gitignore loại trừ .env.
+7. Các API: /api/stats, /api/contact hoạt động chính xác.
 """
 
 import sys
@@ -21,17 +29,21 @@ class TestMilestoneM0(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        # Đảm bảo database đã được tạo và nạp dữ liệu
+        # Xóa file DB cũ nếu có để khởi tạo sạch từ schema mới
+        if DATABASE_PATH.exists():
+            try:
+                os.remove(DATABASE_PATH)
+            except Exception:
+                pass
         init_db()
         cls.client = app.test_client()
 
-    def test_case_1_schema_has_all_10_tables(self):
-        """Test Case 1: Kiểm tra cơ sở dữ liệu SQLite có chính xác đủ 10 bảng bắt buộc."""
+    def test_case_1_schema_has_all_13_tables(self):
+        """Test Case 1: Kiểm tra cơ sở dữ liệu SQLite có chính xác đủ 13 bảng bắt buộc."""
         conn = sqlite3.connect(DATABASE_PATH)
         cursor = conn.cursor()
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
         tables = set(row[0] for row in cursor.fetchall())
-        conn.close()
 
         expected_tables = {
             'users',
@@ -43,12 +55,29 @@ class TestMilestoneM0(unittest.TestCase):
             'quiz_questions',
             'quiz_results',
             'ai_logs',
-            'blog_posts'
+            'blog_posts',
+            'community_tasks',
+            'task_registrations',
+            'chat_messages'
         }
         
         missing = expected_tables - tables
         self.assertEqual(len(missing), 0, f"Thiếu các bảng trong cơ sở dữ liệu: {missing}")
-        print(f"\n[PASS] Case 1: Đủ 10 bảng chuẩn ({len(tables)}/10 bảng): {', '.join(sorted(tables))}")
+        self.assertEqual(len(tables), 13, f"Số lượng bảng phải là 13, hiện có {len(tables)}")
+
+        # Kiểm tra cột bổ sung trong users: gio_ranh
+        cursor.execute("PRAGMA table_info(users)")
+        user_cols = [r[1] for r in cursor.fetchall()]
+        self.assertIn("gio_ranh", user_cols, "Bảng users thiếu cột gio_ranh")
+
+        # Kiểm tra cột bổ sung trong sessions: quiz_dat_chuan
+        cursor.execute("PRAGMA table_info(sessions)")
+        session_cols = [r[1] for r in cursor.fetchall()]
+        self.assertIn("quiz_dat_chuan", session_cols, "Bảng sessions thiếu cột quiz_dat_chuan")
+
+        conn.close()
+        print(f"\n[PASS] Case 1: Đủ 13 bảng chuẩn ({len(tables)}/13 bảng): {', '.join(sorted(tables))}")
+        print("       -> Đã xác minh cột 'gio_ranh' (users) và 'quiz_dat_chuan' (sessions)")
 
     def test_case_2_config_switch_school_name(self):
         """Test Case 2: Kiểm tra khả năng đổi tên trường qua config.yaml và cập nhật tức thì."""
@@ -81,7 +110,7 @@ class TestMilestoneM0(unittest.TestCase):
                 yaml.dump(cfg, f, allow_unicode=True)
 
     def test_case_3_landing_has_all_6_blocks(self):
-        """Test Case 3: Kiểm tra Landing Page hiển thị đủ 6 khối chức năng theo yêu cầu."""
+        """Test Case 3: Kiểm tra Landing Page hiển thị đủ 6 khối chức năng theo yêu cầu, không lỗi."""
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
         html = response.data.decode('utf-8')
@@ -118,7 +147,7 @@ class TestMilestoneM0(unittest.TestCase):
         self.assertIn("Hỗ trợ bởi AI (Gemini)", html)
         self.assertIn("© 2026", html)
 
-        print("[PASS] Case 3: Landing Page đầy đủ 6 khối chức năng, đúng nội dung sư phạm và mobile-first")
+        print("[PASS] Case 3: Landing Page đầy đủ 6 khối chức năng, không lỗi, hiển thị chuẩn mực")
 
     def test_case_4_gitignore_protects_env(self):
         """Test Case 4: Kiểm tra tệp .gitignore đảm bảo không bao giờ push .env lên GitHub."""

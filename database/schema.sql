@@ -1,18 +1,20 @@
 -- ==============================================================================
 -- DỰ ÁN DỰ THI: NGÂN HÀNG THỜI GIAN HỌC ĐƯỜNG (TIMEBANK EDU)
 -- NGÀY HỘI NHÀ GIÁO SÁNG TẠO VỚI CÔNG NGHỆ SỐ VÀ AI 2026 - BẢNG B
--- CẤU TRÚC CƠ SỞ DỮ LIỆU SQLITE (10 BẢNG CHUẨN ĐÚNG THEO ĐẶC TẢ KIẾN TRÚC)
+-- CẤU TRÚC CƠ SỞ DỮ LIỆU SQLITE (13 BẢNG CHUẨN ĐÚNG THEO ĐẶC TẢ KIẾN TRÚC M0 + M0-BS)
 -- ==============================================================================
 
 -- 1. BẢNG NGƯỜI DÙNG: Lưu thông tin học sinh, giáo viên phụ trách, ban quản trị
 -- Mọi thành viên mới tham gia đều được cấp vốn ban đầu là 2.0 giờ tín dụng
+-- gio_ranh: Lưu thời gian rảnh biểu kiến (VD: 'Chiều thứ 3, sáng thứ 7') phục vụ AI gợi ý ghép cặp
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     ma_hoc_sinh TEXT UNIQUE NOT NULL,
     ho_ten TEXT NOT NULL,
     lop TEXT,
     vai_tro TEXT CHECK(vai_tro IN ('hoc_sinh', 'giao_vien', 'admin')) DEFAULT 'hoc_sinh',
-    so_du_gio REAL DEFAULT 2.0
+    so_du_gio REAL DEFAULT 2.0,
+    gio_ranh TEXT
 );
 
 -- 2. BẢNG KỸ NĂNG: Danh mục kỹ năng học sinh đăng ký chia sẻ hoặc muốn học
@@ -29,7 +31,7 @@ CREATE TABLE IF NOT EXISTS skills (
 );
 
 -- 3. BẢNG PHIÊN HỌC (SESSIONS): Kết nối giữa người dạy và người học
--- Chứa mã QR điểm danh 2 chiều và dàn ý buổi học do AI hỗ trợ biên soạn
+-- Chứa mã QR điểm danh 2 chiều, dàn ý buổi học do AI hỗ trợ biên soạn và chỉ số quiz_dat_chuan
 CREATE TABLE IF NOT EXISTS sessions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     skill_id INTEGER,
@@ -42,6 +44,7 @@ CREATE TABLE IF NOT EXISTS sessions (
     checkin_day INTEGER DEFAULT 0,
     checkin_hoc INTEGER DEFAULT 0,
     dan_y_ai TEXT,
+    quiz_dat_chuan INTEGER DEFAULT 0,
     FOREIGN KEY (skill_id) REFERENCES skills(id),
     FOREIGN KEY (nguoi_day_id) REFERENCES users(id),
     FOREIGN KEY (nguoi_hoc_id) REFERENCES users(id)
@@ -60,6 +63,7 @@ CREATE TABLE IF NOT EXISTS session_attendance (
 
 -- 5. BẢNG SỔ CÁI TÍN DỤNG (CREDITS LEDGER): Nguyên tắc bất biến (Append-Only)
 -- CHỈ ĐƯỢC INSERT, KHÔNG UPDATE/DELETE nhằm đảm bảo tính toàn vẹn và minh bạch tài chính thời gian
+-- Hỗ trợ các lý do biến động như trao đổi phiên học, thưởng nhiệm vụ cộng đồng ('nhiem_vu_cong_dong')
 CREATE TABLE IF NOT EXISTS credits_ledger (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
@@ -110,6 +114,7 @@ CREATE TABLE IF NOT EXISTS quiz_results (
 );
 
 -- 9. BẢNG NHẬT KÝ AI (AI LOGS): Ghi vết minh bạch mọi tương tác của AI (Gemini Pro)
+-- Mở rộng hỗ trợ thêm các chức năng: 'goi_y_nhiem_vu' và 'tro_ly_ao'
 CREATE TABLE IF NOT EXISTS ai_logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,
@@ -120,7 +125,9 @@ CREATE TABLE IF NOT EXISTS ai_logs (
         'tom_tat_phan_hoi',
         'canh_bao',
         'bien_tap_vien',
-        'tao_quiz'
+        'tao_quiz',
+        'goi_y_nhiem_vu',
+        'tro_ly_ao'
     )) NOT NULL,
     input_tom_tat TEXT,
     output_text TEXT,
@@ -137,4 +144,40 @@ CREATE TABLE IF NOT EXISTS blog_posts (
     tac_gia_ai INTEGER DEFAULT 0,
     trang_thai TEXT CHECK(trang_thai IN ('nhap', 'da_duyet', 'da_dang')) DEFAULT 'nhap',
     thoi_gian_dang TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 11. BẢNG NHIỆM VỤ CỘNG ĐỒNG (COMMUNITY TASKS): Hoạt động hỗ trợ trường học, thư viện, CLB
+CREATE TABLE IF NOT EXISTS community_tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tieu_de TEXT NOT NULL,
+    mo_ta TEXT,
+    dia_diem TEXT,
+    so_gio_thuong REAL DEFAULT 1.0,
+    so_luong_toi_da INTEGER DEFAULT 5,
+    han_dang_ky TEXT,
+    nguoi_tao_id INTEGER NOT NULL,
+    trang_thai TEXT CHECK(trang_thai IN ('mo', 'dong', 'hoan_thanh', 'huy')) DEFAULT 'mo',
+    thoi_gian_tao TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (nguoi_tao_id) REFERENCES users(id)
+);
+
+-- 12. BẢNG ĐĂNG KÝ NHIỆM VỤ (TASK REGISTRATIONS): Ghi nhận học sinh tham gia nhiệm vụ cộng đồng
+CREATE TABLE IF NOT EXISTS task_registrations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    task_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    trang_thai TEXT CHECK(trang_thai IN ('da_dang_ky', 'da_duyet', 'hoan_thanh', 'huy')) DEFAULT 'da_dang_ky',
+    thoi_gian_dang_ky TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (task_id) REFERENCES community_tasks(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- 13. BẢNG TIN NHẮN TRỢ LÝ AI (CHAT MESSAGES): Hội thoại giữa người dùng và Trợ lý học đường AI
+CREATE TABLE IF NOT EXISTS chat_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    vai_tro TEXT CHECK(vai_tro IN ('user', 'assistant', 'system')) NOT NULL,
+    noi_dung TEXT NOT NULL,
+    thoi_gian TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
 );
