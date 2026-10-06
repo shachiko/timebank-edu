@@ -6,7 +6,8 @@
 
 -- 1. BẢNG NGƯỜI DÙNG: Lưu thông tin học sinh, giáo viên phụ trách, ban quản trị
 -- Mọi thành viên mới tham gia đều được cấp vốn ban đầu là 2.0 giờ tín dụng
--- gio_ranh: Lưu thời gian rảnh biểu kiến (VD: 'Chiều thứ 3, sáng thứ 7') phục vụ AI gợi ý ghép cặp
+-- gio_ranh: Lưu thời gian rảnh biểu kiến phục vụ AI gợi ý ghép cặp
+-- mat_khau: Lưu chuỗi băm bảo mật (hashed password) qua werkzeug.security
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     ma_hoc_sinh TEXT UNIQUE NOT NULL,
@@ -14,7 +15,8 @@ CREATE TABLE IF NOT EXISTS users (
     lop TEXT,
     vai_tro TEXT CHECK(vai_tro IN ('hoc_sinh', 'giao_vien', 'admin')) DEFAULT 'hoc_sinh',
     so_du_gio REAL DEFAULT 2.0,
-    gio_ranh TEXT
+    gio_ranh TEXT,
+    mat_khau TEXT
 );
 
 -- 2. BẢNG KỸ NĂNG: Danh mục kỹ năng học sinh đăng ký chia sẻ hoặc muốn học

@@ -139,5 +139,21 @@ Lưu tệp và tải lại trang, toàn bộ nhận diện và tiêu đề của
 
 ---
 
-## 8. Tính trung thực về AI
+## 8. Tài khoản mẫu & Phân quyền (Milestone M1)
+
+Hệ thống thiết lập sẵn các tài khoản để Ban Giám khảo và giáo viên trải nghiệm ngay:
+- **Quản trị viên (Admin):** `admin` / mật khẩu: `admin123` (Truy cập toàn quyền dashboard `/admin`, duyệt kỹ năng).
+- **Giáo viên phụ trách:** `GV001` / mật khẩu: `admin123` (Truy cập duyệt kỹ năng `/skills/approve`).
+- **Học sinh:** `HS12001` / mật khẩu: `admin123` (Hồ sơ cá nhân, bị chặn 403 khi vào `/admin` và `/skills/approve`).
+
+### Phân quyền hệ thống (RBAC):
+- `/register`: Đăng ký tài khoản học sinh mới, tự động cấp **2.0 giờ tín dụng ban đầu** vào sổ cái.
+- `/login`, `/logout`: Đăng nhập/Đăng xuất bảo mật với mật khẩu băm, báo lỗi tiếng Việt nếu sai.
+- `/profile`: Hồ sơ cá nhân, số dư giờ thực tế và lịch sử biến động sổ cái tín dụng (`credits_ledger`).
+- `/admin`: Bảng điều khiển quản trị tối cao — **chỉ Admin**, học sinh vào sẽ bị chặn với mã 403 Forbidden.
+- `/skills/approve`: Khu vực duyệt kỹ năng học sinh — **chỉ Giáo viên & Admin**, học sinh vào bị chặn 403.
+
+---
+
+## 9. Tính trung thực về AI
 Hệ thống tuân thủ nghiêm ngặt nguyên tắc minh bạch: Mọi vị trí có sự tham gia của Trí tuệ nhân tạo (kiểm duyệt, gợi ý ghép cặp, dàn ý buổi học, tạo trắc nghiệm) đều được gắn nhãn nhận diện rõ ràng: **"Hỗ trợ bởi AI (Gemini)"**.

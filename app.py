@@ -13,8 +13,12 @@ import os
 import sqlite3
 import yaml
 from pathlib import Path
+from functools import wraps
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, jsonify, g, flash, redirect, url_for
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask import (
+    Flask, render_template, request, jsonify, g, flash, redirect, url_for, session, abort
+)
 
 # 1. Tải các biến môi trường từ file .env (nếu có)
 # Lưu ý: File .env chứa API Key tuyệt đối không được đưa lên GitHub
@@ -61,12 +65,84 @@ def load_school_config():
 
 
 @app.context_processor
-def inject_school_config():
+def inject_template_globals():
     """
-    Tự động truyền biến 'config' vào tất cả các giao diện HTML (Jinja2 Template).
-    Nhờ hàm này, mọi trang web đều đọc được 'config.ten_truong', 'config.mau_chu_dao', v.v.
+    Tự động truyền cấu hình trường học 'config' và thông tin phiên đăng nhập 'current_user'
+    vào tất cả các giao diện HTML (Jinja2 Template).
     """
-    return {"config": load_school_config()}
+    current_user = None
+    if "user_id" in session:
+        # Lấy số dư mới nhất từ cơ sở dữ liệu nếu có kết nối
+        current_user = {
+            "id": session.get("user_id"),
+            "ma_hoc_sinh": session.get("ma_hoc_sinh"),
+            "ho_ten": session.get("ho_ten"),
+            "vai_tro": session.get("vai_tro"),
+            "lop": session.get("lop"),
+            "so_du_gio": session.get("so_du_gio", 2.0)
+        }
+    return {
+        "config": load_school_config(),
+        "current_user": current_user
+    }
+
+
+# ==============================================================================
+# DECORATORS PHÂN QUYỀN TRUY CẬP (ACCESS CONTROL / RBAC)
+# ==============================================================================
+def login_required(f):
+    """
+    Bắt buộc người dùng phải đăng nhập trước khi truy cập trang.
+    Nếu chưa đăng nhập, chuyển hướng đến trang /login.
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "user_id" not in session:
+            flash("Vui lòng đăng nhập để tiếp tục truy cập.", "warning")
+            return redirect(url_for("login", next=request.url))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def admin_required(f):
+    """
+    Chỉ cho phép tài khoản có vai_tro = 'admin' truy cập.
+    Nếu là học sinh hoặc giáo viên, lập tức chặn truy cập và trả về mã lỗi 403 Forbidden.
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "user_id" not in session:
+            flash("Vui lòng đăng nhập bằng tài khoản Quản trị viên.", "warning")
+            return redirect(url_for("login", next=request.url))
+        if session.get("vai_tro") != "admin":
+            # Chặn học sinh và giáo viên: trả về trang lỗi 403
+            return render_template("errors/403.html"), 403
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def teacher_or_admin_required(f):
+    """
+    Chỉ cho phép Giáo viên (giao_vien) hoặc Quản trị viên (admin) thực hiện chức năng.
+    Học sinh không có quyền sẽ bị chặn bằng mã lỗi 403 Forbidden.
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "user_id" not in session:
+            flash("Vui lòng đăng nhập với quyền Giáo viên hoặc Quản trị viên.", "warning")
+            return redirect(url_for("login", next=request.url))
+        if session.get("vai_tro") not in ("giao_vien", "admin"):
+            return render_template("errors/403.html"), 403
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+@app.errorhandler(403)
+def handle_forbidden(e):
+    """
+    Trang xử lý lỗi 403 Forbidden: Hiển thị giao diện thông báo tiếng Việt lịch sự, rõ ràng.
+    """
+    return render_template("errors/403.html"), 403
 
 
 # ==============================================================================
@@ -100,9 +176,9 @@ def close_db(error=None):
 
 def init_db():
     """
-    Khởi tạo cấu trúc cơ sở dữ liệu (10 bảng) từ file database/schema.sql.
+    Khởi tạo cấu trúc cơ sở dữ liệu (13 bảng) từ file database/schema.sql.
     Đồng thời tự động nạp dữ liệu mẫu ban đầu nếu hệ thống chưa có dữ liệu,
-    đảm bảo khi giám khảo chấm thi thì hệ thống hoạt động đầy đủ ngay.
+    bao gồm tài khoản quản trị sẵn: admin/admin123.
     """
     # Đảm bảo thư mục database tồn tại
     DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -129,53 +205,58 @@ def init_db():
 def seed_demo_data(conn):
     """
     Nạp dữ liệu mẫu sư phạm phục vụ thuyết trình và demo thực tế:
-    - 5 học sinh tiêu biểu (An, Bình, Chi, Minh, Hà) và 1 giáo viên phụ trách
-    - Các kỹ năng đăng ký (Toán, Guitar, Tiếng Anh, Tin học...)
-    - Các phiên học hoàn thành thể hiện vòng tròn tuần hoàn thời gian
-    - Nhật ký sổ cái tín dụng (credits_ledger) và đánh giá sao (ratings)
+    - Tạo sẵn admin/admin123 cho Ban Giám Khảo và Quản trị viên
+    - Tạo sẵn tài khoản giáo viên GV001/admin123
+    - 5 học sinh tiêu biểu (An, Bình, Chi, Minh, Hà) với số dư giờ khởi đầu
+    - Các kỹ năng đăng ký, phiên học thực tế, sổ cái tín dụng và đánh giá
     """
     cur = conn.cursor()
+    default_pass_hash = generate_password_hash("admin123")
     
-    # 1. Thêm người dùng mẫu (có thêm trường gio_ranh)
+    # 1. Thêm người dùng mẫu (có mật khẩu băm, giờ rảnh và vai trò)
     users = [
-        ('HS12001', 'Nguyễn Hoàng An', '12A1', 'hoc_sinh', 3.5, 'Chiều thứ 3, sáng thứ 7'),
-        ('HS11002', 'Trần Thanh Bình', '11B2', 'hoc_sinh', 2.5, 'Sáng Chủ nhật, tối thứ 5'),
-        ('HS10003', 'Lê Kim Chi', '10A3', 'hoc_sinh', 3.0, 'Chiều thứ 6, sáng Chủ nhật'),
-        ('HS11004', 'Phạm Quang Minh', '11A1', 'hoc_sinh', 2.0, 'Tối thứ 2, tối thứ 4'),
-        ('HS12005', 'Vũ Thu Hà', '12D2', 'hoc_sinh', 2.0, 'Sáng thứ 7, chiều Chủ nhật'),
-        ('GV001', 'Thầy Nguyễn Văn Đức', 'Tổ Toán - Tin', 'giao_vien', 10.0, 'Các buổi chiều trong tuần'),
-        ('ADMIN01', 'Quản trị viên Nhà trường', 'BGH', 'admin', 100.0, 'Toàn thời gian')
+        ('admin', 'Quản trị viên Hệ thống', 'Ban Giám Hiệu', 'admin', 100.0, 'Toàn thời gian', default_pass_hash),
+        ('GV001', 'Thầy Nguyễn Văn Đức', 'Tổ Toán - Tin', 'giao_vien', 10.0, 'Các buổi chiều trong tuần', default_pass_hash),
+        ('HS12001', 'Nguyễn Hoàng An', '12A1', 'hoc_sinh', 3.5, 'Chiều thứ 3, sáng thứ 7', default_pass_hash),
+        ('HS11002', 'Trần Thanh Bình', '11B2', 'hoc_sinh', 2.5, 'Sáng Chủ nhật, tối thứ 5', default_pass_hash),
+        ('HS10003', 'Lê Kim Chi', '10A3', 'hoc_sinh', 3.0, 'Chiều thứ 6, sáng Chủ nhật', default_pass_hash),
+        ('HS11004', 'Phạm Quang Minh', '11A1', 'hoc_sinh', 2.0, 'Tối thứ 2, tối thứ 4', default_pass_hash),
+        ('HS12005', 'Vũ Thu Hà', '12D2', 'hoc_sinh', 2.0, 'Sáng thứ 7, chiều Chủ nhật', default_pass_hash)
     ]
     cur.executemany(
-        "INSERT INTO users (ma_hoc_sinh, ho_ten, lop, vai_tro, so_du_gio, gio_ranh) VALUES (?, ?, ?, ?, ?, ?)",
+        """INSERT INTO users 
+           (ma_hoc_sinh, ho_ten, lop, vai_tro, so_du_gio, gio_ranh, mat_khau) 
+           VALUES (?, ?, ?, ?, ?, ?, ?)""",
         users
     )
     
-    # 2. Thêm kỹ năng chia sẻ
+    # 2. Thêm kỹ năng chia sẻ (user_id = 3 là HS12001, 4 là HS11002, 5 là HS10003...)
     skills = [
-        (1, 'Toán học', 'Ôn tập Hình học không gian lớp 12', 'Phương pháp giải nhanh trắc nghiệm khoảng cách và góc', 'da_duyet', 'Nội dung bổ ích, phù hợp chương trình'),
-        (2, 'Năng khiếu', 'Đệm hát Guitar cơ bản cho người mới', 'Cách bấm các hợp âm chuẩn và kỹ thuật quạt chả điệu Disco', 'da_duyet', 'Kỹ năng giải trí tích cực'),
-        (3, 'Ngoại ngữ', 'Luyện phản xạ nói Tiếng Anh IELTS Speaking', 'Chiến thuật trả lời Part 1 và Part 2 tự nhiên, lưu loát', 'da_duyet', 'Rất hữu ích cho học sinh hội nhập'),
-        (4, 'Tin học', 'Lập trình Python cho người mới bắt đầu', 'Cấu trúc rẽ nhánh, vòng lặp và xử lý chuỗi căn bản', 'da_duyet', 'Định hướng chuyển đổi số trường học'),
-        (5, 'Khoa học', 'Phương pháp làm bài thí nghiệm Hóa học 12', 'Giải thích hiện tượng và mẹo nhớ tính chất kim loại kiềm', 'da_duyet', 'Hỗ trợ ôn thi tốt nghiệp')
+        (3, 'Toán học', 'Ôn tập Hình học không gian lớp 12', 'Phương pháp giải nhanh trắc nghiệm khoảng cách và góc', 'da_duyet', 'Nội dung bổ ích, phù hợp chương trình'),
+        (4, 'Năng khiếu', 'Đệm hát Guitar cơ bản cho người mới', 'Cách bấm các hợp âm chuẩn và kỹ thuật quạt chả điệu Disco', 'da_duyet', 'Kỹ năng giải trí tích cực'),
+        (5, 'Ngoại ngữ', 'Luyện phản xạ nói Tiếng Anh IELTS Speaking', 'Chiến thuật trả lời Part 1 và Part 2 tự nhiên, lưu loát', 'da_duyet', 'Rất hữu ích cho học sinh hội nhập'),
+        (6, 'Tin học', 'Lập trình Python cho người mới bắt đầu', 'Cấu trúc rẽ nhánh, vòng lặp và xử lý chuỗi căn bản', 'da_duyet', 'Định hướng chuyển đổi số trường học'),
+        (7, 'Khoa học', 'Phương pháp làm bài thí nghiệm Hóa học 12', 'Giải thích hiện tượng và mẹo nhớ tính chất kim loại kiềm', 'cho_duyet', 'Chờ giáo viên bộ môn duyệt nội dung')
     ]
     cur.executemany(
-        "INSERT INTO skills (user_id, linh_vuc, tieu_de, mo_ta, trang_thai_duyet, ly_do_ai_kiem_duyet) VALUES (?, ?, ?, ?, ?, ?)",
+        """INSERT INTO skills 
+           (user_id, linh_vuc, tieu_de, mo_ta, trang_thai_duyet, ly_do_ai_kiem_duyet) 
+           VALUES (?, ?, ?, ?, ?, ?)""",
         skills
     )
     
-    # 3. Thêm các phiên học hoàn thành thực tế (Sessions) - có quiz_dat_chuan
+    # 3. Thêm các phiên học hoàn thành thực tế (Sessions)
     # Session 1: An dạy Toán cho Bình (1.0 giờ)
     # Session 2: Bình dạy Đàn cho Chi (1.0 giờ)
     # Session 3: Chi dạy Tiếng Anh cho An (1.0 giờ)
     # Session 4: An dạy Toán cho Minh (1.0 giờ)
     # Session 5: Minh dạy Python cho Hà (1.0 giờ)
     sessions = [
-        (1, 1, 2, '2026-09-28 14:00:00', 1.0, 'hoan_thanh', 'QR_SES_001', 1, 1, 'Dàn ý AI: Khái niệm góc giữa hai mặt phẳng + 3 bài tập mẫu', 1),
-        (2, 2, 3, '2026-09-29 15:30:00', 1.0, 'hoan_thanh', 'QR_SES_002', 1, 1, 'Dàn ý AI: Hợp âm C-Am-Dm-G7 + bài tập bấm tay', 1),
-        (3, 3, 1, '2026-10-01 16:00:00', 1.0, 'hoan_thanh', 'QR_SES_003', 1, 1, 'Dàn ý AI: Chủ đề Hometown & Hobbies', 1),
-        (1, 1, 4, '2026-10-03 09:00:00', 1.0, 'hoan_thanh', 'QR_SES_004', 1, 1, 'Dàn ý AI: Góc giữa đường thẳng và mặt phẳng', 1),
-        (4, 4, 5, '2026-10-04 14:30:00', 1.0, 'hoan_thanh', 'QR_SES_005', 1, 1, 'Dàn ý AI: Biến số và lệnh input/print trong Python', 1)
+        (1, 3, 4, '2026-09-28 14:00:00', 1.0, 'hoan_thanh', 'QR_SES_001', 1, 1, 'Dàn ý AI: Khái niệm góc giữa hai mặt phẳng + 3 bài tập mẫu', 1),
+        (2, 4, 5, '2026-09-29 15:30:00', 1.0, 'hoan_thanh', 'QR_SES_002', 1, 1, 'Dàn ý AI: Hợp âm C-Am-Dm-G7 + bài tập bấm tay', 1),
+        (3, 5, 3, '2026-10-01 16:00:00', 1.0, 'hoan_thanh', 'QR_SES_003', 1, 1, 'Dàn ý AI: Chủ đề Hometown & Hobbies', 1),
+        (1, 3, 6, '2026-10-03 09:00:00', 1.0, 'hoan_thanh', 'QR_SES_004', 1, 1, 'Dàn ý AI: Góc giữa đường thẳng và mặt phẳng', 1),
+        (4, 6, 7, '2026-10-04 14:30:00', 1.0, 'hoan_thanh', 'QR_SES_005', 1, 1, 'Dàn ý AI: Biến số và lệnh input/print trong Python', 1)
     ]
     cur.executemany(
         """INSERT INTO sessions 
@@ -186,17 +267,17 @@ def seed_demo_data(conn):
     
     # 4. Ghi sổ cái tín dụng (credits_ledger) - Nguyên tắc chỉ Insert
     ledger_entries = [
-        (1, 1.0, 'Dạy Toán cho Trần Thanh Bình', 1, '2026-09-28 15:00:00'),
-        (2, -1.0, 'Học Toán từ Nguyễn Hoàng An', 1, '2026-09-28 15:00:00'),
-        (2, 1.0, 'Dạy Đàn cho Lê Kim Chi', 2, '2026-09-29 16:30:00'),
-        (3, -1.0, 'Học Đàn từ Trần Thanh Bình', 2, '2026-09-29 16:30:00'),
-        (3, 1.0, 'Dạy Tiếng Anh cho Nguyễn Hoàng An', 3, '2026-10-01 17:00:00'),
-        (1, -1.0, 'Học Tiếng Anh từ Lê Kim Chi', 3, '2026-10-01 17:00:00'),
-        (1, 1.0, 'Dạy Toán cho Phạm Quang Minh', 4, '2026-10-03 10:00:00'),
-        (4, -1.0, 'Học Toán từ Nguyễn Hoàng An', 4, '2026-10-03 10:00:00'),
-        (4, 1.0, 'Dạy Python cho Vũ Thu Hà', 5, '2026-10-04 15:30:00'),
-        (5, -1.0, 'Học Python từ Phạm Quang Minh', 5, '2026-10-04 15:30:00'),
-        (1, 2.0, 'nhiem_vu_cong_dong: Hỗ trợ số hóa tài liệu thư viện', None, '2026-10-05 11:00:00')
+        (3, 1.0, 'Dạy Toán cho Trần Thanh Bình', 1, '2026-09-28 15:00:00'),
+        (4, -1.0, 'Học Toán từ Nguyễn Hoàng An', 1, '2026-09-28 15:00:00'),
+        (4, 1.0, 'Dạy Đàn cho Lê Kim Chi', 2, '2026-09-29 16:30:00'),
+        (5, -1.0, 'Học Đàn từ Trần Thanh Bình', 2, '2026-09-29 16:30:00'),
+        (5, 1.0, 'Dạy Tiếng Anh cho Nguyễn Hoàng An', 3, '2026-10-01 17:00:00'),
+        (3, -1.0, 'Học Tiếng Anh từ Lê Kim Chi', 3, '2026-10-01 17:00:00'),
+        (3, 1.0, 'Dạy Toán cho Phạm Quang Minh', 4, '2026-10-03 10:00:00'),
+        (6, -1.0, 'Học Toán từ Nguyễn Hoàng An', 4, '2026-10-03 10:00:00'),
+        (6, 1.0, 'Dạy Python cho Vũ Thu Hà', 5, '2026-10-04 15:30:00'),
+        (7, -1.0, 'Học Python từ Phạm Quang Minh', 5, '2026-10-04 15:30:00'),
+        (3, 2.0, 'nhiem_vu_cong_dong: Hỗ trợ số hóa tài liệu thư viện', None, '2026-10-05 11:00:00')
     ]
     cur.executemany(
         "INSERT INTO credits_ledger (user_id, bien_dong, ly_do, session_id, thoi_gian) VALUES (?, ?, ?, ?, ?)",
@@ -205,11 +286,11 @@ def seed_demo_data(conn):
     
     # 5. Thêm đánh giá chất lượng (ratings)
     ratings = [
-        (1, 2, 1, 5, 'Anh An giảng Toán rất dễ hiểu, giải thích bài tập góc không gian siêu hay!'),
-        (2, 3, 2, 5, 'Bình dạy đàn kiên nhẫn, chỉ cách chuyển hợp âm rất dễ nhớ.'),
-        (3, 1, 3, 5, 'Chi phát âm chuẩn, sửa lỗi ngữ điệu cho mình rất nhiệt tình.'),
-        (4, 4, 1, 5, 'Buổi học rất bổ ích, mình đã tự tin làm được bài kiểm tra.'),
-        (5, 5, 4, 4, 'Minh chỉ code dễ hiểu, mong có thêm buổi học tiếp theo.')
+        (1, 4, 3, 5, 'Anh An giảng Toán rất dễ hiểu, giải thích bài tập góc không gian siêu hay!'),
+        (2, 5, 4, 5, 'Bình dạy đàn kiên nhẫn, chỉ cách chuyển hợp âm rất dễ nhớ.'),
+        (3, 3, 5, 5, 'Chi phát âm chuẩn, sửa lỗi ngữ điệu cho mình rất nhiệt tình.'),
+        (4, 6, 3, 5, 'Buổi học rất bổ ích, mình đã tự tin làm được bài kiểm tra.'),
+        (5, 7, 6, 4, 'Minh chỉ code dễ hiểu, mong có thêm buổi học tiếp theo.')
     ]
     cur.executemany(
         """INSERT INTO ratings 
@@ -218,13 +299,13 @@ def seed_demo_data(conn):
         ratings
     )
     
-    # 6. Ghi nhật ký AI minh bạch (ai_logs) - bao gồm goi_y_nhiem_vu, tro_ly_ao
+    # 6. Ghi nhật ký AI minh bạch (ai_logs)
     ai_logs = [
-        (1, 'dan_y_buoi_hoc', 'Soạn dàn ý buổi học Toán Hình học 12', 'Đã sinh cấu trúc 3 phần: Lý thuyết định nghĩa, bài tập mẫu và mẹo giải nhanh.', '2026-09-28 13:50:00'),
-        (2, 'dan_y_buoi_hoc', 'Soạn dàn ý hướng dẫn đệm đàn Guitar', 'Đã sinh danh sách hợp âm C, Am, Dm, G7 và bài tập bấm gam.', '2026-09-29 15:10:00'),
-        (3, 'kiem_duyet', 'Kiểm duyệt nội dung chia sẻ kỹ năng tiếng Anh', 'Nội dung giáo dục an toàn, tích cực, không vi phạm chuẩn mực sư phạm.', '2026-10-01 10:00:00'),
-        (1, 'goi_y_nhiem_vu', 'Gợi ý nhiệm vụ cộng đồng phù hợp học sinh', 'Đã đề xuất nhiệm vụ hỗ trợ số hóa sách thư viện dựa trên kỹ năng tin học.', '2026-10-05 08:30:00'),
-        (1, 'tro_ly_ao', 'Tư vấn lộ trình trao đổi kỹ năng học đường', 'Trợ lý ảo đã giải đáp thắc mắc về quy chế tín dụng thời gian cho học sinh.', '2026-10-05 09:15:00')
+        (3, 'dan_y_buoi_hoc', 'Soạn dàn ý buổi học Toán Hình học 12', 'Đã sinh cấu trúc 3 phần: Lý thuyết định nghĩa, bài tập mẫu và mẹo giải nhanh.', '2026-09-28 13:50:00'),
+        (4, 'dan_y_buoi_hoc', 'Soạn dàn ý hướng dẫn đệm đàn Guitar', 'Đã sinh danh sách hợp âm C, Am, Dm, G7 và bài tập bấm gam.', '2026-09-29 15:10:00'),
+        (5, 'kiem_duyet', 'Kiểm duyệt nội dung chia sẻ kỹ năng tiếng Anh', 'Nội dung giáo dục an toàn, tích cực, không vi phạm chuẩn mực sư phạm.', '2026-10-01 10:00:00'),
+        (3, 'goi_y_nhiem_vu', 'Gợi ý nhiệm vụ cộng đồng phù hợp học sinh', 'Đã đề xuất nhiệm vụ hỗ trợ số hóa sách thư viện dựa trên kỹ năng tin học.', '2026-10-05 08:30:00'),
+        (3, 'tro_ly_ao', 'Tư vấn lộ trình trao đổi kỹ năng học đường', 'Trợ lý ảo đã giải đáp thắc mắc về quy chế tín dụng thời gian cho học sinh.', '2026-10-05 09:15:00')
     ]
     cur.executemany(
         "INSERT INTO ai_logs (user_id, chuc_nang, input_tom_tat, output_text, thoi_gian) VALUES (?, ?, ?, ?, ?)",
@@ -233,8 +314,8 @@ def seed_demo_data(conn):
 
     # 7. Thêm nhiệm vụ cộng đồng mẫu (community_tasks)
     community_tasks = [
-        ('Hỗ trợ số hóa tài liệu thư viện trường', 'Quét và phân loại sách tham khảo vào hệ thống thư viện điện tử', 'Phòng Thư viện - Tầng 2', 2.0, 4, '2026-10-15', 6, 'mo', '2026-10-05 08:00:00'),
-        ('Phụ đạo Tin học văn phòng cho CLB Học tập', 'Hướng dẫn trình bày slide và bảng tính Excel căn bản', 'Phòng máy số 3', 1.5, 3, '2026-10-20', 6, 'mo', '2026-10-05 09:00:00')
+        ('Hỗ trợ số hóa tài liệu thư viện trường', 'Quét và phân loại sách tham khảo vào hệ thống thư viện điện tử', 'Phòng Thư viện - Tầng 2', 2.0, 4, '2026-10-15', 2, 'mo', '2026-10-05 08:00:00'),
+        ('Phụ đạo Tin học văn phòng cho CLB Học tập', 'Hướng dẫn trình bày slide và bảng tính Excel căn bản', 'Phòng máy số 3', 1.5, 3, '2026-10-20', 2, 'mo', '2026-10-05 09:00:00')
     ]
     cur.executemany(
         """INSERT INTO community_tasks 
@@ -245,7 +326,7 @@ def seed_demo_data(conn):
 
     # 8. Thêm đăng ký nhiệm vụ cộng đồng (task_registrations)
     task_regs = [
-        (1, 1, 'da_duyet', '2026-10-05 08:45:00')
+        (1, 3, 'da_duyet', '2026-10-05 08:45:00')
     ]
     cur.executemany(
         "INSERT INTO task_registrations (task_id, user_id, trang_thai, thoi_gian_dang_ky) VALUES (?, ?, ?, ?)",
@@ -254,8 +335,8 @@ def seed_demo_data(conn):
 
     # 9. Thêm tin nhắn Trợ lý ảo (chat_messages)
     chat_samples = [
-        (1, 'user', 'Em muốn học thêm kỹ năng giao tiếp tiếng Anh thì nên tìm bạn nào?', '2026-10-01 09:00:00'),
-        (1, 'assistant', 'Chào An! Dựa trên hệ thống, bạn Lê Kim Chi (10A3) đang chia sẻ kỹ năng Luyện phản xạ IELTS Speaking rất phù hợp với em nhé!', '2026-10-01 09:00:05')
+        (3, 'user', 'Em muốn học thêm kỹ năng giao tiếp tiếng Anh thì nên tìm bạn nào?', '2026-10-01 09:00:00'),
+        (3, 'assistant', 'Chào An! Dựa trên hệ thống, bạn Lê Kim Chi (10A3) đang chia sẻ kỹ năng Luyện phản xạ IELTS Speaking rất phù hợp với em nhé!', '2026-10-01 09:00:05')
     ]
     cur.executemany(
         "INSERT INTO chat_messages (user_id, vai_tro, noi_dung, thoi_gian) VALUES (?, ?, ?, ?)",
@@ -278,19 +359,15 @@ def get_realtime_stats(db):
     """
     cur = db.cursor()
     
-    # 1. Tổng số thành viên
     cur.execute("SELECT COUNT(*) FROM users WHERE vai_tro IN ('hoc_sinh', 'giao_vien')")
     tong_thanh_vien = cur.fetchone()[0]
     
-    # 2. Số phiên học đã hoàn thành
     cur.execute("SELECT COUNT(*) FROM sessions WHERE trang_thai = 'hoan_thanh'")
     phien_hoan_thanh = cur.fetchone()[0]
     
-    # 3. Tổng số giờ lưu thông (tính từ các phiên đã hoàn thành)
     cur.execute("SELECT COALESCE(SUM(so_gio), 0.0) FROM sessions WHERE trang_thai = 'hoan_thanh'")
     gio_luu_thong = cur.fetchone()[0]
     
-    # 4. Kỹ năng sẵn sàng trao đổi
     cur.execute("SELECT COUNT(*) FROM skills WHERE trang_thai_duyet = 'da_duyet'")
     ky_nang_san_sang = cur.fetchone()[0]
     
@@ -337,13 +414,7 @@ def get_top_tutors(db, limit=3):
 def index():
     """
     Trang chủ (Landing Page) của Ngân hàng Thời gian Học đường.
-    Bao gồm 6 khối chính:
-    1. Hero Banner: Logo, tên trường, khẩu hiệu sư phạm, nút tham gia
-    2. Mô hình hoạt động: 4 bước chuẩn sư phạm + ví dụ minh họa An - Bình - Chi
-    3. Số liệu realtime: Chỉ số thực tế trích xuất trực tiếp từ SQLite
-    4. Vinh danh tuần: Top 3 học sinh có giờ dạy cao nhất
-    5. Dành cho nhà trường: Triết lý Single-Tenant & Form đăng ký tư vấn
-    6. Footer: Thông tin trường, bản quyền và xác thực "Hỗ trợ bởi AI (Gemini)"
+    Gồm 6 khối chức năng sư phạm hoàn chỉnh.
     """
     db = get_db()
     stats = get_realtime_stats(db)
@@ -355,6 +426,267 @@ def index():
         top_tutors=top_tutors
     )
 
+
+# ------------------------------------------------------------------------------
+# MILESTONE M1: ĐĂNG KÝ, ĐĂNG NHẬP, ĐĂNG XUẤT, HỒ SƠ & PHÂN QUYỀN
+# ------------------------------------------------------------------------------
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    """
+    Đăng ký tài khoản học sinh mới:
+    - Thu thập: mã học sinh, họ tên, lớp, mật khẩu (được băm an toàn), giờ rảnh
+    - Cấp vốn khởi tạo mặc định: 2.0 giờ tín dụng
+    - Tự động ghi sổ cái (credits_ledger) đảm bảo tính minh bạch
+    """
+    if "user_id" in session:
+        return redirect(url_for("profile"))
+
+    if request.method == "POST":
+        ma_hoc_sinh = request.form.get("ma_hoc_sinh", "").strip()
+        ho_ten = request.form.get("ho_ten", "").strip()
+        lop = request.form.get("lop", "").strip()
+        gio_ranh = request.form.get("gio_ranh", "").strip()
+        mat_khau = request.form.get("mat_khau", "")
+        mat_khau_xac_nhan = request.form.get("mat_khau_xac_nhan", "")
+
+        # Kiểm tra tính hợp lệ của dữ liệu đầu vào
+        if not ma_hoc_sinh or not ho_ten or not mat_khau:
+            flash("Vui lòng điền đầy đủ các thông tin bắt buộc (*).", "danger")
+            return render_template("register.html")
+
+        if len(mat_khau) < 6:
+            flash("Mật khẩu phải có độ dài tối thiểu từ 6 ký tự trở lên.", "danger")
+            return render_template("register.html")
+
+        if mat_khau != mat_khau_xac_nhan:
+            flash("Mật khẩu xác nhận không khớp với mật khẩu đã nhập.", "danger")
+            return render_template("register.html")
+
+        db = get_db()
+        cur = db.cursor()
+
+        # Kiểm tra xem mã học sinh đã tồn tại chưa
+        cur.execute("SELECT id FROM users WHERE ma_hoc_sinh = ?", (ma_hoc_sinh,))
+        if cur.fetchone():
+            flash("Mã học sinh đã tồn tại trong hệ thống. Vui lòng kiểm tra lại!", "danger")
+            return render_template("register.html")
+
+        # Băm mật khẩu và tạo người dùng mới với số dư khởi đầu 2.0h
+        hashed_password = generate_password_hash(mat_khau)
+        initial_balance = 2.0
+
+        cur.execute(
+            """INSERT INTO users (ma_hoc_sinh, ho_ten, lop, vai_tro, so_du_gio, gio_ranh, mat_khau)
+               VALUES (?, ?, ?, 'hoc_sinh', ?, ?, ?)""",
+            (ma_hoc_sinh, ho_ten, lop, initial_balance, gio_ranh, hashed_password)
+        )
+        new_user_id = cur.lastrowid
+
+        # Ghi nhận vào sổ cái tín dụng (credits_ledger - nguyên tắc append-only)
+        cur.execute(
+            """INSERT INTO credits_ledger (user_id, bien_dong, ly_do, session_id)
+               VALUES (?, ?, 'Khoản vốn tín dụng khởi đầu mở sổ học đường', NULL)""",
+            (new_user_id, initial_balance)
+        )
+        db.commit()
+
+        # Tự động đăng nhập vào session sau khi đăng ký thành công
+        session["user_id"] = new_user_id
+        session["ma_hoc_sinh"] = ma_hoc_sinh
+        session["ho_ten"] = ho_ten
+        session["vai_tro"] = "hoc_sinh"
+        session["lop"] = lop
+        session["so_du_gio"] = initial_balance
+
+        flash("Chúc mừng bạn đã mở sổ thành công và nhận ngay 2.0 giờ tín dụng!", "success")
+        return redirect(url_for("profile"))
+
+    return render_template("register.html")
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    """
+    Đăng nhập hệ thống:
+    - Xác thực mã đăng nhập và mật khẩu băm
+    - Báo lỗi tiếng Việt rõ ràng khi sai thông tin
+    - Chuyển hướng đúng vai trò (Admin -> /admin, Học sinh/Giáo viên -> /profile)
+    """
+    if "user_id" in session:
+        if session.get("vai_tro") == "admin":
+            return redirect(url_for("admin_dashboard"))
+        return redirect(url_for("profile"))
+
+    if request.method == "POST":
+        ma_hoc_sinh = request.form.get("ma_hoc_sinh", "").strip()
+        mat_khau = request.form.get("mat_khau", "")
+
+        db = get_db()
+        cur = db.cursor()
+        cur.execute("SELECT * FROM users WHERE ma_hoc_sinh = ?", (ma_hoc_sinh,))
+        user = cur.fetchone()
+
+        # Kiểm tra người dùng và so khớp mật khẩu băm
+        if not user or not user["mat_khau"] or not check_password_hash(user["mat_khau"], mat_khau):
+            flash("Mã đăng nhập hoặc mật khẩu không chính xác!", "danger")
+            return render_template("login.html"), 401
+
+        # Lưu thông tin định danh vào Flask session
+        session["user_id"] = user["id"]
+        session["ma_hoc_sinh"] = user["ma_hoc_sinh"]
+        session["ho_ten"] = user["ho_ten"]
+        session["vai_tro"] = user["vai_tro"]
+        session["lop"] = user["lop"]
+        session["so_du_gio"] = user["so_du_gio"]
+
+        flash(f"Đăng nhập thành công! Xin chào {user['ho_ten']}.", "success")
+
+        # Chuyển hướng phù hợp theo vai trò
+        next_url = request.args.get("next")
+        if next_url:
+            return redirect(next_url)
+
+        if user["vai_tro"] == "admin":
+            return redirect(url_for("admin_dashboard"))
+        return redirect(url_for("profile"))
+
+    return render_template("login.html")
+
+
+@app.route("/logout")
+def logout():
+    """
+    Đăng xuất: Xóa toàn bộ dữ liệu phiên và trở về trang chủ.
+    """
+    session.clear()
+    flash("Bạn đã đăng xuất khỏi hệ thống thành công.", "info")
+    return redirect(url_for("index"))
+
+
+@app.route("/profile")
+@login_required
+def profile():
+    """
+    Trang hồ sơ cá nhân của người dùng:
+    - Hiển thị họ tên, lớp, vai trò, thời gian rảnh
+    - Hiển thị số dư giờ thời gian thực
+    - Liệt kê lịch sử biến động từ Sổ cái tín dụng (credits_ledger)
+    - Liệt kê các kỹ năng học sinh đã đăng ký
+    """
+    db = get_db()
+    cur = db.cursor()
+    
+    # Lấy thông tin mới nhất từ cơ sở dữ liệu
+    cur.execute("SELECT * FROM users WHERE id = ?", (session["user_id"],))
+    user = cur.fetchone()
+    
+    if not user:
+        session.clear()
+        return redirect(url_for("login"))
+        
+    # Cập nhật lại số dư trong session
+    session["so_du_gio"] = user["so_du_gio"]
+
+    # Lấy lịch sử biến động tín dụng (credits_ledger)
+    cur.execute(
+        "SELECT * FROM credits_ledger WHERE user_id = ? ORDER BY id DESC LIMIT 15",
+        (user["id"],)
+    )
+    ledger_entries = cur.fetchall()
+
+    # Lấy danh sách kỹ năng đã đăng ký
+    cur.execute(
+        "SELECT * FROM skills WHERE user_id = ? ORDER BY id DESC",
+        (user["id"],)
+    )
+    my_skills = cur.fetchall()
+
+    return render_template(
+        "profile.html",
+        user=user,
+        ledger_entries=ledger_entries,
+        my_skills=my_skills
+    )
+
+
+@app.route("/admin")
+@admin_required
+def admin_dashboard():
+    """
+    Bảng điều khiển Quản trị hệ thống (/admin):
+    - CHỈ ADMIN mới có quyền truy cập. Học sinh và giáo viên bị chặn 403 Forbidden.
+    - Thống kê toàn trường: người dùng, số học sinh mở sổ, tổng giờ lưu thông
+    - Quản lý danh sách tài khoản người dùng
+    """
+    db = get_db()
+    cur = db.cursor()
+
+    # Lấy danh sách toàn bộ người dùng
+    cur.execute("SELECT * FROM users ORDER BY id ASC")
+    all_users = cur.fetchall()
+
+    # Thống kê nhanh
+    student_count = sum(1 for u in all_users if u["vai_tro"] == "hoc_sinh")
+    total_credits = sum(u["so_du_gio"] for u in all_users if u["vai_tro"] == "hoc_sinh")
+
+    cur.execute("SELECT COUNT(*) FROM skills WHERE trang_thai_duyet = 'cho_duyet'")
+    pending_skills_count = cur.fetchone()[0]
+
+    return render_template(
+        "admin.html",
+        users=all_users,
+        student_count=student_count,
+        total_credits=total_credits,
+        pending_skills_count=pending_skills_count
+    )
+
+
+@app.route("/skills/approve")
+@teacher_or_admin_required
+def skills_approval():
+    """
+    Khu vực duyệt kỹ năng:
+    - CHỈ GIÁO VIÊN VÀ ADMIN có quyền truy cập. Học sinh bị chặn 403 Forbidden.
+    - Liệt kê các kỹ năng học sinh đăng ký và lý do kiểm duyệt từ AI (Gemini).
+    """
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("""
+        SELECT s.*, u.ho_ten, u.ma_hoc_sinh, u.lop
+        FROM skills s
+        JOIN users u ON s.user_id = u.id
+        ORDER BY CASE WHEN s.trang_thai_duyet = 'cho_duyet' THEN 0 ELSE 1 END, s.id DESC
+    """)
+    skills_list = cur.fetchall()
+
+    return render_template("skills_approval.html", skills=skills_list)
+
+
+@app.route("/skills/approve/<int:skill_id>/<action>", methods=["POST"])
+@teacher_or_admin_required
+def approve_skill_action(skill_id, action):
+    """
+    Xử lý thao tác duyệt hoặc từ chối kỹ năng từ Giáo viên / Admin:
+    - action: 'da_duyet' hoặc 'tu_choi'
+    """
+    if action not in ("da_duyet", "tu_choi"):
+        flash("Hành động không hợp lệ.", "danger")
+        return redirect(url_for("skills_approval"))
+
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("UPDATE skills SET trang_thai_duyet = ? WHERE id = ?", (action, skill_id))
+    db.commit()
+
+    action_label = "phê duyệt" if action == "da_duyet" else "từ chối"
+    flash(f"Đã {action_label} kỹ năng #{skill_id} thành công.", "success")
+    return redirect(url_for("skills_approval"))
+
+
+# ------------------------------------------------------------------------------
+# CÁC API HỖ TRỢ VÀ LIÊN HỆ
+# ------------------------------------------------------------------------------
 
 @app.route("/api/stats")
 def api_stats():
@@ -398,6 +730,7 @@ if __name__ == "__main__":
     print("🏫 TIMEBANK EDU - NGÂN HÀNG THỜI GIAN HỌC ĐƯỜNG")
     print(f"📍 Đơn vị: {config.get('ten_truong')}")
     print("🚀 Máy chủ đang khởi động tại: http://127.0.0.1:5000")
+    print("🔑 Tài khoản quản trị mặc định: admin / admin123")
     print("=" * 70)
     
     # Khởi chạy Flask Server trên cổng 5000

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Đăng ký tài khoản - {{ config.ten_truong }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6">
+      <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="card-header bg-white border-0 pt-4 pb-2 text-center">
+          <div class="badge bg-success bg-opacity-10 text-success fw-semibold px-3 py-2 rounded-pill mb-2">
+            <i class="bi bi-gift-fill me-1"></i> TẶNG NGAY 2.0 GIỜ TÍN DỤNG KHI MỞ SỔ
+          </div>
+          <h4 class="fw-bold text-dark mb-1">Mở sổ Ngân hàng Thời gian</h4>
+          <p class="text-muted small mb-0">Dành cho học sinh {{ config.ten_truong }}</p>
+        </div>
+
+        <div class="card-body p-4 p-md-5 pt-3">
+          <form method="POST" action="{{ url_for('register') }}">
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label for="ma_hoc_sinh" class="form-label small fw-semibold">Mã học sinh <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light"><i class="bi bi-person-vcard"></i></span>
+                  <input type="text" class="form-control" id="ma_hoc_sinh" name="ma_hoc_sinh" placeholder="VD: HS10009" required value="{{ request.form.get('ma_hoc_sinh', '') }}">
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="lop" class="form-label small fw-semibold">Lớp học <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light"><i class="bi bi-mortarboard"></i></span>
+                  <input type="text" class="form-control" id="lop" name="lop" placeholder="VD: 10A1, 11B2..." required value="{{ request.form.get('lop', '') }}">
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="ho_ten" class="form-label small fw-semibold">Họ và tên học sinh <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-person"></i></span>
+                <input type="text" class="form-control" id="ho_ten" name="ho_ten" placeholder="Nhập đầy đủ họ và tên..." required value="{{ request.form.get('ho_ten', '') }}">
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="gio_ranh" class="form-label small fw-semibold">Khung giờ rảnh dự kiến (AI hỗ trợ ghép cặp)</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-clock-history"></i></span>
+                <input type="text" class="form-control" id="gio_ranh" name="gio_ranh" placeholder="VD: Chiều thứ 4, sáng thứ 7, tối CN..." value="{{ request.form.get('gio_ranh', '') }}">
+              </div>
+              <div class="form-text small text-muted"><span class="badge-ai" style="font-size: 0.68rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Gemini)</span> để tự động đề xuất lịch học thích hợp.</div>
+            </div>
+
+            <div class="row g-3 mb-4">
+              <div class="col-md-6">
+                <label for="mat_khau" class="form-label small fw-semibold">Mật khẩu <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light"><i class="bi bi-lock"></i></span>
+                  <input type="password" class="form-control" id="mat_khau" name="mat_khau" placeholder="Tối thiểu 6 ký tự" minlength="6" required>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="mat_khau_xac_nhan" class="form-label small fw-semibold">Xác nhận mật khẩu <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light"><i class="bi bi-check2-circle"></i></span>
+                  <input type="password" class="form-control" id="mat_khau_xac_nhan" name="mat_khau_xac_nhan" placeholder="Nhập lại mật khẩu" minlength="6" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="alert alert-info py-2 px-3 small d-flex align-items-center gap-2 mb-4">
+              <i class="bi bi-shield-check fs-5 text-primary"></i>
+              <div>
+                <strong>Chính sách số dư ban đầu:</strong> Ngay sau khi mở sổ, hệ thống tự động cấp vốn <strong>2.0 giờ tín dụng</strong> vào sổ cái để bạn sẵn sàng đăng ký học kỹ năng mới.
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-brand w-100 py-2 fw-semibold">
+              <i class="bi bi-person-check me-1"></i> Hoàn tất đăng ký & Nhận 2.0h
+            </button>
+          </form>
+
+          <div class="mt-4 pt-3 border-top text-center">
+            <p class="small text-muted mb-0">Đã có tài khoản? <a href="{{ url_for('login') }}" class="fw-semibold text-primary">Đăng nhập tại đây</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

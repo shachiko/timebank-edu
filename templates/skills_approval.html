@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Duyệt kỹ năng học sinh - {{ config.ten_truong }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+      <span class="badge bg-primary mb-1"><i class="bi bi-mortarboard-fill me-1"></i> Quyền Giáo viên & Quản trị viên</span>
+      <h2 class="fw-bold mb-0 text-dark">Kiểm duyệt Kỹ năng Học đường</h2>
+      <p class="text-muted small mb-0">Thầy/Cô thẩm định nội dung học sinh đăng ký chia sẻ trước khi kết nối</p>
+    </div>
+    <div>
+      <span class="badge-ai"><i class="bi bi-stars"></i> Kiểm duyệt sơ bộ bởi AI (Gemini)</span>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+    <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+      <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-list-check me-2 text-primary"></i>Danh sách Kỹ năng Đăng ký</h5>
+      <span class="badge bg-light text-dark border">Tổng số: {{ skills|length }}</span>
+    </div>
+
+    <div class="card-body p-0">
+      {% if skills %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light small text-muted">
+            <tr>
+              <th scope="col" class="ps-3">ID</th>
+              <th scope="col">Học sinh đăng ký</th>
+              <th scope="col">Lĩnh vực & Tiêu đề</th>
+              <th scope="col">Lý do gợi ý từ AI</th>
+              <th scope="col">Trạng thái</th>
+              <th scope="col" class="text-end pe-3">Thao tác duyệt</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in skills %}
+            <tr>
+              <td class="ps-3 small text-muted">#{{ item.id }}</td>
+              <td>
+                <span class="fw-semibold text-dark d-block">{{ item.ho_ten }}</span>
+                <small class="text-muted">Mã: <code>{{ item.ma_hoc_sinh }}</code> • Lớp: {{ item.lop }}</small>
+              </td>
+              <td>
+                <span class="badge bg-light text-secondary border mb-1">{{ item.linh_vuc }}</span>
+                <div class="fw-bold text-dark">{{ item.tieu_de }}</div>
+                <small class="text-muted d-block text-truncate" style="max-width: 280px;">{{ item.mo_ta }}</small>
+              </td>
+              <td>
+                {% if item.ly_do_ai_kiem_duyet %}
+                  <div class="small text-muted p-2 rounded bg-light border" style="font-size: 0.8rem;">
+                    <i class="bi bi-robot text-primary me-1"></i>{{ item.ly_do_ai_kiem_duyet }}
+                  </div>
+                {% else %}
+                  <span class="small text-muted fst-italic">Chưa có đánh giá</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if item.trang_thai_duyet == 'da_duyet' %}
+                  <span class="badge bg-success">Đã duyệt</span>
+                {% elif item.trang_thai_duyet == 'tu_choi' %}
+                  <span class="badge bg-danger">Từ chối</span>
+                {% else %}
+                  <span class="badge bg-warning text-dark">Chờ duyệt</span>
+                {% endif %}
+              </td>
+              <td class="text-end pe-3">
+                <div class="btn-group btn-group-sm" role="group">
+                  <form method="POST" action="{{ url_for('approve_skill_action', skill_id=item.id, action='da_duyet') }}" class="d-inline">
+                    <button type="submit" class="btn btn-outline-success btn-sm me-1" {% if item.trang_thai_duyet == 'da_duyet' %}disabled{% endif %}>
+                      <i class="bi bi-check-lg"></i> Duyệt
+                    </button>
+                  </form>
+                  <form method="POST" action="{{ url_for('approve_skill_action', skill_id=item.id, action='tu_choi') }}" class="d-inline">
+                    <button type="submit" class="btn btn-outline-danger btn-sm" {% if item.trang_thai_duyet == 'tu_choi' %}disabled{% endif %}>
+                      <i class="bi bi-x-lg"></i> Từ chối
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-5 text-muted">
+        <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+        Hiện tại không có kỹ năng nào trong danh sách.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

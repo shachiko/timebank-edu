@@ -36,7 +36,9 @@ class TestMilestoneM0(unittest.TestCase):
             except Exception:
                 pass
         init_db()
-        cls.client = app.test_client()
+
+    def setUp(self):
+        self.client = app.test_client()
 
     def test_case_1_schema_has_all_13_tables(self):
         """Test Case 1: Kiểm tra cơ sở dữ liệu SQLite có chính xác đủ 13 bảng bắt buộc."""

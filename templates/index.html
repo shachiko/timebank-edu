@@ -27,11 +27,20 @@
         </p>
 
         <div class="d-flex flex-wrap align-items-center gap-3">
-          <button type="button" class="btn btn-brand btn-lg" data-bs-toggle="modal" data-bs-target="#loginModal">
-            <i class="bi bi-rocket-takeoff-fill me-2"></i> Tham gia ngay
-          </button>
-          <a href="#mo-hinh" class="btn btn-outline-brand btn-lg">
-            <i class="bi bi-lightbulb me-2"></i> Khám phá mô hình
+          {% if current_user %}
+            <a href="{{ url_for('profile') }}" class="btn btn-brand btn-lg">
+              <i class="bi bi-wallet2 me-2"></i> Vào sổ tín dụng ({{ "%.1f"|format(current_user.so_du_gio) }}h)
+            </a>
+          {% else %}
+            <a href="{{ url_for('register') }}" class="btn btn-brand btn-lg">
+              <i class="bi bi-rocket-takeoff-fill me-2"></i> Tham gia ngay (+2.0h)
+            </a>
+            <a href="{{ url_for('login') }}" class="btn btn-outline-brand btn-lg">
+              <i class="bi bi-box-arrow-in-right me-2"></i> Đăng nhập
+            </a>
+          {% endif %}
+          <a href="#mo-hinh" class="btn btn-link text-decoration-none text-muted">
+            <i class="bi bi-lightbulb me-1"></i> Khám phá mô hình
           </a>
         </div>
 
@@ -271,7 +280,7 @@
   <div class="container py-3">
     <div class="row g-5 align-items-center">
       <div class="col-lg-6">
-        <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold px-3 py-2 rounded-pill mb-3">MÔ HÌNH DÀNH CHO NHÀ TRƯỜNG</span>
+        <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold px-3 py-2 rounded-pill mb-3">Dành cho nhà trường</span>
         <h2 class="fw-bold display-6 mb-3">Giải pháp sư phạm độc lập cho từng trường học</h2>
         <p class="text-secondary">
           TimeBank EDU được thiết kế theo kiến trúc <strong>Single-Tenant</strong> — Mỗi trường học sở hữu một không gian độc lập, 

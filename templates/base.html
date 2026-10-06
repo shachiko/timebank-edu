@@ -51,25 +51,78 @@
       <div class="collapse navbar-collapse" id="navbarContent">
         <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center gap-lg-3">
           <li class="nav-item">
-            <a class="nav-link" href="#mo-hinh"><i class="bi bi-diagram-3 me-1"></i>Mô hình hoạt động</a>
+            <a class="nav-link" href="{{ url_for('index') }}#mo-hinh"><i class="bi bi-diagram-3 me-1"></i>Mô hình</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#so-lieu"><i class="bi bi-graph-up-arrow me-1"></i>Số liệu</a>
+            <a class="nav-link" href="{{ url_for('index') }}#so-lieu"><i class="bi bi-graph-up-arrow me-1"></i>Số liệu</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#vinh-danh"><i class="bi bi-trophy me-1"></i>Vinh danh tuần</a>
+            <a class="nav-link" href="{{ url_for('index') }}#vinh-danh"><i class="bi bi-trophy me-1"></i>Vinh danh</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#nha-truong"><i class="bi bi-building me-1"></i>Dành cho nhà trường</a>
+            <a class="nav-link" href="{{ url_for('index') }}#nha-truong"><i class="bi bi-building me-1"></i>Nhà trường</a>
           </li>
-          <li class="nav-item d-none d-lg-block">
+          <li class="nav-item d-none d-xl-block">
             <span class="badge-ai"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Gemini)</span>
           </li>
-          <li class="nav-item mt-2 mt-lg-0">
-            <button class="btn btn-brand btn-sm w-100 px-3 py-2" data-bs-toggle="modal" data-bs-target="#loginModal">
-              <i class="bi bi-box-arrow-in-right me-1"></i> Đăng nhập
-            </button>
-          </li>
+
+          {% if current_user %}
+            <!-- Menu người dùng đã đăng nhập -->
+            <li class="nav-item dropdown mt-2 mt-lg-0">
+              <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 p-1 px-2 rounded-pill bg-light border text-dark fw-semibold" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <span class="badge rounded-circle bg-primary text-white" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;">
+                  {{ current_user.ho_ten[0] | upper }}
+                </span>
+                <span>{{ current_user.ho_ten }}</span>
+                <span class="badge bg-success text-white py-1 px-2" style="font-size: 0.75rem;">
+                  <i class="bi bi-clock-history me-1"></i>{{ "%.1f"|format(current_user.so_du_gio) }}h
+                </span>
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 mt-2">
+                <li>
+                  <div class="px-3 py-2 border-bottom">
+                    <div class="fw-bold text-dark">{{ current_user.ho_ten }}</div>
+                    <small class="text-muted">Mã: <code>{{ current_user.ma_hoc_sinh }}</code> ({{ current_user.vai_tro }})</small>
+                  </div>
+                </li>
+                <li>
+                  <a class="dropdown-item py-2" href="{{ url_for('profile') }}">
+                    <i class="bi bi-person-circle text-primary me-2"></i>Hồ sơ cá nhân & Sổ cái
+                  </a>
+                </li>
+                {% if current_user.vai_tro in ('giao_vien', 'admin') %}
+                <li>
+                  <a class="dropdown-item py-2" href="{{ url_for('skills_approval') }}">
+                    <i class="bi bi-check2-square text-success me-2"></i>Duyệt kỹ năng học sinh
+                  </a>
+                </li>
+                {% endif %}
+                {% if current_user.vai_tro == 'admin' %}
+                <li>
+                  <a class="dropdown-item py-2" href="{{ url_for('admin_dashboard') }}">
+                    <i class="bi bi-speedometer2 text-danger me-2"></i>Bảng điều khiển Quản trị (Admin)
+                  </a>
+                </li>
+                {% endif %}
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                  <a class="dropdown-item py-2 text-danger" href="{{ url_for('logout') }}">
+                    <i class="bi bi-box-arrow-right me-2"></i>Đăng xuất
+                  </a>
+                </li>
+              </ul>
+            </li>
+          {% else %}
+            <!-- Nút Đăng nhập & Đăng ký khi chưa đăng nhập -->
+            <li class="nav-item d-flex gap-2 mt-2 mt-lg-0">
+              <a href="{{ url_for('login') }}" class="btn btn-outline-brand btn-sm px-3">
+                <i class="bi bi-box-arrow-in-right me-1"></i> Đăng nhập
+              </a>
+              <a href="{{ url_for('register') }}" class="btn btn-brand btn-sm px-3">
+                <i class="bi bi-person-plus me-1"></i> Đăng ký
+              </a>
+            </li>
+          {% endif %}
         </ul>
       </div>
     </div>

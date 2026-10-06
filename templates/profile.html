@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Hồ sơ cá nhân - {{ user.ho_ten }} - {{ config.ten_truong }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Thẻ định danh & Số dư giờ -->
+  <div class="row g-4 mb-4">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
+        <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-3">
+          <div class="position-relative">
+            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold fs-2" style="width: 72px; height: 72px;">
+              {{ user.ho_ten[0] | upper }}
+            </div>
+            <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-success border border-white p-1">
+              <span class="visually-hidden">Trực tuyến</span>
+            </span>
+          </div>
+
+          <div class="flex-grow-1">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+              <h3 class="fw-bold mb-0 text-dark">{{ user.ho_ten }}</h3>
+              {% if user.vai_tro == 'admin' %}
+                <span class="badge bg-danger"><i class="bi bi-shield-fill-check me-1"></i> Quản trị viên</span>
+              {% elif user.vai_tro == 'giao_vien' %}
+                <span class="badge bg-primary"><i class="bi bi-mortarboard-fill me-1"></i> Giáo viên</span>
+              {% else %}
+                <span class="badge bg-success"><i class="bi bi-person-fill me-1"></i> Học sinh</span>
+              {% endif %}
+            </div>
+            
+            <p class="text-muted small mb-2">
+              <i class="bi bi-person-vcard me-1"></i>Mã định danh: <code>{{ user.ma_hoc_sinh }}</code>
+              {% if user.lop %} • <i class="bi bi-building me-1"></i>Lớp/Đơn vị: <strong>{{ user.lop }}</strong>{% endif %}
+              • <i class="bi bi-geo-alt me-1"></i>{{ config.ten_truong }}
+            </p>
+
+            <div class="small text-secondary">
+              <i class="bi bi-clock-history me-1 text-primary"></i>Khung giờ rảnh: 
+              <strong>{{ user.gio_ranh if user.gio_ranh else 'Chưa cập nhật' }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hộp số dư tín dụng thời gian -->
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 p-4 h-100 text-white" style="background: linear-gradient(135deg, var(--brand-color), #3b82f6);">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <span class="small text-white-50 text-uppercase fw-semibold"><i class="bi bi-wallet2 me-1"></i> Sổ dư Tín dụng Thời gian</span>
+          <span class="badge bg-white bg-opacity-25 text-white">1h dạy = 1 credit</span>
+        </div>
+
+        <div class="d-flex align-items-baseline gap-2 my-2">
+          <span class="display-4 fw-extrabold">{{ "%.1f"|format(user.so_du_gio) }}</span>
+          <span class="fs-5 text-white-50">giờ</span>
+        </div>
+
+        <div class="small text-white-50 mt-auto pt-2 border-top border-white border-opacity-25">
+          <i class="bi bi-shield-lock me-1"></i> Được bảo chứng bởi Sổ cái bất biến (credits_ledger)
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Cột 1: Lịch sử biến động sổ cái tín dụng (credits_ledger) -->
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-journal-text text-primary me-2"></i>Nhật ký Biến động Sổ cái Tín dụng</h5>
+          <span class="badge bg-light text-muted border">Chỉ ghi tăng/giảm</span>
+        </div>
+
+        {% if ledger_entries %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light small text-muted">
+              <tr>
+                <th scope="col">Thời gian</th>
+                <th scope="col">Nội dung / Lý do</th>
+                <th scope="col" class="text-end">Biến động</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in ledger_entries %}
+              <tr>
+                <td class="small text-muted text-nowrap">{{ item.thoi_gian }}</td>
+                <td>
+                  <span class="small fw-medium text-dark">{{ item.ly_do }}</span>
+                  {% if item.session_id %}
+                    <span class="badge bg-light text-secondary border ms-1">Phiên #{{ item.session_id }}</span>
+                  {% endif %}
+                </td>
+                <td class="text-end fw-bold text-nowrap">
+                  {% if item.bien_dong > 0 %}
+                    <span class="text-success"><i class="bi bi-plus-circle-fill me-1"></i>+{{ "%.1f"|format(item.bien_dong) }}h</span>
+                  {% else %}
+                    <span class="text-danger"><i class="bi bi-dash-circle-fill me-1"></i>{{ "%.1f"|format(item.bien_dong) }}h</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4 text-muted small">
+          <i class="bi bi-inbox fs-3 d-block mb-1"></i>
+          Chưa có biến động tín dụng nào được ghi nhận.
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Cột 2: Kỹ năng đã đăng ký & Tiện ích -->
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-stars text-warning me-2"></i>Kỹ năng của tôi</h6>
+          <span class="badge bg-primary bg-opacity-10 text-primary">{{ my_skills|length }}</span>
+        </div>
+
+        {% if my_skills %}
+          <div class="list-group list-group-flush">
+            {% for sk in my_skills %}
+            <div class="list-group-item px-0 py-2">
+              <div class="d-flex justify-content-between align-items-start mb-1">
+                <span class="fw-semibold small text-dark">{{ sk.tieu_de }}</span>
+                {% if sk.trang_thai_duyet == 'da_duyet' %}
+                  <span class="badge bg-success-subtle text-success small">Đã duyệt</span>
+                {% elif sk.trang_thai_duyet == 'tu_choi' %}
+                  <span class="badge bg-danger-subtle text-danger small">Từ chối</span>
+                {% else %}
+                  <span class="badge bg-warning-subtle text-warning small">Chờ duyệt</span>
+                {% endif %}
+              </div>
+              <small class="text-muted d-block">{{ sk.linh_vuc }}</small>
+            </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-muted small mb-3">Bạn chưa đăng ký kỹ năng nào để chia sẻ cùng bạn bè.</p>
+        {% endif %}
+
+        <div class="mt-3 pt-2 border-top">
+          {% if user.vai_tro in ('giao_vien', 'admin') %}
+            <a href="{{ url_for('skills_approval') }}" class="btn btn-outline-primary btn-sm w-100 mb-2">
+              <i class="bi bi-check2-circle me-1"></i> Khu vực Duyệt Kỹ Năng
+            </a>
+          {% endif %}
+          {% if user.vai_tro == 'admin' %}
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-danger btn-sm w-100">
+              <i class="bi bi-gear-fill me-1"></i> Bảng điều khiển Quản trị (Admin)
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

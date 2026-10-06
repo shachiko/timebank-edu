@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Bảng điều khiển Quản trị - {{ config.ten_truong }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+      <span class="badge bg-danger mb-1"><i class="bi bi-shield-lock-fill me-1"></i> Khu vực Quản trị viên Tối cao</span>
+      <h2 class="fw-bold mb-0 text-dark">Hệ thống Quản trị Nhà trường</h2>
+      <p class="text-muted small mb-0">{{ config.ten_truong }} — Bản cài đặt độc lập (Single-Tenant)</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('skills_approval') }}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-patch-check me-1"></i> Duyệt Kỹ Năng
+      </a>
+      <a href="{{ url_for('profile') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-person me-1"></i> Hồ sơ của tôi
+      </a>
+    </div>
+  </div>
+
+  <!-- Thống kê nhanh cấp trường -->
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <span class="text-muted small">Tổng người dùng</span>
+            <h3 class="fw-bold mb-0 text-primary">{{ users|length }}</h3>
+          </div>
+          <div class="p-3 bg-primary bg-opacity-10 text-primary rounded-3">
+            <i class="bi bi-people-fill fs-4"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-3">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <span class="text-muted small">Học sinh mở sổ</span>
+            <h3 class="fw-bold mb-0 text-success">{{ student_count }}</h3>
+          </div>
+          <div class="p-3 bg-success bg-opacity-10 text-success rounded-3">
+            <i class="bi bi-backpack-fill fs-4"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-3">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <span class="text-muted small">Tổng giờ trong hệ thống</span>
+            <h3 class="fw-bold mb-0 text-warning">{{ "%.1f"|format(total_credits) }}h</h3>
+          </div>
+          <div class="p-3 bg-warning bg-opacity-10 text-warning rounded-3">
+            <i class="bi bi-wallet2 fs-4"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-3">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <span class="text-muted small">Kỹ năng chờ duyệt</span>
+            <h3 class="fw-bold mb-0 text-danger">{{ pending_skills_count }}</h3>
+          </div>
+          <div class="p-3 bg-danger bg-opacity-10 text-danger rounded-3">
+            <i class="bi bi-hourglass-top fs-4"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Danh sách người dùng -->
+  <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+    <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+      <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-table me-2 text-primary"></i>Danh sách Tài khoản Người dùng</h5>
+      <span class="badge bg-light text-dark border">Cập nhật theo CSDL</span>
+    </div>
+
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light small text-muted">
+            <tr>
+              <th scope="col" class="ps-3">ID</th>
+              <th scope="col">Mã định danh</th>
+              <th scope="col">Họ và tên</th>
+              <th scope="col">Lớp / Bộ môn</th>
+              <th scope="col">Vai trò</th>
+              <th scope="col" class="text-end">Số dư giờ</th>
+              <th scope="col">Khung giờ rảnh</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for u in users %}
+            <tr>
+              <td class="ps-3 small text-muted">#{{ u.id }}</td>
+              <td><code>{{ u.ma_hoc_sinh }}</code></td>
+              <td class="fw-semibold text-dark">{{ u.ho_ten }}</td>
+              <td class="small">{{ u.lop if u.lop else '—' }}</td>
+              <td>
+                {% if u.vai_tro == 'admin' %}
+                  <span class="badge bg-danger">Quản trị viên</span>
+                {% elif u.vai_tro == 'giao_vien' %}
+                  <span class="badge bg-primary">Giáo viên</span>
+                {% else %}
+                  <span class="badge bg-success">Học sinh</span>
+                {% endif %}
+              </td>
+              <td class="text-end fw-bold text-nowrap">
+                <span class="text-success">{{ "%.1f"|format(u.so_du_gio) }}h</span>
+              </td>
+              <td class="small text-muted">{{ u.gio_ranh if u.gio_ranh else '—' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
