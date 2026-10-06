@@ -173,9 +173,10 @@ def ai_matchmake(db, user_id, mon_hoc, trinh_do, gio_ranh, candidates):
     if is_live:
         candidates_info = []
         for idx, c in enumerate(candidates[:8]):
+            cand_ranh = c['gio_ranh'] if c['gio_ranh'] else 'Linh hoạt'
             candidates_info.append(
                 f"- Ứng viên #{c['id']} (Gia sư: {c['ho_ten']}, Lớp {c['lop']}): "
-                f"Kỹ năng '{c['tieu_de']}', Lĩnh vực '{c['linh_vuc']}', Đánh giá {c['sao_tb']} sao, Giờ rảnh: '{c.get('gio_ranh', 'Linh hoạt')}'"
+                f"Kỹ năng '{c['tieu_de']}', Lĩnh vực '{c['linh_vuc']}', Đánh giá {c['sao_tb']} sao, Giờ rảnh: '{cand_ranh}'"
             )
             
         prompt = f"""

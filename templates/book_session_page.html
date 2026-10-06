@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Đặt lịch học kèm - {{ skill.tieu_de }} - {{ config.ten_truong }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <!-- Nút quay lại -->
+      <div class="mb-3">
+        <a href="{{ url_for('profile') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+          <i class="bi bi-arrow-left me-1"></i> Quay lại Dashboard
+        </a>
+      </div>
+
+      <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+        <div class="card-header bg-white border-bottom p-4">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold px-2 py-1">
+              {{ skill.linh_vuc }}
+            </span>
+            <span class="badge bg-warning bg-opacity-25 text-dark fw-bold px-2 py-1">
+              <i class="bi bi-star-fill text-warning me-1"></i>{{ skill.sao_tb }}★
+            </span>
+            <span class="badge-ai" style="font-size: 0.72rem;"><i class="bi bi-stars"></i> Gợi ý tự động từ AI</span>
+          </div>
+          <h4 class="fw-bold text-dark mb-1">{{ skill.tieu_de }}</h4>
+          <p class="text-muted small mb-0">{{ skill.mo_ta }}</p>
+        </div>
+
+        <div class="card-body p-4">
+          <!-- Thông tin bạn gia sư -->
+          <div class="p-3 rounded-4 bg-light border mb-4">
+            <div class="d-flex align-items-center gap-3">
+              <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold fs-4" style="width: 52px; height: 52px;">
+                {{ skill.ho_ten[0] | upper }}
+              </div>
+              <div class="flex-grow-1">
+                <div class="fw-bold text-dark fs-5">{{ skill.ho_ten }}</div>
+                <div class="text-muted small">
+                  <i class="bi bi-mortarboard me-1"></i>Lớp: <strong>{{ skill.lop }}</strong> •
+                  <i class="bi bi-person-badge me-1"></i>Mã HS: <code>{{ skill.ma_hoc_sinh }}</code>
+                </div>
+                <div class="text-primary small mt-1">
+                  <i class="bi bi-clock-history me-1"></i>Khung giờ rảnh của gia sư: 
+                  <strong>{{ skill.gio_ranh if skill.gio_ranh else 'Linh hoạt' }}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Thông tin số dư tín dụng người học -->
+          <div class="d-flex justify-content-between align-items-center p-3 rounded-3 bg-primary bg-opacity-10 border border-primary border-opacity-25 mb-4">
+            <div>
+              <span class="text-muted small d-block">Số dư giờ tín dụng của bạn:</span>
+              <strong class="text-primary fs-5">{{ "%.1f"|format(current_user.so_du_gio) }} giờ</strong>
+            </div>
+            <div class="text-end small text-muted">
+              <i class="bi bi-info-circle me-1"></i>Quy tắc: 1 giờ học = 1 tín dụng thời gian.
+            </div>
+          </div>
+
+          <!-- Form Đặt Lịch -->
+          <form method="POST" action="{{ url_for('book_session') }}">
+            <input type="hidden" name="skill_id" value="{{ skill.id }}">
+
+            <div class="mb-3">
+              <label for="thoi_gian_bat_dau" class="form-label fw-semibold text-dark">
+                <i class="bi bi-calendar-event text-primary me-1"></i>Thời gian hẹn học <span class="text-danger">*</span>
+              </label>
+              <input type="datetime-local" class="form-control form-control-lg" id="thoi_gian_bat_dau" name="thoi_gian_bat_dau" required>
+              <div class="form-text small">Vui lòng chọn khung giờ phù hợp với lịch rảnh của bạn và gia sư.</div>
+            </div>
+
+            <div class="mb-4">
+              <label for="so_gio" class="form-label fw-semibold text-dark">
+                <i class="bi bi-clock text-primary me-1"></i>Thời lượng buổi học <span class="text-danger">*</span>
+              </label>
+              <select class="form-select form-select-lg" id="so_gio" name="so_gio" required>
+                <option value="1.0" selected>1.0 giờ (1 tín dụng - Khuyến nghị chuẩn)</option>
+                <option value="0.5">0.5 giờ (30 phút - 0.5 tín dụng)</option>
+                <option value="1.5">1.5 giờ (90 phút - 1.5 tín dụng)</option>
+                <option value="2.0">2.0 giờ (Tối đa 2h / phiên - 2.0 tín dụng)</option>
+              </select>
+              <div class="form-text small text-danger"><i class="bi bi-shield-check me-1"></i>Hệ thống giới hạn tối đa 2.0 giờ/phiên học để đảm bảo hiệu quả tiếp thu.</div>
+            </div>
+
+            <div class="d-flex gap-2">
+              <a href="{{ url_for('profile') }}" class="btn btn-light btn-lg flex-grow-1">Hủy bỏ</a>
+              <button type="submit" class="btn btn-brand btn-lg flex-grow-1 fw-bold shadow-sm">
+                <i class="bi bi-calendar-check me-1"></i> Xác nhận đặt lịch học ngay
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

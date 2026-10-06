@@ -45,6 +45,9 @@ CONFIG_PATH = BASE_DIR / "config.yaml"
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY", "timebank-edu-secret-key-2026")
 
+# Bộ nhớ đệm kết quả gợi ý ghép cặp hàng ngày: key = (user_id, YYYY-MM-DD), val = (matches, is_live, subject)
+DAILY_RECOMMENDATION_CACHE = {}
+
 
 # ==============================================================================
 # HÀM XỬ LÝ CẤU HÌNH NHÀ TRƯỜNG (CONFIG.YAML)
@@ -202,6 +205,10 @@ def init_db():
         
     conn.commit()
     
+    # Xóa bộ nhớ đệm gợi ý hàng ngày khi khởi tạo CSDL mới
+    global DAILY_RECOMMENDATION_CACHE
+    DAILY_RECOMMENDATION_CACHE.clear()
+    
     # Kiểm tra xem đã có dữ liệu người dùng mẫu chưa, nếu chưa thì nạp dữ liệu ban đầu
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) FROM users")
@@ -247,7 +254,9 @@ def seed_demo_data(conn):
         (4, 'Năng khiếu', 'Đệm hát Guitar cơ bản cho người mới', 'Cách bấm các hợp âm chuẩn và kỹ thuật quạt chả điệu Disco', 'da_duyet', 'Kỹ năng giải trí tích cực'),
         (5, 'Ngoại ngữ', 'Luyện phản xạ nói Tiếng Anh IELTS Speaking', 'Chiến thuật trả lời Part 1 và Part 2 tự nhiên, lưu loát', 'da_duyet', 'Rất hữu ích cho học sinh hội nhập'),
         (6, 'Tin học', 'Lập trình Python cho người mới bắt đầu', 'Cấu trúc rẽ nhánh, vòng lặp và xử lý chuỗi căn bản', 'da_duyet', 'Định hướng chuyển đổi số trường học'),
-        (7, 'Khoa học', 'Phương pháp làm bài thí nghiệm Hóa học 12', 'Giải thích hiện tượng và mẹo nhớ tính chất kim loại kiềm', 'cho_duyet', 'Chờ giáo viên bộ môn duyệt nội dung')
+        (7, 'Khoa học', 'Phương pháp làm bài thí nghiệm Hóa học 12', 'Giải thích hiện tượng và mẹo nhớ tính chất kim loại kiềm', 'cho_duyet', 'Chờ giáo viên bộ môn duyệt nội dung'),
+        (5, 'Toán học', 'Phương pháp vẽ đồ thị và khảo sát hàm số 12', 'Kỹ thuật nhận diện bảng biến thiên và cực trị hàm số', 'da_duyet', 'Nội dung trọng tâm thi tốt nghiệp THPT'),
+        (7, 'Toán học', 'Bí quyết giải nhanh Toán Xác suất và Thống kê', 'Phương pháp tư duy sơ đồ cây và bài toán xác suất thực tế', 'da_duyet', 'Rèn luyện tư duy logic và suy luận')
     ]
     cur.executemany(
         """INSERT INTO skills 
@@ -623,12 +632,103 @@ def profile():
     user_ratings = cur.fetchall()
     ai_feedback, _ = ai_summarize_feedback(db, user["id"], user_ratings)
 
+    # Điểm chạm ghép cặp tự động: "Gợi ý cho bạn hôm nay" (Cache theo ngày)
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    cache_key = (user["id"], today_str)
+
+    if cache_key in DAILY_RECOMMENDATION_CACHE:
+        daily_matches, is_live_rec, target_subject = DAILY_RECOMMENDATION_CACHE[cache_key]
+    else:
+        # 1. Tự suy ra môn HS đang cần học: từ lịch sử các phiên đã học (lĩnh vực kỹ năng)
+        cur.execute("""
+            SELECT sk.linh_vuc, COUNT(*) AS so_luong
+            FROM sessions s
+            JOIN skills sk ON s.skill_id = sk.id
+            WHERE s.nguoi_hoc_id = ?
+            GROUP BY sk.linh_vuc
+            ORDER BY so_luong DESC, s.id DESC
+            LIMIT 1
+        """, (user["id"],))
+        learned_sub = cur.fetchone()
+
+        if learned_sub and learned_sub["linh_vuc"]:
+            target_subject = learned_sub["linh_vuc"]
+        else:
+            # Chưa có lịch sử học -> Lấy lĩnh vực phổ biến nhất trên sàn
+            cur.execute("""
+                SELECT linh_vuc, COUNT(*) AS so_luong
+                FROM skills
+                WHERE trang_thai_duyet = 'da_duyet'
+                GROUP BY linh_vuc
+                ORDER BY so_luong DESC, id DESC
+                LIMIT 1
+            """)
+            pop_sub = cur.fetchone()
+            target_subject = pop_sub["linh_vuc"] if pop_sub else "Toán học"
+
+        # 2. Lọc ứng viên có kỹ năng 'da_duyet' thuộc lĩnh vực đó + người khác chia sẻ
+        search_kw = "Toán" if "toán" in target_subject.lower() else target_subject
+        cur.execute("""
+            SELECT s.*, u.ho_ten, u.lop, u.gio_ranh,
+                   ROUND(COALESCE(AVG(r.so_sao), 5.0), 1) AS sao_tb
+            FROM skills s
+            JOIN users u ON s.user_id = u.id
+            LEFT JOIN sessions ses ON s.id = ses.skill_id AND ses.trang_thai = 'hoan_thanh'
+            LEFT JOIN ratings r ON ses.id = r.session_id AND r.nguoi_duoc_danh_gia_id = u.id
+            WHERE s.trang_thai_duyet = 'da_duyet'
+              AND s.user_id != ?
+              AND (s.linh_vuc LIKE ? OR s.tieu_de LIKE ?)
+            GROUP BY s.id
+            ORDER BY s.id DESC
+        """, (user["id"], f"%{search_kw}%", f"%{search_kw}%"))
+        subject_candidates = cur.fetchall()
+
+        # 3. So khớp giờ rảnh đơn giản (chuỗi) với giờ rảnh của HS đang xem
+        user_ranh = user["gio_ranh"] or ""
+
+        def match_schedule(u_ranh, c_ranh):
+            if not u_ranh or not c_ranh:
+                return True
+            u_l = u_ranh.lower()
+            c_l = c_ranh.lower()
+            keywords = ["thứ 2", "thứ 3", "thứ 4", "thứ 5", "thứ 6", "thứ 7", "chủ nhật", "sáng", "chiều", "tối"]
+            matched_kws = [k for k in keywords if k in u_l]
+            if matched_kws:
+                return any(k in c_l for k in matched_kws)
+            parts = [p.strip() for p in re.split(r'[,;\s]+', u_l) if len(p.strip()) >= 3]
+            return any(p in c_l for p in parts)
+
+        overlapping_candidates = [c for c in subject_candidates if match_schedule(user_ranh, c["gio_ranh"])]
+
+        # Nếu danh sách trùng giờ rảnh < 3 người, bổ sung thêm các ứng viên cùng môn còn lại để đủ 3
+        chosen_candidates = list(overlapping_candidates)
+        if len(chosen_candidates) < 3:
+            existing_ids = {c["id"] for c in chosen_candidates}
+            for c in subject_candidates:
+                if c["id"] not in existing_ids:
+                    chosen_candidates.append(c)
+                if len(chosen_candidates) >= 3:
+                    break
+
+        # 4. Gọi ai_matchmake có sẵn (hỗ trợ cả Gemini và Rule-based fallback, tự ghi ai_logs)
+        if chosen_candidates:
+            daily_matches, is_live_rec = ai_matchmake(
+                db, user["id"], target_subject, "Cần củng cố", user_ranh, chosen_candidates
+            )
+        else:
+            daily_matches, is_live_rec = [], is_ai_live()
+
+        DAILY_RECOMMENDATION_CACHE[cache_key] = (daily_matches, is_live_rec, target_subject)
+
     return render_template(
         "profile.html",
         user=user,
         ledger_entries=ledger_entries,
         my_skills=my_skills,
-        ai_feedback=ai_feedback
+        ai_feedback=ai_feedback,
+        daily_matches=daily_matches,
+        is_live_rec=is_live_rec,
+        target_subject=target_subject
     )
 
 
@@ -870,6 +970,38 @@ def new_skill():
         return redirect(url_for("profile"))
         
     return render_template("skills_new.html")
+
+
+@app.route("/skills/book/<int:skill_id>", methods=["GET"])
+@login_required
+def book_skill_page(skill_id):
+    """
+    Trang đặt lịch học kỹ năng chuyên biệt:
+    - Hiển thị thông tin gia sư, kỹ năng, số dư hiện có.
+    - Cung cấp form chọn thời gian hẹn học và thời lượng (tối đa 2.0h).
+    - Submit trực tiếp tới POST /sessions/book.
+    """
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("""
+        SELECT s.*, u.ho_ten, u.lop, u.gio_ranh, u.ma_hoc_sinh,
+               ROUND(COALESCE(AVG(r.so_sao), 5.0), 1) AS sao_tb
+        FROM skills s
+        JOIN users u ON s.user_id = u.id
+        LEFT JOIN sessions ses ON s.id = ses.skill_id AND ses.trang_thai = 'hoan_thanh'
+        LEFT JOIN ratings r ON ses.id = r.session_id AND r.nguoi_duoc_danh_gia_id = u.id
+        WHERE s.id = ?
+        GROUP BY s.id
+    """, (skill_id,))
+    skill = cur.fetchone()
+    if not skill or skill["trang_thai_duyet"] != "da_duyet":
+        flash("Kỹ năng này chưa sẵn sàng để đặt lịch học!", "warning")
+        return redirect(url_for("skills_market"))
+
+    cur.execute("SELECT * FROM users WHERE id = ?", (session["user_id"],))
+    current_user = cur.fetchone()
+
+    return render_template("book_session_page.html", skill=skill, current_user=current_user)
 
 
 @app.route("/sessions/book", methods=["POST"])

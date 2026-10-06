@@ -125,15 +125,37 @@ class TestMilestoneMAI(unittest.TestCase):
         self.assertIn("Gia Sư Phù Hợp", html)
         self.assertIn("Đặt lịch ngay", html)
 
-        # Kiểm tra ai_logs
+        # 2b. Kiểm tra chế độ ghép cặp tự động trên /profile ("Gợi ý cho bạn hôm nay")
+        res_profile = self.client.get("/profile")
+        self.assertEqual(res_profile.status_code, 200)
+        profile_html = res_profile.data.decode('utf-8')
+
+        self.assertIn("Gợi ý cho bạn hôm nay", profile_html, "Dashboard HS phải có mục 'Gợi ý cho bạn hôm nay'")
+        self.assertIn("Toán", profile_html, "Phải tự suy luận ra môn Toán từ lịch sử học")
+        self.assertIn("Đặt lịch ngay", profile_html, "Phải có nút 'Đặt lịch ngay' cho từng gia sư được gợi ý")
+
+        # Kiểm tra trang đặt lịch chuyên biệt khi bấm "Đặt lịch ngay" (/skills/book/<id>)
+        res_book_page = self.client.get("/skills/book/1")
+        self.assertEqual(res_book_page.status_code, 200)
+        book_html = res_book_page.data.decode('utf-8')
+        self.assertIn("Đặt lịch học kèm", book_html)
+        self.assertIn("Xác nhận đặt lịch học ngay", book_html)
+
+        # Kiểm tra ai_logs và cơ chế cache trong ngày
         conn = sqlite3.connect(DATABASE_PATH)
         cur = conn.cursor()
         cur.execute("SELECT COUNT(*) FROM ai_logs WHERE chuc_nang = 'goi_y_ghep_cap'")
-        log_count = cur.fetchone()[0]
+        log_count_before = cur.fetchone()[0]
+
+        # Tải lại /profile lần 2 trong ngày -> Không gọi thêm AI do đã cache
+        self.client.get("/profile")
+        cur.execute("SELECT COUNT(*) FROM ai_logs WHERE chuc_nang = 'goi_y_ghep_cap'")
+        log_count_after = cur.fetchone()[0]
         conn.close()
 
-        self.assertGreaterEqual(log_count, 1, "Bảng ai_logs phải ghi nhận tương tác gợi ý ghép cặp")
-        print("[PASS] Điểm chạm 2: AI Gợi ý ghép cặp bạn học đề xuất gia sư kèm giải thích sư phạm tiếng Việt và nút đặt lịch.")
+        self.assertGreaterEqual(log_count_before, 1, "Bảng ai_logs phải ghi nhận tương tác gợi ý ghép cặp")
+        self.assertEqual(log_count_before, log_count_after, "Kết quả gợi ý trong ngày phải được cache (không gọi AI lại)")
+        print("[PASS] Điểm chạm 2: AI Ghép cặp bạn học (Cả thủ công & Tự động trên Dashboard 'Gợi ý cho bạn hôm nay' với cache trong ngày, chuyển trang đặt lịch đúng người).")
 
     def test_case_3_ai_lesson_plan(self):
         """

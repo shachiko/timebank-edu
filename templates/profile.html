@@ -71,6 +71,69 @@
     </div>
   </div>
 
+  <!-- KHỐI GỢI Ý CHO BẠN HÔM NAY (ĐIỂM CHẠM GHÉP CẶP TỰ ĐỘNG) -->
+  {% if daily_matches %}
+  <div class="card border-0 shadow-sm rounded-4 bg-white mb-4 overflow-hidden border-start border-4 border-primary">
+    <div class="card-header bg-white border-bottom py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <div>
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-2 py-1">
+            <i class="bi bi-compass-fill me-1"></i> Gợi ý cho bạn hôm nay
+          </span>
+          {% if is_live_rec %}
+            <span class="badge-ai" style="font-size: 0.72rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Gemini)</span>
+          {% else %}
+            <span class="badge bg-secondary bg-opacity-25 text-secondary border" style="font-size: 0.72rem;">
+              <i class="bi bi-cpu me-1"></i> Hỗ trợ bởi AI (Chế độ cơ bản)
+            </span>
+          {% endif %}
+        </div>
+        <h5 class="fw-bold mb-0 text-dark mt-1">Gia sư phù hợp nhất cho môn {{ target_subject }}</h5>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <small class="text-muted"><i class="bi bi-clock-history me-1"></i>Tự động khớp theo lịch sử học & giờ rảnh</small>
+        <a href="{{ url_for('ai_matchmake_view') }}" class="btn btn-outline-brand btn-sm">
+          <i class="bi bi-sliders me-1"></i> Tùy chỉnh tìm kiếm
+        </a>
+      </div>
+    </div>
+
+    <div class="card-body p-4">
+      <div class="row g-3">
+        {% for match in daily_matches %}
+        <div class="col-md-4">
+          <div class="card h-100 border rounded-4 p-3 shadow-none bg-light hover-shadow d-flex flex-column justify-content-between">
+            <div>
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge bg-white text-primary border fw-semibold small">{{ match.linh_vuc }}</span>
+                <span class="badge bg-warning bg-opacity-25 text-dark fw-bold small">
+                  <i class="bi bi-star-fill text-warning me-1"></i>{{ match.sao_tb }}★
+                </span>
+              </div>
+              <h6 class="fw-bold text-dark mb-1">{{ match.tieu_de }}</h6>
+              <div class="small text-muted mb-2">
+                <i class="bi bi-person-circle me-1 text-primary"></i><strong>{{ match.ho_ten }}</strong> (Lớp {{ match.lop }})
+              </div>
+              <div class="small text-secondary mb-2">
+                <i class="bi bi-clock me-1 text-info"></i>Rảnh: <strong>{{ match.gio_ranh if match.gio_ranh else 'Linh hoạt' }}</strong>
+              </div>
+              <div class="p-2 bg-white rounded-3 border small mb-3 text-secondary fst-italic">
+                <i class="bi bi-chat-quote me-1 text-primary"></i>{{ match.ai_ly_do }}
+              </div>
+            </div>
+            <div>
+              <a href="{{ url_for('book_skill_page', skill_id=match.id) }}" class="btn btn-brand btn-sm w-100 fw-bold">
+                <i class="bi bi-calendar-plus me-1"></i> Đặt lịch ngay
+              </a>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
   <div class="row g-4">
     <!-- Cột 1: Lịch sử biến động sổ cái tín dụng (credits_ledger) -->
     <div class="col-lg-8">
