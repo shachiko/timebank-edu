@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Cổng Kết Nối Sàn Cộng Đồng Liên Trường — School Time Bank{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-7">
+      <!-- Thẻ Cổng 24 Tín Dụng -->
+      <div class="card border-0 shadow-lg rounded-4 overflow-hidden bg-white text-center">
+        <!-- Banner đầu trang với hiệu ứng Gradient sang trọng -->
+        <div class="p-5 text-white position-relative" style="background: linear-gradient(135deg, #1B2A6B 0%, #2A4494 50%, #F26522 100%);">
+          <div class="position-relative z-1">
+            <div class="d-inline-flex align-items-center justify-content-center bg-white bg-opacity-20 rounded-circle p-3 mb-3 shadow-sm" style="width: 88px; height: 88px;">
+              <i class="bi bi-shield-lock-fill text-warning display-5"></i>
+            </div>
+            <h2 class="fw-bold mb-2">Cổng Kiểm Chuẩn Sàn Cộng Đồng</h2>
+            <p class="mb-0 text-white-50 fs-6">Sàn Giao Dịch Tri Thức & Kỹ Năng Liên Trường Học Đường</p>
+          </div>
+        </div>
+
+        <div class="card-body p-4 p-md-5">
+          <!-- Thông báo cốt lõi theo yêu cầu Prompt 19 -->
+          <div class="alert alert-warning border-0 rounded-4 p-4 mb-4 text-start shadow-sm" style="background-color: #fff9e6; border-left: 5px solid #f59e0b !important;">
+            <div class="d-flex align-items-start gap-3">
+              <i class="bi bi-info-circle-fill text-warning fs-3 mt-1"></i>
+              <div>
+                <h5 class="fw-bold text-dark mb-1">
+                  Bạn cần <span class="text-primary fw-extrabold fs-4">{{ remaining_display }}</span> giờ dạy nữa để mở khóa Sàn cộng đồng
+                </h5>
+                <p class="text-muted small mb-0">
+                  Triết lý giáo dục: Sàn cộng đồng liên trường là không gian giao lưu tri thức uy tín. Học sinh cần chứng minh năng lực sẻ chia bằng các buổi dạy thực tế hoàn thành trước khi mở rộng kết nối ra ngoài trường học.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Thanh tiến trình học tập -->
+          <div class="bg-light p-4 rounded-4 mb-4 text-start border">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="fw-semibold text-secondary small">
+                <i class="bi bi-bar-chart-steps text-primary me-1"></i> Tiến độ tích lũy giờ dạy thực tế:
+              </span>
+              <span class="fw-bold text-primary">
+                {{ teaching_hours_display }} / {{ threshold_display }} giờ dạy
+              </span>
+            </div>
+            <div class="progress rounded-pill shadow-sm" style="height: 18px; background-color: #e2e8f0;">
+              <div 
+                class="progress-bar progress-bar-striped progress-bar-animated" 
+                role="progressbar" 
+                style="width: {{ progress_pct }}%; background: linear-gradient(90deg, #1B2A6B, #F26522);"
+                aria-valuenow="{{ progress_pct }}" 
+                aria-valuemin="0" 
+                aria-valuemax="100">
+                <span class="small fw-bold px-2">{{ progress_pct }}%</span>
+              </div>
+            </div>
+            <div class="d-flex justify-content-between small text-muted mt-2">
+              <span>Khởi đầu (0h)</span>
+              <span>Ngưỡng mở khóa: {{ threshold_display }}h dạy thật</span>
+            </div>
+          </div>
+
+          <!-- Thẻ giải thích sư phạm & Tiêu chuẩn minh bạch -->
+          <div class="row g-3 text-start mb-4">
+            <div class="col-sm-6">
+              <div class="p-3 rounded-4 border bg-white h-100">
+                <div class="d-flex align-items-center gap-2 mb-2 text-success">
+                  <i class="bi bi-check-circle-fill fs-5"></i>
+                  <strong class="text-dark">Tín dụng dạy thật</strong>
+                </div>
+                <p class="text-muted small mb-0">
+                  Chỉ tính tổng thời lượng các buổi học bạn làm <strong>Người dạy</strong> và có trạng thái <strong>'hoàn thành'</strong>. Không tính 2 giờ tặng ban đầu.
+                </p>
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <div class="p-3 rounded-4 border bg-white h-100">
+                <div class="d-flex align-items-center gap-2 mb-2 text-warning">
+                  <i class="bi bi-award-fill fs-5"></i>
+                  <strong class="text-dark">Đặc quyền Thành viên</strong>
+                </div>
+                <p class="text-muted small mb-0">
+                  Khi đạt ngưỡng, bạn nhận ngay huy hiệu <strong>"Thành viên Cộng đồng"</strong> trên hồ sơ và được đăng kỹ năng giao lưu với học sinh các trường bạn.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Các nút hành động gợi ý -->
+          <div class="d-flex flex-wrap justify-content-center gap-3">
+            <a href="{{ url_for('skills_market') }}" class="btn btn-primary rounded-pill px-4 py-2 shadow-sm">
+              <i class="bi bi-shop me-1"></i> Đến Chợ kỹ năng nội trường để dạy kèm
+            </a>
+            <a href="{{ url_for('profile') }}" class="btn btn-outline-secondary rounded-pill px-4 py-2">
+              <i class="bi bi-person-circle me-1"></i> Xem hồ sơ của tôi
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

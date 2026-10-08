@@ -84,7 +84,8 @@ def load_school_config():
         "logo_path": "/static/img/logo_timebank_edu.png",
         "mau_chu_dao": "#F26522",
         "email_lien_he": "mshuyenuka@gmail.com",
-        "dong_gioi_thieu": "Hệ thống Ngân hàng Thời gian Học đường — Trao đổi tri thức, sẻ chia kỹ năng bằng tín dụng thời gian bình đẳng."
+        "dong_gioi_thieu": "Hệ thống Ngân hàng Thời gian Học đường — Trao đổi tri thức, sẻ chia kỹ năng bằng tín dụng thời gian bình đẳng.",
+        "cong_dong_nguong_tin_dung": 24
     }
     
     if CONFIG_PATH.exists():
@@ -97,6 +98,44 @@ def load_school_config():
             app.logger.warning(f"Không thể đọc file config.yaml, dùng cấu hình mặc định: {e}")
             
     return default_config
+
+
+def get_community_threshold():
+    """
+    Lấy ngưỡng tín dụng dạy thật để mở khóa Sàn cộng đồng từ cấu hình config.yaml.
+    TUYỆT ĐỐI không hardcode số 24 trong nghiệp vụ code.
+    """
+    cfg = load_school_config()
+    try:
+        val = float(cfg.get("cong_dong_nguong_tin_dung", 24))
+        return val
+    except (ValueError, TypeError):
+        return 24.0
+
+
+def get_user_teaching_hours(db, user_id):
+    """
+    Tính 'Tín dụng kiếm được từ dạy thật' = tổng số giờ các buổi học mà user
+    LÀM NGƯỜI DẠY (nguoi_day_id = user_id) và trạng thái 'hoan_thanh'.
+    KHÔNG tính 2 giờ tặng ban đầu.
+    """
+    if not user_id:
+        return 0.0
+    cur = db.cursor()
+    cur.execute(
+        "SELECT COALESCE(SUM(so_gio), 0.0) FROM sessions WHERE nguoi_day_id = ? AND trang_thai = 'hoan_thanh'",
+        (user_id,)
+    )
+    row = cur.fetchone()
+    return float(row[0]) if row and row[0] is not None else 0.0
+
+
+def has_passed_community_gate(db, user_id):
+    """Kiểm tra học sinh đã đạt ngưỡng tín dụng dạy thật để vào Sàn cộng đồng hay chưa."""
+    threshold = get_community_threshold()
+    hours = get_user_teaching_hours(db, user_id)
+    return hours >= threshold
+
 
 
 @app.template_filter("format_date")
@@ -462,6 +501,23 @@ def init_db():
         conn.executescript(f.read())
         
     conn.commit()
+
+    # Tự động nâng cấp bảng skills cho Prompt 19 (Sàn cộng đồng liên trường)
+    try:
+        cur = conn.cursor()
+        cur.execute("PRAGMA table_info(skills)")
+        skill_cols = [r[1] for r in cur.fetchall()]
+        if "hien_thi_cong_dong" not in skill_cols:
+            conn.execute("ALTER TABLE skills ADD COLUMN hien_thi_cong_dong INTEGER DEFAULT 0")
+        if "trang_thai_cong_dong" not in skill_cols:
+            conn.execute("ALTER TABLE skills ADD COLUMN trang_thai_cong_dong TEXT DEFAULT 'chua_dang'")
+        if "nguoi_duyet_cong_dong_id" not in skill_cols:
+            conn.execute("ALTER TABLE skills ADD COLUMN nguoi_duyet_cong_dong_id INTEGER")
+        if "ngay_duyet_cong_dong" not in skill_cols:
+            conn.execute("ALTER TABLE skills ADD COLUMN ngay_duyet_cong_dong TEXT")
+        conn.commit()
+    except Exception as e:
+        app.logger.warning(f"Lỗi nâng cấp cấu trúc bảng skills (Prompt 19): {e}")
     
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) FROM users")
@@ -1289,6 +1345,11 @@ def profile():
     avg_rating = rating_row[0] if rating_row and rating_row[0] is not None else 5.0
     rating_count = rating_row[1] if rating_row else 0
 
+    # Ngưỡng tín dụng dạy thật mở khóa Sàn cộng đồng liên trường (Prompt 19)
+    community_threshold = get_community_threshold()
+    is_community_member = (hours_taught >= community_threshold)
+    hours_needed = max(0.0, community_threshold - hours_taught)
+
     return render_template(
         "profile.html",
         user=user,
@@ -1301,7 +1362,10 @@ def profile():
         hours_taught=hours_taught,
         hours_learned=hours_learned,
         avg_rating=avg_rating,
-        rating_count=rating_count
+        rating_count=rating_count,
+        community_threshold=community_threshold,
+        is_community_member=is_community_member,
+        hours_needed=hours_needed
     )
 
 
@@ -1519,6 +1583,33 @@ def admin_dashboard():
     cur.execute(viol_sql)
     violations_list = cur.fetchall()
 
+    # 5. DANH SÁCH KỸ NĂNG CHỜ DUYỆT SÀN CHUNG (community_pending_skills - Prompt 19)
+    comm_sql = """
+        SELECT s.*, u.ho_ten, u.ma_hoc_sinh, u.lop, t.ten_truong,
+               (SELECT COALESCE(SUM(ses.so_gio), 0.0) FROM sessions ses WHERE ses.nguoi_day_id = u.id AND ses.trang_thai = 'hoan_thanh') AS gio_day_that
+        FROM skills s
+        JOIN users u ON s.user_id = u.id
+        LEFT JOIN truong t ON s.truong_id = t.id
+        WHERE s.trang_thai_cong_dong = 'cho_duyet'
+        ORDER BY s.id DESC
+    """
+    cur.execute(comm_sql)
+    community_pending_skills = cur.fetchall()
+
+    comm_approved_sql = """
+        SELECT s.*, u.ho_ten, u.ma_hoc_sinh, u.lop, t.ten_truong,
+               u_appr.ho_ten AS nguoi_duyet_ten
+        FROM skills s
+        JOIN users u ON s.user_id = u.id
+        LEFT JOIN truong t ON s.truong_id = t.id
+        LEFT JOIN users u_appr ON s.nguoi_duyet_cong_dong_id = u_appr.id
+        WHERE s.hien_thi_cong_dong = 1 AND s.trang_thai_cong_dong = 'da_duyet'
+        ORDER BY s.ngay_duyet_cong_dong DESC, s.id DESC
+        LIMIT 20
+    """
+    cur.execute(comm_approved_sql)
+    community_approved_skills = cur.fetchall()
+
     # Danh sách 4 trường
     cur.execute("SELECT * FROM truong ORDER BY id ASC")
     all_schools = cur.fetchall()
@@ -1542,7 +1633,9 @@ def admin_dashboard():
         pending_students=pending_students,
         invite_codes_list=invite_codes_list,
         violations_list=violations_list,
-        google_drive_configured=is_google_drive_configured()
+        google_drive_configured=is_google_drive_configured(),
+        community_pending_skills=community_pending_skills,
+        community_approved_skills=community_approved_skills
     )
 
 
@@ -1926,6 +2019,216 @@ def approve_skill_action(skill_id, action):
     return redirect(url_for("skills_approval"))
 
 
+# ==============================================================================
+# PROMPT 19: SÀN GIAO DỊCH CHUNG LIÊN TRƯỜNG & CỔNG 24 TÍN DỤNG
+# ==============================================================================
+
+@app.route("/skills/<int:skill_id>/publish-community", methods=["POST"])
+@login_required
+def publish_community_skill(skill_id):
+    """
+    Chủ kỹ năng (đã qua cổng tín dụng) gửi yêu cầu đăng lên Sàn cộng đồng liên trường:
+    - Kiểm tra: người thực hiện là chủ kỹ năng.
+    - Kiểm tra: người thực hiện đã đạt ngưỡng tín dụng dạy thật (get_community_threshold()).
+    - Cập nhật trang_thai_cong_dong = 'cho_duyet', hien_thi_cong_dong = 0.
+    """
+    db = get_db()
+    cur = db.cursor()
+    user_id = session["user_id"]
+
+    cur.execute("SELECT * FROM skills WHERE id = ?", (skill_id,))
+    sk = cur.fetchone()
+    if not sk:
+        flash("Kỹ năng không tồn tại!", "danger")
+        return redirect(url_for("profile"))
+
+    if sk["user_id"] != user_id:
+        flash("Bạn chỉ có thể đăng kỹ năng của chính mình lên Sàn cộng đồng!", "danger")
+        return redirect(url_for("profile"))
+
+    threshold = get_community_threshold()
+    hours_taught = get_user_teaching_hours(db, user_id)
+    if hours_taught < threshold:
+        remaining = max(0.0, threshold - hours_taught)
+        rem_str = int(remaining) if remaining == int(remaining) else round(remaining, 1)
+        flash(f"Bạn cần {rem_str} giờ dạy nữa để mở khóa Sàn cộng đồng!", "warning")
+        return redirect(url_for("profile"))
+
+    cur.execute("""
+        UPDATE skills 
+        SET trang_thai_cong_dong = 'cho_duyet',
+            hien_thi_cong_dong = 0
+        WHERE id = ?
+    """, (skill_id,))
+    db.commit()
+
+    flash("Đã gửi yêu cầu đăng kỹ năng lên Sàn cộng đồng liên trường. Vui lòng chờ Ban quản trị duyệt!", "success")
+    return redirect(url_for("profile"))
+
+
+@app.route("/admin/community-skills/<int:skill_id>/approve", methods=["POST"])
+@admin_required
+def admin_approve_community_skill(skill_id):
+    """
+    Phê duyệt kỹ năng lên Sàn cộng đồng liên trường:
+    - Tổng quản trị HOẶC quản trị bất kỳ trường nào duyệt là đủ (một người duyệt).
+    - Ghi log ai duyệt (session['user_id']).
+    """
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("""
+        SELECT s.*, u.ho_ten, t.ten_truong 
+        FROM skills s 
+        JOIN users u ON s.user_id = u.id 
+        LEFT JOIN truong t ON s.truong_id = t.id 
+        WHERE s.id = ?
+    """, (skill_id,))
+    sk = cur.fetchone()
+    if not sk:
+        flash("Không tìm thấy kỹ năng!", "danger")
+        return redirect(url_for("admin_dashboard"))
+
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    cur.execute("""
+        UPDATE skills
+        SET hien_thi_cong_dong = 1,
+            trang_thai_cong_dong = 'da_duyet',
+            trang_thai_duyet = 'da_duyet',
+            nguoi_duyet_cong_dong_id = ?,
+            ngay_duyet_cong_dong = ?
+        WHERE id = ?
+    """, (session["user_id"], now_str, skill_id))
+    db.commit()
+
+    school_name = sk["ten_truong"] if sk["ten_truong"] else "Trường học"
+    flash(f"Đã duyệt kỹ năng '{sk['tieu_de']}' ({school_name}) lên Sàn cộng đồng liên trường thành công!", "success")
+    return redirect(url_for("admin_dashboard"))
+
+
+@app.route("/admin/community-skills/<int:skill_id>/reject", methods=["POST"])
+@admin_required
+def admin_reject_community_skill(skill_id):
+    """
+    Từ chối đưa kỹ năng lên Sàn cộng đồng liên trường.
+    """
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("SELECT s.*, u.ho_ten FROM skills s JOIN users u ON s.user_id = u.id WHERE s.id = ?", (skill_id,))
+    sk = cur.fetchone()
+    if not sk:
+        flash("Không tìm thấy kỹ năng!", "danger")
+        return redirect(url_for("admin_dashboard"))
+
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    cur.execute("""
+        UPDATE skills
+        SET hien_thi_cong_dong = 0,
+            trang_thai_cong_dong = 'tu_choi',
+            nguoi_duyet_cong_dong_id = ?,
+            ngay_duyet_cong_dong = ?
+        WHERE id = ?
+    """, (session["user_id"], now_str, skill_id))
+    db.commit()
+
+    flash(f"Đã từ chối đưa kỹ năng '{sk['tieu_de']}' lên Sàn cộng đồng liên trường.", "info")
+    return redirect(url_for("admin_dashboard"))
+
+
+@app.route("/community-market")
+def community_market():
+    """
+    Sàn Giao Dịch Chung Liên Trường (Prompt 19):
+    - Cổng kiểm chuẩn tín dụng dạy thật: Học sinh chưa đạt ngưỡng -> Chặn và hiện thông báo + thanh tiến trình.
+    - Học sinh đạt ngưỡng (hoặc Quản trị viên/Giáo viên) -> Truy cập Sàn chung.
+    - Kỹ năng hiển thị kèm TÊN TRƯỜNG của chủ kỹ năng.
+    """
+    db = get_db()
+    cur = db.cursor()
+
+    threshold = get_community_threshold()
+    user_id = session.get("user_id")
+    user_role = session.get("vai_tro", "")
+    is_admin_user = user_role in ("super_admin", "school_admin", "admin", "giao_vien")
+
+    if not user_id:
+        flash("Vui lòng đăng nhập để truy cập Sàn cộng đồng liên trường.", "warning")
+        return redirect(url_for("login", next=request.url))
+
+    teaching_hours = get_user_teaching_hours(db, user_id)
+
+    # Học sinh chưa đạt ngưỡng tín dụng dạy thật -> Hiển thị màn hình Cổng kiểm chuẩn
+    if not is_admin_user and teaching_hours < threshold:
+        remaining_hours = max(0.0, threshold - teaching_hours)
+        remaining_display = int(remaining_hours) if remaining_hours == int(remaining_hours) else round(remaining_hours, 1)
+        teaching_hours_display = int(teaching_hours) if teaching_hours == int(teaching_hours) else round(teaching_hours, 1)
+        threshold_display = int(threshold) if threshold == int(threshold) else round(threshold, 1)
+        progress_pct = min(100.0, max(0.0, round((teaching_hours / threshold) * 100, 1))) if threshold > 0 else 100.0
+        return render_template(
+            "community_market_gate.html",
+            threshold=threshold,
+            threshold_display=threshold_display,
+            teaching_hours=teaching_hours,
+            teaching_hours_display=teaching_hours_display,
+            remaining_hours=remaining_hours,
+            remaining_display=remaining_display,
+            progress_pct=progress_pct
+        )
+
+    # Đã qua cổng hoặc là Quản trị viên/Giáo viên -> Hiển thị Sàn cộng đồng
+    search_query = request.args.get("q", "").strip()
+    selected_school = request.args.get("truong_id", "").strip()
+    selected_category = request.args.get("linh_vuc", "").strip()
+
+    sql = """
+        SELECT 
+            s.*, 
+            u.ho_ten, 
+            u.ma_hoc_sinh, 
+            u.lop,
+            t.ten_truong,
+            t.logo AS logo_truong,
+            ROUND(COALESCE(AVG(r.so_sao), 5.0), 1) AS sao_tb
+        FROM skills s
+        JOIN users u ON s.user_id = u.id
+        LEFT JOIN truong t ON s.truong_id = t.id
+        LEFT JOIN sessions ses ON s.id = ses.skill_id AND ses.trang_thai = 'hoan_thanh'
+        LEFT JOIN ratings r ON ses.id = r.session_id AND r.nguoi_duoc_danh_gia_id = u.id
+        WHERE s.hien_thi_cong_dong = 1 AND s.trang_thai_cong_dong = 'da_duyet'
+    """
+    params = []
+
+    if selected_school and selected_school.isdigit():
+        sql += " AND s.truong_id = ?"
+        params.append(int(selected_school))
+
+    if selected_category:
+        sql += " AND s.linh_vuc = ?"
+        params.append(selected_category)
+
+    if search_query:
+        sql += " AND (s.tieu_de LIKE ? OR s.mo_ta LIKE ? OR s.linh_vuc LIKE ? OR t.ten_truong LIKE ?)"
+        like_term = f"%{search_query}%"
+        params.extend([like_term, like_term, like_term, like_term])
+
+    sql += " GROUP BY s.id, u.id, u.ho_ten, u.ma_hoc_sinh, u.lop, t.ten_truong, t.logo ORDER BY s.id DESC"
+    cur.execute(sql, params)
+    skills = cur.fetchall()
+
+    cur.execute("SELECT id, ten_truong FROM truong ORDER BY id ASC")
+    all_schools = cur.fetchall()
+
+    return render_template(
+        "community_market.html",
+        skills=skills,
+        all_schools=all_schools,
+        search_query=search_query,
+        selected_school=selected_school,
+        selected_category=selected_category,
+        threshold=threshold,
+        teaching_hours=teaching_hours
+    )
+
+
 # ------------------------------------------------------------------------------
 # MILESTONE M2: ĐĂNG KỸ NĂNG, CHỢ KỸ NĂNG, ĐẶT LỊCH & LỊCH CỦA TÔI
 # ------------------------------------------------------------------------------
@@ -2123,7 +2426,7 @@ def book_skill_page(skill_id):
         GROUP BY s.id, u.id, u.ho_ten, u.lop, u.gio_ranh, u.ma_hoc_sinh
     """, (skill_id,))
     skill = cur.fetchone()
-    if not skill or skill["trang_thai_duyet"] != "da_duyet":
+    if not skill or (skill["trang_thai_duyet"] != "da_duyet" and skill.get("hien_thi_cong_dong") != 1):
         flash("Kỹ năng này chưa sẵn sàng để đặt lịch học!", "warning")
         return redirect(url_for("skills_market"))
 
@@ -2181,7 +2484,7 @@ def book_session():
     # 1. Kiểm tra kỹ năng có tồn tại và đã duyệt chưa
     cur.execute("SELECT * FROM skills WHERE id = ?", (skill_id,))
     skill = cur.fetchone()
-    if not skill or skill["trang_thai_duyet"] != "da_duyet":
+    if not skill or (skill["trang_thai_duyet"] != "da_duyet" and skill.get("hien_thi_cong_dong") != 1):
         flash("Kỹ năng này chưa sẵn sàng hoặc chưa được phê duyệt sư phạm!", "danger")
         return redirect(url_for("skills_market"))
         

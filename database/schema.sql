@@ -40,8 +40,13 @@ CREATE TABLE IF NOT EXISTS skills (
     mo_ta TEXT,
     trang_thai_duyet TEXT CHECK(trang_thai_duyet IN ('cho_duyet', 'da_duyet', 'tu_choi')) DEFAULT 'cho_duyet',
     ly_do_ai_kiem_duyet TEXT,
+    hien_thi_cong_dong INTEGER DEFAULT 0,
+    trang_thai_cong_dong TEXT CHECK(trang_thai_cong_dong IN ('chua_dang', 'cho_duyet', 'da_duyet', 'tu_choi')) DEFAULT 'chua_dang',
+    nguoi_duyet_cong_dong_id INTEGER,
+    ngay_duyet_cong_dong TEXT,
     FOREIGN KEY (truong_id) REFERENCES truong(id),
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (nguoi_duyet_cong_dong_id) REFERENCES users(id)
 );
 
 -- 4. BẢNG PHIÊN HỌC (SESSIONS): Kết nối giữa người dạy và người học

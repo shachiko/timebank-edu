@@ -651,7 +651,54 @@ Hệ thống được nâng cấp toàn diện từ mô hình đơn trường sa
 
 ### 5. Kiểm thử Tự động & Regression Toàn diện:
 - Bộ test suite `test_prompt17_multitenant.py` nghiệm thu 8/8 tiêu chí khắt khe.
-- Chạy kiểm thử toàn bộ **13/13 test suites (`run_all_tests.py`) đạt 100% PASS** hoàn hảo trước khi triển khai.
+---
+
+## 💬 PROMPT 18 — DIỄN ĐÀN "GÓC TRÒ CHUYỆN" & KHO GOOGLE DRIVE 5TB
+
+### 1. Diễn đàn Học đường "Góc Trò Chuyện":
+- Bảng `forum_topics` và `forum_replies` hỗ trợ học sinh và giáo viên tạo chủ đề, thảo luận tương tác.
+- Cách ly trường học: Mỗi trường chỉ thấy và tham gia diễn đàn của trường mình (`truong_id`).
+- AI lọc từ tục realtime: Kế thừa cơ chế phòng vệ kép (từ điển + regex + AI), vi phạm ghi nhận tự động vào bảng `violations`.
+- Phân quyền kiểm duyệt: Giáo viên và Quản trị trường có quyền khóa chủ đề hoặc xóa bình luận không phù hợp.
+
+### 2. Kho Tài liệu Google Drive 5TB Toàn Hệ thống:
+- Sử dụng tài khoản Google Drive 5TB làm kho lưu trữ học tập tập trung toàn hệ thống.
+- Cấu trúc thư mục sư phạm tự động: Thư mục gốc `TimeBank-EDU-Shared-5TB/` phân chia theo từng trường học và môn học.
+- Quản trị viên Super Admin kết nối tài khoản Google qua OAuth 2.0 hoặc Service Account.
+- Stream tải lên & tải về an toàn, không tốn bộ nhớ đĩa cục bộ.
+
+---
+
+## 🌐 PROMPT 19 — SÀN GIAO DỊCH CHUNG LIÊN TRƯỜNG & CỔNG 24 TÍN DỤNG
+
+### 1. Cổng Kiểm Chuẩn 24 Tín Dụng (Cổng Mở Khóa Sàn Chung):
+- Tham số cấu hình `cong_dong_nguong_tin_dung: 24` trong `config.yaml` — **TUYỆT ĐỐI không hardcode số 24 trong mã nguồn**.
+- **"Tín dụng kiếm được từ dạy thật"**: Tổng số giờ các buổi học mà học sinh làm **Người dạy** và trạng thái đạt `'hoan_thanh'`. Tuyệt đối không tính 2 giờ tặng ban đầu.
+- Học sinh chưa đạt ngưỡng $\rightarrow$ Vào Sàn chung thấy màn hình **Cổng Kiểm Chuẩn** với thông báo: *"Bạn cần [X] giờ dạy nữa để mở khóa Sàn cộng đồng"* kèm thanh tiến trình trực quan và định hướng sư phạm.
+- Học sinh đạt ngưỡng $\rightarrow$ Hệ thống tự động mở khóa và gắn huy hiệu **"Thành viên Cộng đồng"** trên hồ sơ cá nhân.
+
+### 2. Sàn Giao Dịch Tri Thức & Kỹ Năng Liên Trường:
+- Mở rộng bảng `skills` với các trường: `hien_thi_cong_dong` (0/1), `trang_thai_cong_dong` (`chua_dang`, `cho_duyet`, `da_duyet`, `tu_choi`), `nguoi_duyet_cong_dong_id`, `ngay_duyet_cong_dong`.
+- Chủ kỹ năng (đã qua cổng kiểm chuẩn) có nút **"Đăng lên sàn chung"** trên hồ sơ $\rightarrow$ Kỹ năng chuyển sang trạng thái chờ duyệt. Học sinh chưa qua cổng không thấy nút này.
+- **Cơ chế duyệt linh hoạt liên trường:** Tổng quản trị HOẶC Quản trị viên bất kỳ trường nào đều có quyền duyệt (một người duyệt là đủ). Hệ thống ghi log định danh người duyệt.
+- Kỹ năng đã duyệt hiển thị công khai trên Sàn chung kèm **TÊN TRƯỜNG** của chủ kỹ năng.
+- Học sinh trường A đặt lịch học kỹ năng của trường B hoàn toàn bình thường; tín dụng giờ được luân chuyển liên trường qua **VÍ CHUNG DUY NHẤT** (không tách ví).
+
+### 3. Giao diện & Trải nghiệm Người dùng:
+- Menu điều hướng bổ sung mục **"Sàn cộng đồng"** (phân biệt rạch ròi với "Chợ kỹ năng" nội trường).
+- Bảng điều khiển Quản trị (`/admin`) bổ sung tab **"Duyệt Sàn Chung"** hiển thị danh sách kỹ năng chờ duyệt từ mọi trường học.
+- Hồ sơ học sinh hiển thị huy hiệu vinh danh **"Thành viên Cộng đồng"** khi đạt chuẩn.
+
+### 4. Kết quả Kiểm thử & Nghiệm thu (Test Suite):
+- Bộ test suite chuyên sâu `test_prompt19_community_market.py` vượt qua **7/7 test cases (100% PASS)**:
+  1. Học sinh 23 giờ dạy bị chặn ở cổng, hiển thị số giờ còn thiếu chính xác (1 giờ).
+  2. Học sinh 24 giờ dạy tự động mở khóa và nhận huy hiệu "Thành viên Cộng đồng".
+  3. Thay đổi ngưỡng trong `config.yaml` áp dụng ngay lập tức (chứng minh không hardcode).
+  4. Đăng kỹ năng lên sàn chung $\rightarrow$ Admin trường khác duyệt thành công $\rightarrow$ Hiển thị trên sàn kèm tên trường.
+  5. Học sinh trường A học xong buổi trường B $\rightarrow$ Ví chung cộng/trừ chính xác, không sai lệch.
+  6. Học sinh chưa qua cổng không thấy nút "Đăng lên sàn chung".
+  7. Regression suite toàn bộ **15/15 test suites đạt 100% PASS**.
+
 
 
 

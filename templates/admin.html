@@ -83,6 +83,14 @@
         <span class="badge bg-secondary rounded-pill ms-1">{{ users|length }}</span>
       </button>
     </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link rounded-pill fw-semibold position-relative text-dark" id="tab-community-btn" data-bs-toggle="pill" data-bs-target="#tab-community" type="button" role="tab">
+        <i class="bi bi-globe2 text-warning me-1"></i> Duyệt Sàn Chung
+        {% if community_pending_skills %}
+          <span class="badge bg-warning text-dark rounded-pill ms-1">{{ community_pending_skills|length }}</span>
+        {% endif %}
+      </button>
+    </li>
     {% if is_super_admin %}
     <li class="nav-item" role="presentation">
       <button class="nav-link rounded-pill fw-semibold text-danger" id="tab-drive-btn" data-bs-toggle="pill" data-bs-target="#tab-drive" type="button" role="tab">
@@ -713,6 +721,130 @@
           </div>
         </div>
       </div>
+    <!-- =========================================================================
+         TAB: DUYỆT SÀN GIAO DỊCH CHUNG LIÊN TRƯỜNG (PROMPT 19)
+         ========================================================================= -->
+    <div class="tab-pane fade" id="tab-community" role="tabpanel">
+      <!-- Hàng chờ duyệt Sàn Chung -->
+      <div class="card border-0 shadow-sm rounded-4 bg-white mb-4">
+        <div class="card-header bg-white border-0 pt-4 px-4 pb-2 d-flex justify-content-between align-items-center">
+          <div>
+            <h5 class="fw-bold text-dark mb-1">
+              <i class="bi bi-globe2 text-warning me-2"></i>Kỹ Năng Chờ Duyệt Lên Sàn Chung Liên Trường
+            </h5>
+            <p class="text-muted small mb-0">
+              Tổng quản trị hoặc Quản trị viên bất kỳ trường nào đều có quyền duyệt. Một người duyệt là đủ; hệ thống tự động ghi nhận nhật ký người duyệt.
+            </p>
+          </div>
+          <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold">
+            {{ community_pending_skills|length }} yêu cầu chờ duyệt
+          </span>
+        </div>
+        <div class="card-body p-4">
+          {% if community_pending_skills %}
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light small text-uppercase text-secondary">
+                <tr>
+                  <th>Kỹ năng đề xuất</th>
+                  <th>Học sinh đăng ký</th>
+                  <th>Trường học</th>
+                  <th class="text-center">Giờ dạy thật</th>
+                  <th class="text-end">Hành động duyệt</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for sk in community_pending_skills %}
+                <tr>
+                  <td>
+                    <div class="fw-bold text-dark">{{ sk.tieu_de }}</div>
+                    <span class="badge bg-primary bg-opacity-10 text-primary small me-1">{{ sk.linh_vuc }}</span>
+                    <small class="text-muted d-block mt-1" style="max-width: 300px;">{{ sk.mo_ta }}</small>
+                  </td>
+                  <td>
+                    <div class="fw-semibold text-dark">{{ sk.ho_ten }}</div>
+                    <small class="text-muted">Mã: <code>{{ sk.ma_hoc_sinh }}</code> • Lớp: {{ sk.lop }}</small>
+                  </td>
+                  <td>
+                    <span class="badge bg-light text-primary border p-2">
+                      <i class="bi bi-building me-1"></i>{{ sk.ten_truong }}
+                    </span>
+                  </td>
+                  <td class="text-center">
+                    <span class="badge bg-success-subtle text-success fw-bold px-2 py-1">
+                      <i class="bi bi-check-circle-fill me-1"></i>{{ "%.1f"|format(sk.gio_day_that) }}h
+                    </span>
+                  </td>
+                  <td class="text-end text-nowrap">
+                    <div class="d-inline-flex gap-2">
+                      <form action="{{ url_for('admin_approve_community_skill', skill_id=sk.id) }}" method="POST">
+                        <button type="submit" class="btn btn-sm btn-success rounded-pill px-3 shadow-sm">
+                          <i class="bi bi-check-lg me-1"></i>Duyệt lên Sàn chung
+                        </button>
+                      </form>
+                      <form action="{{ url_for('admin_reject_community_skill', skill_id=sk.id) }}" method="POST">
+                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3">
+                          <i class="bi bi-x-lg me-1"></i>Từ chối
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center py-5 text-muted">
+            <i class="bi bi-check2-circle display-4 text-success mb-2 d-block"></i>
+            <h6 class="fw-bold text-dark">Hiện không có kỹ năng nào chờ duyệt lên Sàn chung</h6>
+            <p class="small mb-0">Tất cả yêu cầu đăng kỹ năng liên trường đã được xử lý hoàn tất.</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Lịch sử kỹ năng đã duyệt lên Sàn Chung -->
+      {% if community_approved_skills %}
+      <div class="card border-0 shadow-sm rounded-4 bg-white">
+        <div class="card-header bg-white border-0 pt-4 px-4 pb-2">
+          <h6 class="fw-bold text-dark mb-1">
+            <i class="bi bi-clock-history text-primary me-2"></i>Kỹ Năng Đang Hoạt Động Trên Sàn Chung
+          </h6>
+          <small class="text-muted">Nhật ký các kỹ năng đã được quản trị viên phê duyệt</small>
+        </div>
+        <div class="card-body p-4">
+          <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0">
+              <thead class="table-light small text-secondary">
+                <tr>
+                  <th>Kỹ năng</th>
+                  <th>Chủ kỹ năng</th>
+                  <th>Trường học</th>
+                  <th>Người phê duyệt</th>
+                  <th>Thời gian duyệt</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for sk in community_approved_skills %}
+                <tr>
+                  <td class="fw-semibold text-dark">{{ sk.tieu_de }}</td>
+                  <td>{{ sk.ho_ten }} ({{ sk.lop }})</td>
+                  <td><span class="badge bg-light text-dark border">{{ sk.ten_truong }}</span></td>
+                  <td>
+                    <span class="badge bg-info-subtle text-info-emphasis">
+                      <i class="bi bi-person-check me-1"></i>{{ sk.nguoi_duyet_ten if sk.nguoi_duyet_ten else 'Quản trị viên' }}
+                    </span>
+                  </td>
+                  <td class="small text-muted">{{ sk.ngay_duyet_cong_dong }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      {% endif %}
     </div>
 
     {% if is_super_admin %}
