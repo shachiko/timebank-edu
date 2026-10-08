@@ -611,6 +611,48 @@ python test_m5_blog.py
   6. `test_06_one_click_publish_workflow`: Xác nhận cơ chế duyệt 1-click của cô giáo hoạt động chuẩn xác, sau duyệt bài lập tức xuất hiện công khai trên `/blog` kèm huy hiệu AI.
 * Kết quả: **6/6 test cases đạt chuẩn 100% OK**.
 
+---
+
+## 🏛️ PROMPT 17 — ĐẠI PHẪU ĐA TRƯỜNG (MULTI-TENANT CORE ARCHITECTURE)
+
+Hệ thống được nâng cấp toàn diện từ mô hình đơn trường sang **Kiến trúc Đa trường ("Gian hàng học đường")** phục vụ đợt thí điểm thực tế, sẵn sàng mở rộng quy mô.
+
+### 1. Kiến trúc Đa trường & Phân quyền 4 cấp (RBAC):
+- **Bảng `truong`:** Quản lý danh mục các trường tham gia (`id`, `ten_truong`, `logo`, `trang_thai`, `ngay_tao`).
+- **Seed 4 trường học:**
+  1. *Trường Tiểu học, THCS, THPT Quốc tế song ngữ học viện Anh Quốc-UK Academy* (`dang_thi_diem`)
+  2. *Trường THCS Nguyễn Văn Thuộc* (`chuan_bi_trien_khai`)
+  3. *Trường THCS Lê Văn Tám* (`chuan_bi_trien_khai`)
+  4. *Trường THPT Hải Đảo* (`chuan_bi_trien_khai`)
+- **Phân quyền 4 cấp nghiêm ngặt:**
+  - `super_admin`: Tài khoản quản trị tối cao (Cô Nguyễn Thị Huyền) — thấy, quản lý và duyệt toàn bộ 4 trường; có chức năng "Duyệt tất cả" hàng loạt.
+  - `school_admin`: Quản trị viên riêng của từng trường — chỉ thấy và quản lý dữ liệu trường mình (duyệt kỹ năng, sinh mã mời, duyệt học sinh, xử lý vi phạm).
+  - `giao_vien`: Giám sát sư phạm, dự giờ phòng học ảo, duyệt kỹ năng và bài viết.
+  - `hoc_sinh`: Tham gia học tập, chia sẻ kỹ năng và tương tác trong không gian trường mình.
+- **Cách ly dữ liệu (Data Isolation):** Mọi query dữ liệu (chợ kỹ năng, phòng học ảo, hoạt động cộng đồng, bài viết, sổ vi phạm) đều tự động lọc theo `truong_id` của người dùng đăng nhập.
+
+### 2. Bảo vệ Đăng ký & Cơ chế Mã mời (Anti-Impersonation):
+- Bảng `invite_codes` sinh mã ngẫu nhiên chuẩn hóa dạng `TBEDU-XXXX-XXXX` (phân loại mã lớp dùng chung hoặc mã cá nhân 1 lần).
+- Đăng ký nhập mã hợp lệ $\rightarrow$ Tự động gán đúng trường và kích hoạt tài khoản ngay lập tức (`hoat_dong`, cấp 2.0h khởi đầu).
+- Đăng ký không có mã $\rightarrow$ Tự chọn trường và chuyển vào trạng thái `cho_duyet`, bị chặn đăng kỹ năng và đặt lịch học cho đến khi được quản trị viên trường hoặc cô Huyền phê duyệt.
+
+### 3. AI Lọc Chat Realtime & Kỷ luật 3 Mức độ:
+- Lọc tin nhắn realtime trong khung chat: Từ điển từ cấm kết hợp biểu thức chính quy (Regex) bắt biến thể lách luật và Gemini AI phân tích ngữ cảnh học đường.
+- Bảng `violations` ghi nhận vi phạm với 3 mức độ nhân văn:
+  - **Lần 1:** Bot tự động nhắc nhở ngay trong chat.
+  - **Lần 2:** Cảnh cáo chính thức và thông báo tới Ban Quản trị nhà trường.
+  - **Lần 3:** Hệ thống ĐỀ XUẤT khóa và chuyển hồ sơ chờ Quản trị viên bấm xác nhận mới khóa thật (tuyệt đối không tự động khóa vĩnh viễn).
+- Nút **"Báo cáo vi phạm"** được tích hợp trực tiếp trong phòng học ảo để học sinh báo cáo hành vi không chuẩn mực cho giáo viên phụ trách.
+
+### 4. Trang Nội quy Học đường (`/noi-quy`) & Thương hiệu Mới:
+- Trang trọng công bố **6 Điều Quy tắc Vàng** (Trung thực, Trang phục, Ngôn ngữ, Lành mạnh, Công bằng, Tôn trọng) và chế tài 3 cấp độ.
+- Tiêu đề trung tâm trang chủ đổi mới: **"School Time Bank"** kèm dòng phụ đề in nghiêng *"Ngân hàng Thời gian Học đường"*.
+- Xóa bỏ định danh cũ tại Header, Hero và Footer; chỉ giữ trong danh mục các trường tham gia.
+
+### 5. Kiểm thử Tự động & Regression Toàn diện:
+- Bộ test suite `test_prompt17_multitenant.py` nghiệm thu 8/8 tiêu chí khắt khe.
+- Chạy kiểm thử toàn bộ **13/13 test suites (`run_all_tests.py`) đạt 100% PASS** hoàn hảo trước khi triển khai.
+
 
 
 

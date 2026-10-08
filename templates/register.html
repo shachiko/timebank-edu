@@ -1,22 +1,62 @@
 {% extends "base.html" %}
 
-{% block title %}Đăng ký tài khoản - {{ config.ten_truong }}{% endblock %}
+{% block title %}Đăng ký tài khoản - School Time Bank{% endblock %}
 
 {% block content %}
 <div class="container py-5">
   <div class="row justify-content-center">
-    <div class="col-md-7 col-lg-6">
+    <div class="col-md-8 col-lg-7">
       <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
         <div class="card-header bg-white border-0 pt-4 pb-2 text-center">
           <div class="badge bg-success bg-opacity-10 text-success fw-semibold px-3 py-2 rounded-pill mb-2">
             <i class="bi bi-gift-fill me-1"></i> TẶNG NGAY 2.0 GIỜ TÍN DỤNG KHI MỞ SỔ
           </div>
           <h4 class="fw-bold text-dark mb-1">Mở sổ Ngân hàng Thời gian</h4>
-          <p class="text-muted small mb-0">Dành cho học sinh {{ config.ten_truong }}</p>
+          <p class="text-muted small mb-0">Hệ thống Gian hàng Đa trường — School Time Bank</p>
         </div>
 
         <div class="card-body p-4 p-md-5 pt-3">
-          <form method="POST" action="{{ url_for('register') }}">
+          <form method="POST" action="{{ url_for('register') }}" id="registerForm">
+            <!-- 1. KHỐI BẢO VỆ ĐĂNG KÝ: MÃ MỜI VÀ ĐƠN VỊ TRƯỜNG -->
+            <div class="p-3 bg-light rounded-4 border mb-3">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label for="ma_code" class="form-label small fw-semibold text-dark">
+                    <i class="bi bi-ticket-perforated-fill text-warning me-1"></i> Mã mời trường học
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="bi bi-key-fill text-muted"></i></span>
+                    <input type="text" class="form-control font-monospace text-uppercase" id="ma_code" name="ma_code" placeholder="TBEDU-XXXX-XXXX" value="{{ request.form.get('ma_code', '') }}" autocomplete="off">
+                    <button class="btn btn-outline-secondary btn-sm" type="button" id="btnCheckCode" onclick="validateInviteCode()">
+                      Kiểm tra
+                    </button>
+                  </div>
+                  <div id="codeFeedback" class="small mt-1 text-muted">
+                    Có mã mời: Tự gán trường & kích hoạt ngay.
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="truong_id" class="form-label small fw-semibold text-dark">
+                    <i class="bi bi-building-fill text-primary me-1"></i> Đơn vị trường học <span class="text-danger">*</span>
+                  </label>
+                  <select class="form-select" id="truong_id" name="truong_id" required>
+                    <option value="" disabled selected>-- Chọn trường của bạn --</option>
+                    {% for s in schools %}
+                      <option value="{{ s.id }}" {% if request.form.get('truong_id')|string == s.id|string %}selected{% endif %}>
+                        {{ s.ten_truong }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                  <input type="hidden" id="truong_id_hidden" name="truong_id_hidden" value="">
+                  <div id="schoolNotice" class="small mt-1 text-muted">
+                    Không mã: Vào hàng chờ quản trị trường duyệt.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. THÔNG TIN HỌC SINH -->
             <div class="row g-3 mb-3">
               <div class="col-md-6">
                 <label for="ma_hoc_sinh" class="form-label small fw-semibold">Mã học sinh <span class="text-danger">*</span></label>
@@ -90,4 +130,70 @@
     </div>
   </div>
 </div>
+
+<script>
+async function validateInviteCode() {
+  const codeInput = document.getElementById('ma_code');
+  const code = codeInput.value.trim().toUpperCase();
+  const feedback = document.getElementById('codeFeedback');
+  const schoolSelect = document.getElementById('truong_id');
+  const schoolHidden = document.getElementById('truong_id_hidden');
+  const schoolNotice = document.getElementById('schoolNotice');
+
+  if (!code) {
+    feedback.className = 'small mt-1 text-muted';
+    feedback.textContent = 'Có mã mời: Tự gán trường & kích hoạt ngay.';
+    schoolSelect.disabled = false;
+    schoolHidden.value = '';
+    schoolNotice.className = 'small mt-1 text-muted';
+    schoolNotice.textContent = 'Không mã: Vào hàng chờ quản trị trường duyệt.';
+    return;
+  }
+
+  feedback.className = 'small mt-1 text-info';
+  feedback.textContent = 'Đang kiểm tra mã mời...';
+
+  try {
+    const res = await fetch(`/api/check-invite-code?code=${encodeURIComponent(code)}`);
+    const data = await res.json();
+    if (data.valid) {
+      feedback.className = 'small mt-1 text-success fw-bold';
+      feedback.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i> Mã hợp lệ! Tự gán: ${data.ten_truong} (Còn ${data.con_lai} lượt). Kích hoạt ngay!`;
+      schoolSelect.value = String(data.truong_id);
+      schoolSelect.disabled = true; // Khóa dropdown trường
+      schoolHidden.value = String(data.truong_id);
+      schoolNotice.className = 'small mt-1 text-success fw-semibold';
+      schoolNotice.innerHTML = `<i class="bi bi-lock-fill me-1"></i> Trường đã tự gán & khóa theo mã mời.`;
+    } else {
+      feedback.className = 'small mt-1 text-danger fw-bold';
+      feedback.innerHTML = `<i class="bi bi-x-circle-fill me-1"></i> ${data.message}`;
+      schoolSelect.disabled = false;
+      schoolHidden.value = '';
+      schoolNotice.className = 'small mt-1 text-muted';
+      schoolNotice.textContent = 'Không có mã hợp lệ: Tài khoản vào hàng chờ duyệt.';
+    }
+  } catch (e) {
+    feedback.className = 'small mt-1 text-danger';
+    feedback.textContent = 'Không thể kiểm tra mã mời lúc này.';
+  }
+}
+
+document.getElementById('ma_code').addEventListener('input', function() {
+  if (this.value.trim().length >= 8) {
+    validateInviteCode();
+  } else if (this.value.trim().length === 0) {
+    validateInviteCode();
+  }
+});
+
+// Trước khi submit, mở khóa dropdown để gửi dữ liệu form chính xác
+document.getElementById('registerForm').addEventListener('submit', function() {
+  const schoolSelect = document.getElementById('truong_id');
+  const schoolHidden = document.getElementById('truong_id_hidden');
+  if (schoolHidden.value) {
+    schoolSelect.value = schoolHidden.value;
+  }
+  schoolSelect.disabled = false;
+});
+</script>
 {% endblock %}

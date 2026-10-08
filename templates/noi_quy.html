@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Nội quy Học đường - School Time Bank{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <!-- Phần Tiêu đề Trang trọng -->
+  <div class="text-center max-w-800 mx-auto mb-5">
+    <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-white border shadow-sm mb-3">
+      <span class="badge bg-warning text-dark"><i class="bi bi-shield-check me-1"></i> BẢO VỆ MÔI TRƯỜNG HỌC ĐƯỜNG</span>
+      <span class="small text-muted fw-semibold">School Time Bank</span>
+    </div>
+    <h1 class="display-5 fw-bold text-dark mb-2">Quy Chế & Nội Quy Học Đường</h1>
+    <p class="text-muted fs-5 fst-italic">"Ngân hàng Thời gian Học đường — Văn minh, Bình đẳng, Nhân văn"</p>
+    <div class="mx-auto" style="width: 80px; height: 4px; background: linear-gradient(90deg, #F26522, #F5B301); border-radius: 2px;"></div>
+  </div>
+
+  <!-- Lời mở đầu -->
+  <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white mb-5 border-start border-4 border-warning">
+    <div class="d-flex align-items-start gap-3">
+      <div class="p-3 bg-warning bg-opacity-10 rounded-circle text-warning fs-3">
+        <i class="bi bi-mortarboard-fill"></i>
+      </div>
+      <div>
+        <h4 class="fw-bold text-dark mb-2">Triết Lý & Nguyên Tắc Cốt Lõi</h4>
+        <p class="text-secondary mb-0 lh-lg">
+          Mô hình <strong>School Time Bank (Ngân hàng Thời gian Học đường)</strong> được sáng lập dựa trên triết lý sư phạm:
+          <em>"Mỗi học sinh vừa là người học, vừa là người dạy — Mọi tri thức đều bình đẳng"</em>. 
+          Để đảm bảo một không gian giáo dục an toàn, tích cực, không bạo lực học đường và tôn trọng lẫn nhau, mọi học sinh và cán bộ giáo viên tham gia hệ thống phải tuân thủ nghiêm ngặt <strong>6 Điều Nội quy</strong> dưới đây.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6 ĐIỀU NỘI QUY CHÍNH THỨC -->
+  <div class="row g-4 mb-5">
+    <!-- Điều 1: Trung thực -->
+    <div class="col-md-6 col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100 position-relative overflow-hidden card-rule">
+        <div class="rule-number">01</div>
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <span class="badge bg-primary bg-opacity-10 text-primary p-2 rounded-3"><i class="bi bi-check-circle-fill fs-5"></i></span>
+          <h5 class="fw-bold mb-0 text-dark">1. Trung thực</h5>
+        </div>
+        <p class="text-secondary mb-2 fw-semibold text-primary">Dạy thật, học thật.</p>
+        <p class="small text-muted mb-0 lh-base">
+          Cả người dạy và người học phải tham dự ít nhất <strong>80% thời lượng buổi học</strong> thì tín dụng thời gian mới được hệ thống tự động đối soát và chuyển vào ví. Không gian lận điểm danh hoặc khai báo khống giờ học.
+        </p>
+      </div>
+    </div>
+
+    <!-- Điều 2: Trang phục -->
+    <div class="col-md-6 col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100 position-relative overflow-hidden card-rule">
+        <div class="rule-number">02</div>
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <span class="badge bg-success bg-opacity-10 text-success p-2 rounded-3"><i class="bi bi-camera-video-fill fs-5"></i></span>
+          <h5 class="fw-bold mb-0 text-dark">2. Trang phục</h5>
+        </div>
+        <p class="text-secondary mb-2 fw-semibold text-success">Lịch sự, kín đáo khi trực tuyến.</p>
+        <p class="small text-muted mb-0 lh-base">
+          Khi tham gia phòng học ảo và bật camera, học sinh phải ăn mặc chỉnh tề, lịch sự, kín đáo phù hợp môi trường học đường. <strong>Nghiêm cấm tuyệt đối</strong> ăn mặc hở hang, phản cảm hoặc có hành vi thiếu chuẩn mực trước ống kính.
+        </p>
+      </div>
+    </div>
+
+    <!-- Điều 3: Ngôn ngữ -->
+    <div class="col-md-6 col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100 position-relative overflow-hidden card-rule">
+        <div class="rule-number">03</div>
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <span class="badge bg-danger bg-opacity-10 text-danger p-2 rounded-3"><i class="bi bi-chat-quote-fill fs-5"></i></span>
+          <h5 class="fw-bold mb-0 text-dark">3. Ngôn ngữ</h5>
+        </div>
+        <p class="text-secondary mb-2 fw-semibold text-danger">Chuẩn mực, văn minh học đường.</p>
+        <p class="small text-muted mb-0 lh-base">
+          Không chửi bới, chửi tục, chửi thề dưới mọi hình thức; <strong>nghiêm cấm từ ngữ nhạy cảm, thô tục</strong> trong lớp học, phòng học ảo và khung chat. Trợ lý AI và hệ thống kiểm duyệt hoạt động realtime để ngăn chặn các vi phạm.
+        </p>
+      </div>
+    </div>
+
+    <!-- Điều 4: Lành mạnh -->
+    <div class="col-md-6 col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100 position-relative overflow-hidden card-rule">
+        <div class="rule-number">04</div>
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <span class="badge bg-info bg-opacity-10 text-info p-2 rounded-3"><i class="bi bi-shield-lock-fill fs-5"></i></span>
+          <h5 class="fw-bold mb-0 text-dark">4. Lành mạnh</h5>
+        </div>
+        <p class="text-secondary mb-2 fw-semibold text-info">Nội dung qua kiểm duyệt sư phạm.</p>
+        <p class="small text-muted mb-0 lh-base">
+          Mọi kỹ năng, tài liệu và hoạt động chia sẻ đều phải được kiểm duyệt tự động qua AI và giáo viên thẩm định. <strong>Nghiêm cấm chia sẻ nội dung độc hại</strong>, bạo lực, quảng cáo thương mại hoặc lôi kéo trái phép.
+        </p>
+      </div>
+    </div>
+
+    <!-- Điều 5: Công bằng -->
+    <div class="col-md-6 col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100 position-relative overflow-hidden card-rule">
+        <div class="rule-number">05</div>
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <span class="badge bg-warning bg-opacity-10 text-warning p-2 rounded-3"><i class="bi bi-hourglass-split fs-5"></i></span>
+          <h5 class="fw-bold mb-0 text-dark">5. Công bằng</h5>
+        </div>
+        <p class="text-secondary mb-2 fw-semibold text-warning">1 giờ dạy = 1 tín dụng thời gian.</p>
+        <p class="small text-muted mb-0 lh-base">
+          Mọi tri thức đều có giá trị ngang nhau bất kể môn văn hóa hay năng khiếu. <strong>Tuyệt đối không dùng tiền mặt</strong>, quà cáp hoặc bất kỳ hình thức quy đổi vật chất nào khác ngoài tín dụng thời gian của hệ thống.
+        </p>
+      </div>
+    </div>
+
+    <!-- Điều 6: Tôn trọng -->
+    <div class="col-md-6 col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100 position-relative overflow-hidden card-rule">
+        <div class="rule-number">06</div>
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <span class="badge bg-purple-subtle text-purple p-2 rounded-3" style="background: #ede9fe; color: #6d28d9;"><i class="bi bi-people-fill fs-5"></i></span>
+          <h5 class="fw-bold mb-0 text-dark">6. Tôn trọng</h5>
+        </div>
+        <p class="text-secondary mb-2 fw-semibold" style="color: #6d28d9;">Bảo mật & không quấy rối.</p>
+        <p class="small text-muted mb-0 lh-base">
+          Tuyệt đối tôn trọng quyền riêng tư và <strong>bảo mật thông tin cá nhân của bạn học</strong> (số điện thoại, địa chỉ, hình ảnh). Nghiêm cấm hành vi đe dọa, xúc phạm hoặc quấy rối dưới bất kỳ hình thức nào.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHẾ TÀI XỬ LÝ VI PHẠM (3 MỨC ĐỘ) -->
+  <div class="card border-0 shadow-lg rounded-4 overflow-hidden mb-5">
+    <div class="card-header bg-danger text-white py-3 px-4 d-flex align-items-center gap-2">
+      <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+      <div>
+        <h5 class="fw-bold mb-0">CHẾ TÀI XỬ LÝ VI PHẠM (3 CẤP ĐỘ)</h5>
+        <small class="text-white-50">Áp dụng nghiêm minh trên toàn bộ hệ thống các trường</small>
+      </div>
+    </div>
+
+    <div class="card-body p-4 p-md-5 bg-white">
+      <div class="row g-4 align-items-stretch">
+        <!-- Cấp độ 1 -->
+        <div class="col-md-4">
+          <div class="p-4 rounded-4 border border-warning h-100 bg-warning bg-opacity-10 position-relative">
+            <span class="badge bg-warning text-dark fw-bold px-3 py-2 rounded-pill mb-3">MỨC ĐỘ 1</span>
+            <h5 class="fw-bold text-dark mb-2"><i class="bi bi-bell-fill text-warning me-2"></i>Lần 1 — Nhắc nhở</h5>
+            <p class="small text-secondary mb-0 lh-base">
+              Hệ thống Bot và Trợ lý AI tự động phát hiện và <strong>nhắc nhở tức thời ngay trong khung chat</strong>. Tin nhắn vi phạm bị chặn hiển thị để người học kịp thời điều chỉnh ngôn phong và nhận thức.
+            </p>
+          </div>
+        </div>
+
+        <!-- Cấp độ 2 -->
+        <div class="col-md-4">
+          <div class="p-4 rounded-4 border border-danger h-100 bg-danger bg-opacity-10 position-relative">
+            <span class="badge bg-danger text-white fw-bold px-3 py-2 rounded-pill mb-3">MỨC ĐỘ 2</span>
+            <h5 class="fw-bold text-dark mb-2"><i class="bi bi-shield-slash-fill text-danger me-2"></i>Lần 2 — Cảnh cáo</h5>
+            <p class="small text-secondary mb-0 lh-base">
+              Hệ thống ghi nhận <strong>CẢNH CÁO CHÍNH THỨC</strong>, lập biên bản điện tử và gửi thông báo khẩn tới <strong>Ban Quản trị nhà trường</strong> và Giáo viên chủ nhiệm để mời học sinh làm việc, nhắc nhở.
+            </p>
+          </div>
+        </div>
+
+        <!-- Cấp độ 3 -->
+        <div class="col-md-4">
+          <div class="p-4 rounded-4 border border-dark h-100 bg-dark text-white position-relative">
+            <span class="badge bg-danger text-white fw-bold px-3 py-2 rounded-pill mb-3">MỨC ĐỘ 3</span>
+            <h5 class="fw-bold text-white mb-2"><i class="bi bi-person-x-fill text-danger me-2"></i>Lần 3 — Đưa ra khỏi lớp học và khóa tài khoản vĩnh viễn</h5>
+            <p class="small text-white-50 mb-0 lh-base">
+              Đưa ngay ra khỏi lớp học / phòng học ảo. Hệ thống tự động <strong>đề xuất khóa tài khoản</strong> và chuyển hồ sơ chờ Quản trị viên trường bấm xác nhận để <strong>khóa tài khoản vĩnh viễn</strong>.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="alert alert-secondary mt-4 mb-0 small text-center rounded-3">
+        <i class="bi bi-info-circle me-1 text-primary"></i>
+        Mọi học sinh khi tham gia lớp học có quyền bấm nút <strong>"Báo cáo vi phạm"</strong> trong phòng học ảo để gửi thông tin trực tiếp đến thầy cô giám sát sư phạm.
+      </div>
+    </div>
+  </div>
+
+  <div class="text-center">
+    <a href="{{ url_for('skills_market') }}" class="btn btn-brand px-4 py-2 fw-semibold">
+      <i class="bi bi-shop me-1"></i> Khám phá Chợ kỹ năng
+    </a>
+    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary px-4 py-2 ms-2">
+      <i class="bi bi-house me-1"></i> Trở về Trang chủ
+    </a>
+  </div>
+</div>
+
+<style>
+  .card-rule {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .card-rule:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(27,42,107,0.12) !important;
+  }
+  .rule-number {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: rgba(27,42,107,0.06);
+    line-height: 1;
+    pointer-events: none;
+  }
+</style>
+{% endblock %}

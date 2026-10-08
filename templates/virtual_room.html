@@ -34,6 +34,11 @@
         <span class="fw-bold fs-5 font-monospace text-primary" id="roomTimer">00:00:00</span>
       </div>
 
+      <!-- Nút Báo cáo vi phạm cho giáo viên -->
+      <button type="button" class="btn btn-outline-warning fw-semibold px-3 py-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#reportViolationModal">
+        <i class="bi bi-shield-exclamation me-1"></i> Báo cáo
+      </button>
+
       <!-- Nút kết thúc buổi học -->
       {% if is_teacher or is_learner or is_supervisor %}
       <form method="POST" action="{{ url_for('finish_virtual_room', session_id=session_data.id) }}" onsubmit="return confirm('Bạn có chắc chắn muốn kết thúc buổi học này? Hệ thống sẽ tự động đối soát thời lượng cùng online (yêu cầu ≥ 80%) để xử lý chuyển giờ.');">
@@ -122,6 +127,51 @@
         </div>
       </div>
       {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Modal Báo cáo vi phạm trong phòng học ảo -->
+<div class="modal fade" id="reportViolationModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-header border-bottom-0 pb-0">
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge bg-danger p-2 rounded-circle"><i class="bi bi-flag-fill text-white"></i></span>
+          <h5 class="modal-title fw-bold text-dark" id="reportModalLabel">Báo cáo vi phạm cho Giáo viên</h5>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="POST" action="{{ url_for('report_session_violation', session_id=session_data.id) }}">
+        <div class="modal-body p-4">
+          <p class="small text-muted mb-3">
+            Thông tin báo cáo sẽ được gửi bảo mật trực tiếp đến Giáo viên phụ trách và Ban Quản trị trường để can thiệp kịp thời.
+          </p>
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Hành vi vi phạm nội quy <span class="text-danger">*</span></label>
+            <select class="form-select" name="loai_vi_pham" required>
+              <option value="ngon_tu_khong_chuan_muc">Ngôn từ thô tục, chửi thề, xúc phạm (Điều 3)</option>
+              <option value="trang_phuc_khong_phu_hop">Trang phục phản cảm, không phù hợp camera (Điều 2)</option>
+              <option value="quay_roi_thieu_ton_trong">Hành vi quấy rối, thiếu tôn trọng bạn học (Điều 6)</option>
+              <option value="noi_dung_doc_hai">Chia sẻ nội dung độc hại, quảng cáo (Điều 4)</option>
+              <option value="gian_lan_thoi_luong">Gian lận điểm danh / rời phòng sớm (Điều 1)</option>
+              <option value="khac">Vi phạm khác</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Mô tả chi tiết sự việc <span class="text-danger">*</span></label>
+            <textarea class="form-control" name="mo_ta" rows="3" placeholder="Mô tả cụ thể hành vi hoặc lời nói vi phạm..." required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer border-top-0 pt-0 px-4 pb-4">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+          <button type="submit" class="btn btn-danger fw-semibold px-4">
+            <i class="bi bi-send-fill me-1"></i> Gửi báo cáo vi phạm
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </div>

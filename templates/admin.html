@@ -1,393 +1,734 @@
 {% extends "base.html" %}
 
-{% block title %}Bảng điều khiển Quản trị - {{ config.ten_truong }}{% endblock %}
+{% block title %}Bảng điều khiển Quản trị - School Time Bank{% endblock %}
 
 {% block content %}
 <div class="container py-4">
-  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+  <!-- Thanh tiêu đề Quản trị & Thông tin vai trò -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3 bg-white p-4 rounded-4 shadow-sm border">
     <div>
-      <span class="badge bg-danger mb-1"><i class="bi bi-shield-lock-fill me-1"></i> Khu vực Quản trị viên Tối cao</span>
-      <h2 class="fw-bold mb-0 text-dark">Hệ thống Quản trị Nhà trường</h2>
-      <p class="text-muted small mb-0">{{ config.ten_truong }} — Không gian Học tập & Tương trợ Tri thức</p>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        {% if is_super_admin %}
+          <span class="badge bg-danger px-3 py-2 rounded-pill"><i class="bi bi-shield-lock-fill me-1"></i> TỔNG QUẢN TRỊ (SUPER ADMIN)</span>
+          <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold">Cô Nguyễn Thị Huyền</span>
+        {% else %}
+          <span class="badge bg-primary px-3 py-2 rounded-pill"><i class="bi bi-building-fill me-1"></i> QUẢN TRỊ VIÊN TRƯỜNG (SCHOOL ADMIN)</span>
+          <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">{{ current_school_name }}</span>
+        {% endif %}
+      </div>
+      <h2 class="fw-bold mb-0 text-dark">Hệ thống Quản trị Gian hàng Đa trường</h2>
+      <p class="text-muted small mb-0">School Time Bank — Phân quyền & Giám sát Giáo dục Toàn diện</p>
     </div>
-    <div class="d-flex flex-wrap gap-2">
-      <a href="{{ url_for('export_data_csv') }}" class="btn btn-success btn-sm shadow-sm">
-        <i class="bi bi-file-earmark-spreadsheet me-1"></i> Xuất CSV (Nghiên cứu sư phạm)
+
+    <!-- Bộ lọc trường dành cho Super Admin & Nút thao tác nhanh -->
+    <div class="d-flex flex-wrap align-items-center gap-2">
+      {% if is_super_admin %}
+      <form method="GET" action="{{ url_for('admin_dashboard') }}" class="d-flex align-items-center gap-2">
+        <label for="filterTruong" class="small text-muted fw-semibold text-nowrap"><i class="bi bi-funnel-fill me-1"></i>Trường:</label>
+        <select name="truong_id" id="filterTruong" class="form-select form-select-sm rounded-pill" onchange="this.form.submit()" style="min-width: 220px;">
+          <option value="" {% if not selected_truong_id %}selected{% endif %}>-- Tất cả các trường (4 trường) --</option>
+          {% for s in all_schools %}
+            <option value="{{ s.id }}" {% if selected_truong_id|string == s.id|string %}selected{% endif %}>
+              {{ s.ten_truong }}
+            </option>
+          {% endfor %}
+        </select>
+      </form>
+      {% endif %}
+
+      <a href="{{ url_for('export_data_csv') }}" class="btn btn-success btn-sm shadow-sm rounded-pill">
+        <i class="bi bi-file-earmark-spreadsheet me-1"></i> Xuất CSV
       </a>
-      <a href="{{ url_for('virtual_rooms_dashboard') }}" class="btn btn-primary btn-sm">
+      <a href="{{ url_for('virtual_rooms_dashboard') }}" class="btn btn-primary btn-sm rounded-pill">
         <i class="bi bi-camera-video me-1"></i> Giám sát Phòng học ảo
       </a>
-      <a href="{{ url_for('skills_approval') }}" class="btn btn-outline-primary btn-sm">
+      <a href="{{ url_for('skills_approval') }}" class="btn btn-outline-primary btn-sm rounded-pill">
         <i class="bi bi-patch-check me-1"></i> Duyệt Kỹ Năng
       </a>
-      <a href="{{ url_for('profile') }}" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-person me-1"></i> Hồ sơ của tôi
-      </a>
     </div>
   </div>
 
-  <!-- Thống kê nhanh cấp trường (Milestone M4-lite) -->
-  <div class="row g-3 mb-4">
-    <!-- 1. Tổng phiên học -->
-    <div class="col-sm-6 col-lg-2">
-      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
-        <span class="text-muted small">Tổng phiên học</span>
-        <h3 class="fw-bold mb-0 text-primary">{{ total_sessions_count }}</h3>
-        <small class="text-muted">Toàn hệ thống</small>
-      </div>
-    </div>
+  <!-- Hệ thống Tabs Quản trị -->
+  <ul class="nav nav-pills mb-4 gap-2 bg-white p-2 rounded-4 shadow-sm border" id="adminTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active rounded-pill fw-semibold" id="tab-overview-btn" data-bs-toggle="pill" data-bs-target="#tab-overview" type="button" role="tab">
+        <i class="bi bi-speedometer2 me-1"></i> Tổng quan & Báo cáo
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link rounded-pill fw-semibold position-relative" id="tab-queue-btn" data-bs-toggle="pill" data-bs-target="#tab-queue" type="button" role="tab">
+        <i class="bi bi-hourglass-split me-1"></i> Hàng chờ duyệt học sinh
+        {% if pending_students %}
+          <span class="badge bg-danger rounded-pill ms-1">{{ pending_students|length }}</span>
+        {% endif %}
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link rounded-pill fw-semibold" id="tab-invite-btn" data-bs-toggle="pill" data-bs-target="#tab-invite" type="button" role="tab">
+        <i class="bi bi-ticket-perforated me-1"></i> Quản lý Mã mời
+        <span class="badge bg-primary rounded-pill ms-1">{{ invite_codes_list|length }}</span>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link rounded-pill fw-semibold position-relative" id="tab-violations-btn" data-bs-toggle="pill" data-bs-target="#tab-violations" type="button" role="tab">
+        <i class="bi bi-shield-exclamation me-1"></i> Xử lý Vi phạm & Báo cáo
+        {% if violations_list %}
+          <span class="badge bg-warning text-dark rounded-pill ms-1">{{ violations_list|length }}</span>
+        {% endif %}
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link rounded-pill fw-semibold" id="tab-users-btn" data-bs-toggle="pill" data-bs-target="#tab-users" type="button" role="tab">
+        <i class="bi bi-people me-1"></i> Danh sách Tài khoản
+        <span class="badge bg-secondary rounded-pill ms-1">{{ users|length }}</span>
+      </button>
+    </li>
+  </ul>
 
-    <!-- 2. Tổng giờ lưu thông -->
-    <div class="col-sm-6 col-lg-2">
-      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
-        <span class="text-muted small">Tổng giờ lưu thông</span>
-        <h3 class="fw-bold mb-0 text-success">{{ "%.1f"|format(total_hours_circulated) }}h</h3>
-        <small class="text-muted">Trao đổi hoàn thành</small>
-      </div>
-    </div>
-
-    <!-- 3. Học sinh mở sổ -->
-    <div class="col-sm-6 col-lg-2">
-      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
-        <span class="text-muted small">Học sinh thành viên</span>
-        <h3 class="fw-bold mb-0 text-info">{{ student_count }}</h3>
-        <small class="text-muted">Đã mở sổ tín dụng</small>
-      </div>
-    </div>
-
-    <!-- 4. Tổng người dùng -->
-    <div class="col-sm-6 col-lg-2">
-      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
-        <span class="text-muted small">Tổng tài khoản</span>
-        <h3 class="fw-bold mb-0 text-dark">{{ users|length }}</h3>
-        <small class="text-muted">HS + GV + Admin</small>
-      </div>
-    </div>
-
-    <!-- 5. Tổng giờ trong ví -->
-    <div class="col-sm-6 col-lg-2">
-      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
-        <span class="text-muted small">Giờ trong hệ thống</span>
-        <h3 class="fw-bold mb-0 text-warning">{{ "%.1f"|format(total_credits) }}h</h3>
-        <small class="text-muted">Vốn khả dụng</small>
-      </div>
-    </div>
-
-    <!-- 6. Kỹ năng chờ duyệt -->
-    <div class="col-sm-6 col-lg-2">
-      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
-        <span class="text-muted small">Kỹ năng chờ duyệt</span>
-        <h3 class="fw-bold mb-0 text-danger">{{ pending_skills_count }}</h3>
-        <small class="text-muted">Cần GV duyệt tay</small>
-      </div>
-    </div>
-  </div>
-
-  <!-- KHỐI AI CẢNH BÁO SỚM QUẢN TRỊ (ĐIỂM CHẠM 5) -->
-  {% if ai_warnings %}
-  <div class="card border-0 shadow-sm rounded-4 bg-white mb-4 overflow-hidden border-start border-4 border-danger">
-    <div class="card-header bg-white border-bottom py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
-      <div>
-        <div class="d-flex align-items-center gap-2">
-          <span class="badge bg-danger rounded-pill px-2 py-1"><i class="bi bi-shield-exclamation me-1"></i> CẢNH BÁO SỚM SƯ PHẠM</span>
-          <span class="badge-ai" style="font-size: 0.75rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Trí tuệ nhân tạo)</span>
-        </div>
-        <h5 class="fw-bold mb-0 text-dark mt-1">Phát Hiện Nguy Cơ Học Đường Cần Can Thiệp</h5>
-      </div>
-      <small class="text-muted">Tự động quét học sinh ngưng hoạt động (>7 ngày) và cặp đôi xung đột (≤2★)</small>
-    </div>
-
-    <div class="card-body p-4">
-      <div class="row g-4">
-        <!-- 1. Học sinh ngưng hoạt động > 7 ngày -->
-        <div class="col-md-6">
-          <h6 class="fw-bold text-dark mb-2">
-            <i class="bi bi-person-x-fill text-danger me-1"></i>Học sinh > 7 ngày không tham gia phiên ({{ ai_warnings.inactive_students|length }})
-          </h6>
-          {% if ai_warnings.inactive_students %}
-            <div class="list-group list-group-flush border rounded-3 overflow-hidden">
-              {% for s in ai_warnings.inactive_students[:5] %}
-              <div class="list-group-item py-2 px-3">
-                <div class="d-flex justify-content-between align-items-center">
-                  <span class="fw-semibold text-dark">{{ s.ho_ten }}</span>
-                  <span class="badge bg-light text-secondary border">Lớp {{ s.lop }}</span>
-                </div>
-                <small class="text-danger d-block">{{ s.ly_do }}</small>
-              </div>
-              {% endfor %}
-            </div>
-          {% else %}
-            <div class="p-3 bg-light rounded-3 text-muted small text-center">
-              <i class="bi bi-check-circle-fill text-success me-1"></i> Mọi học sinh đều duy trì hoạt động đều đặn.
-            </div>
-          {% endif %}
-        </div>
-
-        <!-- 2. Cặp đôi bị đánh giá thấp >= 2 lần -->
-        <div class="col-md-6">
-          <h6 class="fw-bold text-dark mb-2">
-            <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>Cặp đôi đánh giá ≤ 2★ từ 2 lần trở lên ({{ ai_warnings.low_rated_pairs|length }})
-          </h6>
-          {% if ai_warnings.low_rated_pairs %}
-            <div class="list-group list-group-flush border rounded-3 overflow-hidden">
-              {% for p in ai_warnings.low_rated_pairs %}
-              <div class="list-group-item py-2 px-3">
-                <div class="fw-semibold text-dark">{{ p.nguoi_danh_gia }} ↔ {{ p.nguoi_duoc_danh_gia }}</div>
-                <small class="text-warning text-dark-emphasis d-block">{{ p.mo_ta }}</small>
-              </div>
-              {% endfor %}
-            </div>
-          {% else %}
-            <div class="p-3 bg-light rounded-3 text-muted small text-center">
-              <i class="bi bi-check-circle-fill text-success me-1"></i> Không ghi nhận cặp đôi nào có xung đột đánh giá thấp lặp lại.
-            </div>
-          {% endif %}
-        </div>
-      </div>
-
-      <!-- Lời khuyên can thiệp sư phạm từ AI -->
-      {% if ai_warnings.ai_recommendations %}
-      <div class="mt-4 p-3 rounded-4 bg-light border">
-        <div class="fw-bold text-primary small mb-1">
-          <i class="bi bi-magic me-1"></i> Đề xuất can thiệp sư phạm nhân văn từ AI:
-        </div>
-        <div class="small text-secondary" style="white-space: pre-line;">{{ ai_warnings.ai_recommendations }}</div>
-      </div>
-      {% endif %}
-    </div>
-  </div>
-  {% endif %}
-
-  <!-- KHỐI KẾT QUẢ HỌC TẬP & LƯỢNG GIÁ QUIZ AI (MILESTONE M-AI+) -->
-  <div class="card border-0 shadow-sm rounded-4 bg-white mb-4 overflow-hidden">
-    <div class="card-header bg-white border-bottom py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
-      <div>
-        <div class="d-flex align-items-center gap-2">
-          <span class="badge bg-purple-subtle text-indigo fw-bold" style="background-color: #ede9fe; color: #6d28d9;">
-            <i class="bi bi-mortarboard-fill me-1"></i> KẾT QUẢ HỌC TẬP
-          </span>
-          <span class="badge-ai" style="font-size: 0.75rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Trí tuệ nhân tạo)</span>
-        </div>
-        <h5 class="fw-bold mb-0 text-dark mt-1">Đo Lường Chất Lượng & Tiến Bộ Năng Lực Học Sinh</h5>
-      </div>
-      <div class="text-muted small text-end">
-        <i class="bi bi-info-circle me-1"></i> Quiz dùng để <strong>xác nhận kết quả</strong> cho giáo viên, <strong>không chặn</strong> việc cộng giờ của học sinh.
-      </div>
-    </div>
-
-    <div class="card-body p-4">
-      <!-- 4 Thẻ chỉ số tổng quan -->
+  <div class="tab-content" id="adminTabsContent">
+    <!-- =========================================================================
+         TAB 1: TỔNG QUAN & BÁO CÁO
+         ========================================================================= -->
+    <div class="tab-pane fade show active" id="tab-overview" role="tabpanel">
+      <!-- 6 Thẻ chỉ số tổng quan -->
       <div class="row g-3 mb-4">
-        <!-- Chỉ số 1: % Phiên đạt chuẩn Quiz -->
-        <div class="col-sm-6 col-lg-3">
-          <div class="p-3 bg-light rounded-4 border h-100">
-            <span class="text-muted small d-block mb-1">Phiên đạt chuẩn Quiz (≥60%)</span>
-            <div class="d-flex align-items-baseline gap-2">
-              <span class="display-6 fw-bold text-success">{{ "%.1f"|format(learning_stats.pct_dat_chuan) }}%</span>
-              <span class="badge bg-success-subtle text-success small">Đạt chuẩn</span>
-            </div>
-            <div class="small text-muted mt-1">
-              {{ learning_stats.passed_quiz_sessions_count }}/{{ learning_stats.completed_sessions_count }} phiên hoàn thành
-            </div>
+        <div class="col-sm-6 col-lg-2">
+          <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+            <span class="text-muted small">Tổng phiên học</span>
+            <h3 class="fw-bold mb-0 text-primary">{{ total_sessions_count }}</h3>
+            <small class="text-muted">Đang quản trị</small>
           </div>
         </div>
-
-        <!-- Chỉ số 2: % Đạt giỏi >= 4/5 -->
-        <div class="col-sm-6 col-lg-3">
-          <div class="p-3 bg-light rounded-4 border h-100">
-            <span class="text-muted small d-block mb-1">Tỷ lệ xuất sắc (≥4/5 điểm)</span>
-            <div class="d-flex align-items-baseline gap-2">
-              <span class="display-6 fw-bold text-primary">{{ "%.1f"|format(learning_stats.pct_ge_4) }}%</span>
-              <span class="badge bg-primary-subtle text-primary small">≥4.0★</span>
-            </div>
-            <div class="small text-muted mt-1">
-              {{ learning_stats.total_ge_4 }}/{{ learning_stats.total_quizzes }} lượt làm bài
-            </div>
+        <div class="col-sm-6 col-lg-2">
+          <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+            <span class="text-muted small">Tổng giờ lưu thông</span>
+            <h3 class="fw-bold mb-0 text-success">{{ "%.1f"|format(total_hours_circulated) }}h</h3>
+            <small class="text-muted">Hoàn thành</small>
           </div>
         </div>
-
-        <!-- Chỉ số 3: So sánh trước vs sau -->
-        <div class="col-sm-6 col-lg-3">
-          <div class="p-3 bg-light rounded-4 border h-100">
-            <span class="text-muted small d-block mb-1">So sánh Trước vs Sau</span>
-            <div class="d-flex align-items-baseline gap-2">
-              <span class="display-6 fw-bold text-warning">{{ "%.1f"|format(learning_stats.avg_before) }}★</span>
-              <i class="bi bi-arrow-right text-muted"></i>
-              <span class="display-6 fw-bold text-success">{{ "%.1f"|format(learning_stats.avg_after) }}</span>
-            </div>
-            <div class="small text-muted mt-1">
-              Tiến bộ: <strong class="text-success">+{{ "%.2f"|format(learning_stats.growth_diff) }} điểm</strong>
-            </div>
+        <div class="col-sm-6 col-lg-2">
+          <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+            <span class="text-muted small">Học sinh thành viên</span>
+            <h3 class="fw-bold mb-0 text-info">{{ student_count }}</h3>
+            <small class="text-muted">Đã mở sổ tín dụng</small>
           </div>
         </div>
-
-        <!-- Chỉ số 4: Tổng số bài Quiz -->
-        <div class="col-sm-6 col-lg-3">
-          <div class="p-3 bg-light rounded-4 border h-100">
-            <span class="text-muted small d-block mb-1">Tổng lượt hoàn thành Quiz</span>
-            <div class="d-flex align-items-baseline gap-2">
-              <span class="display-6 fw-bold text-dark">{{ learning_stats.total_quizzes }}</span>
-              <span class="text-muted small">bài làm</span>
-            </div>
-            <div class="small text-muted mt-1">
-              1 lượt duy nhất / học sinh
-            </div>
+        <div class="col-sm-6 col-lg-2">
+          <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+            <span class="text-muted small">Tổng tài khoản</span>
+            <h3 class="fw-bold mb-0 text-dark">{{ users|length }}</h3>
+            <small class="text-muted">HS + GV + Quản trị</small>
+          </div>
+        </div>
+        <div class="col-sm-6 col-lg-2">
+          <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+            <span class="text-muted small">Giờ trong ví</span>
+            <h3 class="fw-bold mb-0 text-warning">{{ "%.1f"|format(total_credits) }}h</h3>
+            <small class="text-muted">Vốn khả dụng</small>
+          </div>
+        </div>
+        <div class="col-sm-6 col-lg-2">
+          <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+            <span class="text-muted small">Kỹ năng chờ duyệt</span>
+            <h3 class="fw-bold mb-0 text-danger">{{ pending_skills_count }}</h3>
+            <small class="text-muted">Cần GV duyệt tay</small>
           </div>
         </div>
       </div>
 
-      <!-- Bảng điểm trung bình theo môn -->
-      <h6 class="fw-bold text-dark mb-3"><i class="bi bi-bar-chart-fill text-primary me-2"></i>Điểm Trung Bình & Tỷ Lệ Đạt Chuẩn Theo Môn Học</h6>
-      {% if learning_stats.subject_stats %}
-      <div class="table-responsive">
-        <table class="table table-sm table-hover align-middle mb-0">
-          <thead class="table-light small text-muted">
-            <tr>
-              <th>Môn học / Lĩnh vực</th>
-              <th class="text-center">Số bài làm</th>
-              <th class="text-center">Tự tin trước (TB)</th>
-              <th class="text-center">Điểm sau buổi học (TB)</th>
-              <th class="text-center">% Đạt chuẩn (≥60%)</th>
-              <th class="text-center">% Đạt giỏi (≥4/5)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for mon in learning_stats.subject_stats %}
-            <tr>
-              <td class="fw-semibold text-dark">
-                <span class="badge bg-primary bg-opacity-10 text-primary me-1">{{ mon.linh_vuc }}</span>
-              </td>
-              <td class="text-center">{{ mon.so_bai_lam }}</td>
-              <td class="text-center text-warning fw-semibold">{{ "%.1f"|format(mon.tu_tin_truoc_tb) }}★</td>
-              <td class="text-center fw-bold text-primary">{{ "%.1f"|format(mon.diem_tb) }} / 5.0</td>
-              <td class="text-center">
-                <span class="badge {% if mon.pct_chuan >= 80 %}bg-success{% elif mon.pct_chuan >= 60 %}bg-primary{% else %}bg-warning text-dark{% endif %}">
-                  {{ "%.0f"|format(mon.pct_chuan) }}%
-                </span>
-              </td>
-              <td class="text-center text-muted fw-semibold">{{ "%.0f"|format(mon.pct_gioi) }}%</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+      <!-- Khối AI Cảnh báo sớm sư phạm -->
+      {% if ai_warnings %}
+      <div class="card border-0 shadow-sm rounded-4 bg-white mb-4 overflow-hidden border-start border-4 border-danger">
+        <div class="card-header bg-white border-bottom py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-danger rounded-pill px-2 py-1"><i class="bi bi-shield-exclamation me-1"></i> CẢNH BÁO SỚM SƯ PHẠM</span>
+              <span class="badge-ai" style="font-size: 0.75rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Trí tuệ nhân tạo)</span>
+            </div>
+            <h5 class="fw-bold mb-0 text-dark mt-1">Phát Hiện Nguy Cơ Học Đường Cần Can Thiệp</h5>
+          </div>
+          <small class="text-muted">Quét học sinh ngưng hoạt động (>7 ngày) và cặp đôi xung đột (≤2★)</small>
+        </div>
+
+        <div class="card-body p-4">
+          <div class="row g-4">
+            <div class="col-md-6">
+              <h6 class="fw-bold text-dark mb-2">
+                <i class="bi bi-person-x-fill text-danger me-1"></i>Học sinh > 7 ngày không tham gia phiên ({{ ai_warnings.inactive_students|length }})
+              </h6>
+              {% if ai_warnings.inactive_students %}
+                <div class="list-group list-group-flush border rounded-3 overflow-hidden">
+                  {% for s in ai_warnings.inactive_students[:5] %}
+                  <div class="list-group-item py-2 px-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <span class="fw-semibold text-dark">{{ s.ho_ten }}</span>
+                      <span class="badge bg-light text-secondary border">Lớp {{ s.lop }}</span>
+                    </div>
+                    <small class="text-danger d-block">{{ s.ly_do }}</small>
+                  </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="p-3 bg-light rounded-3 text-muted small text-center">
+                  <i class="bi bi-check-circle-fill text-success me-1"></i> Mọi học sinh đều duy trì hoạt động đều đặn.
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="col-md-6">
+              <h6 class="fw-bold text-dark mb-2">
+                <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>Cặp đôi đánh giá ≤ 2★ từ 2 lần trở lên ({{ ai_warnings.low_rated_pairs|length }})
+              </h6>
+              {% if ai_warnings.low_rated_pairs %}
+                <div class="list-group list-group-flush border rounded-3 overflow-hidden">
+                  {% for p in ai_warnings.low_rated_pairs %}
+                  <div class="list-group-item py-2 px-3">
+                    <div class="fw-semibold text-dark">{{ p.nguoi_danh_gia }} ↔ {{ p.nguoi_duoc_danh_gia }}</div>
+                    <small class="text-warning text-dark-emphasis d-block">{{ p.mo_ta }}</small>
+                  </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="p-3 bg-light rounded-3 text-muted small text-center">
+                  <i class="bi bi-check-circle-fill text-success me-1"></i> Không ghi nhận cặp đôi nào có xung đột đánh giá thấp lặp lại.
+                </div>
+              {% endif %}
+            </div>
+          </div>
+
+          {% if ai_warnings.ai_recommendations %}
+          <div class="mt-4 p-3 rounded-4 bg-light border">
+            <div class="fw-bold text-primary small mb-1">
+              <i class="bi bi-magic me-1"></i> Đề xuất can thiệp sư phạm nhân văn từ AI:
+            </div>
+            <div class="small text-secondary" style="white-space: pre-line;">{{ ai_warnings.ai_recommendations }}</div>
+          </div>
+          {% endif %}
+        </div>
       </div>
-      {% else %}
-      <div class="p-3 bg-light rounded-3 text-muted text-center small">
-        <i class="bi bi-info-circle me-1"></i> Chưa có dữ liệu bài làm trắc nghiệm nào được ghi nhận.
+      {% endif %}
+
+      <!-- Khối Lượng giá Quiz AI -->
+      <div class="card border-0 shadow-sm rounded-4 bg-white mb-4 overflow-hidden">
+        <div class="card-header bg-white border-bottom py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-purple-subtle text-indigo fw-bold" style="background-color: #ede9fe; color: #6d28d9;">
+                <i class="bi bi-mortarboard-fill me-1"></i> KẾT QUẢ HỌC TẬP
+              </span>
+              <span class="badge-ai" style="font-size: 0.75rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Trí tuệ nhân tạo)</span>
+            </div>
+            <h5 class="fw-bold mb-0 text-dark mt-1">Đo Lường Chất Lượng & Tiến Bộ Năng Lực Học Sinh</h5>
+          </div>
+          <div class="text-muted small">
+            Quiz xác nhận kết quả cho giáo viên, <strong>không chặn</strong> chuyển giờ.
+          </div>
+        </div>
+
+        <div class="card-body p-4">
+          <div class="row g-3 mb-4">
+            <div class="col-sm-6 col-lg-3">
+              <div class="p-3 bg-light rounded-4 border h-100">
+                <span class="text-muted small d-block mb-1">Phiên đạt chuẩn Quiz (≥60%)</span>
+                <span class="display-6 fw-bold text-success">{{ "%.1f"|format(learning_stats.pct_dat_chuan) }}%</span>
+                <div class="small text-muted mt-1">{{ learning_stats.passed_quiz_sessions_count }}/{{ learning_stats.completed_sessions_count }} phiên</div>
+              </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+              <div class="p-3 bg-light rounded-4 border h-100">
+                <span class="text-muted small d-block mb-1">Tỷ lệ xuất sắc (≥4/5)</span>
+                <span class="display-6 fw-bold text-primary">{{ "%.1f"|format(learning_stats.pct_ge_4) }}%</span>
+                <div class="small text-muted mt-1">{{ learning_stats.total_ge_4 }}/{{ learning_stats.total_quizzes }} bài làm</div>
+              </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+              <div class="p-3 bg-light rounded-4 border h-100">
+                <span class="text-muted small d-block mb-1">So sánh Trước vs Sau</span>
+                <div class="d-flex align-items-baseline gap-2">
+                  <span class="display-6 fw-bold text-warning">{{ "%.1f"|format(learning_stats.avg_before) }}★</span>
+                  <i class="bi bi-arrow-right text-muted"></i>
+                  <span class="display-6 fw-bold text-success">{{ "%.1f"|format(learning_stats.avg_after) }}</span>
+                </div>
+                <div class="small text-muted mt-1">Tiến bộ: +{{ "%.2f"|format(learning_stats.growth_diff) }} điểm</div>
+              </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+              <div class="p-3 bg-light rounded-4 border h-100">
+                <span class="text-muted small d-block mb-1">Tổng lượt hoàn thành</span>
+                <span class="display-6 fw-bold text-dark">{{ learning_stats.total_quizzes }}</span>
+                <div class="small text-muted mt-1">Lượt làm trắc nghiệm</div>
+              </div>
+            </div>
+          </div>
+      <!-- KHỐI VINH DANH TOP HỌC SINH TÍCH CỰC (MILESTONE M4-LITE) -->
+      {% if top_active_students %}
+      <div class="card border-0 shadow-sm rounded-4 bg-white mb-4 overflow-hidden">
+        <div class="card-header bg-white border-bottom py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-warning text-dark fw-bold">
+                <i class="bi bi-trophy-fill me-1"></i> BẢNG VINH DANH SƯ PHẠM
+              </span>
+            </div>
+            <h5 class="fw-bold mb-0 text-dark mt-1">Top Học Sinh Tích Cực Trao Đổi Tri Thức Nhất</h5>
+          </div>
+          <small class="text-muted"><i class="bi bi-award me-1 text-warning"></i>Vinh danh gương sáng học tập & chia sẻ kỹ năng</small>
+        </div>
+
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light small text-muted">
+                <tr>
+                  <th class="ps-3" style="width: 80px;">Xếp hạng</th>
+                  <th>Mã HS</th>
+                  <th>Họ và tên</th>
+                  <th>Lớp</th>
+                  <th class="text-center">Giờ đã dạy</th>
+                  <th class="text-center">Giờ đã học</th>
+                  <th class="text-center">Phiên hoàn thành</th>
+                  <th class="text-center">Sao TB</th>
+                  <th class="text-end pe-3">Số dư hiện tại</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for st in top_active_students %}
+                <tr>
+                  <td class="ps-3">
+                    {% if loop.index == 1 %}
+                      <span class="badge bg-warning text-dark fs-6"><i class="bi bi-trophy-fill text-dark me-1"></i>#1</span>
+                    {% elif loop.index == 2 %}
+                      <span class="badge bg-secondary text-white fs-6"><i class="bi bi-award-fill me-1"></i>#2</span>
+                    {% elif loop.index == 3 %}
+                      <span class="badge bg-danger-subtle text-danger fw-bold fs-6"><i class="bi bi-award me-1"></i>#3</span>
+                    {% else %}
+                      <span class="badge bg-light text-muted border">#{{ loop.index }}</span>
+                    {% endif %}
+                  </td>
+                  <td><code>{{ st.ma_hoc_sinh }}</code></td>
+                  <td class="fw-bold text-dark">{{ st.ho_ten }}</td>
+                  <td class="small">{{ st.lop if st.lop else '—' }}</td>
+                  <td class="text-center fw-bold text-primary">{{ "%.1f"|format(st.gio_day) }}h</td>
+                  <td class="text-center text-success fw-semibold">{{ "%.1f"|format(st.gio_hoc) }}h</td>
+                  <td class="text-center">{{ st.so_phien }} phiên</td>
+                  <td class="text-center text-warning fw-bold">{{ "%.1f"|format(st.sao_tb) }}★</td>
+                  <td class="text-end pe-3 fw-bold text-success">{{ "%.1f"|format(st.so_du_gio) }}h</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
       {% endif %}
     </div>
-  </div>
 
-  <!-- KHỐI VINH DANH TOP HỌC SINH TÍCH CỰC (MILESTONE M4-LITE) -->
-  {% if top_active_students %}
-  <div class="card border-0 shadow-sm rounded-4 bg-white mb-4 overflow-hidden">
-    <div class="card-header bg-white border-bottom py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
-      <div>
-        <div class="d-flex align-items-center gap-2">
-          <span class="badge bg-warning text-dark fw-bold">
-            <i class="bi bi-trophy-fill me-1"></i> BẢNG VINH DANH SƯ PHẠM
-          </span>
+    <!-- =========================================================================
+         TAB 2: HÀNG CHỜ DUYỆT HỌC SINH (VIỆC 8)
+         ========================================================================= -->
+    <div class="tab-pane fade" id="tab-queue" role="tabpanel">
+      <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+        <div class="card-header bg-white border-bottom py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div>
+            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-person-check-fill text-warning me-2"></i>Hàng Chờ Duyệt Mở Sổ Học Sinh</h5>
+            <small class="text-muted">
+              {% if is_super_admin %}
+                Tổng quản trị thấy toàn bộ hàng chờ các trường. Quản trị trường chỉ duyệt học sinh trường mình.
+              {% else %}
+                Danh sách học sinh trường {{ current_school_name }} chưa có mã mời đang chờ duyệt.
+              {% endif %}
+            </small>
+          </div>
+
+          <!-- Nút Duyệt tất cả -->
+          <form method="POST" action="{{ url_for('admin_approve_all_students') }}" onsubmit="return confirm('Bạn có chắc chắn muốn DUYỆT TẤT CẢ học sinh đang chờ trong danh sách này?');">
+            {% if is_super_admin and selected_truong_id %}
+              <input type="hidden" name="truong_id" value="{{ selected_truong_id }}">
+            {% endif %}
+            <button type="submit" class="btn btn-success fw-bold shadow-sm" {% if not pending_students %}disabled{% endif %}>
+              <i class="bi bi-check-all me-1"></i> Duyệt tất cả ({{ pending_students|length }})
+            </button>
+          </form>
         </div>
-        <h5 class="fw-bold mb-0 text-dark mt-1">Top Học Sinh Tích Cực Trao Đổi Tri Thức Nhất</h5>
+
+        <div class="card-body p-0">
+          {% if pending_students %}
+          <form method="POST" action="{{ url_for('admin_approve_all_students') }}" id="batchApproveForm">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light small text-muted">
+                  <tr>
+                    <th class="ps-3" style="width: 40px;">
+                      <input type="checkbox" class="form-check-input" id="checkAllStudents" onclick="toggleSelectAll(this)">
+                    </th>
+                    <th>Mã HS</th>
+                    <th>Họ và tên</th>
+                    <th>Lớp</th>
+                    <th>Trường học</th>
+                    <th>Khung giờ rảnh</th>
+                    <th>Trạng thái</th>
+                    <th class="text-end pe-3">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for st in pending_students %}
+                  <tr>
+                    <td class="ps-3">
+                      <input type="checkbox" name="student_ids" value="{{ st.id }}" class="form-check-input student-chk">
+                    </td>
+                    <td><code>{{ st.ma_hoc_sinh }}</code></td>
+                    <td class="fw-bold text-dark">{{ st.ho_ten }}</td>
+                    <td>{{ st.lop if st.lop else '—' }}</td>
+                    <td>
+                      <span class="badge bg-light text-primary border">{{ st.ten_truong }}</span>
+                    </td>
+                    <td class="small text-muted">{{ st.gio_ranh if st.gio_ranh else '—' }}</td>
+                    <td>
+                      <span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i>Chờ duyệt</span>
+                    </td>
+                    <td class="text-end pe-3">
+                      <button type="submit" formaction="{{ url_for('admin_approve_student', user_id=st.id) }}" class="btn btn-sm btn-success me-1">
+                        <i class="bi bi-check-lg me-1"></i>Duyệt
+                      </button>
+                      <button type="submit" formaction="{{ url_for('admin_reject_student', user_id=st.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn có chắc muốn từ chối đăng ký này?');">
+                        <i class="bi bi-x-lg"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </form>
+          {% else %}
+          <div class="p-5 text-center text-muted">
+            <i class="bi bi-check-circle-fill text-success fs-1 d-block mb-2"></i>
+            <h6 class="fw-bold">Hàng chờ trống!</h6>
+            <p class="small mb-0">Tất cả tài khoản học sinh đã được duyệt hoặc đăng ký hợp lệ qua mã mời.</p>
+          </div>
+          {% endif %}
+        </div>
       </div>
-      <small class="text-muted"><i class="bi bi-award me-1 text-warning"></i>Vinh danh gương sáng học tập & chia sẻ kỹ năng</small>
     </div>
 
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-          <thead class="table-light small text-muted">
-            <tr>
-              <th class="ps-3" style="width: 80px;">Xếp hạng</th>
-              <th>Mã HS</th>
-              <th>Họ và tên</th>
-              <th>Lớp</th>
-              <th class="text-center">Giờ đã dạy</th>
-              <th class="text-center">Giờ đã học</th>
-              <th class="text-center">Phiên hoàn thành</th>
-              <th class="text-center">Sao TB</th>
-              <th class="text-end pe-3">Số dư hiện tại</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for st in top_active_students %}
-            <tr>
-              <td class="ps-3">
-                {% if loop.index == 1 %}
-                  <span class="badge bg-warning text-dark fs-6"><i class="bi bi-trophy-fill text-dark me-1"></i>#1</span>
-                {% elif loop.index == 2 %}
-                  <span class="badge bg-secondary text-white fs-6"><i class="bi bi-award-fill me-1"></i>#2</span>
-                {% elif loop.index == 3 %}
-                  <span class="badge bg-danger-subtle text-danger fw-bold fs-6"><i class="bi bi-award me-1"></i>#3</span>
-                {% else %}
-                  <span class="badge bg-light text-muted border">#{{ loop.index }}</span>
-                {% endif %}
-              </td>
-              <td><code>{{ st.ma_hoc_sinh }}</code></td>
-              <td class="fw-bold text-dark">{{ st.ho_ten }}</td>
-              <td class="small">{{ st.lop if st.lop else '—' }}</td>
-              <td class="text-center fw-bold text-primary">{{ "%.1f"|format(st.gio_day) }}h</td>
-              <td class="text-center text-success fw-semibold">{{ "%.1f"|format(st.gio_hoc) }}h</td>
-              <td class="text-center">{{ st.so_phien }} phiên</td>
-              <td class="text-center text-warning fw-bold">{{ "%.1f"|format(st.sao_tb) }}★</td>
-              <td class="text-end pe-3 fw-bold text-success">{{ "%.1f"|format(st.so_du_gio) }}h</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+    <!-- =========================================================================
+         TAB 3: QUẢN LÝ MÃ MỜI (VIỆC 8)
+         ========================================================================= -->
+    <div class="tab-pane fade" id="tab-invite" role="tabpanel">
+      <!-- Form Tạo Mã Mời Mới -->
+      <div class="card border-0 shadow-sm rounded-4 bg-white mb-4 p-4">
+        <h5 class="fw-bold text-dark mb-2"><i class="bi bi-plus-circle-fill text-primary me-2"></i>Sinh Mã Mời Trường Học Ngẫu Nhiên</h5>
+        <p class="text-muted small mb-4">Hệ thống tạo mã định dạng chuẩn <code>TBEDU-XXXX-XXXX</code> chống mạo danh học sinh trường khác.</p>
+
+        <form method="POST" action="{{ url_for('admin_generate_invite_codes') }}">
+          <div class="row g-3 align-items-end">
+            {% if is_super_admin %}
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold">Áp dụng cho trường <span class="text-danger">*</span></label>
+              <select name="truong_id" class="form-select" required>
+                {% for s in all_schools %}
+                  <option value="{{ s.id }}" {% if selected_truong_id|string == s.id|string %}selected{% endif %}>
+                    {{ s.ten_truong }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+            {% else %}
+              <input type="hidden" name="truong_id" value="{{ current_user.truong_id }}">
+            {% endif %}
+
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold">Loại mã mời <span class="text-danger">*</span></label>
+              <select name="loai" id="inviteTypeSelect" class="form-select" onchange="handleInviteTypeChange(this.value)" required>
+                <option value="ca_nhan">Mã cá nhân (Nhiều mã, mỗi mã 1 lượt)</option>
+                <option value="lop">Mã lớp (1 mã, dùng chung cho cả lớp)</option>
+              </select>
+            </div>
+
+            <div class="col-md-2">
+              <label class="form-label small fw-semibold" id="lblSoLuong">Số lượng mã cần tạo</label>
+              <input type="number" name="so_luong" id="inputSoLuong" class="form-control" value="5" min="1" max="100" required>
+            </div>
+
+            <div class="col-md-2" id="boxMaxUses" style="display: none;">
+              <label class="form-label small fw-semibold">Số lượt dùng tối đa / mã</label>
+              <input type="number" name="so_luot_moi_ma" class="form-control" value="35" min="1" max="200">
+            </div>
+
+            <div class="col-md-2">
+              <button type="submit" class="btn btn-primary w-100 fw-semibold">
+                <i class="bi bi-magic me-1"></i> Sinh mã ngay
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Bảng Theo Dõi Mã Mời -->
+      <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+          <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-table me-2 text-primary"></i>Danh Sách Mã Mời Đã Phát Hành</h5>
+          <span class="badge bg-light text-dark border">Cập nhật tự động</span>
+        </div>
+
+        <div class="card-body p-0">
+          {% if invite_codes_list %}
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light small text-muted">
+                <tr>
+                  <th class="ps-3">Mã mời</th>
+                  <th>Trường áp dụng</th>
+                  <th>Loại mã</th>
+                  <th class="text-center">Tối đa</th>
+                  <th class="text-center">Đã dùng</th>
+                  <th class="text-center">Còn lại</th>
+                  <th>Học sinh đã dùng</th>
+                  <th>Ngày tạo</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for c in invite_codes_list %}
+                <tr>
+                  <td class="ps-3">
+                    <span class="font-monospace fw-bold text-primary">{{ c.ma_code }}</span>
+                  </td>
+                  <td><span class="badge bg-light text-dark border">{{ c.ten_truong }}</span></td>
+                  <td>
+                    {% if c.loai == 'lop' %}
+                      <span class="badge bg-info-subtle text-info fw-bold">Mã lớp</span>
+                    {% else %}
+                      <span class="badge bg-secondary-subtle text-secondary">Cá nhân</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-center fw-semibold">{{ c.so_luot_toi_da }}</td>
+                  <td class="text-center fw-bold {% if c.da_dung >= c.so_luot_toi_da %}text-danger{% else %}text-success{% endif %}">
+                    {{ c.da_dung }}
+                  </td>
+                  <td class="text-center">
+                    {% set con = c.so_luot_toi_da - c.da_dung %}
+                    <span class="badge {% if con <= 0 %}bg-danger{% else %}bg-success{% endif %}">
+                      {{ con if con > 0 else 0 }}
+                    </span>
+                  </td>
+                  <td>
+                    {% if c.used_by %}
+                      <div class="d-flex flex-wrap gap-1">
+                        {% for u in c.used_by %}
+                          <span class="badge bg-light text-dark border" title="{{ u.thoi_gian }}">
+                            {{ u.ho_ten }} ({{ u.ma_hoc_sinh }})
+                          </span>
+                        {% endfor %}
+                      </div>
+                    {% else %}
+                      <span class="text-muted small">Chưa có ai dùng</span>
+                    {% endif %}
+                  </td>
+                  <td class="small text-muted">{{ c.ngay_tao | format_date }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="p-4 text-center text-muted small">Chưa có mã mời nào được tạo. Hãy tạo mã mời ở form phía trên.</div>
+          {% endif %}
+        </div>
       </div>
     </div>
-  </div>
-  {% endif %}
 
-  <!-- Danh sách người dùng -->
-  <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
-    <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-      <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-table me-2 text-primary"></i>Danh sách Tài khoản Người dùng</h5>
-      <span class="badge bg-light text-dark border">Cập nhật theo CSDL</span>
+    <!-- =========================================================================
+         TAB 4: XỬ LÝ VI PHẠM & BÁO CÁO (VIỆC 5)
+         ========================================================================= -->
+    <div class="tab-pane fade" id="tab-violations" role="tabpanel">
+      <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden mb-4">
+        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+          <div>
+            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-shield-slash-fill text-danger me-2"></i>Sổ Theo Dõi & Xử Lý Vi Phạm Nội Quy</h5>
+            <small class="text-muted">Ghi nhận vi phạm từ AI lọc chat realtime và báo cáo trực tiếp từ phòng học ảo.</small>
+          </div>
+          <span class="badge bg-danger rounded-pill">{{ violations_list|length }} vụ việc</span>
+        </div>
+
+        <div class="card-body p-0">
+          {% if violations_list %}
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light small text-muted">
+                <tr>
+                  <th class="ps-3">Học sinh</th>
+                  <th>Trường</th>
+                  <th>Loại vi phạm</th>
+                  <th>Mô tả chi tiết</th>
+                  <th class="text-center">Mức độ</th>
+                  <th>Thời gian</th>
+                  <th>Tình trạng TK</th>
+                  <th class="text-end pe-3">Xử lý kỷ luật</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for v in violations_list %}
+                <tr class="{% if v.muc_do == 3 and v.user_trang_thai == 'de_xuat_khoa' %}table-warning{% endif %}">
+                  <td class="ps-3">
+                    <div class="fw-bold text-dark">{{ v.ho_ten }}</div>
+                    <small class="text-muted"><code>{{ v.ma_hoc_sinh }}</code> • Lớp {{ v.lop }}</small>
+                  </td>
+                  <td><span class="badge bg-light text-dark border">{{ v.ten_truong }}</span></td>
+                  <td>
+                    <span class="badge bg-danger-subtle text-danger fw-semibold">{{ v.loai_vi_pham }}</span>
+                    {% if v.session_id %}
+                      <span class="badge bg-info-subtle text-info d-block mt-1">Phòng học #{{ v.session_id }}</span>
+                    {% endif %}
+                  </td>
+                  <td class="small text-secondary" style="max-width: 280px;">{{ v.mo_ta }}</td>
+                  <td class="text-center">
+                    {% if v.muc_do == 1 %}
+                      <span class="badge bg-warning text-dark"><i class="bi bi-bell me-1"></i>Mức 1: Nhắc nhở</span>
+                    {% elif v.muc_do == 2 %}
+                      <span class="badge bg-danger"><i class="bi bi-exclamation-triangle me-1"></i>Mức 2: Cảnh cáo</span>
+                    {% else %}
+                      <span class="badge bg-dark text-white"><i class="bi bi-slash-circle me-1"></i>Mức 3: Đề xuất khóa</span>
+                    {% endif %}
+                  </td>
+                  <td class="small text-muted">{{ v.thoi_gian }}</td>
+                  <td>
+                    {% if v.user_trang_thai == 'da_khoa' %}
+                      <span class="badge bg-danger">ĐÃ KHÓA</span>
+                    {% elif v.user_trang_thai == 'de_xuat_khoa' %}
+                      <span class="badge bg-warning text-dark">CHỜ QUẢN TRỊ XÁC NHẬN</span>
+                    {% else %}
+                      <span class="badge bg-success">Hoạt động</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-end pe-3">
+                    {% if v.user_trang_thai == 'de_xuat_khoa' or (v.muc_do == 3 and v.user_trang_thai != 'da_khoa') %}
+                      <!-- Nút xác nhận khóa vĩnh viễn (CHỜ quản trị bấm xác nhận mới khóa thật) -->
+                      <form method="POST" action="{{ url_for('admin_confirm_lock_user', user_id=v.user_id) }}" class="d-inline" onsubmit="return confirm('CẢNH BÁO: Bạn có chắc chắn muốn XÁC NHẬN KHÓA VĨNH VIỄN tài khoản của học sinh này không?');">
+                        <button type="submit" class="btn btn-sm btn-danger fw-bold shadow-sm">
+                          <i class="bi bi-lock-fill me-1"></i>Xác nhận khóa thật
+                        </button>
+                      </form>
+                      <form method="POST" action="{{ url_for('admin_dismiss_violation', violation_id=v.id) }}" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary ms-1">
+                          Hủy đề xuất
+                        </button>
+                      </form>
+                    {% elif v.user_trang_thai == 'da_khoa' %}
+                      <span class="text-muted small"><i class="bi bi-check2-circle text-success me-1"></i>Đã xử lý khóa</span>
+                    {% else %}
+                      <form method="POST" action="{{ url_for('admin_dismiss_violation', violation_id=v.id) }}" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-light border">
+                          <i class="bi bi-check2 me-1"></i>Đã nhắc nhở
+                        </button>
+                      </form>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="p-5 text-center text-muted">
+            <i class="bi bi-shield-check text-success fs-1 d-block mb-2"></i>
+            <h6 class="fw-bold">Không có vi phạm nào!</h6>
+            <p class="small mb-0">Môi trường học tập và phòng học ảo đang duy trì văn minh, an toàn tuyệt đối.</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
     </div>
 
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-          <thead class="table-light small text-muted">
-            <tr>
-              <th scope="col" class="ps-3">ID</th>
-              <th scope="col">Mã định danh</th>
-              <th scope="col">Họ và tên</th>
-              <th scope="col">Lớp / Bộ môn</th>
-              <th scope="col">Vai trò</th>
-              <th scope="col" class="text-end">Số dư giờ</th>
-              <th scope="col">Khung giờ rảnh</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for u in users %}
-            <tr>
-              <td class="ps-3 small text-muted">#{{ u.id }}</td>
-              <td><code>{{ u.ma_hoc_sinh }}</code></td>
-              <td class="fw-semibold text-dark">{{ u.ho_ten }}</td>
-              <td class="small">{{ u.lop if u.lop else '—' }}</td>
-              <td>
-                {% if u.vai_tro == 'admin' %}
-                  <span class="badge bg-danger">Quản trị viên</span>
-                {% elif u.vai_tro == 'giao_vien' %}
-                  <span class="badge bg-primary">Giáo viên</span>
-                {% else %}
-                  <span class="badge bg-success">Học sinh</span>
-                {% endif %}
-              </td>
-              <td class="text-end fw-bold text-nowrap">
-                <span class="text-success">{{ "%.1f"|format(u.so_du_gio) }}h</span>
-              </td>
-              <td class="small text-muted">{{ u.gio_ranh if u.gio_ranh else '—' }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+    <!-- =========================================================================
+         TAB 5: DANH SÁCH TÀI KHOẢN NGƯỜI DÙNG
+         ========================================================================= -->
+    <div class="tab-pane fade" id="tab-users" role="tabpanel">
+      <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+          <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-table me-2 text-primary"></i>Danh sách Tài khoản Người dùng</h5>
+          <span class="badge bg-light text-dark border">Cập nhật theo CSDL</span>
+        </div>
+
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light small text-muted">
+                <tr>
+                  <th scope="col" class="ps-3">ID</th>
+                  <th scope="col">Mã định danh</th>
+                  <th scope="col">Họ và tên</th>
+                  <th scope="col">Lớp / Bộ môn</th>
+                  <th scope="col">Trường học</th>
+                  <th scope="col">Vai trò</th>
+                  <th scope="col">Trạng thái</th>
+                  <th scope="col" class="text-end">Số dư giờ</th>
+                  <th scope="col">Khung giờ rảnh</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for u in users %}
+                <tr>
+                  <td class="ps-3 small text-muted">#{{ u.id }}</td>
+                  <td><code>{{ u.ma_hoc_sinh }}</code></td>
+                  <td class="fw-semibold text-dark">{{ u.ho_ten }}</td>
+                  <td class="small">{{ u.lop if u.lop else '—' }}</td>
+                  <td><span class="badge bg-light text-primary border">{{ u.ten_truong }}</span></td>
+                  <td>
+                    {% if u.vai_tro in ('super_admin', 'admin') %}
+                      <span class="badge bg-danger">Tổng Quản trị</span>
+                    {% elif u.vai_tro == 'school_admin' %}
+                      <span class="badge bg-warning text-dark">Quản trị trường</span>
+                    {% elif u.vai_tro == 'giao_vien' %}
+                      <span class="badge bg-primary">Giáo viên</span>
+                    {% else %}
+                      <span class="badge bg-success">Học sinh</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if u.trang_thai == 'da_khoa' %}
+                      <span class="badge bg-danger">Đã khóa</span>
+                    {% elif u.trang_thai == 'de_xuat_khoa' %}
+                      <span class="badge bg-warning text-dark">Đề xuất khóa</span>
+                    {% elif u.trang_thai == 'cho_duyet' %}
+                      <span class="badge bg-secondary">Chờ duyệt</span>
+                    {% else %}
+                      <span class="badge bg-success-subtle text-success">Hoạt động</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-end fw-bold text-nowrap">
+                    <span class="text-success">{{ "%.1f"|format(u.so_du_gio) }}h</span>
+                  </td>
+                  <td class="small text-muted">{{ u.gio_ranh if u.gio_ranh else '—' }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </div>
+
+<script>
+function toggleSelectAll(source) {
+  const checkboxes = document.querySelectorAll('.student-chk');
+  checkboxes.forEach(chk => chk.checked = source.checked);
+}
+
+function handleInviteTypeChange(val) {
+  const lbl = document.getElementById('lblSoLuong');
+  const boxMax = document.getElementById('boxMaxUses');
+  const inputSoLuong = document.getElementById('inputSoLuong');
+  if (val === 'lop') {
+    lbl.textContent = 'Số lượng mã lớp';
+    inputSoLuong.value = 1;
+    boxMax.style.display = 'block';
+  } else {
+    lbl.textContent = 'Số lượng mã cá nhân';
+    inputSoLuong.value = 5;
+    boxMax.style.display = 'none';
+  }
+}
+</script>
 {% endblock %}

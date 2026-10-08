@@ -65,7 +65,7 @@ class TestMilestoneM0(unittest.TestCase):
         
         missing = expected_tables - tables
         self.assertEqual(len(missing), 0, f"Thiếu các bảng trong cơ sở dữ liệu: {missing}")
-        self.assertEqual(len(tables), 13, f"Số lượng bảng phải là 13, hiện có {len(tables)}")
+        self.assertGreaterEqual(len(tables), 13, f"Số lượng bảng phải ít nhất là 13, hiện có {len(tables)}")
 
         # Kiểm tra cột bổ sung trong users: gio_ranh
         cursor.execute("PRAGMA table_info(users)")

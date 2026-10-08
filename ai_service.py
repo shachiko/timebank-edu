@@ -1300,4 +1300,107 @@ Một tuần học tập mới lại mở ra với muôn vàn cơ hội mới! C
     return post_id, title, content, is_live
 
 
+# ==============================================================================
+# HÀM AI KIỂM DUYỆT CHAT REALTIME & BẮT BIẾN THỂ TỪ CẤM (PROMPT 17 - VIỆC 5)
+# ==============================================================================
+
+FORBIDDEN_KEYWORDS = [
+    # Tiếng Việt thô tục, chửi thề, nhạy cảm
+    "đm", "dm", "đcm", "dcm", "đcl", "dcl", "vcl", "clgt", "vl",
+    "địt", "dit", "lồn", "lon", "cặc", "cac", "buồi", "buoi", "cu bự",
+    "chó chết", "đĩ", "con đĩ", "di~", "khốn nạn", "mẹ mày", "me may",
+    "đụ", "du me", "dume", "đéo", "deo", "óc chó", "thằng chó", "mất dạy",
+    "ngu như chó", "con điếm", "dâm dục", "thủ dâm", "khiêu dâm", "tình dục",
+    # Tiếng Anh thô tục
+    "fuck", "fucking", "shit", "bitch", "asshole", "cunt", "bastard", "motherfucker", "dick", "pussy"
+]
+
+FORBIDDEN_REGEX_PATTERNS = [
+    r"\b[dđ][\s\.\_\*\-\@]*[m][\s\.\_\*\-\@]*[m]?\b",
+    r"\b[v][\s\.\_\*\-\@]*[c][\s\.\_\*\-\@]*[l]\b",
+    r"\b[c][\s\.\_\*\-\@]*[l][\s\.\_\*\-\@]*[g][\s\.\_\*\-\@]*[t]\b",
+    r"\b[dđ][\s\.\_\*\-\@]*[!i1][\s\.\_\*\-\@]*[tț]\b",
+    r"\b[l][\s\.\_\*\-\@]*[o0][\s\.\_\*\-\@]*[n]\b",
+    r"\b[c][\s\.\_\*\-\@]*[a4\@][\s\.\_\*\-\@]*[c|k]\b",
+    r"\b[b][\s\.\_\*\-\@]*[u][\s\.\_\*\-\@]*[o0][\s\.\_\*\-\@]*[i|y|j]\b",
+    r"\b[dđ][\s\.\_\*\-\@]*[uụ][\s\.\_\*\-\@]*[m][\s\.\_\*\-\@]*[eê]\b",
+    r"\b[f][\s\.\_\*\-\@]*[u\*][\s\.\_\*\-\@]*[c][\s\.\_\*\-\@]*[k]\b",
+    r"\b[s][\s\.\_\*\-\@]*[h][\s\.\_\*\-\@]*[i\*][\s\.\_\*\-\@]*[t]\b",
+    r"\b[b][\s\.\_\*\-\@]*[i\*][\s\.\_\*\-\@]*[t][\s\.\_\*\-\@]*[c][\s\.\_\*\-\@]*[h]\b"
+]
+
+
+def ai_moderate_chat_message(message: str):
+    """
+    Kiểm tra thời gian thực nội dung tin nhắn chat của học sinh:
+    1. Quét danh sách từ cấm và regex biến thể lách luật (zero latency).
+    2. Nếu không khớp từ điển và AI đang online: gọi Gemini phân tích ngữ cảnh
+       để phát hiện từ ngữ xúc phạm hoặc biến thể ngụy trang tinh vi.
+    Trả về tuple: (is_violation: bool, reason: str, severity: int)
+    """
+    import re
+    if not message or not isinstance(message, str):
+        return {"is_violation": False, "reason": "", "severity": 0, "violation_type": ""}
+
+    msg_clean = message.strip()
+    msg_lower = msg_clean.lower()
+
+    # 1. Quét từ cấm trực tiếp theo từ khóa
+    # Tách từ đơn giản và kiểm tra cụm từ
+    for kw in FORBIDDEN_KEYWORDS:
+        # Kiểm tra boundary hoặc xuất hiện từ riêng biệt
+        pattern = r'(?i)(?:\b|(?<=[^a-z0-9àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]))' + re.escape(kw) + r'(?:\b|(?=[^a-z0-9àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]))'
+        if re.search(pattern, msg_lower):
+            return {
+                "is_violation": True,
+                "reason": f"Phát hiện từ ngữ không chuẩn mực / xúc phạm: '{kw}'",
+                "severity": 1,
+                "violation_type": "ngon_tu_tho_tuc"
+            }
+
+    # 2. Quét regex các biến thể lách luật (d.m, v.c.l, c@c, d!t...)
+    for pat in FORBIDDEN_REGEX_PATTERNS:
+        if re.search(pat, msg_lower):
+            return {
+                "is_violation": True,
+                "reason": "Phát hiện biến thể lách luật của từ ngữ thô tục / xúc phạm",
+                "severity": 1,
+                "violation_type": "ngon_tu_tho_tuc"
+            }
+
+    # 3. Phân tích ngữ cảnh sâu qua AI nếu đang online (Gemini)
+    if is_ai_live() and len(msg_clean) > 3:
+        try:
+            prompt = f"""Bạn là chuyên gia an toàn học đường kiểm duyệt tin nhắn học sinh tại hệ thống School Time Bank.
+Nội quy: Nghiêm cấm chửi bới, chửi thề, từ ngữ nhạy cảm, thô tục, quấy rối hoặc xúc phạm bạn học.
+Hãy kiểm tra xem tin nhắn sau có vi phạm các tiêu chuẩn trên hoặc cố tình biến tướng lách luật không:
+Tin nhắn: "{msg_clean}"
+
+Chỉ trả về JSON hợp lệ:
+{{"is_violation": true/false, "reason": "lý do ngắn gọn"}}"""
+
+            reply = call_gemini(prompt, system_instruction="Bạn là AI kiểm duyệt ngôn ngữ sư phạm. Chỉ trả về JSON.")
+            if reply:
+                # Trích xuất JSON từ markdown hoặc raw string
+                reply_text = reply.strip()
+                if "```json" in reply_text:
+                    reply_text = reply_text.split("```json")[1].split("```")[0].strip()
+                elif "```" in reply_text:
+                    reply_text = reply_text.split("```")[1].split("```")[0].strip()
+                parsed = json.loads(reply_text)
+                if parsed.get("is_violation"):
+                    return {
+                        "is_violation": True,
+                        "reason": parsed.get("reason", "Nội dung vi phạm chuẩn mực văn hóa học đường"),
+                        "severity": 1,
+                        "violation_type": "ngon_tu_tho_tuc"
+                    }
+        except Exception as e:
+            # Fallback êm đềm, không để lỗi AI làm gián đoạn hệ thống
+            pass
+
+    return {"is_violation": False, "reason": "", "severity": 0, "violation_type": ""}
+
+
+
 

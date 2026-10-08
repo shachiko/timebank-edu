@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}{{ config.ten_truong }}{% endblock %} - Ngân hàng Thời gian Học đường (TimeBank EDU)</title>
+  <title>{% block title %}School Time Bank{% endblock %} - Ngân hàng Thời gian Học đường</title>
   
   <!-- Favicon chính thức của trường -->
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo_timebank_edu.png') }}">
@@ -42,9 +42,9 @@
   <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top py-2 shadow">
     <div class="container">
       <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('index') }}">
-        <img src="{{ url_for('static', filename='img/logo_timebank_edu.png') }}" alt="Logo {{ config.ten_truong }}" style="height: 38px; width: auto; max-width: 160px; object-fit: contain;" class="d-inline-block bg-white px-2 py-1 rounded-3 shadow-sm">
+        <img src="{{ url_for('static', filename='img/logo_timebank_edu.png') }}" alt="Logo School Time Bank" style="height: 38px; width: auto; max-width: 160px; object-fit: contain;" class="d-inline-block bg-white px-2 py-1 rounded-3 shadow-sm">
         <span class="d-none d-sm-inline-block ps-1 border-start border-white border-opacity-50">
-          <small class="text-white text-opacity-95 fw-semibold d-block" style="font-size: 0.72rem; letter-spacing: 0.2px;">{{ config.ten_truong }}</small>
+          <small class="text-white text-opacity-95 fw-bold d-block" style="font-size: 0.85rem; letter-spacing: 0.2px;">School Time Bank</small>
         </span>
       </a>
       
@@ -56,6 +56,9 @@
         <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center gap-lg-2">
           <li class="nav-item">
             <a class="nav-link" href="{{ url_for('skills_market') }}"><i class="bi bi-shop me-1"></i>Chợ kỹ năng</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('noi_quy') }}"><i class="bi bi-shield-check me-1"></i>Nội quy</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="{{ url_for('community_tasks_view') }}"><i class="bi bi-heart-fill me-1"></i>Vì cộng đồng</a>
@@ -82,9 +85,6 @@
           </li>
           <li class="nav-item">
             <a class="nav-link" href="{{ url_for('index') }}#nha-truong"><i class="bi bi-building me-1"></i>Nhà trường</a>
-          </li>
-          <li class="nav-item d-none d-xl-block">
-            <span class="badge-ai"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Trí tuệ nhân tạo)</span>
           </li>
 
           {% if current_user %}
@@ -131,7 +131,7 @@
                     <i class="bi bi-heart-fill text-danger me-2"></i>Hoạt động Vì cộng đồng
                   </a>
                 </li>
-                {% if current_user.vai_tro in ('giao_vien', 'admin') %}
+                {% if current_user.vai_tro in ('giao_vien', 'school_admin', 'super_admin', 'admin') %}
                 <li><hr class="dropdown-divider my-1"></li>
                 <li>
                   <a class="dropdown-item py-2" href="{{ url_for('blog_manage') }}">
@@ -149,7 +149,7 @@
                   </a>
                 </li>
                 {% endif %}
-                {% if current_user.vai_tro == 'admin' %}
+                {% if current_user.vai_tro in ('school_admin', 'super_admin', 'admin') %}
                 <li>
                   <a class="dropdown-item py-2" href="{{ url_for('admin_dashboard') }}">
                     <i class="bi bi-speedometer2 text-danger me-2"></i>Bảng điều khiển Quản trị (Admin)
@@ -199,16 +199,16 @@
     {% block content %}{% endblock %}
   </main>
 
-  <!-- Footer hệ thống UKA Academy Hạ Long -->
+  <!-- Footer hệ thống School Time Bank -->
   <footer class="mt-auto text-white">
     <div class="container py-4">
       <div class="row g-4 justify-content-between">
         <div class="col-lg-5 col-md-6">
           <div class="d-flex align-items-center gap-3 mb-3">
-            <img src="{{ url_for('static', filename='img/logo_timebank_edu.png') }}" alt="Logo {{ config.ten_truong }}" style="height: 44px; width: auto; max-width: 175px; object-fit: contain;" class="bg-white p-2 rounded-3 shadow-sm">
+            <img src="{{ url_for('static', filename='img/logo_timebank_edu.png') }}" alt="Logo School Time Bank" style="height: 44px; width: auto; max-width: 175px; object-fit: contain;" class="bg-white p-2 rounded-3 shadow-sm">
             <div>
-              <h5 class="text-white mb-0 fw-bold">Ngân hàng Thời gian Học đường</h5>
-              <small class="text-warning fw-semibold">TimeBank EDU • UKA Academy Hạ Long</small>
+              <h5 class="text-white mb-0 fw-bold">School Time Bank</h5>
+              <small class="text-warning fw-semibold fst-italic">Ngân hàng Thời gian Học đường</small>
             </div>
           </div>
           <p class="small text-white-50 mb-3 lh-base">
@@ -217,17 +217,14 @@
           <div class="p-3 rounded-3 mb-3" style="background: rgba(255,255,255,0.06); border-left: 3px solid #F5B301;">
             <p class="small text-light mb-0">
               <i class="bi bi-shield-check text-warning me-1"></i>
-              <strong>Sản phẩm bản quyền thuộc cô giáo:</strong> Nguyễn Thị Huyền - Giáo viên sư phạm tin học, trường UK Academy Hạ Long.
+              <strong>Sản phẩm bản quyền thuộc cá nhân:</strong> Cô giáo Nguyễn Thị Huyền — Sáng kiến Ngân hàng Thời gian Học đường.
             </p>
-          </div>
-          <div class="d-flex align-items-center gap-2">
-            <span class="badge-ai"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Trí tuệ nhân tạo)</span>
           </div>
         </div>
 
         <div class="col-lg-4 col-md-6">
           <h6 class="text-warning text-uppercase fw-bold mb-3"><i class="bi bi-building me-2"></i>Đơn vị triển khai</h6>
-          <p class="mb-2 text-white fw-bold"><i class="bi bi-mortarboard-fill text-warning me-2"></i>{{ config.ten_truong }}</p>
+          <p class="mb-2 text-white fw-bold"><i class="bi bi-mortarboard-fill text-warning me-2"></i>Hệ thống Nền tảng Đa trường Học đường</p>
           <p class="mb-2 small text-white-50"><i class="bi bi-geo-alt-fill text-warning me-2"></i>Đường Phan Đăng Lưu, Phường Hồng Hải, thành phố Quảng Ninh</p>
           <p class="mb-2 small text-white-50"><i class="bi bi-telephone-fill text-warning me-2"></i>SĐT: <a href="tel:0766667999" class="text-white fw-semibold">07.6666.7999</a></p>
           <p class="mb-0 small text-white-50"><i class="bi bi-envelope-at-fill text-warning me-2"></i>Email: <a href="mailto:mshuyenuka@gmail.com" class="text-white fw-semibold">mshuyenuka@gmail.com</a></p>
@@ -248,12 +245,14 @@
 
       <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 small text-white-50">
         <div>
-          © 2026 <strong>TimeBank EDU</strong> — Hệ thống Ngân hàng Thời gian Học đường.
+          © 2026 <strong>School Time Bank</strong> — Ngân hàng Thời gian Học đường.
         </div>
         <div class="d-flex align-items-center gap-3">
-          <span>Trường: <strong class="text-white">{{ config.ten_truong }}</strong></span>
+          <a href="{{ url_for('noi_quy') }}" class="text-warning text-decoration-none fw-semibold"><i class="bi bi-card-checklist me-1"></i>Nội quy Học đường</a>
           <span>•</span>
-          <span class="text-warning"><i class="bi bi-cpu me-1"></i>Hỗ trợ bởi AI (Trí tuệ nhân tạo)</span>
+          <a href="{{ url_for('skills_market') }}" class="text-white text-decoration-none">Chợ kỹ năng</a>
+          <span>•</span>
+          <a href="{{ url_for('blog_index') }}" class="text-white text-decoration-none">Bản tin</a>
         </div>
       </div>
     </div>

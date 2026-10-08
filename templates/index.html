@@ -11,12 +11,18 @@
       <div class="col-lg-7">
         <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-white border shadow-sm mb-3">
           <span class="badge bg-warning text-dark"><i class="bi bi-award-fill"></i> Sáng kiến Giáo dục Số 2026</span>
-          <span class="small text-muted">{{ config.ten_truong }}</span>
+          <span class="small text-muted fw-semibold">Nền tảng Đa trường Học đường</span>
         </div>
         
-        <h1 class="hero-title mb-3">
-          Ngân hàng Thời gian Học đường
-        </h1>
+        <div class="mb-3">
+          <h1 class="hero-brand-title display-4 fw-bold mb-1" style="background: linear-gradient(135deg, #1B2A6B 0%, #F26522 60%, #F5B301 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.5px;">
+            School Time Bank
+          </h1>
+          <p class="fst-italic text-secondary fs-5 mb-0 fw-medium">
+            Ngân hàng Thời gian Học đường
+          </p>
+        </div>
+
         <p class="hero-tagline mb-2">
           <i class="bi bi-quote fs-4 text-warning"></i> Một giờ bạn dạy — một giờ bạn được học. <i class="bi bi-quote fs-4 text-warning"></i>
         </p>
@@ -28,7 +34,7 @@
         </div>
         
         <p class="lead text-secondary mb-4 fs-6">
-          Mô hình giáo dục sáng tạo tại <strong>{{ config.ten_truong }}</strong>: Mỗi học sinh vừa là người học, vừa là người thầy. 
+          Mô hình giáo dục sáng tạo đa trường học đường: Mỗi học sinh vừa là người học, vừa là người thầy. 
           Không dùng tiền mặt, mọi tri thức đều được trân trọng công bằng thông qua tín dụng thời gian.
         </p>
 
@@ -63,9 +69,9 @@
 
       <div class="col-lg-5 text-center">
         <div class="hero-img-box p-4 bg-white rounded-5 shadow-lg border text-center position-relative">
-          <img src="{{ url_for('static', filename='img/logo_timebank_edu.png') }}" alt="Logo {{ config.ten_truong }}" class="img-fluid mb-3" style="max-height: 120px; max-width: 90%; object-fit: contain; filter: drop-shadow(0 8px 16px rgba(27,42,107,0.15));">
-          <h5 class="fw-bold text-dark mb-1">{{ config.ten_truong }}</h5>
-          <p class="text-muted small mb-3">Không gian trao đổi kỹ năng số thế hệ mới</p>
+          <img src="{{ url_for('static', filename='img/logo_timebank_edu.png') }}" alt="Logo School Time Bank" class="img-fluid mb-3" style="max-height: 120px; max-width: 90%; object-fit: contain; filter: drop-shadow(0 8px 16px rgba(27,42,107,0.15));">
+          <h5 class="fw-bold text-dark mb-1">School Time Bank</h5>
+          <p class="text-muted small mb-3">Không gian trao đổi kỹ năng đa trường thế hệ mới</p>
           
           <div class="d-flex justify-content-around border-top pt-3 text-start">
             <div>
@@ -364,6 +370,66 @@
      ============================================================================== -->
 <section id="nha-truong" class="py-5 bg-light">
   <div class="container py-3">
+
+    <!-- Danh sách 4 trường tham gia hệ thống -->
+    <div class="mb-5 pb-3 border-bottom">
+      <div class="text-center max-w-700 mx-auto mb-4">
+        <span class="badge bg-warning text-dark fw-bold px-3 py-2 rounded-pill mb-2"><i class="bi bi-buildings-fill me-1"></i> HỆ THỐNG GIAN HÀNG ĐA TRƯỜNG</span>
+        <h3 class="fw-bold">Các Trường Học Tham Gia Thí Điểm & Triển Khai</h3>
+        <p class="text-muted small">Không gian trao đổi kỹ năng học đường được cá nhân hóa và quản trị độc lập cho từng trường.</p>
+      </div>
+
+      <div class="row g-3">
+        <!-- Trường 1 -->
+        <div class="col-md-6 col-lg-3">
+          <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100 border-top border-4 border-success">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="badge bg-success bg-opacity-10 text-success fw-bold"><i class="bi bi-broadcast me-1"></i>Đang thí điểm</span>
+              <small class="text-muted">Gian hàng #1</small>
+            </div>
+            <h6 class="fw-bold text-dark mb-2">Trường Tiểu học, THCS, THPT Quốc tế song ngữ học viện Anh Quốc-UK Academy</h6>
+            <p class="small text-muted mb-0">Trường Quốc tế Song ngữ UKA Academy Hạ Long — Tiên phong thí điểm trao đổi tín dụng thời gian học đường.</p>
+          </div>
+        </div>
+
+        <!-- Trường 2 -->
+        <div class="col-md-6 col-lg-3">
+          <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100 border-top border-4 border-warning">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="badge bg-warning bg-opacity-10 text-warning fw-bold"><i class="bi bi-clock-history me-1"></i>Chuẩn bị triển khai</span>
+              <small class="text-muted">Gian hàng #2</small>
+            </div>
+            <h6 class="fw-bold text-dark mb-2">Trường THCS Nguyễn Văn Thuộc</h6>
+            <p class="small text-muted mb-0">Đơn vị giáo dục kết nối phong trào Đôi bạn cùng tiến và kèm cặp môn học.</p>
+          </div>
+        </div>
+
+        <!-- Trường 3 -->
+        <div class="col-md-6 col-lg-3">
+          <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100 border-top border-4 border-warning">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="badge bg-warning bg-opacity-10 text-warning fw-bold"><i class="bi bi-clock-history me-1"></i>Chuẩn bị triển khai</span>
+              <small class="text-muted">Gian hàng #3</small>
+            </div>
+            <h6 class="fw-bold text-dark mb-2">Trường THCS Lê Văn Tám</h6>
+            <p class="small text-muted mb-0">Đơn vị trường học tiếp nhận chuyển giao mô hình chia sẻ năng khiếu và kỹ năng số.</p>
+          </div>
+        </div>
+
+        <!-- Trường 4 -->
+        <div class="col-md-6 col-lg-3">
+          <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100 border-top border-4 border-warning">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="badge bg-warning bg-opacity-10 text-warning fw-bold"><i class="bi bi-clock-history me-1"></i>Chuẩn bị triển khai</span>
+              <small class="text-muted">Gian hàng #4</small>
+            </div>
+            <h6 class="fw-bold text-dark mb-2">Trường THPT Hải Đảo</h6>
+            <p class="small text-muted mb-0">Lan tỏa tri thức và ngân hàng thời gian tới học sinh vùng hải đảo Quảng Ninh.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="row g-5 align-items-center">
       <div class="col-lg-6">
         <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold px-3 py-2 rounded-pill mb-3">Dành cho nhà trường</span>
