@@ -26,22 +26,88 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Cố gắng khởi tạo Google Generative AI
+# Cố gắng khởi tạo Google GenAI Client
+_gemini_client = None
 GEMINI_AVAILABLE = False
-try:
-    import google.generativeai as genai
-    api_key = os.getenv("GEMINI_API_KEY", "").strip()
-    if api_key:
-        genai.configure(api_key=api_key)
+_last_init_key = None
+_active_model = None
+
+# Danh sách các model flash thế hệ mới ưu tiên kiểm tra theo thứ tự
+CANDIDATE_MODELS = [
+    "gemini-2.0-flash",
+    "gemini-2.5-flash",
+    "gemini-1.5-flash",
+]
+
+
+def init_gemini_client(api_key=None):
+    """
+    Khởi tạo hoặc cập nhật Google GenAI Client với log chẩn đoán minh bạch.
+    Bảo mật: Tuyệt đối không bao giờ in API key ra log.
+    """
+    global _gemini_client, GEMINI_AVAILABLE, _last_init_key, _active_model
+
+    if api_key is None:
+        api_key = os.getenv("GEMINI_API_KEY", "").strip()
+    else:
+        api_key = str(api_key).strip()
+
+    _last_init_key = api_key
+    key_present = bool(api_key)
+    key_len = len(api_key)
+
+    # Log chẩn đoán lúc khởi tạo (Đúng định dạng yêu cầu, KHÔNG BAO GIỜ in key)
+    print(f"[AI Init] key present: {key_present} | len: {key_len}")
+
+    if not key_present:
+        _gemini_client = None
+        GEMINI_AVAILABLE = False
+        _active_model = None
+        print("[AI Init] client ready: False - Thieu GEMINI_API_KEY")
+        return None
+
+    try:
+        from google import genai
+        from google.genai import types
+
+        # Khởi tạo client chính thức của thư viện google-genai với timeout ~18s (18000ms)
+        client = genai.Client(
+            api_key=api_key,
+            http_options=types.HttpOptions(timeout=18000)
+        )
+        _gemini_client = client
         GEMINI_AVAILABLE = True
-except Exception:
-    GEMINI_AVAILABLE = False
+        print("[AI Init] client ready: True")
+        return _gemini_client
+    except Exception as e:
+        _gemini_client = None
+        GEMINI_AVAILABLE = False
+        _active_model = None
+        # Không nuốt lỗi câm ở khâu init
+        print(f"[AI Init] client ready: False - Loi khoi tao: {e}")
+        return None
+
+
+# Tự động chẩn đoán và khởi tạo khi nạp module
+init_gemini_client()
+
+
+def get_gemini_client():
+    """Lấy client hiện tại, tự động re-init nếu biến môi trường GEMINI_API_KEY thay đổi."""
+    global _gemini_client, _last_init_key
+    current_key = os.getenv("GEMINI_API_KEY", "").strip()
+    if current_key != _last_init_key or (_gemini_client is None and current_key):
+        return init_gemini_client(current_key)
+    return _gemini_client
 
 
 def is_ai_live():
     """Kiểm tra xem Gemini API có sẵn sàng hoạt động hay đang ở chế độ dự phòng."""
     key = os.getenv("GEMINI_API_KEY", "").strip()
-    return bool(key) and GEMINI_AVAILABLE
+    if not key:
+        return False
+    client = get_gemini_client()
+    return client is not None and GEMINI_AVAILABLE
 
 
 def log_ai_interaction(db, user_id, chuc_nang, input_tom_tat, output_text):
@@ -59,35 +125,68 @@ def log_ai_interaction(db, user_id, chuc_nang, input_tom_tat, output_text):
         )
         db.commit()
     except Exception as e:
-        print(f"[AI Log Error]: Không thể ghi log AI: {e}")
+        print(f"[AI Log Error]: Khong the ghi log AI: {e}")
 
 
 def call_gemini(prompt, system_instruction=""):
     """
-    Hàm gọi Gemini API với cơ chế dự phòng an toàn và giới hạn thời gian (timeout < 20s).
-    Trả về nội dung văn bản phản hồi hoặc None nếu thất bại.
+    Hàm gọi Gemini API với cơ chế dự phòng an toàn và giới hạn thời gian (timeout ~18s).
+    Sử dụng thư viện google-genai mới nhất:
+    - from google import genai
+    - client = genai.Client(api_key=api_key)
+    - client.models.generate_content(model=<model-flash-mới-nhất>, contents=...)
+    - Tự kiểm tra tên model đang khả dụng (gemini-2.0-flash / gemini-2.5-flash / gemini-1.5-flash).
+    - Giữ timeout ~18s như cũ.
+    - Fallback model khác nếu lỗi; trả về None nếu toàn bộ thất bại (không crash).
     """
+    global _active_model
+
     if not is_ai_live():
         return None
-        
-    try:
-        # Thử sử dụng mô hình gemini-1.5-flash hoặc gemini-pro
-        model_name = "gemini-1.5-flash"
-        try:
-            model = genai.GenerativeModel(model_name)
-            full_prompt = f"{system_instruction}\n\n{prompt}" if system_instruction else prompt
-            response = model.generate_content(full_prompt, request_options={"timeout": 18})
-            if response and response.text:
-                return response.text.strip()
-        except Exception:
-            # Fallback sang gemini-pro nếu model mới chưa hỗ trợ
-            model = genai.GenerativeModel("gemini-pro")
-            response = model.generate_content(prompt, request_options={"timeout": 18})
-            if response and response.text:
-                return response.text.strip()
-    except Exception as e:
-        print(f"[Gemini Call Warning]: {e}")
+
+    client = get_gemini_client()
+    if not client:
         return None
+
+    try:
+        from google.genai import types
+        config = types.GenerateContentConfig(
+            system_instruction=system_instruction if system_instruction else None,
+            http_options=types.HttpOptions(timeout=18000)
+        )
+    except Exception as e:
+        print(f"[Gemini Config Error]: {e}")
+        config = None
+
+    # Ưu tiên model đang khả dụng hoặc thử lần lượt danh sách model flash
+    models_to_try = list(CANDIDATE_MODELS)
+    if _active_model and _active_model in models_to_try:
+        models_to_try.remove(_active_model)
+        models_to_try.insert(0, _active_model)
+
+    last_error = None
+    for model_name in models_to_try:
+        try:
+            kwargs = {
+                "model": model_name,
+                "contents": prompt,
+            }
+            if config is not None:
+                kwargs["config"] = config
+
+            response = client.models.generate_content(**kwargs)
+            if response and getattr(response, "text", None):
+                text = response.text.strip()
+                if text:
+                    _active_model = model_name
+                    return text
+        except Exception as e:
+            last_error = e
+            print(f"[Gemini Call Warning] Model '{model_name}' that bai: {e}")
+            continue
+
+    if last_error:
+        print(f"[Gemini Call Error] Toan bo model Gemini deu that bai: {last_error}")
     return None
 
 
