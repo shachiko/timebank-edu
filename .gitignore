@@ -43,3 +43,7 @@ instance/
 # Hệ điều hành
 .DS_Store
 Thumbs.db
+
+# Kho lưu trữ file cục bộ mô phỏng / test
+storage/
+.pytest_cache/

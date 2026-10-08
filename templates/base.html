@@ -66,6 +66,12 @@
           <li class="nav-item">
             <a class="nav-link" href="{{ url_for('blog_index') }}"><i class="bi bi-newspaper me-1"></i>Bản tin</a>
           </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('forum_index') }}"><i class="bi bi-chat-dots-fill me-1"></i>Diễn đàn</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('documents_index') }}"><i class="bi bi-folder2-open me-1"></i>Kho tài liệu</a>
+          </li>
           {% if current_user %}
           <li class="nav-item">
             <a class="nav-link" href="{{ url_for('my_schedule') }}"><i class="bi bi-calendar-check me-1"></i>Lịch của tôi</a>
@@ -129,6 +135,15 @@
                 <li>
                   <a class="dropdown-item py-2" href="{{ url_for('community_tasks_view') }}">
                     <i class="bi bi-heart-fill text-danger me-2"></i>Hoạt động Vì cộng đồng
+                  </a>
+                <li>
+                  <a class="dropdown-item py-2" href="{{ url_for('forum_index') }}">
+                    <i class="bi bi-chat-dots-fill text-primary me-2"></i>Diễn đàn "Góc trò chuyện"
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item py-2" href="{{ url_for('documents_index') }}">
+                    <i class="bi bi-folder2-open text-warning me-2"></i>Kho tài liệu học tập (5TB)
                   </a>
                 </li>
                 {% if current_user.vai_tro in ('giao_vien', 'school_admin', 'super_admin', 'admin') %}

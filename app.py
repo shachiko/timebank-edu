@@ -26,7 +26,7 @@ from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask import (
-    Flask, render_template, request, jsonify, g, flash, redirect, url_for, session, abort, make_response
+    Flask, render_template, request, jsonify, g, flash, redirect, url_for, session, abort, make_response, Response
 )
 from ai_service import (
     ai_moderate_skill, ai_matchmake, ai_generate_lesson_plan, 
@@ -34,6 +34,10 @@ from ai_service import (
     ai_generate_quiz, ai_recommend_tasks, get_chat_greeting_and_reminder,
     ai_chat_assistant, ai_generate_weekly_newsletter,
     ai_moderate_chat_message
+)
+from drive_service import (
+    upload_document_stream, download_document_stream, delete_document_from_drive,
+    get_oauth_auth_url, exchange_code_for_tokens, is_google_drive_configured
 )
 
 # 1. Tải các biến môi trường từ file .env (nếu có)
@@ -57,8 +61,8 @@ def allowed_image_file(filename):
 
 # Khởi tạo ứng dụng Flask
 app = Flask(__name__)
-# Cấu hình kích thước tải lên tối đa 16MB
-app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024
+# Cấu hình kích thước tải lên tối đa 200MB (Google Drive 5TB storage)
+app.config["MAX_CONTENT_LENGTH"] = 200 * 1024 * 1024
 # Bảo mật: SECRET_KEY đọc từ biến môi trường khi deploy production
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY") or os.getenv("FLASK_SECRET_KEY") or "timebank-edu-secret-key-2026"
 
@@ -379,14 +383,16 @@ def get_db():
                 app.logger.warning(f"Lỗi kết nối PostgreSQL ({e}), tự động chuyển về SQLite dự phòng.")
                 g.db = sqlite3.connect(
                     DATABASE_PATH,
-                    detect_types=sqlite3.PARSE_DECLTYPES
+                    detect_types=sqlite3.PARSE_DECLTYPES,
+                    timeout=30.0
                 )
                 g.db.row_factory = sqlite3.Row
                 g.db.execute("PRAGMA foreign_keys = ON")
         else:
             g.db = sqlite3.connect(
                 DATABASE_PATH,
-                detect_types=sqlite3.PARSE_DECLTYPES
+                detect_types=sqlite3.PARSE_DECLTYPES,
+                timeout=30.0
             )
             g.db.row_factory = sqlite3.Row
             g.db.execute("PRAGMA foreign_keys = ON")
@@ -1535,7 +1541,8 @@ def admin_dashboard():
         selected_truong_id=selected_truong_id,
         pending_students=pending_students,
         invite_codes_list=invite_codes_list,
-        violations_list=violations_list
+        violations_list=violations_list,
+        google_drive_configured=is_google_drive_configured()
     )
 
 
@@ -4121,6 +4128,712 @@ def api_contact():
         "success": True,
         "message": f"Cảm ơn Thầy/Cô {ho_ten} ({ten_truong})! Ban đề án TimeBank EDU sẽ liên hệ lại qua SĐT {sdt}."
     })
+
+
+# ==============================================================================
+# PROMPT 18 — PHẦN 1: DIỄN ĐÀN "GÓC TRÒ CHUYỆN"
+# ==============================================================================
+
+@app.route("/forum")
+@login_required
+def forum_index():
+    """
+    Diễn đàn 'Góc trò chuyện' (Học sinh trao đổi đồng đẳng):
+    - Multi-tenant: Học sinh chỉ thấy chủ đề của TRƯỜNG MÌNH (lọc theo truong_id).
+    - Super Admin có thể lọc theo từng trường hoặc xem toàn bộ.
+    - Đếm số lượt bình luận, trạng thái mở/khóa.
+    """
+    db = get_db()
+    cur = db.cursor()
+    user_school_id = session.get("truong_id", 1)
+    is_super = is_super_admin()
+    search_query = request.args.get("q", "").strip()
+
+    # Xử lý trường được chọn
+    selected_school_id = request.args.get("truong_id") if is_super else None
+    if selected_school_id:
+        try:
+            target_school_id = int(selected_school_id)
+        except ValueError:
+            target_school_id = user_school_id
+    else:
+        target_school_id = user_school_id
+
+    # Lấy tên trường hiện tại
+    cur.execute("SELECT ten_truong FROM truong WHERE id = ?", (target_school_id,))
+    school_row = cur.fetchone()
+    school_name = school_row["ten_truong"] if school_row else "Trường học"
+
+    sql = """
+        SELECT ft.*, u.ho_ten, u.lop, u.vai_tro,
+               (SELECT COUNT(*) FROM forum_replies fr WHERE fr.topic_id = ft.id) AS reply_count
+        FROM forum_topics ft
+        JOIN users u ON ft.user_id = u.id
+        WHERE ft.truong_id = ?
+    """
+    params = [target_school_id]
+
+    if search_query:
+        sql += " AND (ft.tieu_de LIKE ? OR ft.noi_dung LIKE ?)"
+        params.extend([f"%{search_query}%", f"%{search_query}%"])
+
+    sql += " ORDER BY ft.id DESC"
+    cur.execute(sql, tuple(params))
+    topics = cur.fetchall()
+
+    user_role = session.get("vai_tro")
+    is_teacher_or_admin = user_role in ("giao_vien", "school_admin", "super_admin", "admin")
+
+    return render_template(
+        "forum_index.html",
+        topics=topics,
+        school_name=school_name,
+        search_query=search_query,
+        is_teacher_or_admin=is_teacher_or_admin,
+        can_moderate=is_teacher_or_admin
+    )
+
+
+@app.route("/forum/new", methods=["GET", "POST"], endpoint="forum_new")
+@app.route("/forum/new", methods=["GET", "POST"], endpoint="forum_new_topic")
+@login_required
+def forum_new():
+    """
+    Tạo chủ đề thảo luận mới trên Diễn đàn:
+    - AI Kiểm duyệt ngôn từ (VIỆC 5/P17) áp dụng cho cả Tiêu đề và Nội dung.
+    - Vi phạm: Chặn đăng bài + ghi nhận vào bảng violations.
+    - Lưu truong_id theo trường của người tạo.
+    """
+    user_school_id = session.get("truong_id", 1)
+    db = get_db()
+    cur = db.cursor()
+
+    cur.execute("SELECT ten_truong FROM truong WHERE id = ?", (user_school_id,))
+    school_row = cur.fetchone()
+    school_name = school_row["ten_truong"] if school_row else "Trường học"
+
+    if request.method == "POST":
+        tieu_de = request.form.get("tieu_de", "").strip()
+        noi_dung = request.form.get("noi_dung", "").strip()
+        user_id = session["user_id"]
+
+        if not tieu_de or not noi_dung:
+            flash("Vui lòng nhập đầy đủ tiêu đề và nội dung chủ đề.", "warning")
+            return render_template("forum_new.html", school_name=school_name, tieu_de=tieu_de, noi_dung=noi_dung)
+
+        # AI Lọc từ tục cho cả Tiêu đề và Nội dung (VIỆC 5 / P17)
+        check_title = ai_moderate_chat_message(tieu_de)
+        check_content = ai_moderate_chat_message(noi_dung)
+        violation_found = check_title.get("is_violation") or check_content.get("is_violation")
+
+        if violation_found:
+            viol_info = check_title if check_title.get("is_violation") else check_content
+            reason = viol_info.get("reason", "Ngôn từ không phù hợp chuẩn mực học đường")
+            viol_type = viol_info.get("violation_type", "ngon_tu_tho_tuc")
+
+            # Đếm số lần vi phạm trước đó để tính bậc
+            cur.execute("SELECT COUNT(*) FROM violations WHERE user_id = ?", (user_id,))
+            prior_count = cur.fetchone()[0]
+            v_level = min(3, prior_count + 1)
+            now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            bad_sample = tieu_de if check_title.get("is_violation") else noi_dung
+            cur.execute("""
+                INSERT INTO violations (user_id, loai_vi_pham, mo_ta, muc_do, thoi_gian)
+                VALUES (?, ?, ?, ?, ?)
+            """, (user_id, viol_type, f"Diễn đàn vi phạm ({reason}): \"{bad_sample[:100]}\"", v_level, now_str))
+
+            if v_level >= 3:
+                cur.execute("UPDATE users SET trang_thai = 'de_xuat_khoa' WHERE id = ?", (user_id,))
+            db.commit()
+
+            flash(f"⚠️ Bài viết của bạn bị AI từ chối đăng do vi phạm quy chuẩn ngôn ngữ học đường ({reason}). Hệ thống đã ghi nhận vi phạm vào Sổ kỷ luật.", "danger")
+            return render_template("forum_new.html", school_name=school_name, tieu_de=tieu_de, noi_dung=noi_dung)
+
+        # Hợp lệ: Thêm chủ đề mới
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        cur.execute("""
+            INSERT INTO forum_topics (truong_id, user_id, tieu_de, noi_dung, trang_thai, ngay_tao)
+            VALUES (?, ?, ?, ?, 'mo', ?)
+        """, (user_school_id, user_id, tieu_de, noi_dung, now_str))
+        topic_id = cur.lastrowid
+        db.commit()
+
+        flash("✨ Tạo chủ đề thảo luận mới thành công!", "success")
+        return redirect(url_for("forum_topic", topic_id=topic_id))
+
+    return render_template("forum_new.html", school_name=school_name)
+
+
+@app.route("/forum/topic/<int:topic_id>", endpoint="forum_topic")
+@app.route("/forum/topic/<int:topic_id>", endpoint="forum_topic_detail")
+@login_required
+def forum_topic(topic_id):
+    """
+    Xem chi tiết chủ đề thảo luận và danh sách bình luận:
+    - Kiểm tra bảo mật multi-tenant: chỉ người cùng trường hoặc Super Admin mới được xem.
+    - Hiển thị danh sách bình luận theo thứ tự thời gian.
+    """
+    db = get_db()
+    cur = db.cursor()
+    user_school_id = session.get("truong_id", 1)
+    is_super = is_super_admin()
+
+    cur.execute("""
+        SELECT ft.*, u.ho_ten, u.lop, u.vai_tro, u.ma_hoc_sinh, t.ten_truong
+        FROM forum_topics ft
+        JOIN users u ON ft.user_id = u.id
+        LEFT JOIN truong t ON ft.truong_id = t.id
+        WHERE ft.id = ?
+    """, (topic_id,))
+    topic = cur.fetchone()
+
+    if not topic:
+        flash("Chủ đề không tồn tại hoặc đã bị xóa.", "danger")
+        return redirect(url_for("forum_index"))
+
+    # Kiểm tra phân lập trường học (Multi-Tenant Isolation)
+    if not is_super and topic["truong_id"] != user_school_id:
+        flash("Bạn không có quyền xem diễn đàn của trường khác.", "danger")
+        return redirect(url_for("forum_index"))
+
+    # Lấy danh sách bình luận
+    cur.execute("""
+        SELECT fr.*, u.ho_ten, u.lop, u.vai_tro, u.ma_hoc_sinh
+        FROM forum_replies fr
+        JOIN users u ON fr.user_id = u.id
+        WHERE fr.topic_id = ?
+        ORDER BY fr.id ASC
+    """, (topic_id,))
+    replies = cur.fetchall()
+
+    user_role = session.get("vai_tro")
+    is_teacher_or_admin = user_role in ("giao_vien", "school_admin", "super_admin", "admin")
+
+    return render_template(
+        "forum_topic.html",
+        topic=topic,
+        replies=replies,
+        is_teacher_or_admin=is_teacher_or_admin,
+        can_moderate=is_teacher_or_admin
+    )
+
+
+@app.route("/forum/topic/<int:topic_id>/reply", methods=["POST"], endpoint="forum_topic_reply")
+@app.route("/forum/topic/<int:topic_id>/reply", methods=["POST"], endpoint="forum_reply_topic")
+@login_required
+def forum_topic_reply(topic_id):
+    """
+    Gửi bình luận vào chủ đề:
+    - Kiểm tra chủ đề có bị khóa hay không.
+    - AI Lọc từ tục realtime: chặn đăng và ghi nhận vào violations nếu vi phạm.
+    """
+    db = get_db()
+    cur = db.cursor()
+    user_school_id = session.get("truong_id", 1)
+    user_id = session["user_id"]
+    is_super = is_super_admin()
+
+    cur.execute("SELECT * FROM forum_topics WHERE id = ?", (topic_id,))
+    topic = cur.fetchone()
+    if not topic:
+        flash("Chủ đề không tồn tại.", "danger")
+        return redirect(url_for("forum_index"))
+
+    if not is_super and topic["truong_id"] != user_school_id:
+        flash("Bạn không có quyền bình luận trong diễn đàn trường khác.", "danger")
+        return redirect(url_for("forum_index"))
+
+    if topic["trang_thai"] == "khoa":
+        flash("Chủ đề này đã bị khóa bình luận bởi Giáo viên / Quản trị viên.", "warning")
+        return redirect(url_for("forum_topic", topic_id=topic_id))
+
+    noi_dung = request.form.get("noi_dung", "").strip()
+    if not noi_dung:
+        flash("Nội dung bình luận không được để trống.", "warning")
+        return redirect(url_for("forum_topic", topic_id=topic_id))
+
+    # AI Kiểm duyệt ngôn từ realtime (VIỆC 5 / P17)
+    check_rep = ai_moderate_chat_message(noi_dung)
+    if check_rep.get("is_violation"):
+        reason = check_rep.get("reason", "Ngôn từ không phù hợp chuẩn mực học đường")
+        viol_type = check_rep.get("violation_type", "ngon_tu_tho_tuc")
+
+        cur.execute("SELECT COUNT(*) FROM violations WHERE user_id = ?", (user_id,))
+        prior_count = cur.fetchone()[0]
+        v_level = min(3, prior_count + 1)
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        cur.execute("""
+            INSERT INTO violations (user_id, loai_vi_pham, mo_ta, muc_do, thoi_gian)
+            VALUES (?, ?, ?, ?, ?)
+        """, (user_id, viol_type, f"Bình luận diễn đàn vi phạm ({reason}): \"{noi_dung[:100]}\"", v_level, now_str))
+
+        if v_level >= 3:
+            cur.execute("UPDATE users SET trang_thai = 'de_xuat_khoa' WHERE id = ?", (user_id,))
+        db.commit()
+
+        flash(f"⚠️ Bình luận bị AI chặn do vi phạm quy chuẩn ngôn ngữ ({reason}). Vi phạm đã được ghi nhận vào Sổ kỷ luật.", "danger")
+        return redirect(url_for("forum_topic", topic_id=topic_id))
+
+    # Hợp lệ: Lưu bình luận
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    cur.execute("""
+        INSERT INTO forum_replies (topic_id, user_id, noi_dung, ngay_tao)
+        VALUES (?, ?, ?, ?)
+    """, (topic_id, user_id, noi_dung, now_str))
+    db.commit()
+
+    flash("💬 Đã gửi bình luận thành công!", "success")
+    return redirect(url_for("forum_topic", topic_id=topic_id))
+
+
+@app.route("/forum/topic/<int:topic_id>/toggle-lock", methods=["POST"], endpoint="forum_topic_toggle_lock")
+@app.route("/forum/topic/<int:topic_id>/toggle-lock", methods=["POST"], endpoint="forum_toggle_lock_topic")
+@teacher_or_admin_required
+def forum_topic_toggle_lock(topic_id):
+    """
+    Giáo viên / Quản trị viên khóa hoặc mở khóa chủ đề thảo luận.
+    """
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("SELECT * FROM forum_topics WHERE id = ?", (topic_id,))
+    topic = cur.fetchone()
+    if not topic:
+        flash("Chủ đề không tồn tại.", "danger")
+        return redirect(url_for("forum_index"))
+
+    user_school_id = session.get("truong_id", 1)
+    if not is_super_admin() and topic["truong_id"] != user_school_id:
+        flash("Bạn không có quyền quản lý chủ đề của trường khác.", "danger")
+        return redirect(url_for("forum_index"))
+
+    new_status = "khoa" if topic["trang_thai"] == "mo" else "mo"
+    cur.execute("UPDATE forum_topics SET trang_thai = ? WHERE id = ?", (new_status, topic_id))
+    db.commit()
+
+    msg = "Đã khóa chủ đề thảo luận thành công." if new_status == "khoa" else "Đã mở lại chủ đề thảo luận."
+    flash(msg, "info")
+    return redirect(url_for("forum_topic", topic_id=topic_id))
+
+
+@app.route("/forum/topic/<int:topic_id>/delete", methods=["POST"], endpoint="forum_topic_delete")
+@app.route("/forum/topic/<int:topic_id>/delete", methods=["POST"], endpoint="forum_delete_topic")
+@login_required
+def forum_topic_delete(topic_id):
+    """
+    Xóa chủ đề thảo luận:
+    - Giáo viên và Quản trị viên có quyền xóa bất kỳ chủ đề nào trong trường.
+    - Tác giả có quyền xóa chủ đề của chính mình.
+    """
+    db = get_db()
+    cur = db.cursor()
+    user_id = session["user_id"]
+    user_role = session.get("vai_tro")
+    user_school_id = session.get("truong_id", 1)
+    is_teacher_or_admin = user_role in ("giao_vien", "school_admin", "super_admin", "admin")
+
+    cur.execute("SELECT * FROM forum_topics WHERE id = ?", (topic_id,))
+    topic = cur.fetchone()
+    if not topic:
+        flash("Chủ đề không tồn tại.", "danger")
+        return redirect(url_for("forum_index"))
+
+    if not is_super_admin() and topic["truong_id"] != user_school_id:
+        flash("Bạn không có quyền can thiệp vào chủ đề của trường khác.", "danger")
+        return redirect(url_for("forum_index"))
+
+    if not (is_teacher_or_admin or topic["user_id"] == user_id):
+        flash("Bạn không có quyền xóa chủ đề này.", "danger")
+        return redirect(url_for("forum_topic", topic_id=topic_id))
+
+    # Xóa các bình luận liên quan và xóa chủ đề
+    cur.execute("DELETE FROM forum_replies WHERE topic_id = ?", (topic_id,))
+    cur.execute("DELETE FROM forum_topics WHERE id = ?", (topic_id,))
+    db.commit()
+
+    flash("Đã xóa chủ đề thảo luận.", "info")
+    return redirect(url_for("forum_index"))
+
+
+@app.route("/forum/reply/<int:reply_id>/delete", methods=["POST"], endpoint="forum_reply_delete")
+@app.route("/forum/reply/<int:reply_id>/delete", methods=["POST"], endpoint="forum_delete_reply")
+@login_required
+def forum_reply_delete(reply_id):
+    """
+    Xóa bình luận trên diễn đàn:
+    - Giáo viên / Admin có quyền xóa bình luận.
+    - Tác giả bình luận có quyền tự xóa.
+    """
+    db = get_db()
+    cur = db.cursor()
+    user_id = session["user_id"]
+    user_role = session.get("vai_tro")
+    user_school_id = session.get("truong_id", 1)
+    is_teacher_or_admin = user_role in ("giao_vien", "school_admin", "super_admin", "admin")
+
+    cur.execute("""
+        SELECT fr.*, ft.truong_id 
+        FROM forum_replies fr
+        JOIN forum_topics ft ON fr.topic_id = ft.id
+        WHERE fr.id = ?
+    """, (reply_id,))
+    reply = cur.fetchone()
+
+    if not reply:
+        flash("Bình luận không tồn tại.", "danger")
+        return redirect(url_for("forum_index"))
+
+    topic_id = reply["topic_id"]
+
+    if not is_super_admin() and reply["truong_id"] != user_school_id:
+        flash("Bạn không có quyền can thiệp vào bình luận của trường khác.", "danger")
+        return redirect(url_for("forum_topic", topic_id=topic_id))
+
+    if not (is_teacher_or_admin or reply["user_id"] == user_id):
+        flash("Bạn không có quyền xóa bình luận này.", "danger")
+        return redirect(url_for("forum_topic", topic_id=topic_id))
+
+    cur.execute("DELETE FROM forum_replies WHERE id = ?", (reply_id,))
+    db.commit()
+
+    flash("Đã xóa bình luận.", "info")
+    return redirect(url_for("forum_topic", topic_id=topic_id))
+
+
+# ==============================================================================
+# PROMPT 18 — PHẦN 2: KHO TÀI LIỆU GOOGLE DRIVE 5TB
+# ==============================================================================
+
+DOC_SUBJECTS_LIST = [
+    "Toán", "Ngữ văn", "Tiếng Anh", "Vật lý", "Hóa học", "Sinh học", 
+    "Lịch sử", "Địa lý", "GDCD", "Tin học", "Công nghệ", "Hoạt động trải nghiệm"
+]
+
+def format_file_size(size_bytes):
+    """Định dạng dung lượng file hiển thị thân thiện (B, KB, MB, GB)."""
+    if not size_bytes or size_bytes < 0:
+        return "0 B"
+    for unit in ['B', 'KB', 'MB', 'GB']:
+        if size_bytes < 1024.0:
+            return f"{size_bytes:.1f} {unit}" if unit != 'B' else f"{int(size_bytes)} B"
+        size_bytes /= 1024.0
+    return f"{size_bytes:.1f} TB"
+
+
+@app.route("/admin/google-drive/auth")
+@super_admin_required
+def admin_google_drive_auth():
+    """
+    Khởi tạo luồng xác thực Google OAuth2 để lấy Refresh Token cho tài khoản Drive 5TB:
+    - Chỉ Super Admin (cô Huyền) mới có quyền kết nối.
+    - Chuyển hướng tới trang đăng nhập và đồng ý cấp quyền Google Drive.
+    """
+    redirect_uri = url_for("admin_google_drive_callback", _external=True)
+    auth_url = get_oauth_auth_url(redirect_uri)
+    return redirect(auth_url)
+
+
+@app.route("/admin/google-drive/callback")
+@super_admin_required
+def admin_google_drive_callback():
+    """
+    Tiếp nhận mã xác thực từ Google OAuth2 và trích xuất refresh_token:
+    - TUYỆT ĐỐI không hardcode trong mã nguồn, không push lên GitHub.
+    - Cung cấp hướng dẫn để lưu vào biến môi trường GOOGLE_REFRESH_TOKEN trên Render.
+    """
+    code = request.args.get("code")
+    if not code:
+        flash("Không nhận được mã xác thực từ Google.", "danger")
+        return redirect(url_for("admin_dashboard"))
+
+    redirect_uri = url_for("admin_google_drive_callback", _external=True)
+    tokens = exchange_code_for_tokens(code, redirect_uri)
+    refresh_token = tokens.get("refresh_token")
+
+    if refresh_token:
+        # Cập nhật tạm thời vào bộ nhớ runtime process
+        os.environ["GOOGLE_REFRESH_TOKEN"] = refresh_token
+        flash(
+            f"🎉 Kết nối Google Drive 5TB thành công! "
+            f"Mã Refresh Token: '{refresh_token[:10]}...{refresh_token[-6:]}'. "
+            f"Thầy/Cô hãy thêm biến môi trường 'GOOGLE_REFRESH_TOKEN' vào Render Dashboard để duy trì vĩnh viễn.",
+            "success"
+        )
+    else:
+        flash(
+            "Đã nhận Token từ Google, nhưng tài khoản chưa cấp lại Refresh Token mới "
+            "(thường xảy ra nếu đã cấp quyền trước đó). Nếu cần tạo lại, hãy thu hồi quyền trong tài khoản Google và thử lại.",
+            "info"
+        )
+
+    return redirect(url_for("admin_dashboard"))
+
+
+@app.route("/documents")
+@login_required
+def documents_index():
+    """
+    Xem và tìm kiếm tài liệu trong kho Google Drive của trường:
+    - Multi-tenant: Học sinh chỉ xem tài liệu trường mình.
+    - Lọc theo môn học, tìm kiếm theo từ khóa.
+    """
+    db = get_db()
+    cur = db.cursor()
+    user_school_id = session.get("truong_id", 1)
+    is_super = is_super_admin()
+    search_query = request.args.get("q", "").strip()
+    selected_subject = request.args.get("mon_hoc", "").strip()
+
+    cur.execute("SELECT ten_truong FROM truong WHERE id = ?", (user_school_id,))
+    school_row = cur.fetchone()
+    school_name = school_row["ten_truong"] if school_row else "Trường học"
+
+    sql = """
+        SELECT d.*, u.ho_ten AS user_name, u.lop AS user_class
+        FROM documents d
+        JOIN users u ON d.user_id = u.id
+        WHERE d.truong_id = ? AND d.trang_thai = 'hoat_dong'
+    """
+    params = [user_school_id]
+
+    if selected_subject:
+        sql += " AND d.mon_hoc = ?"
+        params.append(selected_subject)
+
+    if search_query:
+        sql += " AND (d.tieu_de LIKE ? OR d.mo_ta LIKE ? OR d.file_name LIKE ?)"
+        params.extend([f"%{search_query}%", f"%{search_query}%", f"%{search_query}%"])
+
+    sql += " ORDER BY d.id DESC"
+    cur.execute(sql, tuple(params))
+    docs_raw = cur.fetchall()
+
+    documents = []
+    for d in docs_raw:
+        item = dict(d)
+        item["formatted_size"] = format_file_size(d["file_size"])
+        documents.append(item)
+
+    user_role = session.get("vai_tro")
+    is_teacher_or_admin = user_role in ("giao_vien", "school_admin", "super_admin", "admin")
+
+    return render_template(
+        "documents_index.html",
+        documents=documents,
+        school_name=school_name,
+        subjects_list=DOC_SUBJECTS_LIST,
+        selected_subject=selected_subject,
+        search_query=search_query,
+        is_teacher_or_admin=is_teacher_or_admin
+    )
+
+
+@app.route("/documents/upload", methods=["GET", "POST"])
+@login_required
+def documents_upload():
+    """
+    Tải lên tài liệu/ảnh/video (tối đa 200MB/file):
+    - Tự động phân cấp thư mục: /SchoolTimeBank/{ten_truong}/{mon_hoc}/
+    - Stream trực tiếp lên Google Drive 5TB, KHÔNG lưu file lên server Render.
+    - Hiển thị ngay sau khi tải lên thành công.
+    """
+    db = get_db()
+    cur = db.cursor()
+    user_school_id = session.get("truong_id", 1)
+    user_id = session["user_id"]
+
+    cur.execute("SELECT ten_truong FROM truong WHERE id = ?", (user_school_id,))
+    school_row = cur.fetchone()
+    school_name = school_row["ten_truong"] if school_row else "Trường học"
+
+    if request.method == "POST":
+        mon_hoc = request.form.get("mon_hoc", "").strip()
+        tieu_de = request.form.get("tieu_de", "").strip()
+        mo_ta = request.form.get("mo_ta", "").strip()
+        file = request.files.get("file")
+
+        if not mon_hoc or not tieu_de or not file or not file.filename:
+            flash("Vui lòng điền đầy đủ môn học, tiêu đề và chọn tệp đính kèm.", "warning")
+            return render_template("documents_upload.html", school_name=school_name, subjects_list=DOC_SUBJECTS_LIST)
+
+        filename = secure_filename(file.filename) or f"document_{int(time.time())}.bin"
+        mime_type = file.mimetype or "application/octet-stream"
+
+        # Đọc độ dài file stream để xác định dung lượng
+        file.stream.seek(0, io.SEEK_END)
+        file_size = file.stream.tell()
+        file.stream.seek(0)
+
+        # Kiểm tra giới hạn 200MB
+        if file_size > 200 * 1024 * 1024:
+            flash("Tệp đính kèm vượt quá dung lượng tối đa cho phép (200MB).", "danger")
+            return render_template("documents_upload.html", school_name=school_name, subjects_list=DOC_SUBJECTS_LIST)
+
+        try:
+            # Stream tải trực tiếp lên Google Drive 5TB (không lưu trên đĩa Render)
+            drive_result = upload_document_stream(
+                file_stream=file.stream,
+                filename=filename,
+                mime_type=mime_type,
+                school_name=school_name,
+                subject_name=mon_hoc
+            )
+
+            drive_file_id = drive_result.get("file_id")
+            drive_web_view_link = drive_result.get("web_view_link")
+
+            now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            cur.execute("""
+                INSERT INTO documents (
+                    truong_id, user_id, tieu_de, mo_ta, mon_hoc,
+                    file_name, file_size, file_type, drive_file_id,
+                    drive_web_view_link, luot_tai, ngay_tao, trang_thai
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, 'hoat_dong')
+            """, (
+                user_school_id, user_id, tieu_de, mo_ta, mon_hoc,
+                filename, file_size, mime_type, drive_file_id,
+                drive_web_view_link, now_str
+            ))
+            db.commit()
+
+            flash(f"🎉 Tải lên tài liệu '{tieu_de}' thành công vào thư mục {mon_hoc} trên Google Drive 5TB!", "success")
+            return redirect(url_for("documents_index"))
+
+        except Exception as e:
+            app.logger.error(f"Lỗi tải lên tài liệu Google Drive: {e}")
+            flash(f"Lỗi khi truyền tệp lên Google Drive: {str(e)}", "danger")
+            return render_template("documents_upload.html", school_name=school_name, subjects_list=DOC_SUBJECTS_LIST)
+
+    return render_template("documents_upload.html", school_name=school_name, subjects_list=DOC_SUBJECTS_LIST)
+
+
+@app.route("/documents/download/<int:doc_id>")
+@login_required
+def documents_download(doc_id):
+    """
+    Tải về tài liệu từ kho Google Drive 5TB:
+    - Stream trực tiếp từ Drive về trình duyệt (KHÔNG lưu file tạm trên đĩa server Render).
+    - Tự động tăng số lượt tải (luot_tai) và ghi nhật ký vào document_downloads.
+    """
+    db = get_db()
+    cur = db.cursor()
+    user_school_id = session.get("truong_id", 1)
+    user_id = session["user_id"]
+    is_super = is_super_admin()
+
+    cur.execute("SELECT * FROM documents WHERE id = ? AND trang_thai = 'hoat_dong'", (doc_id,))
+    doc = cur.fetchone()
+    if not doc:
+        flash("Tài liệu không tồn tại hoặc đã bị xóa.", "danger")
+        return redirect(url_for("documents_index"))
+
+    # Kiểm tra quyền trường
+    if not is_super and doc["truong_id"] != user_school_id:
+        flash("Bạn không có quyền tải tài liệu của trường khác.", "danger")
+        return redirect(url_for("documents_index"))
+
+    try:
+        # Stream trực tiếp từ Google Drive 5TB
+        file_stream, mime_type, filename = download_document_stream(
+            file_id=doc["drive_file_id"],
+            fallback_filename=doc["file_name"]
+        )
+
+        # Cập nhật số lượt tải và ghi log
+        cur.execute("UPDATE documents SET luot_tai = luot_tai + 1 WHERE id = ?", (doc_id,))
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        cur.execute("""
+            INSERT INTO document_downloads (document_id, user_id, thoi_gian)
+            VALUES (?, ?, ?)
+        """, (doc_id, user_id, now_str))
+        db.commit()
+
+        # Tạo phản hồi dạng streaming response (hỗ trợ trực tiếp generator hoặc stream)
+        data_or_gen = file_stream.read() if hasattr(file_stream, "read") else file_stream
+        response = Response(data_or_gen, mimetype=mime_type)
+        response.headers["Content-Disposition"] = f'attachment; filename="{filename}"'
+        return response
+
+    except Exception as e:
+        app.logger.error(f"Lỗi tải tài liệu từ Google Drive #{doc_id}: {e}")
+        flash(f"Không thể tải tài liệu từ Google Drive: {str(e)}", "danger")
+        return redirect(url_for("documents_index"))
+
+
+@app.route("/documents/report/<int:doc_id>", methods=["POST"])
+@login_required
+def documents_report(doc_id):
+    """
+    Báo cáo tài liệu vi phạm quy chế hoặc độc hại:
+    - Ghi nhận báo cáo vào bảng violations để quản trị viên trường kiểm tra.
+    """
+    db = get_db()
+    cur = db.cursor()
+    user_id = session["user_id"]
+    ly_do = request.form.get("ly_do", "").strip() or "Báo cáo nội dung không phù hợp"
+
+    cur.execute("SELECT * FROM documents WHERE id = ?", (doc_id,))
+    doc = cur.fetchone()
+    if not doc:
+        flash("Tài liệu không tồn tại.", "danger")
+        return redirect(url_for("documents_index"))
+
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    cur.execute("""
+        INSERT INTO violations (user_id, loai_vi_pham, mo_ta, muc_do, thoi_gian)
+        VALUES (?, 'bao_cao_tai_lieu', ?, 1, ?)
+    """, (
+        doc["user_id"],
+        f"Tài liệu #{doc_id} ('{doc['tieu_de']}', file: {doc['file_name']}) bị báo cáo: {ly_do} (Người báo cáo ID={user_id})",
+        now_str
+    ))
+    db.commit()
+
+    flash("Đã gửi báo cáo vi phạm tới Ban Quản trị nhà trường để kiểm tra và xử lý.", "info")
+    return redirect(url_for("documents_index"))
+
+
+@app.route("/documents/delete/<int:doc_id>", methods=["POST"])
+@login_required
+def documents_delete(doc_id):
+    """
+    Quản trị viên / Giáo viên hoặc người tải lên xóa tài liệu vi phạm:
+    - Xóa trên Google Drive 5TB.
+    - Cập nhật trang_thai = 'da_xoa' trong database.
+    """
+    db = get_db()
+    cur = db.cursor()
+    user_id = session["user_id"]
+    user_role = session.get("vai_tro")
+    user_school_id = session.get("truong_id", 1)
+    is_teacher_or_admin = user_role in ("giao_vien", "school_admin", "super_admin", "admin")
+
+    cur.execute("SELECT * FROM documents WHERE id = ?", (doc_id,))
+    doc = cur.fetchone()
+    if not doc:
+        flash("Tài liệu không tồn tại.", "danger")
+        return redirect(url_for("documents_index"))
+
+    if not is_super_admin() and doc["truong_id"] != user_school_id:
+        flash("Bạn không có quyền thao tác trên tài liệu của trường khác.", "danger")
+        return redirect(url_for("documents_index"))
+
+    if not (is_teacher_or_admin or doc["user_id"] == user_id):
+        flash("Bạn không có quyền xóa tài liệu này.", "danger")
+        return redirect(url_for("documents_index"))
+
+    try:
+        if doc["drive_file_id"]:
+            delete_document_from_drive(doc["drive_file_id"])
+    except Exception as e:
+        app.logger.warning(f"Lỗi khi xóa file trên Drive #{doc['drive_file_id']}: {e}")
+
+    cur.execute("UPDATE documents SET trang_thai = 'da_xoa' WHERE id = ?", (doc_id,))
+    db.commit()
+
+    flash(f"Đã xóa tài liệu '{doc['tieu_de']}' khỏi hệ thống và Google Drive.", "success")
+    return redirect(url_for("documents_index"))
 
 
 # ==============================================================================

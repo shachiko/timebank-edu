@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Tạo chủ đề thảo luận mới - Diễn đàn School Time Bank{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 800px;">
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+    <div class="card-header bg-white border-bottom p-4">
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <span class="badge bg-warning text-dark px-3 py-1 fw-bold rounded-pill">
+          <i class="bi bi-pencil-square me-1"></i> BÀI VIẾT MỚI
+        </span>
+        <span class="badge bg-light text-secondary border px-3 py-1 rounded-pill">
+          <i class="bi bi-building me-1 text-primary"></i>{{ current_school_name }}
+        </span>
+      </div>
+      <h3 class="fw-bold text-dark mb-0">Tạo Chủ Đề Thảo Luận Mới</h3>
+      <p class="text-muted small mb-0 mt-1">Chia sẻ câu hỏi, kinh nghiệm học tập hoặc ý tưởng học đường tích cực.</p>
+    </div>
+
+    <div class="card-body p-4 p-md-5">
+      <!-- Cảnh báo quy tắc kiểm duyệt AI -->
+      <div class="alert alert-warning border-warning bg-warning bg-opacity-10 rounded-4 d-flex align-items-start gap-3 mb-4">
+        <i class="bi bi-shield-exclamation text-warning fs-3 mt-1"></i>
+        <div class="small">
+          <strong class="text-dark d-block mb-1">Lưu ý an toàn văn hóa học đường:</strong>
+          Mọi bài viết trên diễn đàn được <strong>Trợ lý AI kiểm duyệt tự động realtime</strong>. Tuyệt đối không chửi bới, xúc phạm bạn học, dùng từ ngữ nhạy cảm hoặc chia sẻ nội dung độc hại (theo <strong>Nội quy Điều 3 & Điều 4</strong>). Hành vi vi phạm sẽ bị ghi nhận vào Sổ kỷ luật của trường.
+        </div>
+      </div>
+
+      <form method="POST" action="{{ url_for('forum_new_topic') }}">
+        <div class="mb-3">
+          <label for="tieu_de" class="form-label fw-bold text-dark">
+            Tiêu đề chủ đề <span class="text-danger">*</span>
+          </label>
+          <input type="text" class="form-control form-control-lg rounded-3" id="tieu_de" name="tieu_de" 
+                 placeholder="VD: Hỏi cách giải nhanh câu hình không gian đề thi thử..." required
+                 value="{{ request.form.get('tieu_de', '') }}">
+          <div class="form-text">Tiêu đề ngắn gọn, rõ ràng, nêu đúng trọng tâm vấn đề cần thảo luận.</div>
+        </div>
+
+        <div class="mb-4">
+          <label for="noi_dung" class="form-label fw-bold text-dark">
+            Nội dung chi tiết <span class="text-danger">*</span>
+          </label>
+          <textarea class="form-control rounded-3" id="noi_dung" name="noi_dung" rows="7" 
+                    placeholder="Mô tả cụ thể thắc mắc, bối cảnh bài toán, hoặc ý tưởng của bạn để các bạn học sinh và thầy cô dễ dàng tương trợ..." required>{{ request.form.get('noi_dung', '') }}</textarea>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+          <a href="{{ url_for('forum_index') }}" class="btn btn-outline-secondary rounded-pill px-4">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại Diễn đàn
+          </a>
+          <button type="submit" class="btn btn-brand rounded-pill px-5 py-2 fw-bold shadow-sm">
+            <i class="bi bi-send-fill me-1"></i> Đăng chủ đề
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

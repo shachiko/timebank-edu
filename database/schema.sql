@@ -242,3 +242,57 @@ CREATE TABLE IF NOT EXISTS invite_code_usages (
     FOREIGN KEY (invite_code_id) REFERENCES invite_codes(id),
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+-- 18. BẢNG CHỦ ĐỀ DIỄN ĐÀN (FORUM TOPICS): Góc trò chuyện trao đổi học đường
+CREATE TABLE IF NOT EXISTS forum_topics (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    truong_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    tieu_de TEXT NOT NULL,
+    noi_dung TEXT NOT NULL,
+    trang_thai TEXT DEFAULT 'mo' CHECK(trang_thai IN ('mo', 'khoa')),
+    ngay_tao TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (truong_id) REFERENCES truong(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- 19. BẢNG BÌNH LUẬN DIỄN ĐÀN (FORUM REPLIES): Ý kiến, câu trả lời trong chủ đề
+CREATE TABLE IF NOT EXISTS forum_replies (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    topic_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    noi_dung TEXT NOT NULL,
+    ngay_tao TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (topic_id) REFERENCES forum_topics(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- 20. BẢNG KHO TÀI LIỆU GOOGLE DRIVE (DOCUMENTS): Học liệu số hóa toàn trường
+CREATE TABLE IF NOT EXISTS documents (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    truong_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    tieu_de TEXT NOT NULL,
+    mo_ta TEXT,
+    mon_hoc TEXT NOT NULL,
+    file_name TEXT NOT NULL,
+    file_size INTEGER NOT NULL,
+    file_type TEXT,
+    drive_file_id TEXT,
+    drive_web_view_link TEXT,
+    luot_tai INTEGER DEFAULT 0,
+    ngay_tao TEXT DEFAULT CURRENT_TIMESTAMP,
+    trang_thai TEXT DEFAULT 'hoat_dong' CHECK(trang_thai IN ('hoat_dong', 'da_xoa')),
+    FOREIGN KEY (truong_id) REFERENCES truong(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- 21. BẢNG THEO DÕI LƯỢT TẢI TÀI LIỆU (DOCUMENT DOWNLOADS): Minh bạch nhật ký tải file
+CREATE TABLE IF NOT EXISTS document_downloads (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    document_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    thoi_gian TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);

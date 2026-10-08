@@ -83,6 +83,13 @@
         <span class="badge bg-secondary rounded-pill ms-1">{{ users|length }}</span>
       </button>
     </li>
+    {% if is_super_admin %}
+    <li class="nav-item" role="presentation">
+      <button class="nav-link rounded-pill fw-semibold text-danger" id="tab-drive-btn" data-bs-toggle="pill" data-bs-target="#tab-drive" type="button" role="tab">
+        <i class="bi bi-google me-1"></i> Kho Google Drive 5TB
+      </button>
+    </li>
+    {% endif %}
   </ul>
 
   <div class="tab-content" id="adminTabsContent">
@@ -707,6 +714,88 @@
         </div>
       </div>
     </div>
+
+    {% if is_super_admin %}
+    <!-- =========================================================================
+         TAB 6: KHO GOOGLE DRIVE 5TB (SUPER ADMIN ONLY)
+         ========================================================================= -->
+    <div class="tab-pane fade" id="tab-drive" role="tabpanel">
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center pb-3 border-bottom mb-4">
+          <div>
+            <h4 class="fw-bold mb-1 text-dark">
+              <i class="bi bi-google text-danger me-2"></i>Kho Lưu Trữ Đám Mây Google Drive 5TB Toàn Hệ Thống
+            </h4>
+            <p class="text-muted small mb-0">
+              Tài khoản Google Drive 5TB của Thầy phụ trách chung toàn hệ thống — Tự động phân cấp thư mục theo trường và môn học.
+            </p>
+          </div>
+          <div>
+            {% if google_drive_configured %}
+              <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill fw-bold">
+                <i class="bi bi-check-circle-fill me-1"></i> Google Drive: Đã Kết Nối (OAuth2)
+              </span>
+            {% else %}
+              <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-2 rounded-pill fw-bold">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i> Chế độ Fallback / Chưa nạp Token
+              </span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-lg-6">
+            <div class="p-4 rounded-4 bg-light border h-100">
+              <h5 class="fw-bold text-dark mb-3">
+                <i class="bi bi-key-fill text-primary me-2"></i>Xác thực OAuth2 & Biến Môi Trường (Render)
+              </h5>
+              <p class="small text-muted mb-3">
+                Nhấn nút bên dưới để đăng nhập bằng tài khoản Google Drive 5TB của Thầy. Sau khi cấp quyền 1 lần duy nhất, mã Refresh Token sẽ được cấp để lưu vào <code>GOOGLE_REFRESH_TOKEN</code> trên Dashboard Render.
+              </p>
+              
+              <div class="alert alert-warning rounded-3 small mb-4">
+                <i class="bi bi-shield-lock-fill me-1 text-danger"></i>
+                <strong>TUYỆT ĐỐI BẢO MẬT:</strong> Refresh token và Client Secret không bao giờ được hardcode trong mã nguồn hoặc commit lên GitHub. Mọi xác thực đều được đọc trực tiếp từ biến môi trường của máy chủ Render.
+              </div>
+
+              <div class="d-flex flex-wrap gap-2">
+                <a href="{{ url_for('admin_google_drive_auth') }}" class="btn btn-danger px-4 py-2 rounded-pill fw-semibold shadow-sm">
+                  <i class="bi bi-google me-2"></i>Kết Nối Google Drive (OAuth2)
+                </a>
+                <a href="{{ url_for('documents_index') }}" class="btn btn-outline-primary px-3 py-2 rounded-pill fw-semibold">
+                  <i class="bi bi-folder2-open me-1"></i>Xem Kho Tài Liệu
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-6">
+            <div class="p-4 rounded-4 bg-light border h-100">
+              <h5 class="fw-bold text-dark mb-3">
+                <i class="bi bi-diagram-3-fill text-success me-2"></i>Cấu Trúc Thư Mục Tự Động
+              </h5>
+              <p class="small text-muted mb-2">Hệ thống tự động khởi tạo cấu trúc thư mục phân cấp trên Google Drive:</p>
+              <div class="bg-dark text-light p-3 rounded-3 font-monospace small mb-3">
+                📁 /SchoolTimeBank/<br>
+                &nbsp;&nbsp;├── 📁 UK-Academy/<br>
+                &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── 📁 Toán/<br>
+                &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── 📁 Ngữ văn/<br>
+                &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── 📁 Tiếng Anh/...<br>
+                &nbsp;&nbsp;├── 📁 THCS-Nguyen-Van-Thuoc/<br>
+                &nbsp;&nbsp;├── 📁 THCS-Le-Van-Tam/<br>
+                &nbsp;&nbsp;└── 📁 THPT-Hon-Gai/
+              </div>
+              <ul class="small text-muted mb-0 ps-3">
+                <li>Dung lượng tối đa: <strong>200MB/tệp</strong>.</li>
+                <li>Stream tải lên & tải về trực tiếp từ Drive (không lưu trên đĩa Render).</li>
+                <li>Học sinh chỉ xem & tải tài liệu của trường mình.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
   </div>
 </div>
 

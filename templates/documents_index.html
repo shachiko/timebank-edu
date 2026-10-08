@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Kho Tài Liệu Học Tập - TimeBank EDU{% endblock %}
+
+{% block content %}
+<div class="row mb-4 align-items-center">
+    <div class="col-md-7">
+        <h2 class="fw-bold mb-1" style="color: #0f172a;">
+            <i class="bi bi-folder2-open text-primary me-2"></i>Kho Tài Liệu Học Tập 5TB
+        </h2>
+        <p class="text-muted mb-0">
+            Trường: <span class="badge bg-primary-subtle text-primary fw-semibold px-2 py-1">{{ school_name or "Chung" }}</span>
+            &bull; Hệ thống lưu trữ đám mây Google Drive tốc độ cao
+        </p>
+    </div>
+    <div class="col-md-5 text-md-end mt-3 mt-md-0">
+        <a href="{{ url_for('documents_upload') }}" class="btn btn-primary px-3 py-2 shadow-sm rounded-pill fw-semibold">
+            <i class="bi bi-cloud-arrow-up-fill me-1"></i> Tải Lên Tài Liệu (≤200MB)
+        </a>
+    </div>
+</div>
+
+<!-- Bộ lọc môn học & tìm kiếm -->
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-3">
+        <form method="GET" action="{{ url_for('documents_index') }}" class="row g-2 align-items-center">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" class="form-control bg-light border-start-0" 
+                           placeholder="Tìm tài liệu, bài giảng, đề thi..." value="{{ search_query or '' }}">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select name="mon_hoc" class="form-select bg-light">
+                    <option value="">-- Tất cả môn học --</option>
+                    {% for m in subjects_list %}
+                    <option value="{{ m }}" {% if selected_subject == m %}selected{% endif %}>{{ m }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-outline-primary flex-grow-1 fw-semibold">
+                    <i class="bi bi-funnel me-1"></i>Lọc
+                </button>
+                {% if search_query or selected_subject %}
+                <a href="{{ url_for('documents_index') }}" class="btn btn-outline-secondary" title="Xóa bộ lọc">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Danh sách tài liệu -->
+{% if documents %}
+<div class="row g-3">
+    {% for doc in documents %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm rounded-4 hover-lift transition">
+            <div class="card-body p-4 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="badge bg-info-subtle text-info fw-semibold px-2 py-1 rounded-pill">
+                        <i class="bi bi-bookmark-fill me-1"></i>{{ doc.mon_hoc }}
+                    </span>
+                    <small class="text-muted">
+                        <i class="bi bi-hdd me-1"></i>{{ doc.formatted_size }}
+                    </small>
+                </div>
+
+                <h5 class="card-title fw-bold text-dark mb-2 line-clamp-2" title="{{ doc.tieu_de }}">
+                    {{ doc.tieu_de }}
+                </h5>
+                
+                <p class="card-text text-muted small flex-grow-1 line-clamp-2">
+                    {{ doc.mo_ta or "Không có mô tả chi tiết." }}
+                </p>
+
+                <div class="border-top pt-3 mt-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2 small text-muted">
+                        <span><i class="bi bi-person me-1"></i>{{ doc.user_name }}</span>
+                        <span><i class="bi bi-clock me-1"></i>{{ doc.ngay_tao[:10] }}</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-secondary-subtle text-secondary small">
+                            <i class="bi bi-download me-1"></i>{{ doc.luot_tai or 0 }} lượt tải
+                        </span>
+                        
+                        <div class="d-flex gap-1">
+                            <!-- Nút tải về -->
+                            <a href="{{ url_for('documents_download', doc_id=doc.id) }}" class="btn btn-sm btn-outline-primary fw-semibold rounded-pill px-3">
+                                <i class="bi bi-cloud-arrow-down-fill me-1"></i>Tải về
+                            </a>
+
+                            <!-- Menu tác vụ -->
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-light rounded-circle text-muted" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                    <!-- Nút Báo cáo -->
+                                    <li>
+                                        <button class="dropdown-item text-warning" data-bs-toggle="modal" data-bs-target="#reportModal{{ doc.id }}">
+                                            <i class="bi bi-flag me-2"></i>Báo cáo vi phạm
+                                        </button>
+                                    </li>
+                                    <!-- Nút xóa (chỉ Admin, Giáo viên hoặc người đăng) -->
+                                    {% if is_teacher_or_admin or doc.user_id == current_user.id %}
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form method="POST" action="{{ url_for('documents_delete', doc_id=doc.id) }}" onsubmit="return confirm('Bạn có chắc chắn muốn xóa tài liệu này khỏi Drive?');">
+                                            <button type="submit" class="dropdown-item text-danger">
+                                                <i class="bi bi-trash3 me-2"></i>Xóa tài liệu
+                                            </button>
+                                        </form>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Báo cáo -->
+        <div class="modal fade" id="reportModal{{ doc.id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow rounded-4">
+                    <form method="POST" action="{{ url_for('documents_report', doc_id=doc.id) }}">
+                        <div class="modal-header border-0 pb-0">
+                            <h5 class="modal-title fw-bold text-danger">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>Báo Cáo Tài Liệu
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body py-3">
+                            <p class="text-muted small">Tài liệu: <strong>{{ doc.tieu_de }}</strong> ({{ doc.file_name }})</p>
+                            <label class="form-label fw-semibold small">Lý do báo cáo:</label>
+                            <textarea name="ly_do" class="form-control rounded-3" rows="3" required
+                                      placeholder="Mô tả vi phạm: nội dung không phù hợp, bản quyền, độc hại, spam..."></textarea>
+                        </div>
+                        <div class="modal-footer border-0 pt-0">
+                            <button type="button" class="btn btn-light rounded-pill px-3" data-bs-dismiss="modal">Đóng</button>
+                            <button type="submit" class="btn btn-danger rounded-pill px-4 fw-semibold">Gửi Báo Cáo</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card border-0 shadow-sm rounded-4 text-center py-5">
+    <div class="card-body">
+        <i class="bi bi-folder-x text-muted" style="font-size: 3.5rem;"></i>
+        <h4 class="fw-bold mt-3 text-secondary">Chưa có tài liệu nào</h4>
+        <p class="text-muted mb-4">Trường của bạn chưa có tài liệu học tập nào trong môn học này hoặc theo từ khóa tìm kiếm.</p>
+        <a href="{{ url_for('documents_upload') }}" class="btn btn-primary rounded-pill px-4 py-2 fw-semibold">
+            <i class="bi bi-cloud-arrow-up-fill me-1"></i> Tải lên tài liệu đầu tiên
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.hover-lift:hover {
+    transform: translateY(-3px);
+    transition: transform 0.2s ease-in-out;
+}
+</style>
+{% endblock %}

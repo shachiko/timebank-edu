@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}{{ topic.tieu_de }} - Diễn đàn School Time Bank{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 900px;">
+  <!-- Nút quay lại & Breadcrumb -->
+  <div class="mb-3 d-flex justify-content-between align-items-center">
+    <a href="{{ url_for('forum_index') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+      <i class="bi bi-arrow-left me-1"></i> Quay lại Diễn đàn
+    </a>
+    <span class="badge bg-light text-secondary border px-3 py-1 rounded-pill small">
+      <i class="bi bi-building me-1 text-primary"></i>{{ topic.ten_truong }}
+    </span>
+  </div>
+
+  <!-- Thẻ Bài viết Chủ đề -->
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+    <div class="card-body p-4 p-md-5">
+      <!-- Header Chủ đề -->
+      <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+        <div class="d-flex align-items-center gap-3">
+          <div class="badge rounded-circle text-white shadow-sm" style="background-color: #1B2A6B; width: 48px; height: 48px; font-size: 1.25rem; display: flex; align-items: center; justify-content: center;">
+            {{ topic.ho_ten[0] | upper }}
+          </div>
+          <div>
+            <h6 class="fw-bold text-dark mb-0 fs-6">{{ topic.ho_ten }}</h6>
+            <div class="small text-muted">
+              <code>{{ topic.ma_hoc_sinh }}</code> · {{ topic.lop if topic.lop else topic.vai_tro }} · <i class="bi bi-clock ms-1 me-1"></i>{{ topic.ngay_tao }}
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+          {% if topic.trang_thai == 'mo' %}
+            <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 rounded-pill small">
+              <i class="bi bi-chat-dots me-1"></i>Đang mở
+            </span>
+          {% else %}
+            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-3 py-1 rounded-pill small">
+              <i class="bi bi-lock-fill me-1"></i>Đã khóa
+            </span>
+          {% endif %}
+
+          <!-- Menu Quản trị Chủ đề (GV / Admin) -->
+          {% if can_moderate %}
+          <div class="dropdown">
+            <button class="btn btn-sm btn-light rounded-circle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-three-dots-vertical text-muted"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
+              <li>
+                <form method="POST" action="{{ url_for('forum_toggle_lock_topic', topic_id=topic.id) }}">
+                  <button type="submit" class="dropdown-item py-2 small">
+                    {% if topic.trang_thai == 'mo' %}
+                      <i class="bi bi-lock-fill text-warning me-2"></i>Khóa chủ đề
+                    {% else %}
+                      <i class="bi bi-unlock-fill text-success me-2"></i>Mở khóa chủ đề
+                    {% endif %}
+                  </button>
+                </form>
+              </li>
+              <li>
+                <form method="POST" action="{{ url_for('forum_delete_topic', topic_id=topic.id) }}" onsubmit="return confirm('Bạn có chắc chắn muốn xóa chủ đề này không?');">
+                  <button type="submit" class="dropdown-item py-2 small text-danger">
+                    <i class="bi bi-trash3-fill me-2"></i>Xóa chủ đề
+                  </button>
+                </form>
+              </li>
+            </ul>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Tiêu đề & Nội dung -->
+      <h3 class="fw-bold text-dark mb-3">{{ topic.tieu_de }}</h3>
+      <div class="text-secondary lh-lg mb-4" style="white-space: pre-line; font-size: 1.02rem;">
+        {{ topic.noi_dung }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Phần Bình luận & Thảo luận -->
+  <div class="d-flex align-items-center justify-content-between mb-3 px-1">
+    <h5 class="fw-bold text-dark mb-0">
+      <i class="bi bi-chat-square-text-fill text-primary me-2"></i>Ý kiến thảo luận ({{ replies|length }})
+    </h5>
+    <small class="text-muted">Kiểm duyệt realtime bởi AI</small>
+  </div>
+
+  <!-- Danh sách bình luận -->
+  {% if replies %}
+    <div class="d-flex flex-column gap-3 mb-4">
+      {% for r in replies %}
+      <div class="card border-0 shadow-sm rounded-4 bg-white">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge rounded-circle text-white" style="background-color: #1B2A6B; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
+                {{ r.ho_ten[0] | upper }}
+              </span>
+              <div>
+                <span class="fw-bold text-dark small">{{ r.ho_ten }}</span>
+                <span class="text-muted small">({{ r.lop if r.lop else r.vai_tro }})</span>
+                <span class="text-muted small ms-2"><i class="bi bi-clock me-1"></i>{{ r.ngay_tao }}</span>
+              </div>
+            </div>
+
+            <!-- Nút xóa bình luận (GV / Admin / Tác giả) -->
+            {% if can_moderate or r.user_id == session.get('user_id') %}
+            <form method="POST" action="{{ url_for('forum_delete_reply', reply_id=r.id) }}" onsubmit="return confirm('Bạn có muốn xóa bình luận này không?');">
+              <button type="submit" class="btn btn-sm btn-link text-muted p-0" title="Xóa bình luận">
+                <i class="bi bi-trash3 text-danger opacity-75"></i>
+              </button>
+            </form>
+            {% endif %}
+          </div>
+
+          <div class="text-secondary small ps-4 ms-2" style="white-space: pre-line;">
+            {{ r.noi_dung }}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card border-0 shadow-sm rounded-4 p-4 text-center bg-white mb-4">
+      <p class="text-muted small mb-0">Chưa có ý kiến phản hồi nào. Hãy là người đầu tiên tham gia thảo luận!</p>
+    </div>
+  {% endif %}
+
+  <!-- Form Gửi bình luận -->
+  {% if topic.trang_thai == 'mo' %}
+  <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+    <div class="card-header bg-light border-bottom py-3 px-4">
+      <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-pencil-fill text-primary me-2"></i>Gửi ý kiến phản hồi</h6>
+    </div>
+    <div class="card-body p-4">
+      <form method="POST" action="{{ url_for('forum_reply_topic', topic_id=topic.id) }}">
+        <div class="mb-3">
+          <textarea class="form-control rounded-3" name="noi_dung" rows="4" 
+                    placeholder="Viết phản hồi tích cực, giải đáp bài toán hoặc chia sẻ quan điểm của bạn..." required></textarea>
+          <div class="form-text small text-muted">
+            <i class="bi bi-shield-check text-success me-1"></i>Ngôn từ được AI kiểm duyệt tự động để bảo đảm văn hóa học đường văn minh.
+          </div>
+        </div>
+        <div class="text-end">
+          <button type="submit" class="btn btn-brand rounded-pill px-4 fw-semibold shadow-sm">
+            <i class="bi bi-send-fill me-1"></i> Gửi bình luận
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% else %}
+  <div class="alert alert-secondary rounded-4 text-center py-3">
+    <i class="bi bi-lock-fill me-1 text-warning"></i>
+    Chủ đề này đã bị khóa bởi Ban Quản trị. Không thể gửi thêm ý kiến bình luận.
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
