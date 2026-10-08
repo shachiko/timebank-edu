@@ -34,9 +34,9 @@ _active_model = None
 
 # Danh sách các model flash thế hệ mới ưu tiên kiểm tra theo thứ tự
 CANDIDATE_MODELS = [
-    "gemini-2.0-flash",
+    "gemini-3.8-flash",
     "gemini-2.5-flash",
-    "gemini-1.5-flash",
+    "gemini-2.0-flash",
 ]
 
 

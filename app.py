@@ -730,7 +730,7 @@ def get_top_tutors(db, limit=3):
         LEFT JOIN sessions s ON u.id = s.nguoi_day_id AND s.trang_thai = 'hoan_thanh'
         LEFT JOIN ratings r ON s.id = r.session_id AND r.nguoi_duoc_danh_gia_id = u.id
         WHERE u.vai_tro = 'hoc_sinh'
-        GROUP BY u.id
+        GROUP BY u.id, u.ma_hoc_sinh, u.ho_ten, u.lop
         ORDER BY so_gio_day DESC, sao_tb DESC
         LIMIT ?
     """
@@ -1017,7 +1017,7 @@ def profile():
             WHERE s.trang_thai_duyet = 'da_duyet'
               AND s.user_id != ?
               AND (s.linh_vuc LIKE ? OR s.tieu_de LIKE ?)
-            GROUP BY s.id
+            GROUP BY s.id, u.id, u.ho_ten, u.lop, u.gio_ranh
             ORDER BY s.id DESC
         """, (user["id"], f"%{search_kw}%", f"%{search_kw}%"))
         subject_candidates = cur.fetchall()
@@ -1220,7 +1220,7 @@ def admin_dashboard():
         FROM users u
         LEFT JOIN sessions s ON (s.nguoi_day_id = u.id OR s.nguoi_hoc_id = u.id)
         WHERE u.vai_tro = 'hoc_sinh'
-        GROUP BY u.id
+        GROUP BY u.id, u.ma_hoc_sinh, u.ho_ten, u.lop, u.so_du_gio
         ORDER BY gio_day DESC, u.so_du_gio DESC
         LIMIT 5
     """)
@@ -1456,7 +1456,7 @@ def skills_market():
         like_term = f"%{search_query}%"
         params.extend([like_term, like_term, like_term])
         
-    sql += " GROUP BY s.id ORDER BY s.id DESC"
+    sql += " GROUP BY s.id, u.id, u.ho_ten, u.ma_hoc_sinh, u.lop ORDER BY s.id DESC"
     cur.execute(sql, params)
     skills = cur.fetchall()
     
@@ -1505,7 +1505,7 @@ def ai_matchmake_view():
                 LEFT JOIN sessions ses ON s.id = ses.skill_id AND ses.trang_thai = 'hoan_thanh'
                 LEFT JOIN ratings r ON ses.id = r.session_id AND r.nguoi_duoc_danh_gia_id = u.id
                 WHERE s.trang_thai_duyet = 'da_duyet' AND s.user_id != ?
-                GROUP BY s.id
+                GROUP BY s.id, u.id, u.ho_ten, u.lop, u.gio_ranh
                 ORDER BY s.id DESC
             """, (user_id,))
             candidates = cur.fetchall()
@@ -1594,7 +1594,7 @@ def book_skill_page(skill_id):
         LEFT JOIN sessions ses ON s.id = ses.skill_id AND ses.trang_thai = 'hoan_thanh'
         LEFT JOIN ratings r ON ses.id = r.session_id AND r.nguoi_duoc_danh_gia_id = u.id
         WHERE s.id = ?
-        GROUP BY s.id
+        GROUP BY s.id, u.id, u.ho_ten, u.lop, u.gio_ranh, u.ma_hoc_sinh
     """, (skill_id,))
     skill = cur.fetchone()
     if not skill or skill["trang_thai_duyet"] != "da_duyet":

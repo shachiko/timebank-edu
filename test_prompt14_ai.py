@@ -23,8 +23,13 @@ from unittest.mock import MagicMock, patch
 from dotenv import load_dotenv
 
 # Đảm bảo mã hóa console utf-8
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+try:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding='utf-8')
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding='utf-8')
+except Exception:
+    pass
 
 # Nạp file .env cục bộ nếu có
 load_dotenv()
