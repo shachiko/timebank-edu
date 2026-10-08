@@ -132,7 +132,7 @@ class TestMilestoneM0(unittest.TestCase):
         self.assertIn("Chi (10A3)", html)
 
         # Khối 3: Số liệu realtime
-        self.assertIn("Tổng thành viên", html)
+        self.assertTrue("Học sinh thành viên" in html or "Tổng thành viên" in html)
         self.assertIn("Phiên hoàn thành", html)
         self.assertIn("Giờ lưu thông", html)
 
@@ -146,7 +146,7 @@ class TestMilestoneM0(unittest.TestCase):
         self.assertIn("contactForm", html)
 
         # Khối 6: Footer + Nhãn AI
-        self.assertIn("Hỗ trợ bởi AI (Gemini)", html)
+        self.assertTrue("Hỗ trợ bởi AI (Trí tuệ nhân tạo)" in html or "Hỗ trợ bởi AI (Gemini)" in html)
         self.assertIn("© 2026", html)
 
         print("[PASS] Case 3: Landing Page đầy đủ 6 khối chức năng, không lỗi, hiển thị chuẩn mực")

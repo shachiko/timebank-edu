@@ -80,7 +80,7 @@
         {% if session_data.dan_y_ai %}
         <div class="p-3 rounded-4 bg-light border small mb-3">
           <div class="d-flex justify-content-between align-items-center mb-2">
-            <span class="badge-ai" style="font-size: 0.75rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Gemini)</span>
+            <span class="badge-ai" style="font-size: 0.75rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Trí tuệ nhân tạo)</span>
             {% if is_teacher or is_admin %}
             <form method="POST" action="{{ url_for('generate_ai_lesson_plan_route', session_id=session_data.id) }}" class="d-inline">
               <button type="submit" class="btn btn-outline-primary btn-sm py-0 px-2" style="font-size: 0.75rem;">
@@ -97,7 +97,7 @@
           <div class="p-3 rounded-4 border bg-primary bg-opacity-10 mb-3 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
             <div>
               <div class="fw-bold text-primary small"><i class="bi bi-stars me-1"></i> Chưa có dàn ý bài học</div>
-              <div class="text-muted small">Gemini sẽ tạo cấu trúc 60 phút: Mở đầu 5', Trọng tâm 25', Luyện tập 20', Tổng kết 10'.</div>
+              <div class="text-muted small">Hệ thống AI sẽ tạo cấu trúc 60 phút: Mở đầu 5', Trọng tâm 25', Luyện tập 20', Tổng kết 10'.</div>
             </div>
             <form method="POST" action="{{ url_for('generate_ai_lesson_plan_route', session_id=session_data.id) }}">
               <button type="submit" class="btn btn-primary btn-sm fw-bold text-nowrap shadow-sm">
@@ -116,7 +116,7 @@
               <span class="badge bg-purple-subtle text-indigo fw-bold" style="background-color: #ede9fe; color: #6d28d9;">
                 <i class="bi bi-patch-question-fill me-1"></i> Quiz Trắc Nghiệm AI
               </span>
-              <span class="badge-ai" style="font-size: 0.72rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Gemini)</span>
+              <span class="badge-ai" style="font-size: 0.72rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Trí tuệ nhân tạo)</span>
             </div>
             {% if session_data.quiz_dat_chuan == 1 %}
               <span class="badge bg-success-subtle text-success fw-bold">
@@ -159,7 +159,7 @@
             <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 pt-1">
               <div>
                 <div class="fw-bold text-dark">Chưa có câu hỏi lượng giá</div>
-                <div class="text-muted small">Gemini sẽ đọc dàn ý & tạo 5 câu trắc nghiệm 4 lựa chọn vui vẻ cho học sinh.</div>
+                <div class="text-muted small">Hệ thống AI sẽ đọc dàn ý & tạo 5 câu trắc nghiệm 4 lựa chọn cho học sinh.</div>
               </div>
               <form method="POST" action="{{ url_for('generate_ai_quiz_route', session_id=session_data.id) }}">
                 <button type="submit" class="btn btn-brand btn-sm fw-bold text-nowrap shadow-sm">

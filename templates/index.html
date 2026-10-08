@@ -10,16 +10,22 @@
     <div class="row align-items-center g-5">
       <div class="col-lg-7">
         <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-white border shadow-sm mb-3">
-          <span class="badge bg-warning text-dark"><i class="bi bi-award-fill"></i> Dự thi Bảng B</span>
-          <span class="small text-muted">Ngày hội Nhà giáo sáng tạo với công nghệ số & AI 2026</span>
+          <span class="badge bg-warning text-dark"><i class="bi bi-award-fill"></i> Sáng kiến Giáo dục Số 2026</span>
+          <span class="small text-muted">{{ config.ten_truong }}</span>
         </div>
         
         <h1 class="hero-title mb-3">
           Ngân hàng Thời gian Học đường
         </h1>
-        <p class="hero-tagline mb-3">
-          <i class="bi bi-quote fs-4 text-warning"></i> Một giờ bạn dạy — một giờ bạn được học <i class="bi bi-quote fs-4 text-warning"></i>
+        <p class="hero-tagline mb-2">
+          <i class="bi bi-quote fs-4 text-warning"></i> Một giờ bạn dạy — một giờ bạn được học. <i class="bi bi-quote fs-4 text-warning"></i>
         </p>
+
+        <div class="mb-3">
+          <span class="hero-hook-badge">
+            <i class="bi bi-mortarboard-fill me-2"></i> Học thầy không tày học bạn.
+          </span>
+        </div>
         
         <p class="lead text-secondary mb-4 fs-6">
           Mô hình giáo dục sáng tạo tại <strong>{{ config.ten_truong }}</strong>: Mỗi học sinh vừa là người học, vừa là người thầy. 
@@ -46,18 +52,18 @@
 
         <div class="mt-4 pt-2 d-flex align-items-center gap-3 text-muted small">
           <span class="d-flex align-items-center gap-1 text-success fw-medium">
-            <i class="bi bi-shield-check-fill"></i> Vận hành độc lập (Single-Tenant)
+            <i class="bi bi-shield-check-fill"></i> Vận hành nội bộ an toàn
           </span>
           <span>•</span>
           <span class="badge-ai">
-            <i class="bi bi-stars"></i> Hỗ trợ bởi AI (Gemini)
+            <i class="bi bi-stars"></i> Hỗ trợ bởi AI (Trí tuệ nhân tạo)
           </span>
         </div>
       </div>
 
       <div class="col-lg-5 text-center">
         <div class="hero-img-box p-4 bg-white rounded-5 shadow-lg border text-center position-relative">
-          <img src="{{ config.logo_path }}" alt="Logo {{ config.ten_truong }}" class="img-fluid mb-3" style="max-height: 220px;">
+          <img src="{{ config.logo_path }}" alt="Logo {{ config.ten_truong }}" class="img-fluid mb-3" style="max-height: 120px; max-width: 90%; object-fit: contain; filter: drop-shadow(0 8px 16px rgba(27,42,107,0.15));">
           <h5 class="fw-bold text-dark mb-1">{{ config.ten_truong }}</h5>
           <p class="text-muted small mb-3">Không gian trao đổi kỹ năng số thế hệ mới</p>
           
@@ -103,8 +109,8 @@
         <div class="step-card">
           <div class="step-badge"><i class="bi bi-stars text-warning"></i> 2</div>
           <h5 class="fw-bold mb-2">AI gợi ý ghép cặp</h5>
-          <p class="text-muted small mb-0">Trợ lý AI (Gemini) tự động phân tích nhu cầu, kiểm duyệt nội dung và ghép cặp đôi bạn cùng tiến tối ưu.</p>
-          <div class="mt-2"><span class="badge-ai" style="font-size: 0.7rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Gemini)</span></div>
+          <p class="text-muted small mb-0">Trợ lý AI (Trí tuệ nhân tạo) tự động phân tích nhu cầu, kiểm duyệt nội dung và ghép cặp đôi bạn cùng tiến tối ưu.</p>
+          <div class="mt-2"><span class="badge-ai" style="font-size: 0.7rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Trí tuệ nhân tạo)</span></div>
         </div>
       </div>
 
@@ -172,14 +178,14 @@
 </section>
 
 <!-- ==============================================================================
-     KHỐI 3: SỐ LIỆU REALTIME (Query trực tiếp từ SQLite Database)
+     KHỐI 3: SỐ LIỆU REALTIME
      ============================================================================== -->
 <section id="so-lieu" class="py-5 bg-light">
   <div class="container py-2">
     <div class="text-center mb-4">
       <span class="badge bg-info bg-opacity-10 text-info-emphasis fw-semibold px-3 py-2 rounded-pill mb-2">DỮ LIỆU THỜI GIAN THỰC</span>
       <h2 class="fw-bold">Chỉ số vận hành tại {{ config.ten_truong }}</h2>
-      <p class="text-muted small">Cập nhật trực tiếp từ hệ thống sổ cái tín dụng (credits_ledger) và phiên học</p>
+      <p class="text-muted small">Cập nhật trực tiếp từ hệ thống sổ cái tín dụng và phiên học</p>
     </div>
 
     <div class="row g-4 justify-content-center">
@@ -187,7 +193,7 @@
         <div class="stat-card">
           <div class="text-primary mb-2"><i class="bi bi-people-fill fs-2"></i></div>
           <div class="stat-number">{{ stats.tong_thanh_vien }}</div>
-          <div class="text-muted small fw-medium mt-1">Tổng thành viên</div>
+          <div class="text-muted small fw-medium mt-1">Học sinh thành viên</div>
         </div>
       </div>
 
@@ -363,8 +369,8 @@
         <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold px-3 py-2 rounded-pill mb-3">Dành cho nhà trường</span>
         <h2 class="fw-bold display-6 mb-3">Giải pháp sư phạm độc lập cho từng trường học</h2>
         <p class="text-secondary">
-          TimeBank EDU được thiết kế theo kiến trúc <strong>Single-Tenant</strong> — Mỗi trường học sở hữu một không gian độc lập, 
-          cơ sở dữ liệu riêng biệt tại chỗ, tuyệt đối bảo vệ dữ liệu học sinh theo quy định của Bộ GD&ĐT.
+          TimeBank EDU được thiết kế theo kiến trúc vận hành độc lập — Mỗi trường học sở hữu một không gian riêng biệt, 
+          cơ sở dữ liệu an toàn tại chỗ, tuyệt đối bảo vệ dữ liệu học sinh theo quy định của Bộ GD&ĐT.
         </p>
 
         <div class="mt-4">
@@ -387,7 +393,7 @@
           <div class="school-benefit-item">
             <div class="benefit-icon"><i class="bi bi-robot text-primary"></i></div>
             <div>
-              <h6 class="fw-bold mb-1">Tích hợp Trợ lý AI (Gemini Pro) sư phạm</h6>
+              <h6 class="fw-bold mb-1">Tích hợp Trợ lý AI (Trí tuệ nhân tạo) sư phạm</h6>
               <p class="small text-muted mb-0">Hỗ trợ kiểm duyệt nội dung kỹ năng, soạn dàn ý bài học chuẩn kiến thức và tạo câu hỏi lượng giá tự động.</p>
             </div>
           </div>

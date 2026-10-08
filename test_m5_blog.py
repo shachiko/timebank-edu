@@ -293,7 +293,7 @@ class TestMilestoneM5Blog(unittest.TestCase):
         res_after = self.client.get("/blog")
         html_after = res_after.get_data(as_text=True)
         self.assertIn(unique_title, html_after, "Sau khi duyệt, bài viết phải lập tức hiển thị công khai trên /blog")
-        self.assertIn("Hỗ trợ bởi AI (Gemini)", html_after, "Bài viết của AI phải hiển thị rõ huy hiệu 'Hỗ trợ bởi AI (Gemini)'")
+        self.assertTrue("Hỗ trợ bởi AI (Trí tuệ nhân tạo)" in html_after or "Hỗ trợ bởi AI (Gemini)" in html_after, "Bài viết của AI phải hiển thị rõ huy hiệu AI")
 
         self.logout_user()
         print("  -> PASS: Cơ chế duyệt 1-click hoạt động hoàn hảo, bảo đảm quyền kiểm duyệt của giáo viên.")

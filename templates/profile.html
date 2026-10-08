@@ -65,7 +65,7 @@
         </div>
 
         <div class="small text-white-50 mt-auto pt-2 border-top border-white border-opacity-25">
-          <i class="bi bi-shield-lock me-1"></i> Được bảo chứng bởi Sổ cái bất biến (credits_ledger)
+          <i class="bi bi-shield-lock me-1"></i> Được bảo chứng bởi Sổ cái tín dụng minh bạch
         </div>
       </div>
     </div>
@@ -160,7 +160,7 @@
             <i class="bi bi-compass-fill me-1"></i> Gợi ý cho bạn hôm nay
           </span>
           {% if is_live_rec %}
-            <span class="badge-ai" style="font-size: 0.72rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Gemini)</span>
+            <span class="badge-ai" style="font-size: 0.72rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Trí tuệ nhân tạo)</span>
           {% else %}
             <span class="badge bg-secondary bg-opacity-25 text-secondary border" style="font-size: 0.72rem;">
               <i class="bi bi-cpu me-1"></i> Hỗ trợ bởi AI (Chế độ cơ bản)
@@ -214,7 +214,7 @@
   {% endif %}
 
   <div class="row g-4">
-    <!-- Cột 1: Lịch sử biến động sổ cái tín dụng (credits_ledger) -->
+    <!-- Cột 1: Lịch sử biến động sổ cái tín dụng -->
     <div class="col-lg-8">
       <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -278,7 +278,7 @@
               <div class="d-flex justify-content-between align-items-start mb-1">
                 <span class="fw-semibold small text-dark">{{ sk.tieu_de }}</span>
                 {% if sk.trang_thai_duyet == 'da_duyet' %}
-                  <span class="badge bg-success-subtle text-success small">Đã duyệt</span>
+                  <span class="badge-status-approved small"><i class="bi bi-patch-check-fill me-1"></i>Đã duyệt</span>
                 {% elif sk.trang_thai_duyet == 'tu_choi' %}
                   <span class="badge bg-danger-subtle text-danger small">Từ chối</span>
                 {% else %}
@@ -311,7 +311,7 @@
       <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-chat-heart-fill text-danger me-2"></i>AI Tóm Tắt Phản Hồi</h6>
-          <span class="badge-ai" style="font-size: 0.7rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Gemini)</span>
+          <span class="badge-ai" style="font-size: 0.7rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Trí tuệ nhân tạo)</span>
         </div>
         <small class="text-muted d-block mb-3">Đúc kết từ các nhận xét thực tế của bạn bè sau các buổi bạn kèm cặp</small>
 

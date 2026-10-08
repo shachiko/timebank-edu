@@ -5,7 +5,7 @@
 {% block content %}
 <div class="container py-4">
   <!-- Header Bản tin học đường -->
-  <div class="p-4 p-md-5 mb-4 rounded-4 bg-gradient text-white position-relative overflow-hidden shadow-sm" style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #0284c7 100%);">
+  <div class="p-4 p-md-5 mb-4 rounded-4 bg-gradient text-white position-relative overflow-hidden shadow-sm" style="background: linear-gradient(135deg, #1B2A6B 0%, #2563eb 50%, #F26522 100%);">
     <div class="row align-items-center position-relative" style="z-index: 2;">
       <div class="col-lg-8">
         <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold mb-3">
@@ -17,7 +17,7 @@
         </p>
         <div class="d-flex flex-wrap gap-2 align-items-center">
           <span class="badge bg-white bg-opacity-25 text-white border border-white border-opacity-25 py-2 px-3 rounded-pill">
-            <i class="bi bi-stars text-warning me-1"></i> Hỗ trợ bởi AI (Gemini)
+            <i class="bi bi-stars text-warning me-1"></i> Hỗ trợ bởi AI (Trí tuệ nhân tạo)
           </span>
           <span class="badge bg-white bg-opacity-25 text-white border border-white border-opacity-25 py-2 px-3 rounded-pill">
             <i class="bi bi-shield-check me-1"></i> 100% Nội bộ nhà trường
@@ -67,7 +67,7 @@
           {% if post.tac_gia_ai == 1 %}
           <div class="position-absolute top-0 end-0 m-2">
             <span class="badge bg-dark bg-opacity-75 text-warning border border-warning border-opacity-50 py-1 px-2 rounded-pill small">
-              <i class="bi bi-stars me-1"></i>Hỗ trợ bởi AI (Gemini)
+              <i class="bi bi-stars me-1"></i>Hỗ trợ bởi AI (Trí tuệ nhân tạo)
             </span>
           </div>
           {% endif %}
@@ -76,7 +76,7 @@
         <div class="card-body d-flex flex-column p-4">
           <div class="small text-muted mb-2 d-flex align-items-center gap-2">
             <i class="bi bi-calendar3"></i>
-            <span>{{ post.thoi_gian_dang[:10] if post.thoi_gian_dang else 'Hôm nay' }}</span>
+            <span>{{ post.thoi_gian_dang | format_date }}</span>
             <span>•</span>
             <span class="text-primary fw-medium">
               {% if post.tac_gia_ai == 1 %}Bản tin AI{% else %}Giáo viên{% endif %}

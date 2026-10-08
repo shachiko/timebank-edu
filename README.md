@@ -129,10 +129,10 @@ timebankEDU/
 
 Mở tệp `config.yaml` và chỉnh sửa các trường sau:
 ```yaml
-ten_truong: "THPT Chuyên Thực Nghiệm Sáng Tạo"
+ten_truong: "Trường Quốc tế Song ngữ UKA Academy Hạ Long"
 logo_path: "/static/img/logo.svg"
-mau_chu_dao: "#1e40af"
-email_lien_he: "lienhe@timebank-edu.vn"
+mau_chu_dao: "#F26522"
+email_lien_he: "mshuyenuka@gmail.com"
 dong_gioi_thieu: "Nền tảng Ngân hàng Thời gian Học đường..."
 ```
 Lưu tệp và tải lại trang, toàn bộ nhận diện và tiêu đề của website sẽ được đồng bộ ngay tức khắc!

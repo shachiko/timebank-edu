@@ -75,11 +75,11 @@ def load_school_config():
     sang một trường học khác mà không cần viết lại mã nguồn.
     """
     default_config = {
-        "ten_truong": "THPT Chuyên Thực Nghiệm Sáng Tạo",
-        "logo_path": "/static/img/logo.svg",
-        "mau_chu_dao": "#1e40af",
-        "email_lien_he": "lienhe@timebank-edu.vn",
-        "dong_gioi_thieu": "Nền tảng Ngân hàng Thời gian Học đường — Trao đổi kỹ năng bằng tín dụng thời gian."
+        "ten_truong": "Trường Quốc tế Song ngữ UKA Academy Hạ Long",
+        "logo_path": "/static/img/logo_timebank_edu.png",
+        "mau_chu_dao": "#F26522",
+        "email_lien_he": "mshuyenuka@gmail.com",
+        "dong_gioi_thieu": "Hệ thống Ngân hàng Thời gian Học đường — Trao đổi tri thức, sẻ chia kỹ năng bằng tín dụng thời gian bình đẳng."
     }
     
     if CONFIG_PATH.exists():
@@ -92,6 +92,25 @@ def load_school_config():
             app.logger.warning(f"Không thể đọc file config.yaml, dùng cấu hình mặc định: {e}")
             
     return default_config
+
+
+@app.template_filter("format_date")
+def format_date_filter(value):
+    """
+    Bộ lọc Jinja2 chuẩn hóa định dạng ngày sang dd/mm/yyyy:
+    Nhận chuỗi YYYY-MM-DD HH:MM:SS hoặc YYYY-MM-DD và chuyển thành dd/mm/yyyy.
+    """
+    if not value:
+        return "N/A"
+    try:
+        val_str = str(value).strip()
+        date_part = val_str.split(" ")[0]
+        parts = date_part.split("-")
+        if len(parts) == 3 and len(parts[0]) == 4:
+            return f"{parts[2]}/{parts[1]}/{parts[0]}"
+        return val_str
+    except Exception:
+        return str(value)
 
 
 @app.context_processor
@@ -691,7 +710,7 @@ def get_realtime_stats(db):
     """
     cur = db.cursor()
     
-    cur.execute("SELECT COUNT(*) FROM users WHERE vai_tro IN ('hoc_sinh', 'giao_vien')")
+    cur.execute("SELECT COUNT(*) FROM users WHERE vai_tro = 'hoc_sinh'")
     tong_thanh_vien = cur.fetchone()[0]
     
     cur.execute("SELECT COUNT(*) FROM sessions WHERE trang_thai = 'hoan_thanh'")

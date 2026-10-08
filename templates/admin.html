@@ -8,7 +8,7 @@
     <div>
       <span class="badge bg-danger mb-1"><i class="bi bi-shield-lock-fill me-1"></i> Khu vực Quản trị viên Tối cao</span>
       <h2 class="fw-bold mb-0 text-dark">Hệ thống Quản trị Nhà trường</h2>
-      <p class="text-muted small mb-0">{{ config.ten_truong }} — Bản cài đặt độc lập (Single-Tenant)</p>
+      <p class="text-muted small mb-0">{{ config.ten_truong }} — Không gian Học tập & Tương trợ Tri thức</p>
     </div>
     <div class="d-flex flex-wrap gap-2">
       <a href="{{ url_for('export_data_csv') }}" class="btn btn-success btn-sm shadow-sm">
@@ -49,9 +49,9 @@
     <!-- 3. Học sinh mở sổ -->
     <div class="col-sm-6 col-lg-2">
       <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
-        <span class="text-muted small">Học sinh mở sổ</span>
+        <span class="text-muted small">Học sinh thành viên</span>
         <h3 class="fw-bold mb-0 text-info">{{ student_count }}</h3>
-        <small class="text-muted">Thành viên tích cực</small>
+        <small class="text-muted">Đã mở sổ tín dụng</small>
       </div>
     </div>
 
@@ -90,7 +90,7 @@
       <div>
         <div class="d-flex align-items-center gap-2">
           <span class="badge bg-danger rounded-pill px-2 py-1"><i class="bi bi-shield-exclamation me-1"></i> CẢNH BÁO SỚM SƯ PHẠM</span>
-          <span class="badge-ai" style="font-size: 0.75rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Gemini)</span>
+          <span class="badge-ai" style="font-size: 0.75rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Trí tuệ nhân tạo)</span>
         </div>
         <h5 class="fw-bold mb-0 text-dark mt-1">Phát Hiện Nguy Cơ Học Đường Cần Can Thiệp</h5>
       </div>
@@ -149,7 +149,7 @@
       {% if ai_warnings.ai_recommendations %}
       <div class="mt-4 p-3 rounded-4 bg-light border">
         <div class="fw-bold text-primary small mb-1">
-          <i class="bi bi-magic me-1"></i> Đề xuất can thiệp sư phạm nhân văn từ Gemini:
+          <i class="bi bi-magic me-1"></i> Đề xuất can thiệp sư phạm nhân văn từ AI:
         </div>
         <div class="small text-secondary" style="white-space: pre-line;">{{ ai_warnings.ai_recommendations }}</div>
       </div>
@@ -166,7 +166,7 @@
           <span class="badge bg-purple-subtle text-indigo fw-bold" style="background-color: #ede9fe; color: #6d28d9;">
             <i class="bi bi-mortarboard-fill me-1"></i> KẾT QUẢ HỌC TẬP
           </span>
-          <span class="badge-ai" style="font-size: 0.75rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Gemini)</span>
+          <span class="badge-ai" style="font-size: 0.75rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Trí tuệ nhân tạo)</span>
         </div>
         <h5 class="fw-bold mb-0 text-dark mt-1">Đo Lường Chất Lượng & Tiến Bộ Năng Lực Học Sinh</h5>
       </div>

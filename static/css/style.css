@@ -1,247 +1,366 @@
 /* ==============================================================================
    TIMEBANK EDU - GIAO DIỆN HỌC ĐƯỜNG HIỆN ĐẠI & THÂN THIỆN
-   Dành cho cuộc thi "Ngày hội Nhà giáo sáng tạo với công nghệ số và AI 2026"
-   Hỗ trợ tùy biến màu sắc thương hiệu linh hoạt qua biến CSS
+   TRƯỜNG QUỐC TẾ SONG NGỮ UKA ACADEMY HẠ LONG
+   Bảng màu thương hiệu: Cam #F26522 | Vàng #F5B301 | Navy #1B2A6B
    ============================================================================== */
 
 :root {
-  --brand-color: #1e40af;
-  --brand-color-rgb: 30, 64, 175;
-  --brand-hover: #1d4ed8;
-  --accent-gold: #f59e0b;
-  --accent-emerald: #10b981;
-  --bg-light: #f8fafc;
-  --text-dark: #1e293b;
-  --text-muted: #64748b;
-  --border-color: #e2e8f0;
+  --brand-orange: #F26522;
+  --brand-orange-rgb: 242, 101, 34;
+  --brand-gold: #F5B301;
+  --brand-gold-rgb: 245, 179, 1;
+  --brand-navy: #1B2A6B;
+  --brand-navy-rgb: 27, 42, 107;
+
+  --brand-color: #F26522;
+  --brand-color-rgb: 242, 101, 34;
+  --brand-hover: #D85213;
+  --accent-gold: #F5B301;
+  --accent-navy: #1B2A6B;
+  --accent-emerald: #10B981;
+
+  --bg-light: #F8FAFC;
+  --text-dark: #0F172A;
+  --text-muted: #64748B;
+  --border-color: #E2E8F0;
+  --card-radius: 18px;
 }
 
 body {
-  font-family: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
+  font-family: 'Be Vietnam Pro', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color: var(--text-dark);
   background-color: var(--bg-light);
   line-height: 1.6;
   overflow-x: hidden;
 }
 
-/* Navbar */
-.navbar-brand img {
-  transition: transform 0.3s ease;
-}
-.navbar-brand:hover img {
-  transform: rotate(-10deg) scale(1.05);
-}
-.nav-link {
-  font-weight: 500;
-  color: #334155;
-  transition: color 0.2s;
-}
-.nav-link:hover {
-  color: var(--brand-color);
-}
-
-/* Buttons */
-.btn-brand {
-  background-color: var(--brand-color);
-  border-color: var(--brand-color);
-  color: #ffffff;
-  font-weight: 600;
-  border-radius: 50px;
-  padding: 0.65rem 1.6rem;
-  box-shadow: 0 4px 14px rgba(var(--brand-color-rgb), 0.25);
+/* ==============================================================================
+   1. NAVBAR & HEADER GRADIENT (Cam #F26522 -> Vàng #F5B301)
+   ============================================================================== */
+.navbar-custom {
+  background: linear-gradient(90deg, #F26522 0%, #F58B19 55%, #F5B301 100%) !important;
+  box-shadow: 0 4px 20px rgba(242, 101, 34, 0.28);
+  border: none;
   transition: all 0.3s ease;
 }
-.btn-brand:hover, .btn-brand:focus {
-  background-color: var(--brand-hover);
-  border-color: var(--brand-hover);
-  color: #ffffff;
+
+.navbar-custom .navbar-brand {
+  color: #FFFFFF !important;
+}
+
+.navbar-custom .navbar-brand img {
+  transition: transform 0.3s ease;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+}
+
+.navbar-custom .navbar-brand:hover img {
+  transform: rotate(-8deg) scale(1.08);
+}
+
+.navbar-custom .navbar-brand span {
+  color: #FFFFFF !important;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.navbar-custom .navbar-brand small {
+  color: rgba(255, 255, 255, 0.92) !important;
+  font-weight: 500;
+}
+
+.navbar-custom .nav-link {
+  font-weight: 600;
+  color: #FFFFFF !important;
+  padding: 0.5rem 0.85rem !important;
+  border-radius: 50px;
+  transition: all 0.22s ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.navbar-custom .nav-link:hover,
+.navbar-custom .nav-link:focus {
+  color: #1B2A6B !important;
+  background-color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transform: translateY(-1px);
+}
+
+.navbar-custom .navbar-toggler {
+  border-color: rgba(255, 255, 255, 0.6);
+  color: #FFFFFF;
+}
+
+.navbar-custom .navbar-toggler-icon {
+  filter: brightness(0) invert(1);
+}
+
+/* User pill on navbar */
+.navbar-custom .user-pill {
+  background-color: #FFFFFF !important;
+  color: #1B2A6B !important;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.navbar-custom .user-pill:hover {
+  background-color: #F8FAFC !important;
+}
+
+/* ==============================================================================
+   2. BUTTONS & ACTIONS
+   ============================================================================== */
+.btn-brand {
+  background: linear-gradient(135deg, #F26522 0%, #FF7B39 100%);
+  border: none;
+  color: #FFFFFF;
+  font-weight: 700;
+  border-radius: 50px;
+  padding: 0.65rem 1.6rem;
+  box-shadow: 0 4px 14px rgba(242, 101, 34, 0.32);
+  transition: all 0.25s ease;
+}
+
+.btn-brand:hover,
+.btn-brand:focus {
+  background: linear-gradient(135deg, #D85213 0%, #F26522 100%);
+  color: #FFFFFF;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(var(--brand-color-rgb), 0.35);
+  box-shadow: 0 6px 20px rgba(242, 101, 34, 0.45);
 }
 
 .btn-outline-brand {
-  border: 2px solid var(--brand-color);
-  color: var(--brand-color);
-  font-weight: 600;
+  border: 2px solid #F26522;
+  color: #F26522;
+  background-color: transparent;
+  font-weight: 700;
   border-radius: 50px;
   padding: 0.6rem 1.5rem;
-  transition: all 0.3s ease;
-}
-.btn-outline-brand:hover {
-  background-color: var(--brand-color);
-  color: #ffffff;
-  transform: translateY(-2px);
+  transition: all 0.25s ease;
 }
 
-/* Badge AI */
+.btn-outline-brand:hover {
+  background: #F26522;
+  color: #FFFFFF;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(242, 101, 34, 0.28);
+}
+
+.btn-navy {
+  background-color: #1B2A6B;
+  border: 1px solid #1B2A6B;
+  color: #FFFFFF;
+  font-weight: 700;
+  border-radius: 50px;
+  padding: 0.65rem 1.6rem;
+  box-shadow: 0 4px 12px rgba(27, 42, 107, 0.25);
+  transition: all 0.25s ease;
+}
+
+.btn-navy:hover {
+  background-color: #121E52;
+  color: #FFFFFF;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(27, 42, 107, 0.38);
+}
+
+/* ==============================================================================
+   3. BADGES & LABELS
+   ============================================================================== */
 .badge-ai {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: white;
-  font-size: 0.8rem;
-  font-weight: 600;
-  padding: 0.35rem 0.75rem;
-  border-radius: 20px;
+  background: linear-gradient(135deg, #1B2A6B 0%, #2A439B 100%);
+  color: #FFD043;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.35rem 0.8rem;
+  border-radius: 50px;
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+  border: 1px solid rgba(245, 179, 1, 0.35);
+  box-shadow: 0 2px 8px rgba(27, 42, 107, 0.15);
 }
 
-/* Hero Section */
+/* Badge Đã duyệt nhất quán toàn hệ thống */
+.badge-status-approved {
+  background-color: rgba(16, 185, 129, 0.12) !important;
+  color: #047857 !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  font-weight: 600;
+  font-size: 0.75rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 50px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.badge-status-pending {
+  background-color: rgba(245, 179, 1, 0.15) !important;
+  color: #B45309 !important;
+  border: 1px solid rgba(245, 179, 1, 0.35) !important;
+  font-weight: 600;
+  font-size: 0.75rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 50px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+/* ==============================================================================
+   4. HERO SECTION (UKA Academy Hạ Long)
+   ============================================================================== */
 .hero-section {
-  background: linear-gradient(180deg, rgba(var(--brand-color-rgb), 0.05) 0%, rgba(248, 250, 252, 1) 100%);
+  background: radial-gradient(circle at top left, rgba(242, 101, 34, 0.08) 0%, rgba(245, 179, 1, 0.05) 40%, rgba(248, 250, 252, 1) 100%);
   padding: 4.5rem 0 3.5rem 0;
   position: relative;
 }
+
 .hero-title {
-  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-size: clamp(2.1rem, 4.2vw, 3.4rem);
   font-weight: 800;
-  line-height: 1.2;
-  color: #0f172a;
+  line-height: 1.18;
+  color: #0F172A;
+  letter-spacing: -0.5px;
 }
+
 .hero-tagline {
-  font-size: 1.25rem;
-  color: var(--brand-color);
-  font-weight: 600;
+  font-size: 1.35rem;
+  color: #F26522;
+  font-weight: 700;
 }
+
+.hero-hook-badge {
+  background: linear-gradient(135deg, #F26522 0%, #F5B301 100%);
+  color: #FFFFFF;
+  font-weight: 700;
+  padding: 0.45rem 1.1rem;
+  border-radius: 50px;
+  display: inline-flex;
+  align-items: center;
+  box-shadow: 0 4px 14px rgba(242, 101, 34, 0.25);
+  font-size: 0.95rem;
+}
+
 .hero-img-box {
   animation: float 4s ease-in-out infinite;
+  border: 1px solid rgba(242, 101, 34, 0.2) !important;
 }
+
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-10px); }
 }
 
-/* Step Card (Mô hình hoạt động) */
+/* ==============================================================================
+   5. CARDS (Bo góc, shadow nhẹ, accent cam)
+   ============================================================================== */
+.card, .step-card, .stat-card, .tutor-card {
+  border-radius: var(--card-radius) !important;
+  background-color: #FFFFFF;
+  border: 1px solid #EDF0F5;
+  box-shadow: 0 6px 18px rgba(27, 42, 107, 0.05);
+  transition: all 0.3s ease;
+}
+
+.card:hover, .step-card:hover, .tutor-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(242, 101, 34, 0.12);
+  border-color: rgba(242, 101, 34, 0.3);
+}
+
 .step-card {
-  background: #ffffff;
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
   padding: 1.75rem;
   height: 100%;
   position: relative;
-  transition: all 0.3s ease;
 }
-.step-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.07);
-  border-color: rgba(var(--brand-color-rgb), 0.3);
-}
+
 .step-badge {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background-color: rgba(var(--brand-color-rgb), 0.1);
-  color: var(--brand-color);
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(242, 101, 34, 0.15) 0%, rgba(245, 179, 1, 0.2) 100%);
+  color: #F26522;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.35rem;
-  font-weight: 700;
+  font-size: 1.4rem;
+  font-weight: 800;
   margin-bottom: 1.2rem;
-}
-
-/* Case study box (Ví dụ An, Bình, Chi) */
-.example-exchange-card {
-  background: linear-gradient(135deg, #eff6ff, #f0fdf4);
-  border: 2px dashed rgba(var(--brand-color-rgb), 0.3);
-  border-radius: 18px;
-  padding: 2rem;
-}
-.exchange-node {
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 1rem;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
-  border-left: 4px solid var(--brand-color);
 }
 
 /* Counter Card (Số liệu realtime) */
 .stat-card {
-  background: #ffffff;
-  border-radius: 16px;
   padding: 1.75rem 1.25rem;
-  border: 1px solid var(--border-color);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
   text-align: center;
-  transition: transform 0.3s ease;
 }
+
 .stat-card:hover {
   transform: translateY(-4px);
+  border-color: rgba(242, 101, 34, 0.35);
 }
+
 .stat-number {
   font-size: 2.5rem;
   font-weight: 800;
-  color: var(--brand-color);
+  color: #F26522;
   line-height: 1.1;
 }
 
-/* Leaderboard (Vinh danh tuần) */
-.tutor-card {
-  background: #ffffff;
-  border-radius: 16px;
-  border: 1px solid var(--border-color);
-  padding: 1.5rem;
-  position: relative;
-  transition: all 0.3s ease;
-  height: 100%;
-}
-.tutor-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-}
+/* Leaderboard Tutor Cards */
 .tutor-card.rank-1 {
-  border-top: 5px solid #f59e0b;
-  background: linear-gradient(180deg, #fffbeb 0%, #ffffff 40%);
+  border-top: 5px solid #F5B301 !important;
+  background: linear-gradient(180deg, #FFFDF5 0%, #FFFFFF 40%);
 }
 .tutor-card.rank-2 {
-  border-top: 5px solid #94a3b8;
-  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 40%);
+  border-top: 5px solid #94A3B8 !important;
+  background: linear-gradient(180deg, #F8FAFC 0%, #FFFFFF 40%);
 }
 .tutor-card.rank-3 {
-  border-top: 5px solid #b45309;
-  background: linear-gradient(180deg, #fff7ed 0%, #ffffff 40%);
-}
-.medal-badge {
-  font-size: 2.2rem;
-  line-height: 1;
+  border-top: 5px solid #F26522 !important;
+  background: linear-gradient(180deg, #FFF7F2 0%, #FFFFFF 40%);
 }
 
-/* School Implementation Section */
-.school-benefit-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  margin-bottom: 1.25rem;
-}
-.benefit-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background-color: rgba(var(--brand-color-rgb), 0.1);
-  color: var(--brand-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  flex-shrink: 0;
+/* Accents */
+.accent-orange {
+  border-left: 4px solid #F26522 !important;
 }
 
-/* Footer */
+/* ==============================================================================
+   6. FOOTER (Navy #1B2A6B, Chữ trắng)
+   ============================================================================== */
 footer {
-  background-color: #0f172a;
-  color: #94a3b8;
-  padding: 3.5rem 0 2rem 0;
-}
-footer a {
-  color: #cbd5e1;
-  text-decoration: none;
-  transition: color 0.2s;
-}
-footer a:hover {
-  color: #ffffff;
+  background-color: #1B2A6B !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  padding: 4rem 0 2rem 0;
+  border-top: 4px solid #F26522 !important;
 }
 
-/* Toast/Alert */
-.toast-container {
-  z-index: 1090;
+footer h5, footer h6 {
+  color: #FFFFFF !important;
+}
+
+footer a {
+  color: rgba(255, 255, 255, 0.88);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+footer a:hover {
+  color: #F5B301 !important;
+  text-decoration: underline;
+}
+
+/* Responsive Mobile Tweaks */
+@media (max-width: 991.98px) {
+  .hero-section {
+    padding: 3rem 0 2rem 0;
+    text-align: center;
+  }
+  .navbar-custom .nav-link {
+    padding: 0.65rem 1rem !important;
+    border-radius: 12px;
+  }
 }

@@ -1,31 +1,80 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="100%" height="100%">
   <defs>
-    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#2563eb;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#1e3a8a;stop-opacity:1" />
+    <!-- Brand Gradients -->
+    <linearGradient id="ukaNavy" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1B2A6B" />
+      <stop offset="100%" stop-color="#0F1A45" />
     </linearGradient>
-    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#d97706;stop-opacity:1" />
+    <linearGradient id="ukaOrange" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F26522" />
+      <stop offset="100%" stop-color="#FF8345" />
     </linearGradient>
+    <linearGradient id="ukaGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F5B301" />
+      <stop offset="100%" stop-color="#FFD043" />
+    </linearGradient>
+    <filter id="subtleShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#1B2A6B" flood-opacity="0.25"/>
+    </filter>
   </defs>
-  <!-- Background Circle -->
-  <circle cx="100" cy="100" r="92" fill="url(#grad1)" stroke="#ffffff" stroke-width="6"/>
-  <!-- Clock Outer Ring -->
-  <circle cx="100" cy="100" r="70" fill="none" stroke="#60a5fa" stroke-width="4" stroke-dasharray="6,4"/>
-  <!-- Open Book at base -->
-  <path d="M50,135 Q75,120 100,135 Q125,120 150,135 L146,145 Q125,132 100,145 Q75,132 54,145 Z" fill="#ffffff" opacity="0.95"/>
-  <!-- Clock Hands forming Time Exchange -->
-  <circle cx="100" cy="92" r="6" fill="#f59e0b"/>
-  <!-- Hour hand -->
-  <line x1="100" y1="92" x2="80" y2="82" stroke="#ffffff" stroke-width="5" stroke-linecap="round"/>
-  <!-- Minute hand -->
-  <line x1="100" y1="92" x2="118" y2="60" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
-  <!-- Graduation Cap (Education) -->
-  <polygon points="100,42 62,56 100,70 138,56" fill="url(#goldGrad)"/>
-  <rect x="94" y="66" width="12" height="10" fill="#d97706" rx="2"/>
-  <path d="M125,60 L134,80" stroke="#d97706" stroke-width="3" stroke-linecap="round"/>
-  <circle cx="134" cy="82" r="3" fill="#d97706"/>
-  <!-- Sparkles / AI Star -->
-  <path d="M142,42 L145,34 L148,42 L156,45 L148,48 L145,56 L142,48 L134,45 Z" fill="#fbbf24"/>
+
+  <!-- Outer Ring with Gold Border -->
+  <circle cx="120" cy="120" r="114" fill="#FFFFFF" stroke="url(#ukaOrange)" stroke-width="4" filter="url(#subtleShadow)"/>
+  <circle cx="120" cy="120" r="106" fill="url(#ukaNavy)" stroke="url(#ukaGold)" stroke-width="3"/>
+
+  <!-- Academic Sun Rays / Clock Dials -->
+  <g stroke="url(#ukaGold)" stroke-width="2" opacity="0.6">
+    <line x1="120" y1="20" x2="120" y2="28" />
+    <line x1="120" y1="212" x2="120" y2="220" />
+    <line x1="20" y1="120" x2="28" y2="120" />
+    <line x1="212" y1="120" x2="220" y2="120" />
+    <line x1="49" y1="49" x2="55" y2="55" />
+    <line x1="185" y1="185" x2="191" y2="191" />
+    <line x1="49" y1="191" x2="55" y2="185" />
+    <line x1="185" y1="55" x2="191" y2="49" />
+  </g>
+
+  <!-- Heraldic Shield / Central Emblem -->
+  <path d="M120 38 C158 38 184 48 184 82 C184 134 148 168 120 184 C92 168 56 134 56 82 C56 48 82 38 120 38 Z" 
+        fill="#FFFFFF" stroke="url(#ukaOrange)" stroke-width="4"/>
+
+  <!-- Inner Crest Shield -->
+  <path d="M120 46 C152 46 174 54 174 84 C174 128 144 158 120 172 C96 158 66 128 66 84 C66 54 88 46 120 46 Z" 
+        fill="url(#ukaNavy)"/>
+
+  <!-- Clock Ring inside Shield -->
+  <circle cx="120" cy="104" r="44" fill="none" stroke="url(#ukaGold)" stroke-width="2.5" stroke-dasharray="4,3" opacity="0.8"/>
+  <circle cx="120" cy="104" r="38" fill="#FFFFFF" opacity="0.08"/>
+
+  <!-- Graduation Cap (Education Symbol) -->
+  <polygon points="120,62 82,78 120,94 158,78" fill="url(#ukaOrange)" stroke="#FFFFFF" stroke-width="1.5"/>
+  <rect x="114" y="90" width="12" height="9" fill="url(#ukaGold)" rx="2"/>
+  <path d="M144,83 L152,102" stroke="url(#ukaGold)" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="152" cy="104" r="3" fill="url(#ukaGold)"/>
+
+  <!-- Clock Hands (TimeBank Exchange: 1h = 1 Credit) -->
+  <circle cx="120" cy="112" r="5" fill="url(#ukaOrange)" stroke="#FFFFFF" stroke-width="1.5"/>
+  <line x1="120" y1="112" x2="102" y2="102" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="120" y1="112" x2="134" y2="88" stroke="url(#ukaGold)" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Open Book of Knowledge at Base -->
+  <path d="M84 138 Q102 128 120 136 Q138 128 156 138 L152 148 Q136 138 120 146 Q104 138 88 148 Z" 
+        fill="url(#ukaGold)" stroke="#FFFFFF" stroke-width="1"/>
+
+  <!-- Laurel Leaves of Excellence -->
+  <path d="M68 114 Q60 132 74 152 Q82 142 76 126 Z" fill="url(#ukaOrange)" opacity="0.9"/>
+  <path d="M172 114 Q180 132 166 152 Q158 142 164 126 Z" fill="url(#ukaOrange)" opacity="0.9"/>
+
+  <!-- UKA Academy Hạ Long Banner at Bottom -->
+  <g transform="translate(0, 8)">
+    <rect x="42" y="184" width="156" height="26" rx="13" fill="url(#ukaOrange)" stroke="url(#ukaGold)" stroke-width="2"/>
+    <text x="120" y="201" font-family="'Be Vietnam Pro', system-ui, sans-serif" font-size="11.5" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0.8">
+      UKA HẠ LONG
+    </text>
+  </g>
+
+  <!-- Sparkles / AI Magic -->
+  <polygon points="120,24 122,17 127,19 123,24 127,29 122,31" fill="url(#ukaGold)"/>
+  <circle cx="68" cy="62" r="2.5" fill="url(#ukaGold)"/>
+  <circle cx="172" cy="62" r="2.5" fill="url(#ukaGold)"/>
 </svg>

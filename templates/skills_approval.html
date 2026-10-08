@@ -11,7 +11,7 @@
       <p class="text-muted small mb-0">Thầy/Cô thẩm định nội dung học sinh đăng ký chia sẻ trước khi kết nối</p>
     </div>
     <div>
-      <span class="badge-ai"><i class="bi bi-stars"></i> Kiểm duyệt sơ bộ bởi AI (Gemini)</span>
+      <span class="badge-ai"><i class="bi bi-stars"></i> Kiểm duyệt sơ bộ bởi AI (Trí tuệ nhân tạo)</span>
     </div>
   </div>
 
@@ -59,7 +59,7 @@
               </td>
               <td>
                 {% if item.trang_thai_duyet == 'da_duyet' %}
-                  <span class="badge bg-success">Đã duyệt</span>
+                  <span class="badge-status-approved small"><i class="bi bi-patch-check-fill me-1"></i>Đã duyệt</span>
                 {% elif item.trang_thai_duyet == 'tu_choi' %}
                   <span class="badge bg-danger">Từ chối</span>
                 {% else %}

@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}{{ config.ten_truong }}{% endblock %} - Ngân hàng Thời gian Học đường (TimeBank EDU)</title>
   
+  <!-- Favicon chính thức của trường -->
+  <link rel="icon" type="image/png" href="{{ config.logo_path }}">
+  
   <!-- Phông chữ tiếng Việt chuẩn đẹp Be Vietnam Pro -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,7 +28,7 @@
       {% if hex|length == 6 %}
         --brand-color-rgb: {{ hex[0:2]|int(base=16) }}, {{ hex[2:4]|int(base=16) }}, {{ hex[4:6]|int(base=16) }};
       {% else %}
-        --brand-color-rgb: 30, 64, 175;
+        --brand-color-rgb: 242, 101, 34;
       {% endif %}
     }
   </style>
@@ -33,15 +36,14 @@
 </head>
 <body class="d-flex flex-column min-vh-100">
 
-  <!-- Thanh điều hướng chính (Navbar) -->
-  <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top py-2 shadow-sm">
+  <!-- Thanh điều hướng chính (Navbar Gradient Cam - Vàng) -->
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top py-2 shadow">
     <div class="container">
       <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('index') }}">
-        <img src="{{ config.logo_path }}" alt="Logo {{ config.ten_truong }}" width="42" height="42" class="d-inline-block align-text-top rounded-circle">
-        <div>
-          <span class="fw-bold fs-5 text-dark d-block lh-sm">TimeBank EDU</span>
-          <small class="text-muted fw-normal" style="font-size: 0.75rem;">{{ config.ten_truong }}</small>
-        </div>
+        <img src="{{ config.logo_path }}" alt="Logo {{ config.ten_truong }}" style="height: 38px; width: auto; max-width: 155px; object-fit: contain;" class="d-inline-block bg-white px-2 py-1 rounded-3 shadow-sm">
+        <span class="d-none d-sm-inline-block ps-1 border-start border-white border-opacity-50">
+          <small class="text-white text-opacity-95 fw-semibold d-block" style="font-size: 0.72rem; letter-spacing: 0.2px;">{{ config.ten_truong }}</small>
+        </span>
       </a>
       
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -49,15 +51,15 @@
       </button>
 
       <div class="collapse navbar-collapse" id="navbarContent">
-        <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center gap-lg-3">
+        <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center gap-lg-2">
           <li class="nav-item">
-            <a class="nav-link fw-semibold text-primary" href="{{ url_for('skills_market') }}"><i class="bi bi-shop me-1"></i>Chợ kỹ năng</a>
+            <a class="nav-link" href="{{ url_for('skills_market') }}"><i class="bi bi-shop me-1"></i>Chợ kỹ năng</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link fw-semibold text-danger" href="{{ url_for('community_tasks_view') }}"><i class="bi bi-heart-fill me-1 text-danger"></i>Vì cộng đồng</a>
+            <a class="nav-link" href="{{ url_for('community_tasks_view') }}"><i class="bi bi-heart-fill me-1"></i>Vì cộng đồng</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link fw-semibold text-success" href="{{ url_for('blog_index') }}"><i class="bi bi-newspaper me-1"></i>Bản tin</a>
+            <a class="nav-link" href="{{ url_for('blog_index') }}"><i class="bi bi-newspaper me-1"></i>Bản tin</a>
           </li>
           {% if current_user %}
           <li class="nav-item">
@@ -80,14 +82,14 @@
             <a class="nav-link" href="{{ url_for('index') }}#nha-truong"><i class="bi bi-building me-1"></i>Nhà trường</a>
           </li>
           <li class="nav-item d-none d-xl-block">
-            <span class="badge-ai"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Gemini)</span>
+            <span class="badge-ai"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Trí tuệ nhân tạo)</span>
           </li>
 
           {% if current_user %}
             <!-- Menu người dùng đã đăng nhập -->
             <li class="nav-item dropdown mt-2 mt-lg-0">
-              <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 p-1 px-2 rounded-pill bg-light border text-dark fw-semibold" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <span class="badge rounded-circle bg-primary text-white" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;">
+              <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 p-1 px-2 rounded-pill user-pill text-dark fw-semibold" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <span class="badge rounded-circle text-white" style="background-color: #1B2A6B; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;">
                   {{ current_user.ho_ten[0] | upper }}
                 </span>
                 <span>{{ current_user.ho_ten }}</span>
@@ -95,7 +97,7 @@
                   <i class="bi bi-clock-history me-1"></i>{{ "%.1f"|format(current_user.so_du_gio) }}h
                 </span>
               </a>
-              <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 mt-2">
+              <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 mt-2">
                 <li>
                   <div class="px-3 py-2 border-bottom">
                     <div class="fw-bold text-dark">{{ current_user.ho_ten }}</div>
@@ -163,10 +165,10 @@
           {% else %}
             <!-- Nút Đăng nhập & Đăng ký khi chưa đăng nhập -->
             <li class="nav-item d-flex gap-2 mt-2 mt-lg-0">
-              <a href="{{ url_for('login') }}" class="btn btn-outline-brand btn-sm px-3">
+              <a href="{{ url_for('login') }}" class="btn btn-navy btn-sm px-3 shadow-sm">
                 <i class="bi bi-box-arrow-in-right me-1"></i> Đăng nhập
               </a>
-              <a href="{{ url_for('register') }}" class="btn btn-brand btn-sm px-3">
+              <a href="{{ url_for('register') }}" class="btn btn-light text-dark fw-bold btn-sm px-3 shadow-sm">
                 <i class="bi bi-person-plus me-1"></i> Đăng ký
               </a>
             </li>
@@ -195,54 +197,61 @@
     {% block content %}{% endblock %}
   </main>
 
-  <!-- Footer hệ thống (Bắt buộc hiển thị tên trường từ config và dòng Hỗ trợ bởi AI) -->
-  <footer class="mt-5 border-top">
-    <div class="container">
+  <!-- Footer hệ thống UKA Academy Hạ Long -->
+  <footer class="mt-auto text-white">
+    <div class="container py-4">
       <div class="row g-4 justify-content-between">
         <div class="col-lg-5 col-md-6">
-          <div class="d-flex align-items-center gap-2 mb-3">
-            <img src="{{ config.logo_path }}" alt="Logo" width="45" height="45" class="rounded-circle bg-white p-1">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <img src="{{ config.logo_path }}" alt="Logo {{ config.ten_truong }}" style="height: 44px; width: auto; max-width: 170px; object-fit: contain;" class="bg-white p-1 rounded-3 shadow-sm">
             <div>
               <h5 class="text-white mb-0 fw-bold">Ngân hàng Thời gian Học đường</h5>
-              <span class="badge bg-secondary" style="font-size: 0.72rem;">Phiên bản độc lập (Single-Tenant)</span>
+              <small class="text-warning fw-semibold">TimeBank EDU • UKA Academy Hạ Long</small>
             </div>
           </div>
-          <p class="small text-secondary mb-3">
+          <p class="small text-white-50 mb-3 lh-base">
             {{ config.dong_gioi_thieu }}
           </p>
+          <div class="p-3 rounded-3 mb-3" style="background: rgba(255,255,255,0.06); border-left: 3px solid #F5B301;">
+            <p class="small text-light mb-0">
+              <i class="bi bi-shield-check text-warning me-1"></i>
+              <strong>Sản phẩm bản quyền thuộc cô giáo:</strong> Nguyễn Thị Huyền - Giáo viên sư phạm tin học, trường UK Academy Hạ Long.
+            </p>
+          </div>
           <div class="d-flex align-items-center gap-2">
-            <span class="badge-ai"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Gemini)</span>
-            <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25">Bảng B - Hội thi 2026</span>
+            <span class="badge-ai"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Trí tuệ nhân tạo)</span>
           </div>
         </div>
 
-        <div class="col-lg-3 col-md-6">
-          <h6 class="text-white fw-bold mb-3">Đơn vị triển khai</h6>
-          <p class="mb-1 text-light fw-medium"><i class="bi bi-mortarboard-fill text-warning me-2"></i>{{ config.ten_truong }}</p>
-          <p class="mb-1 small"><i class="bi bi-envelope-at me-2"></i><a href="mailto:{{ config.email_lien_he }}">{{ config.email_lien_he }}</a></p>
-          <p class="mb-0 small"><i class="bi bi-shield-check me-2"></i>Dữ liệu lưu trữ nội bộ (SQLite)</p>
+        <div class="col-lg-4 col-md-6">
+          <h6 class="text-warning text-uppercase fw-bold mb-3"><i class="bi bi-building me-2"></i>Đơn vị triển khai</h6>
+          <p class="mb-2 text-white fw-bold"><i class="bi bi-mortarboard-fill text-warning me-2"></i>{{ config.ten_truong }}</p>
+          <p class="mb-2 small text-white-50"><i class="bi bi-geo-alt-fill text-warning me-2"></i>Đường Phan Đăng Lưu, Phường Hồng Hải, thành phố Quảng Ninh</p>
+          <p class="mb-2 small text-white-50"><i class="bi bi-telephone-fill text-warning me-2"></i>SĐT: <a href="tel:0766667999" class="text-white fw-semibold">07.6666.7999</a></p>
+          <p class="mb-0 small text-white-50"><i class="bi bi-envelope-at-fill text-warning me-2"></i>Email: <a href="mailto:mshuyenuka@gmail.com" class="text-white fw-semibold">mshuyenuka@gmail.com</a></p>
         </div>
 
-        <div class="col-lg-3 col-md-6">
-          <h6 class="text-white fw-bold mb-3">Triết lý sư phạm</h6>
-          <ul class="list-unstyled small text-secondary">
-            <li class="mb-2"><i class="bi bi-check2-circle text-success me-2"></i>1 giờ dạy = 1 tín dụng thời gian</li>
-            <li class="mb-2"><i class="bi bi-check2-circle text-success me-2"></i>Mọi tri thức đều có giá trị bình đẳng</li>
-            <li class="mb-2"><i class="bi bi-check2-circle text-success me-2"></i>Học sinh vừa là người học, vừa là người dạy</li>
+        <div class="col-lg-3 col-md-12">
+          <h6 class="text-warning text-uppercase fw-bold mb-3"><i class="bi bi-lightbulb-fill me-2"></i>Triết lý sư phạm</h6>
+          <ul class="list-unstyled small text-white-50 mb-0">
+            <li class="mb-2"><i class="bi bi-check2-circle text-warning me-2"></i>1 giờ dạy = 1 tín dụng thời gian</li>
+            <li class="mb-2"><i class="bi bi-check2-circle text-warning me-2"></i>Mọi tri thức đều có giá trị bình đẳng</li>
+            <li class="mb-2"><i class="bi bi-check2-circle text-warning me-2"></i>Học sinh vừa là người học, vừa là người dạy</li>
+            <li class="mb-0"><i class="bi bi-check2-circle text-warning me-2"></i>Học thầy không tày học bạn</li>
           </ul>
         </div>
       </div>
 
-      <hr class="border-secondary opacity-25 my-4">
+      <hr style="border-color: rgba(255,255,255,0.15); margin: 2rem 0 1.25rem 0;">
 
-      <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 small text-secondary">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 small text-white-50">
         <div>
-          © 2026 <strong>TimeBank EDU</strong> — Sản phẩm dự thi <em>"Ngày hội Nhà giáo sáng tạo với công nghệ số và AI 2026"</em>.
+          © 2026 <strong>TimeBank EDU</strong> — Hệ thống Ngân hàng Thời gian Học đường.
         </div>
         <div class="d-flex align-items-center gap-3">
-          <span>Trường: <strong>{{ config.ten_truong }}</strong></span>
+          <span>Trường: <strong class="text-white">{{ config.ten_truong }}</strong></span>
           <span>•</span>
-          <span class="text-info"><i class="bi bi-cpu me-1"></i>Hỗ trợ bởi AI (Gemini)</span>
+          <span class="text-warning"><i class="bi bi-cpu me-1"></i>Hỗ trợ bởi AI (Trí tuệ nhân tạo)</span>
         </div>
       </div>
     </div>
@@ -290,7 +299,7 @@
 
   {% if current_user %}
   <!-- ==============================================================================
-       MILESTONE M-CHAT: KHUNG CHAT TRỢ LÝ HỌC ĐƯỜNG ẢO (GEMINI PRO)
+       MILESTONE M-CHAT: KHUNG CHAT TRỢ LÝ HỌC ĐƯỜNG ẢO (TRÍ TUỆ NHÂN TẠO)
        Nút tròn nổi góc dưới mọi trang sau khi học sinh/giáo viên đăng nhập
        ============================================================================== -->
   <div id="aiChatWidgetContainer">
@@ -306,15 +315,15 @@
     <!-- Khung hội thoại nổi (Chat Widget) -->
     <div id="aiChatBox" class="card border-0 shadow-lg rounded-4">
       <!-- Header Khung Chat -->
-      <div class="card-header bg-brand text-white py-3 px-3 border-0 d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, var(--brand-color, #1e40af) 0%, #3b82f6 100%);">
+      <div class="card-header bg-brand text-white py-3 px-3 border-0 d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #F26522 0%, #F5B301 100%);">
         <div class="d-flex align-items-center gap-2">
-          <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center shadow-sm" style="width: 36px; height: 36px;">
-            <i class="bi bi-robot fs-5"></i>
+          <div class="rounded-circle bg-white text-dark d-flex align-items-center justify-content-center shadow-sm" style="width: 36px; height: 36px;">
+            <i class="bi bi-robot fs-5 text-warning"></i>
           </div>
           <div>
             <div class="fw-bold fs-6 lh-sm mb-0">Trợ lý Học đường AI</div>
             <span class="badge bg-white bg-opacity-25 text-white" style="font-size: 0.68rem;">
-              <i class="bi bi-stars"></i> Hỗ trợ bởi AI (Gemini)
+              <i class="bi bi-stars"></i> Hỗ trợ bởi AI (Trí tuệ nhân tạo)
             </span>
           </div>
         </div>
