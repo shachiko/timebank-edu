@@ -123,5 +123,17 @@ class TestPrompt15Rebrand(unittest.TestCase):
         self.assertIn(">5</h3>", html_admin)
         print(f"[PASS] So thanh vien hoc sinh ({stats_members}) thong nhat dong bo hoan hao.")
 
+    def test_09_official_logo_png_used_in_ui(self):
+        """Kiem tra logo_timebank_edu.png duoc dung tai navbar, footer, favicon."""
+        res_img = self.client.get("/static/img/logo_timebank_edu.png")
+        self.assertEqual(res_img.status_code, 200)
+        self.assertGreater(len(res_img.data), 10000)
+
+        res_home = self.client.get("/")
+        html = res_home.data.decode("utf-8")
+        self.assertIn("logo_timebank_edu.png", html)
+        self.assertIn('href="/static/img/logo_timebank_edu.png"', html)
+        print("[PASS] Logo chinh thuc logo_timebank_edu.png duoc tich hop thanh cong tren navbar, footer, favicon.")
+
 if __name__ == "__main__":
     unittest.main()

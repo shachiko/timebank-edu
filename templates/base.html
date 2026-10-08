@@ -6,7 +6,9 @@
   <title>{% block title %}{{ config.ten_truong }}{% endblock %} - Ngân hàng Thời gian Học đường (TimeBank EDU)</title>
   
   <!-- Favicon chính thức của trường -->
-  <link rel="icon" type="image/png" href="{{ config.logo_path }}">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo_timebank_edu.png') }}">
+  <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='img/logo_timebank_edu.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo_timebank_edu.png') }}">
   
   <!-- Phông chữ tiếng Việt chuẩn đẹp Be Vietnam Pro -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -40,7 +42,7 @@
   <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top py-2 shadow">
     <div class="container">
       <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('index') }}">
-        <img src="{{ config.logo_path }}" alt="Logo {{ config.ten_truong }}" style="height: 38px; width: auto; max-width: 155px; object-fit: contain;" class="d-inline-block bg-white px-2 py-1 rounded-3 shadow-sm">
+        <img src="{{ url_for('static', filename='img/logo_timebank_edu.png') }}" alt="Logo {{ config.ten_truong }}" style="height: 38px; width: auto; max-width: 160px; object-fit: contain;" class="d-inline-block bg-white px-2 py-1 rounded-3 shadow-sm">
         <span class="d-none d-sm-inline-block ps-1 border-start border-white border-opacity-50">
           <small class="text-white text-opacity-95 fw-semibold d-block" style="font-size: 0.72rem; letter-spacing: 0.2px;">{{ config.ten_truong }}</small>
         </span>
@@ -203,7 +205,7 @@
       <div class="row g-4 justify-content-between">
         <div class="col-lg-5 col-md-6">
           <div class="d-flex align-items-center gap-3 mb-3">
-            <img src="{{ config.logo_path }}" alt="Logo {{ config.ten_truong }}" style="height: 44px; width: auto; max-width: 170px; object-fit: contain;" class="bg-white p-1 rounded-3 shadow-sm">
+            <img src="{{ url_for('static', filename='img/logo_timebank_edu.png') }}" alt="Logo {{ config.ten_truong }}" style="height: 44px; width: auto; max-width: 175px; object-fit: contain;" class="bg-white p-2 rounded-3 shadow-sm">
             <div>
               <h5 class="text-white mb-0 fw-bold">Ngân hàng Thời gian Học đường</h5>
               <small class="text-warning fw-semibold">TimeBank EDU • UKA Academy Hạ Long</small>

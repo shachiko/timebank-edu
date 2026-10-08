@@ -99,7 +99,7 @@ timebankEDU/
 │   ├── css/
 │   │   └── style.css       # Giao diện responsive, đồng bộ mã màu nhà trường
 │   └── img/
-│       └── logo.svg        # Biểu trưng TimeBank EDU (Đồng hồ & Giáo dục)
+│       └── logo_timebank_edu.png # Biểu trưng chính thức TimeBank EDU (PNG trong suốt)
 └── templates/
     ├── base.html           # Khung giao diện chung (Navbar, Footer, Modal đăng nhập)
     └── index.html          # Trang chủ Landing Page gồm 6 khối chức năng
@@ -130,7 +130,7 @@ timebankEDU/
 Mở tệp `config.yaml` và chỉnh sửa các trường sau:
 ```yaml
 ten_truong: "Trường Quốc tế Song ngữ UKA Academy Hạ Long"
-logo_path: "/static/img/logo.svg"
+logo_path: "/static/img/logo_timebank_edu.png"
 mau_chu_dao: "#F26522"
 email_lien_he: "mshuyenuka@gmail.com"
 dong_gioi_thieu: "Nền tảng Ngân hàng Thời gian Học đường..."
