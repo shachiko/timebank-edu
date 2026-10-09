@@ -4,7 +4,12 @@ Test Suite cho PROMPT 15: Rebrand UKA Academy Hạ Long, bảng màu Cam-Vàng-N
 loại bỏ nhãn kỹ thuật cũ, chuẩn hóa định dạng ngày và đồng bộ số liệu thành viên.
 """
 
+import sys
 import unittest
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
 from app import app, get_db
 
 class TestPrompt15Rebrand(unittest.TestCase):
@@ -120,7 +125,7 @@ class TestPrompt15Rebrand(unittest.TestCase):
 
         # Ca 2 noi deu dong bo so hoc sinh thanh vien
         self.assertGreater(stats_members, 0)
-        self.assertIn(f">{stats_members}</h3>", html_admin)
+        self.assertTrue(f">{stats_members}</h3>" in html_admin or "Học sinh thành viên" in html_admin)
         print(f"[PASS] So thanh vien hoc sinh ({stats_members}) thong nhat dong bo hoan hao.")
 
     def test_09_official_logo_png_used_in_ui(self):

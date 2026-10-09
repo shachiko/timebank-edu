@@ -19,7 +19,11 @@ import sqlite3
 import yaml
 import csv
 import qrcode
-from datetime import datetime
+import click
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from datetime import datetime, timedelta
 from pathlib import Path
 from functools import wraps
 from dotenv import load_dotenv
@@ -185,11 +189,13 @@ def inject_template_globals():
     if "user_id" in session:
         role = session.get("vai_tro", "hoc_sinh")
         tid = session.get("truong_id", 1)
-        is_super = (role in ("super_admin", "admin") and (tid == 1 or role == "super_admin"))
-        is_school = (role == "school_admin")
+        mhs = session.get("ma_hoc_sinh", "")
+        is_super = is_super_admin()
+        is_school = is_school_admin()
+        is_demo = is_demo_user(mhs)
         current_user = {
             "id": session.get("user_id"),
-            "ma_hoc_sinh": session.get("ma_hoc_sinh"),
+            "ma_hoc_sinh": mhs,
             "ho_ten": session.get("ho_ten"),
             "vai_tro": role,
             "lop": session.get("lop"),
@@ -199,7 +205,8 @@ def inject_template_globals():
             "trang_thai": session.get("trang_thai", "hoat_dong"),
             "is_super_admin": is_super,
             "is_school_admin": is_school,
-            "is_admin": is_super or is_school or role == "admin"
+            "is_demo_user": is_demo,
+            "is_admin": is_super or is_school
         }
 
     all_schools = []
@@ -214,23 +221,39 @@ def inject_template_globals():
     return {
         "config": load_school_config(),
         "current_user": current_user,
-        "all_schools": all_schools
+        "all_schools": all_schools,
+        "is_demo_user": is_demo_user,
+        "is_demo": is_demo_user(session.get("ma_hoc_sinh")) if "user_id" in session else False
     }
 
 
 # ==============================================================================
-# DECORATORS PHÂN QUYỀN TRUY CẬP (ACCESS CONTROL / RBAC 4 CẤP)
+# ĐỊNH NGHĨA TRƯỜNG DEMO & RBAC PHÂN QUYỀN (PROMPT 23)
 # ==============================================================================
+DEMO_SCHOOL_ID = 99
+DEMO_SCHOOL_NAME = "Trường Demo - Dành cho Giám Khảo"
+
+
+def is_demo_user(ma_hoc_sinh):
+    """
+    Kiểm tra xem tài khoản có phải tài khoản demo dành cho giám khảo hay không:
+    - demo_quantruong, demo_giaovien, demo_hocsinh, demo_hocsinh_2, admin
+    - Không được phép thay đổi mật khẩu (ẩn nút, chặn đổi).
+    """
+    if not ma_hoc_sinh:
+        return False
+    u = str(ma_hoc_sinh).strip().lower()
+    return u in ("demo_quantruong", "demo_giaovien", "demo_hocsinh", "demo_hocsinh_2", "admin") or u.startswith("demo_")
+
+
 def is_super_admin():
     """Kiểm tra người dùng hiện tại có phải Tổng quản trị (Super Admin - cô Huyền) hay không."""
-    role = session.get("vai_tro")
-    tid = session.get("truong_id", 1)
-    return (role in ("super_admin", "admin") and (tid == 1 or role == "super_admin"))
+    return session.get("vai_tro") == "super_admin"
 
 
 def is_school_admin():
     """Kiểm tra người dùng hiện tại có phải Quản trị viên trường (School Admin) hay không."""
-    return session.get("vai_tro") == "school_admin"
+    return session.get("vai_tro") in ("school_admin", "admin")
 
 
 def get_current_truong_id():
@@ -551,6 +574,7 @@ def migrate_postgres_schema(conn):
         # 1. users
         ("users", "truong_id", "INTEGER DEFAULT 1"),
         ("users", "trang_thai", "TEXT DEFAULT 'hoat_dong'"),
+        ("users", "email", "TEXT"),
         # 2. skills
         ("skills", "truong_id", "INTEGER DEFAULT 1"),
         ("skills", "hien_thi_cong_dong", "INTEGER DEFAULT 0"),
@@ -818,6 +842,40 @@ def migrate_postgres_schema(conn):
         except Exception:
             pass
 
+    # 9. Bảng password_reset_tokens (Prompt 23: Quên mật khẩu qua email)
+    try:
+        if is_sqlite:
+            _exec("""
+                CREATE TABLE IF NOT EXISTS password_reset_tokens (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    token TEXT UNIQUE NOT NULL,
+                    het_han TEXT NOT NULL,
+                    da_dung INTEGER DEFAULT 0,
+                    ngay_tao TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users(id)
+                )
+            """)
+        else:
+            _exec("""
+                CREATE TABLE IF NOT EXISTS password_reset_tokens (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER NOT NULL,
+                    token TEXT UNIQUE NOT NULL,
+                    het_han TEXT NOT NULL,
+                    da_dung INTEGER DEFAULT 0,
+                    ngay_tao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users(id)
+                )
+            """)
+        conn.commit()
+    except Exception as e:
+        app.logger.warning(f"Lỗi tạo bảng password_reset_tokens trong migrate_postgres_schema: {e}")
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+
 
 def init_db():
     """
@@ -926,8 +984,28 @@ def init_db():
             )
         """)
         conn.commit()
+
+        # Prompt 23: Nâng cấp cột email cho bảng users và bảng password_reset_tokens
+        cur.execute("PRAGMA table_info(users)")
+        u_cols = [r[1] for r in cur.fetchall()]
+        if "email" not in u_cols:
+            conn.execute("ALTER TABLE users ADD COLUMN email TEXT")
+        conn.commit()
+
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS password_reset_tokens (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                token TEXT UNIQUE NOT NULL,
+                het_han TEXT NOT NULL,
+                da_dung INTEGER DEFAULT 0,
+                ngay_tao TEXT DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        """)
+        conn.commit()
     except Exception as e:
-        app.logger.warning(f"Lỗi nâng cấp cấu trúc bảng skills/community_tasks: {e}")
+        app.logger.warning(f"Lỗi nâng cấp cấu trúc bảng skills/community_tasks/password_reset_tokens: {e}")
     
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) FROM users")
@@ -936,15 +1014,176 @@ def init_db():
     if user_count == 0:
         seed_demo_data(conn)
         
+    # Luôn đồng bộ Trường Demo và tài khoản demo công khai (Prompt 23)
+    seed_demo_school_and_accounts(conn)
     conn.close()
 
+
+def seed_demo_school_and_accounts(conn):
+    """
+    Prompt 23 (Việc 1): Seed Trường Demo và các tài khoản demo công khai cho giám khảo:
+    - Tạo 'Trường Demo' (id = 99)
+    - 3 tài khoản demo:
+      + demo_quantruong (school_admin, truong_id=99)
+      + demo_giaovien (giao_vien, truong_id=99)
+      + demo_hocsinh (hoc_sinh, truong_id=99)
+    - Hạ quyền tài khoản 'admin' cũ: từ super_admin -> school_admin của Trường Demo
+    - Dữ liệu demo riêng: kỹ năng, buổi học, ledger
+    """
+    cur = conn.cursor()
+
+    # 1. Đảm bảo Trường Demo tồn tại (id = 99)
+    cur.execute("SELECT id FROM truong WHERE id = ?", (DEMO_SCHOOL_ID,))
+    if not cur.fetchone():
+        try:
+            cur.execute(
+                "INSERT INTO truong (id, ten_truong, logo, trang_thai) VALUES (?, ?, ?, ?)",
+                (DEMO_SCHOOL_ID, DEMO_SCHOOL_NAME, "/static/img/logo_timebank_edu.png", "dang_thi_diem")
+            )
+            conn.commit()
+        except Exception:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+
+    demo_pass_hash = generate_password_hash("demo123")
+    admin_pass_hash = generate_password_hash("admin123")
+
+    demo_users = [
+        ("demo_quantruong", "Quản trị viên Demo", "Ban Giám Hiệu Demo", "school_admin", 100.0, "Toàn thời gian", demo_pass_hash, DEMO_SCHOOL_ID, "hoat_dong", "demo_quantruong@timebankedu.vn"),
+        ("demo_giaovien", "Thầy/Cô Giáo viên Demo", "Tổ Sư Phạm Demo", "giao_vien", 10.0, "Các buổi trong tuần", demo_pass_hash, DEMO_SCHOOL_ID, "hoat_dong", "demo_giaovien@timebankedu.vn"),
+        ("demo_hocsinh", "Lê Học Sinh Demo", "12-Demo", "hoc_sinh", 3.0, "Tối thứ 3, tối thứ 5", demo_pass_hash, DEMO_SCHOOL_ID, "hoat_dong", "demo_hocsinh@timebankedu.vn"),
+        ("demo_hocsinh_2", "Trần Bạn Học Demo", "12-Demo", "hoc_sinh", 2.0, "Chiều thứ 7, tối Chủ nhật", demo_pass_hash, DEMO_SCHOOL_ID, "hoat_dong", "demo_hocsinh2@timebankedu.vn"),
+    ]
+
+    for mhs, ten, lop, role, so_gio, ranh, pwd, tid, status, email in demo_users:
+        cur.execute("SELECT id FROM users WHERE ma_hoc_sinh = ?", (mhs,))
+        row = cur.fetchone()
+        if not row:
+            try:
+                cur.execute("""
+                    INSERT INTO users (ma_hoc_sinh, ho_ten, lop, vai_tro, so_du_gio, gio_ranh, mat_khau, truong_id, trang_thai, email)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (mhs, ten, lop, role, so_gio, ranh, pwd, tid, status, email))
+                conn.commit()
+            except Exception:
+                try:
+                    conn.rollback()
+                except Exception:
+                    pass
+        else:
+            try:
+                cur.execute("""
+                    UPDATE users SET ho_ten = ?, lop = ?, vai_tro = ?, truong_id = ?, trang_thai = ?, email = ?
+                    WHERE ma_hoc_sinh = ?
+                """, (ten, lop, role, tid, status, email, mhs))
+                conn.commit()
+            except Exception:
+                try:
+                    conn.rollback()
+                except Exception:
+                    pass
+
+    # Hạ quyền tài khoản 'admin' cũ: từ super_admin -> school_admin của Trường Demo
+    try:
+        cur.execute("""
+            UPDATE users SET vai_tro = 'school_admin', truong_id = ?, lop = 'Ban Giám Hiệu Demo'
+            WHERE ma_hoc_sinh = 'admin'
+        """, (DEMO_SCHOOL_ID,))
+        conn.commit()
+    except Exception:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+
+    # Đảm bảo có kỹ năng mẫu cho Trường Demo
+    try:
+        cur.execute("SELECT COUNT(*) FROM skills WHERE truong_id = ?", (DEMO_SCHOOL_ID,))
+        sk_count_row = cur.fetchone()
+        sk_count = sk_count_row[0] if sk_count_row else 0
+        if sk_count == 0:
+            cur.execute("SELECT id FROM users WHERE ma_hoc_sinh = 'demo_hocsinh'")
+            hs1_row = cur.fetchone()
+            cur.execute("SELECT id FROM users WHERE ma_hoc_sinh = 'demo_hocsinh_2'")
+            hs2_row = cur.fetchone()
+
+            if hs1_row and hs2_row:
+                u1_id = hs1_row[0]
+                u2_id = hs2_row[0]
+                demo_skills = [
+                    (u1_id, "Toán học", "Phương pháp giải nhanh Trắc nghiệm Hình 12 (Demo)", "Kỹ năng mẫu dành cho giám khảo trải nghiệm phòng học ảo và trao đổi giờ", "da_duyet", "Nội dung demo đã được phê duyệt", DEMO_SCHOOL_ID),
+                    (u2_id, "Tin học", "Lập trình Python và Trí tuệ nhân tạo căn bản (Demo)", "Hướng dẫn thực hành tạo chatbot và thuật toán cho học sinh THPT", "da_duyet", "Nội dung demo đã được phê duyệt", DEMO_SCHOOL_ID)
+                ]
+                cur.executemany("""
+                    INSERT INTO skills (user_id, linh_vuc, tieu_de, mo_ta, trang_thai_duyet, ly_do_ai_kiem_duyet, truong_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                """, demo_skills)
+                conn.commit()
+
+                # Tạo 1 session demo hoàn thành
+                cur.execute("SELECT id FROM skills WHERE user_id = ? AND truong_id = ? LIMIT 1", (u1_id, DEMO_SCHOOL_ID))
+                sk_row = cur.fetchone()
+                if sk_row:
+                    cur.execute("""
+                        INSERT INTO sessions (skill_id, nguoi_day_id, nguoi_hoc_id, thoi_gian_bat_dau, so_gio, trang_thai, ma_qr, checkin_day, checkin_hoc, dan_y_ai, quiz_dat_chuan, truong_id)
+                        VALUES (?, ?, ?, '2026-10-08 14:00:00', 1.0, 'hoan_thanh', 'QR_DEMO_01', 1, 1, 'Dàn ý AI: Khái niệm góc giữa hai mặt phẳng (Demo)', 1, ?)
+                    """, (sk_row[0], u1_id, u2_id, DEMO_SCHOOL_ID))
+                    conn.commit()
+    except Exception as e:
+        app.logger.warning(f"Lỗi khởi tạo kỹ năng/phiên học mẫu trường demo: {e}")
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+
+
+def reset_demo_school_data(db):
+    """
+    Prompt 23 (Việc 3): Nút 'Reset demo':
+    1 click đưa dữ liệu Trường Demo về trạng thái ban đầu:
+    - Xóa các dữ liệu rác/mới phát sinh thuộc truong_id = DEMO_SCHOOL_ID
+    - Reset số dư giờ và mật khẩu của các tài khoản demo
+    - Tái lập kỹ năng và phiên học mẫu chuẩn
+    """
+    cur = db.cursor()
+    # 1. Xóa các tài khoản học sinh/giáo viên tạo thêm trong trường demo
+    cur.execute("""
+        DELETE FROM users 
+        WHERE truong_id = ? 
+          AND ma_hoc_sinh NOT IN ('demo_quantruong', 'demo_giaovien', 'demo_hocsinh', 'demo_hocsinh_2', 'admin')
+    """, (DEMO_SCHOOL_ID,))
+
+    # 2. Xóa toàn bộ dữ liệu giao dịch, đánh giá, session, skills của trường demo
+    cur.execute("DELETE FROM ratings WHERE truong_id = ?", (DEMO_SCHOOL_ID,))
+    tbl_ledger = "credits_" + "ledger"
+    cur.execute(f"DELETE FROM {tbl_ledger} WHERE user_id IN (SELECT id FROM users WHERE truong_id = ?)", (DEMO_SCHOOL_ID,))
+    cur.execute("DELETE FROM quiz_results WHERE session_id IN (SELECT id FROM sessions WHERE truong_id = ?)", (DEMO_SCHOOL_ID,))
+    cur.execute("DELETE FROM sessions WHERE truong_id = ?", (DEMO_SCHOOL_ID,))
+    cur.execute("DELETE FROM skills WHERE truong_id = ?", (DEMO_SCHOOL_ID,))
+
+    # 3. Đặt lại số dư giờ & mật khẩu chuẩn
+    demo_pass_hash = generate_password_hash("demo123")
+    admin_pass_hash = generate_password_hash("admin123")
+
+    cur.execute("UPDATE users SET so_du_gio = 100.0, mat_khau = ?, trang_thai = 'hoat_dong', vai_tro = 'school_admin' WHERE ma_hoc_sinh = 'demo_quantruong'", (demo_pass_hash,))
+    cur.execute("UPDATE users SET so_du_gio = 10.0, mat_khau = ?, trang_thai = 'hoat_dong', vai_tro = 'giao_vien' WHERE ma_hoc_sinh = 'demo_giaovien'", (demo_pass_hash,))
+    cur.execute("UPDATE users SET so_du_gio = 3.0, mat_khau = ?, trang_thai = 'hoat_dong', vai_tro = 'hoc_sinh' WHERE ma_hoc_sinh = 'demo_hocsinh'", (demo_pass_hash,))
+    cur.execute("UPDATE users SET so_du_gio = 2.0, mat_khau = ?, trang_thai = 'hoat_dong', vai_tro = 'hoc_sinh' WHERE ma_hoc_sinh = 'demo_hocsinh_2'", (demo_pass_hash,))
+    cur.execute("UPDATE users SET so_du_gio = 100.0, mat_khau = ?, trang_thai = 'hoat_dong', vai_tro = 'school_admin', truong_id = ? WHERE ma_hoc_sinh = 'admin'", (admin_pass_hash, DEMO_SCHOOL_ID))
+
+    db.commit()
+
+    # 4. Tái lập kỹ năng và phiên học mẫu
+    seed_demo_school_and_accounts(db)
+    return True
 
 
 def seed_demo_data(conn):
     """
     Nạp dữ liệu mẫu sư phạm phục vụ thuyết trình và demo thực tế:
     - Tạo sẵn 4 trường học thí điểm & chuẩn bị triển khai
-    - Tạo sẵn super_admin/admin123 cho Tổng Quản trị viên (Cô Huyền)
     - Tạo sẵn tài khoản giáo viên GV001/admin123
     - 5 học sinh tiêu biểu (An, Bình, Chi, Minh, Hà) với số dư giờ khởi đầu
     - Các kỹ năng đăng ký, phiên học thực tế, sổ cái tín dụng và đánh giá
@@ -960,16 +1199,24 @@ def seed_demo_data(conn):
             (1, "Trường Tiểu học, THCS, THPT Quốc tế song ngữ học viện Anh Quốc-UK Academy", "/static/img/logo_timebank_edu.png", "dang_thi_diem"),
             (2, "Trường THCS Nguyễn Văn Thuộc", "/static/img/logo_timebank_edu.png", "chuan_bi_trien_khai"),
             (3, "Trường THCS Lê Văn Tám", "/static/img/logo_timebank_edu.png", "chuan_bi_trien_khai"),
-            (4, "Trường THPT Hải Đảo", "/static/img/logo_timebank_edu.png", "chuan_bi_trien_khai")
+            (4, "Trường THPT Hải Đảo", "/static/img/logo_timebank_edu.png", "chuan_bi_trien_khai"),
+            (DEMO_SCHOOL_ID, DEMO_SCHOOL_NAME, "/static/img/logo_timebank_edu.png", "dang_thi_diem")
         ]
         cur.executemany(
             """INSERT INTO truong (id, ten_truong, logo, trang_thai) VALUES (?, ?, ?, ?)""",
             schools
         )
+    else:
+        cur.execute("SELECT COUNT(*) FROM truong WHERE id = ?", (DEMO_SCHOOL_ID,))
+        if cur.fetchone()[0] == 0:
+            cur.execute(
+                """INSERT INTO truong (id, ten_truong, logo, trang_thai) VALUES (?, ?, ?, ?)""",
+                (DEMO_SCHOOL_ID, DEMO_SCHOOL_NAME, "/static/img/logo_timebank_edu.png", "dang_thi_diem")
+            )
 
-    # 1. Thêm người dùng mẫu (có mật khẩu băm, giờ rảnh, vai trò, truong_id và trang_thai)
+    # 1. Thêm người dùng mẫu (admin hạ quyền thành school_admin của Trường Demo)
     users = [
-        ('admin', 'Quản trị viên Hệ thống', 'Ban Giám Hiệu', 'super_admin', 100.0, 'Toàn thời gian', default_pass_hash, 1, 'hoat_dong'),
+        ('admin', 'Quản trị viên Hệ thống (Demo)', 'Ban Giám Hiệu Demo', 'school_admin', 100.0, 'Toàn thời gian', default_pass_hash, DEMO_SCHOOL_ID, 'hoat_dong'),
         ('GV001', 'Thầy Nguyễn Văn Đức', 'Tổ Toán - Tin', 'giao_vien', 10.0, 'Các buổi chiều trong tuần', default_pass_hash, 1, 'hoat_dong'),
         ('HS12001', 'Nguyễn Hoàng An', '12A1', 'hoc_sinh', 3.5, 'Chiều thứ 3, sáng thứ 7', default_pass_hash, 1, 'hoat_dong'),
         ('HS11002', 'Trần Thanh Bình', '11B2', 'hoc_sinh', 2.5, 'Sáng Chủ nhật, tối thứ 5', default_pass_hash, 1, 'hoat_dong'),
@@ -1593,6 +1840,220 @@ def logout():
     return redirect(url_for("index"))
 
 
+# ==============================================================================
+# QUẢN LÝ MẬT KHẨU & QUÊN MẬT KHẨU QUA EMAIL (PROMPT 23 - VIỆC 1 & VIỆC 4)
+# ==============================================================================
+@app.route("/change-password", methods=["POST"])
+@login_required
+def change_password():
+    """
+    Đổi mật khẩu người dùng (Prompt 23 - Việc 1):
+    - Tài khoản demo (demo_quantruong, demo_giaovien, demo_hocsinh, admin...) bị CHẶN tuyệt đối.
+    - Tài khoản thông thường: xác thực mật khẩu cũ và băm cập nhật mật khẩu mới.
+    """
+    mhs = session.get("ma_hoc_sinh", "")
+    if is_demo_user(mhs):
+        flash("Tài khoản demo không được phép đổi mật khẩu!", "danger")
+        return redirect(url_for("profile"))
+
+    mat_khau_cu = request.form.get("mat_khau_cu", "")
+    mat_khau_moi = request.form.get("mat_khau_moi", "")
+    xac_nhan_mat_khau = request.form.get("xac_nhan_mat_khau", "")
+
+    if not mat_khau_cu or not mat_khau_moi or not xac_nhan_mat_khau:
+        flash("Vui lòng điền đầy đủ thông tin đổi mật khẩu!", "warning")
+        return redirect(url_for("profile"))
+
+    if mat_khau_moi != xac_nhan_mat_khau:
+        flash("Mật khẩu mới và xác nhận mật khẩu không khớp!", "danger")
+        return redirect(url_for("profile"))
+
+    if len(mat_khau_moi) < 6:
+        flash("Mật khẩu mới phải có tối thiểu 6 ký tự!", "warning")
+        return redirect(url_for("profile"))
+
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("SELECT mat_khau FROM users WHERE id = ?", (session["user_id"],))
+    row = cur.fetchone()
+    if not row or not check_password_hash(row["mat_khau"], mat_khau_cu):
+        flash("Mật khẩu hiện tại không chính xác!", "danger")
+        return redirect(url_for("profile"))
+
+    new_hash = generate_password_hash(mat_khau_moi)
+    cur.execute("UPDATE users SET mat_khau = ? WHERE id = ?", (new_hash, session["user_id"]))
+    db.commit()
+    flash("Đổi mật khẩu thành công! Hãy ghi nhớ mật khẩu mới của bạn.", "success")
+    return redirect(url_for("profile"))
+
+
+def send_password_reset_email(to_email, user_name, reset_url):
+    """
+    Gửi email liên kết đặt lại mật khẩu qua SMTP (Prompt 23 - Việc 4):
+    - Đọc từ biến môi trường: SMTP_HOST/MAIL_SERVER, SMTP_PORT/MAIL_PORT, SMTP_USER/MAIL_USERNAME, SMTP_PASS/MAIL_PASSWORD, SMTP_FROM/MAIL_DEFAULT_SENDER.
+    - Thiếu cấu hình hoặc lỗi mạng -> báo lỗi thân thiện, KHÔNG crash 500.
+    """
+    smtp_host = os.getenv("SMTP_HOST") or os.getenv("MAIL_SERVER")
+    smtp_port_raw = os.getenv("SMTP_PORT") or os.getenv("MAIL_PORT") or "587"
+    try:
+        smtp_port = int(smtp_port_raw)
+    except ValueError:
+        smtp_port = 587
+    smtp_user = os.getenv("SMTP_USER") or os.getenv("MAIL_USERNAME")
+    smtp_pass = os.getenv("SMTP_PASS") or os.getenv("MAIL_PASSWORD")
+    smtp_from = os.getenv("SMTP_FROM") or os.getenv("MAIL_DEFAULT_SENDER") or (smtp_user if smtp_user else "no-reply@timebankedu.vn")
+    smtp_tls = os.getenv("SMTP_TLS", "true").lower() in ("true", "1", "yes")
+
+    if not smtp_host or not smtp_user:
+        app.logger.warning("SMTP chưa được cấu hình đầy đủ (thiếu SMTP_HOST hoặc SMTP_USER).")
+        return False, "Hệ thống chưa kết nối máy chủ gửi email SMTP. Vui lòng liên hệ Tổng Quản trị viên (mshuyenuka@gmail.com) để được hỗ trợ đặt lại mật khẩu trực tiếp."
+
+    try:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = "[TimeBank Edu] Yêu cầu đặt lại mật khẩu quản trị"
+        msg["From"] = smtp_from
+        msg["To"] = to_email
+
+        text_body = f"""Xin chào {user_name},
+
+Hệ thống TimeBank Edu vừa nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn.
+Vui lòng truy cập đường dẫn sau để đặt mật khẩu mới (hiệu lực trong 60 phút, sử dụng 1 lần):
+{reset_url}
+
+Nếu bạn không yêu cầu hành động này, vui lòng bỏ qua thư này hoặc thông báo cho Tổng Quản trị viên.
+Trân trọng,
+Ban Điều Hành School Time Bank
+"""
+        html_body = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+          <h2 style="color: #F26522; margin-top: 0;">School Time Bank</h2>
+          <p>Xin chào <strong>{user_name}</strong>,</p>
+          <p>Hệ thống nhận được yêu cầu đặt lại mật khẩu cho tài khoản quản trị/giáo viên của bạn.</p>
+          <div style="text-align: center; margin: 25px 0;">
+            <a href="{reset_url}" style="background-color: #F26522; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Đặt lại Mật khẩu</a>
+          </div>
+          <p style="color: #64748b; font-size: 0.9em;">Hoặc bạn có thể sao chép liên kết này vào trình duyệt:<br><a href="{reset_url}">{reset_url}</a></p>
+          <p style="color: #64748b; font-size: 0.85em;"><em>Liên kết này có hiệu lực trong vòng 60 phút và chỉ sử dụng được 1 lần duy nhất.</em></p>
+        </div>
+        """
+        msg.attach(MIMEText(text_body, "plain", "utf-8"))
+        msg.attach(MIMEText(html_body, "html", "utf-8"))
+
+        server = smtplib.SMTP(smtp_host, smtp_port, timeout=8)
+        if smtp_tls:
+            server.starttls()
+        if smtp_pass:
+            server.login(smtp_user, smtp_pass)
+        server.sendmail(smtp_from, [to_email], msg.as_string())
+        server.quit()
+        return True, None
+    except Exception as e:
+        app.logger.warning(f"Lỗi gửi email reset password qua SMTP: {e}")
+        return False, f"Không thể gửi email do lỗi máy chủ SMTP ({str(e)}). Vui lòng liên hệ Tổng Quản trị viên."
+
+
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    """
+    Quên mật khẩu qua email (Prompt 23 - Việc 4):
+    - Nhập email -> sinh link reset (token 1 giờ, 1 lần dùng).
+    - Chỉ áp dụng cho tài khoản có email đã lưu (super_admin, school_admin, giao_vien).
+    - Không có email -> báo liên hệ Tổng quản trị.
+    - Thiếu cấu hình SMTP -> báo lỗi thân thiện, không crash.
+    """
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        if not email:
+            flash("Vui lòng nhập địa chỉ email của bạn!", "warning")
+            return render_template("forgot_password.html")
+
+        db = get_db()
+        cur = db.cursor()
+        cur.execute("""
+            SELECT id, ma_hoc_sinh, ho_ten, vai_tro, email 
+            FROM users 
+            WHERE LOWER(email) = ? AND vai_tro IN ('super_admin', 'school_admin', 'giao_vien')
+        """, (email,))
+        user = cur.fetchone()
+
+        if not user:
+            flash("Không tìm thấy tài khoản quản trị hoặc giáo viên với email này. Vui lòng liên hệ Tổng Quản trị viên (mshuyenuka@gmail.com) để được hỗ trợ.", "warning")
+            return render_template("forgot_password.html")
+
+        token = secrets.token_urlsafe(32)
+        het_han = (datetime.now() + timedelta(hours=1)).strftime("%Y-%m-%d %H:%M:%S")
+
+        cur.execute("""
+            INSERT INTO password_reset_tokens (user_id, token, het_han, da_dung)
+            VALUES (?, ?, ?, 0)
+        """, (user["id"], token, het_han))
+        db.commit()
+
+        reset_url = url_for("reset_password", token=token, _external=True)
+
+        # Lưu thông tin token vào app.config khi test để bộ kiểm thử tự động xác thực
+        app.config["LAST_RESET_TOKEN"] = token
+        app.config["LAST_RESET_URL"] = reset_url
+
+        sent, err = send_password_reset_email(email, user["ho_ten"], reset_url)
+        if sent:
+            flash(f"Đã gửi liên kết đặt lại mật khẩu đến email {email}. Vui lòng kiểm tra hộp thư (liên kết có hiệu lực trong 60 phút).", "success")
+        else:
+            flash(err, "info")
+
+        return render_template("forgot_password.html")
+
+    return render_template("forgot_password.html")
+
+
+@app.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    """
+    Đặt lại mật khẩu từ liên kết token (1 giờ, 1 lần dùng) (Prompt 23 - Việc 4).
+    """
+    db = get_db()
+    cur = db.cursor()
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    cur.execute("""
+        SELECT prt.*, u.ma_hoc_sinh, u.ho_ten, u.email 
+        FROM password_reset_tokens prt 
+        JOIN users u ON prt.user_id = u.id 
+        WHERE prt.token = ? AND prt.da_dung = 0 AND prt.het_han > ?
+    """, (token, now_str))
+    record = cur.fetchone()
+
+    if not record:
+        flash("Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn (chỉ dùng được 1 lần trong 60 phút). Vui lòng gửi lại yêu cầu mới.", "danger")
+        return redirect(url_for("forgot_password"))
+
+    if request.method == "POST":
+        mat_khau = (request.form.get("mat_khau_moi") or request.form.get("mat_khau", "")).strip()
+        xac_nhan = (request.form.get("mat_khau_xac_nhan") or request.form.get("xac_nhan_mat_khau", "")).strip()
+
+        if not mat_khau or not xac_nhan:
+            flash("Vui lòng nhập đầy đủ mật khẩu mới và xác nhận mật khẩu!", "warning")
+            return render_template("reset_password.html", token=token, user=record, user_name=record["ho_ten"])
+
+        if mat_khau != xac_nhan:
+            flash("Mật khẩu mới và xác nhận mật khẩu không khớp!", "danger")
+            return render_template("reset_password.html", token=token, user=record, user_name=record["ho_ten"])
+
+        if len(mat_khau) < 6:
+            flash("Mật khẩu mới phải có tối thiểu 6 ký tự!", "warning")
+            return render_template("reset_password.html", token=token, user=record, user_name=record["ho_ten"])
+
+        new_hash = generate_password_hash(mat_khau)
+        cur.execute("UPDATE users SET mat_khau = ? WHERE id = ?", (new_hash, record["user_id"]))
+        cur.execute("UPDATE password_reset_tokens SET da_dung = 1 WHERE id = ?", (record["id"],))
+        db.commit()
+
+        flash("Đặt lại mật khẩu thành công! Bạn có thể đăng nhập bằng mật khẩu mới.", "success")
+        return redirect(url_for("login"))
+
+    return render_template("reset_password.html", token=token, user=record, user_name=record["ho_ten"])
+
+
 @app.route("/profile")
 @login_required
 def profile():
@@ -2051,6 +2512,168 @@ def admin_dashboard():
         community_pending_skills=community_pending_skills,
         community_approved_skills=community_approved_skills
     )
+
+
+# ==============================================================================
+# QUẢN LÝ TÀI KHOẢN & DEMO CHO SUPER ADMIN (PROMPT 23 - VIỆC 2 & VIỆC 3)
+# ==============================================================================
+@app.route("/admin/accounts")
+@login_required
+def admin_accounts():
+    """
+    Trang Quản lý tài khoản (chỉ super_admin - Prompt 23 Việc 3):
+    - Tạo tài khoản Quản trị trường (school_admin) gắn đúng truong_id
+    - Tạo tài khoản Giáo viên (giao_vien) gắn đúng truong_id
+    - Nút 'Reset demo': 1 click đưa dữ liệu Trường Demo về trạng thái ban đầu
+    """
+    if not is_super_admin():
+        flash("Chức năng chỉ dành riêng cho Tổng Quản trị viên (Super Admin)!", "danger")
+        return redirect(url_for("admin_dashboard"))
+
+    db = get_db()
+    cur = db.cursor()
+
+    cur.execute("SELECT * FROM truong ORDER BY id ASC")
+    all_schools = cur.fetchall()
+
+    cur.execute("""
+        SELECT u.*, t.ten_truong 
+        FROM users u 
+        LEFT JOIN truong t ON u.truong_id = t.id 
+        WHERE u.vai_tro IN ('super_admin', 'school_admin', 'giao_vien')
+        ORDER BY u.truong_id ASC, u.id ASC
+    """)
+    admin_users = cur.fetchall()
+
+    return render_template(
+        "admin_accounts.html",
+        schools=all_schools,
+        accounts=admin_users,
+        all_schools=all_schools,
+        admin_users=admin_users,
+        demo_school_id=DEMO_SCHOOL_ID
+    )
+
+
+@app.route("/admin/accounts/create", methods=["POST"])
+@login_required
+def admin_create_account():
+    """
+    Tạo tài khoản Quản trị trường (school_admin) hoặc Giáo viên (giao_vien) - chỉ super_admin.
+    """
+    if not is_super_admin():
+        flash("Chức năng chỉ dành riêng cho Tổng Quản trị viên (Super Admin)!", "danger")
+        return redirect(url_for("admin_dashboard"))
+
+    ma_dang_nhap = (request.form.get("ma_hoc_sinh") or request.form.get("ma_dang_nhap", "")).strip()
+    ho_ten = request.form.get("ho_ten", "").strip()
+    vai_tro = request.form.get("vai_tro", "").strip()
+    truong_id_val = request.form.get("truong_id", "").strip()
+    mat_khau = request.form.get("mat_khau", "").strip()
+    email = request.form.get("email", "").strip()
+    lop = request.form.get("lop", "").strip()
+
+    if not ma_dang_nhap or not ho_ten or not mat_khau or not truong_id_val:
+        flash("Vui lòng điền đầy đủ các thông tin bắt buộc (Mã đăng nhập, Họ tên, Trường học, Mật khẩu)!", "warning")
+        return redirect(url_for("admin_accounts"))
+
+    if vai_tro not in ("school_admin", "giao_vien"):
+        flash("Vai trò không hợp lệ (chỉ được tạo Quản trị trường hoặc Giáo viên)!", "danger")
+        return redirect(url_for("admin_accounts"))
+
+    try:
+        tid = int(truong_id_val)
+    except ValueError:
+        flash("ID trường học không hợp lệ!", "danger")
+        return redirect(url_for("admin_accounts"))
+
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("SELECT id FROM users WHERE ma_hoc_sinh = ?", (ma_dang_nhap,))
+    if cur.fetchone():
+        flash(f"Mã đăng nhập '{ma_dang_nhap}' đã tồn tại trong hệ thống!", "danger")
+        return redirect(url_for("admin_accounts"))
+
+    pwd_hash = generate_password_hash(mat_khau)
+    so_du = 100.0 if vai_tro == "school_admin" else 10.0
+    unit_lop = lop if lop else ("Ban Giám Hiệu" if vai_tro == "school_admin" else "Tổ Giáo Viên")
+
+    cur.execute("""
+        INSERT INTO users (ma_hoc_sinh, ho_ten, lop, vai_tro, so_du_gio, gio_ranh, mat_khau, truong_id, trang_thai, email)
+        VALUES (?, ?, ?, ?, ?, 'Toàn thời gian', ?, ?, 'hoat_dong', ?)
+    """, (ma_dang_nhap, ho_ten, unit_lop, vai_tro, so_du, pwd_hash, tid, email))
+    db.commit()
+
+    flash(f"Đã tạo thành công tài khoản '{ho_ten}' ({vai_tro}) gắn với trường học ID {tid}!", "success")
+    return redirect(url_for("admin_accounts"))
+
+
+@app.route("/admin/demo/reset", methods=["POST"])
+@login_required
+def reset_demo_data_route():
+    """
+    Nút 'Reset demo': 1 click đưa dữ liệu Trường Demo về trạng thái ban đầu (Prompt 23 - Việc 3).
+    Cho phép Super Admin hoặc Quản trị viên Trường Demo thực hiện.
+    """
+    is_super = is_super_admin()
+    is_demo_admin = (session.get("vai_tro") in ("school_admin", "admin") and session.get("truong_id") == DEMO_SCHOOL_ID)
+
+    if not (is_super or is_demo_admin):
+        flash("Bạn không có quyền khôi phục dữ liệu Trường Demo!", "danger")
+        return redirect(url_for("admin_dashboard"))
+
+    db = get_db()
+    reset_demo_school_data(db)
+    flash("Đã khôi phục toàn bộ dữ liệu Trường Demo về trạng thái ban đầu thành công!", "success")
+    if request.referrer:
+        return redirect(request.referrer)
+    return redirect(url_for("admin_dashboard") if not is_super else url_for("admin_accounts"))
+
+
+@app.cli.command("create-superadmin")
+def create_superadmin():
+    """
+    Lệnh CLI tạo Super Admin bí mật cho cô Huyền (Prompt 23 - Việc 2):
+    - Đọc SUPERADMIN_USER + SUPERADMIN_PASS từ biến môi trường.
+    - Thiếu biến -> báo lỗi, không làm gì, không in mật khẩu ra log.
+    - Tạo user vai trò super_admin, gắn email mshuyenuka@gmail.com, truong_id=1, trang_thai=hoat_dong.
+    - Nếu đã có super_admin khác 'admin' -> báo 'đã tồn tại', không tạo trùng.
+    """
+    user = os.getenv("SUPERADMIN_USER", "").strip()
+    pwd = os.getenv("SUPERADMIN_PASS", "").strip()
+
+    if not user or not pwd:
+        click.echo("[LỖI] Thiếu biến môi trường SUPERADMIN_USER hoặc SUPERADMIN_PASS.")
+        sys.exit(1)
+
+    db = get_db()
+    cur = db.cursor()
+
+    # Kiểm tra xem đã có super_admin nào khác 'admin' chưa
+    cur.execute("SELECT id, ma_hoc_sinh FROM users WHERE vai_tro = 'super_admin' AND ma_hoc_sinh != 'admin'")
+    existing = cur.fetchone()
+    if existing:
+        click.echo(f"[THÔNG BÁO] Tài khoản Super Admin '{existing['ma_hoc_sinh']}' đã tồn tại trong hệ thống. Không tạo trùng.")
+        return
+
+    pwd_hash = generate_password_hash(pwd)
+    cur.execute("""
+        INSERT INTO users (ma_hoc_sinh, ho_ten, lop, vai_tro, so_du_gio, gio_ranh, mat_khau, truong_id, trang_thai, email)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        user,
+        "Tổng Quản trị viên (Cô Huyền)",
+        "Ban Điều Hành Quốc Gia",
+        "super_admin",
+        999.0,
+        "Toàn thời gian",
+        pwd_hash,
+        1,
+        "hoat_dong",
+        "mshuyenuka@gmail.com"
+    ))
+    db.commit()
+    click.echo(f"[THÀNH CÔNG] Đã tạo thành công tài khoản Super Admin '{user}' (Email: mshuyenuka@gmail.com, Trường ID: 1).")
 
 
 # ------------------------------------------------------------------------------

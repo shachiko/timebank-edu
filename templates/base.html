@@ -249,6 +249,13 @@
                   </a>
                 </li>
                 {% endif %}
+                {% if current_user.vai_tro == 'super_admin' %}
+                <li>
+                  <a class="dropdown-item py-2 fw-semibold text-primary" href="{{ url_for('admin_accounts') }}">
+                    <i class="bi bi-people-fill text-primary me-2"></i>Quản lý Tài khoản
+                  </a>
+                </li>
+                {% endif %}
                 <li><hr class="dropdown-divider my-1"></li>
                 <li>
                   <a class="dropdown-item py-2 text-danger fw-semibold" href="{{ url_for('logout') }}">

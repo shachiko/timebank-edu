@@ -43,6 +43,18 @@
               <i class="bi bi-clock-history me-1 text-primary"></i>Khung giờ rảnh: 
               <strong>{{ user.gio_ranh if user.gio_ranh else 'Chưa cập nhật' }}</strong>
             </div>
+
+            <div class="mt-3 d-flex flex-wrap align-items-center gap-2">
+              {% if is_demo_user(user.ma_hoc_sinh) %}
+                <span class="badge bg-warning-subtle text-warning border border-warning-subtle py-2 px-3 rounded-pill" style="font-size: 0.8rem;">
+                  <i class="bi bi-shield-lock-fill me-1"></i>Tài khoản Demo (Không thể đổi mật khẩu)
+                </span>
+              {% else %}
+                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#changePasswordModal" id="btnChangePassword">
+                  <i class="bi bi-key-fill me-1"></i>Đổi mật khẩu
+                </button>
+              {% endif %}
+            </div>
           </div>
         </div>
       </div>
@@ -382,4 +394,39 @@
     </div>
   </div>
 </div>
+
+{% if not is_demo_user(user.ma_hoc_sinh) %}
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title fw-bold" id="changePasswordModalLabel">
+          <i class="bi bi-key-fill me-2"></i>Đổi Mật Khẩu
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+      </div>
+      <form action="{{ url_for('change_password') }}" method="POST">
+        <div class="modal-body p-4">
+          <div class="mb-3">
+            <label for="mat_khau_cu" class="form-label small fw-bold">Mật khẩu hiện tại <span class="text-danger">*</span></label>
+            <input type="password" class="form-control rounded-3" id="mat_khau_cu" name="mat_khau_cu" required>
+          </div>
+          <div class="mb-3">
+            <label for="mat_khau_moi" class="form-label small fw-bold">Mật khẩu mới <span class="text-danger">*</span></label>
+            <input type="password" class="form-control rounded-3" id="mat_khau_moi" name="mat_khau_moi" minlength="6" required>
+          </div>
+          <div class="mb-3">
+            <label for="mat_khau_xac_nhan" class="form-label small fw-bold">Xác nhận mật khẩu mới <span class="text-danger">*</span></label>
+            <input type="password" class="form-control rounded-3" id="mat_khau_xac_nhan" name="mat_khau_xac_nhan" minlength="6" required>
+          </div>
+        </div>
+        <div class="modal-footer bg-light p-3">
+          <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Hủy</button>
+          <button type="submit" class="btn btn-primary rounded-pill px-4 fw-semibold">Lưu Mật Khẩu</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
 {% endblock %}

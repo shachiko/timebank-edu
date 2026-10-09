@@ -35,6 +35,9 @@ wheels/
 
 # Database SQLite cục bộ
 *.db
+*.db-shm
+*.db-wal
+*.db-journal
 *.sqlite3
 instance/
 

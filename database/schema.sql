@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS users (
     so_du_gio REAL DEFAULT 2.0,
     gio_ranh TEXT,
     mat_khau TEXT,
+    email TEXT,
     trang_thai TEXT CHECK(trang_thai IN ('hoat_dong', 'cho_duyet', 'de_xuat_khoa', 'da_khoa')) DEFAULT 'hoat_dong',
     FOREIGN KEY (truong_id) REFERENCES truong(id)
 );
@@ -315,4 +316,15 @@ CREATE TABLE IF NOT EXISTS tu_van_trien_khai (
     ghi_chu TEXT,
     trang_thai TEXT DEFAULT 'cho_lien_he' CHECK(trang_thai IN ('cho_lien_he', 'da_lien_he', 'da_chuyen_giao')),
     thoi_gian_gui TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 23. BẢNG TOKEN ĐẶT LẠI MẬT KHẨU (PASSWORD RESET TOKENS): Token 1 giờ, 1 lần sử dụng cho tài khoản quản trị
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    token TEXT UNIQUE NOT NULL,
+    het_han TEXT NOT NULL,
+    da_dung INTEGER DEFAULT 0,
+    ngay_tao TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
 );

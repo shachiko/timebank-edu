@@ -36,7 +36,7 @@
                 <input class="form-check-input" type="checkbox" id="rememberMe">
                 <label class="form-check-label small text-muted" for="rememberMe">Ghi nhớ đăng nhập</label>
               </div>
-              <a href="#" class="small text-decoration-none text-primary" onclick="alert('Vui lòng liên hệ Thầy/Cô quản trị viên để được cấp lại mật khẩu!'); return false;">Quên mật khẩu?</a>
+              <a href="{{ url_for('forgot_password') }}" class="small text-decoration-none text-primary fw-semibold">Quên mật khẩu?</a>
             </div>
 
             <button type="submit" class="btn btn-brand w-100 py-2 fw-semibold">
@@ -51,15 +51,54 @@
             </a>
           </div>
 
-          <!-- Gợi ý tài khoản demo cho Ban Giám Khảo & Thầy Cô -->
-          <div class="mt-4 p-3 bg-light rounded-3 small">
-            <div class="fw-bold text-dark mb-1"><i class="bi bi-info-circle text-primary me-1"></i> Tài khoản trải nghiệm sẵn:</div>
-            <ul class="list-unstyled mb-0 text-muted ps-1" style="font-size: 0.8rem;">
-              <li>• <strong>Quản trị viên (Admin):</strong> <code>admin</code> / <code>admin123</code></li>
-              <li>• <strong>Giáo viên:</strong> <code>GV001</code> / <code>admin123</code></li>
-              <li>• <strong>Học sinh giỏi Toán:</strong> <code>HS12001</code> / <code>admin123</code></li>
-            </ul>
+          <!-- HỘP TÀI KHOẢN DEMO CHO GIÁM KHẢO (PROMPT 23 - VIỆC 1) -->
+          <div class="mt-4 p-3 rounded-3 border bg-light shadow-sm">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <span class="fw-bold text-dark small">
+                <i class="bi bi-person-badge-fill text-warning me-1"></i> Tài khoản demo cho giám khảo
+              </span>
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 0.7rem;">Mật khẩu: demo123</span>
+            </div>
+            <p class="text-muted mb-2" style="font-size: 0.78rem;">
+              Dành riêng cho Ban Giám Khảo trải nghiệm trong môi trường <strong>Trường Demo</strong> độc lập (không chạm dữ liệu thật):
+            </p>
+            <div class="d-grid gap-1">
+              <button type="button" class="btn btn-outline-secondary btn-sm text-start py-1 px-2 d-flex justify-content-between align-items-center" onclick="fillDemo('demo_quantruong', 'demo123')">
+                <span style="font-size: 0.78rem;">
+                  <i class="bi bi-building me-1 text-primary"></i><strong>demo_quantruong</strong> <span class="text-muted">(Quản trị trường)</span>
+                </span>
+                <span class="badge bg-light text-secondary border">Điền nhanh</span>
+              </button>
+              <button type="button" class="btn btn-outline-secondary btn-sm text-start py-1 px-2 d-flex justify-content-between align-items-center" onclick="fillDemo('demo_giaovien', 'demo123')">
+                <span style="font-size: 0.78rem;">
+                  <i class="bi bi-mortarboard me-1 text-success"></i><strong>demo_giaovien</strong> <span class="text-muted">(Giáo viên)</span>
+                </span>
+                <span class="badge bg-light text-secondary border">Điền nhanh</span>
+              </button>
+              <button type="button" class="btn btn-outline-secondary btn-sm text-start py-1 px-2 d-flex justify-content-between align-items-center" onclick="fillDemo('demo_hocsinh', 'demo123')">
+                <span style="font-size: 0.78rem;">
+                  <i class="bi bi-person-fill me-1 text-info"></i><strong>demo_hocsinh</strong> <span class="text-muted">(Học sinh)</span>
+                </span>
+                <span class="badge bg-light text-secondary border">Điền nhanh</span>
+              </button>
+            </div>
+            <div class="mt-2 pt-2 border-top text-muted d-flex justify-content-between align-items-center" style="font-size: 0.75rem;">
+              <span>Hoặc tài khoản <code>admin</code> / <code>admin123</code></span>
+              <a href="javascript:void(0)" class="text-decoration-none" onclick="fillDemo('admin', 'admin123')">Điền admin</a>
+            </div>
           </div>
+
+          <script>
+            function fillDemo(user, pass) {
+              const uInput = document.getElementById('ma_hoc_sinh');
+              const pInput = document.getElementById('mat_khau');
+              if (uInput && pInput) {
+                uInput.value = user;
+                pInput.value = pass;
+                uInput.focus();
+              }
+            }
+          </script>
         </div>
       </div>
     </div>

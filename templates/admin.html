@@ -36,6 +36,20 @@
       </form>
       {% endif %}
 
+      {% if is_super_admin %}
+      <a href="{{ url_for('admin_accounts') }}" class="btn btn-danger btn-sm rounded-pill fw-semibold">
+        <i class="bi bi-people-fill me-1"></i> Quản lý Tài khoản
+      </a>
+      {% endif %}
+
+      {% if session.get('truong_id') == 99 or is_super_admin %}
+      <form action="{{ url_for('reset_demo_data_route') }}" method="POST" class="d-inline" onsubmit="return confirm('Khôi phục dữ liệu Trường Demo về trạng thái ban đầu?');">
+        <button type="submit" class="btn btn-warning btn-sm rounded-pill fw-semibold">
+          <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Demo
+        </button>
+      </form>
+      {% endif %}
+
       <a href="{{ url_for('export_data_csv') }}" class="btn btn-success btn-sm shadow-sm rounded-pill">
         <i class="bi bi-file-earmark-spreadsheet me-1"></i> Xuất CSV
       </a>

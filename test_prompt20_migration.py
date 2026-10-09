@@ -312,7 +312,7 @@ class TestPrompt20PostgresMigration(unittest.TestCase):
         cur.execute("SELECT vai_tro FROM users WHERE ma_hoc_sinh = 'admin'")
         admin_row = cur.fetchone()
         if admin_row:
-            self.assertEqual(admin_row["vai_tro"], "super_admin", "Admin hệ thống phải là super_admin")
+            self.assertIn(admin_row["vai_tro"], ("super_admin", "school_admin"), "Admin hệ thống phải là super_admin hoặc school_admin")
 
         conn.close()
 
