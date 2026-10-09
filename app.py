@@ -2182,7 +2182,7 @@ def profile():
             JOIN skills sk ON s.skill_id = sk.id
             WHERE s.nguoi_hoc_id = ?
             GROUP BY sk.linh_vuc
-            ORDER BY so_luong DESC, s.id DESC
+            ORDER BY so_luong DESC, MAX(s.id) DESC
             LIMIT 1
         """, (user["id"],))
         learned_sub = cur.fetchone()
@@ -2196,7 +2196,7 @@ def profile():
                 FROM skills
                 WHERE trang_thai_duyet = 'da_duyet'
                 GROUP BY linh_vuc
-                ORDER BY so_luong DESC, id DESC
+                ORDER BY so_luong DESC, MAX(id) DESC
                 LIMIT 1
             """)
             pop_sub = cur.fetchone()
