@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS truong (
     ten_truong TEXT NOT NULL,
     logo TEXT,
     trang_thai TEXT CHECK(trang_thai IN ('dang_thi_diem', 'chuan_bi_trien_khai', 'dang_su_dung', 'vo_hieu_hoa')) DEFAULT 'dang_thi_diem',
+    an_truong INTEGER DEFAULT 0,
     ngay_tao TEXT DEFAULT CURRENT_TIMESTAMP
 );
 

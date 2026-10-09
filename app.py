@@ -213,7 +213,10 @@ def inject_template_globals():
     try:
         db = get_db()
         cur = db.cursor()
-        cur.execute("SELECT * FROM truong ORDER BY id ASC")
+        if is_super_admin():
+            cur.execute("SELECT *, COALESCE(an_truong, 0) AS an_truong FROM truong ORDER BY id ASC")
+        else:
+            cur.execute("SELECT *, COALESCE(an_truong, 0) AS an_truong FROM truong WHERE COALESCE(an_truong, 0) = 0 ORDER BY id ASC")
         all_schools = cur.fetchall()
     except Exception:
         all_schools = []
@@ -660,6 +663,7 @@ def migrate_postgres_schema(conn):
                     ten_truong TEXT NOT NULL,
                     logo TEXT,
                     trang_thai TEXT CHECK(trang_thai IN ('dang_thi_diem', 'chuan_bi_trien_khai', 'dang_su_dung', 'vo_hieu_hoa')) DEFAULT 'dang_thi_diem',
+                    an_truong INTEGER DEFAULT 0,
                     ngay_tao TEXT DEFAULT CURRENT_TIMESTAMP
                 )
             """)
@@ -670,6 +674,7 @@ def migrate_postgres_schema(conn):
                     ten_truong TEXT NOT NULL,
                     logo TEXT,
                     trang_thai TEXT CHECK(trang_thai IN ('dang_thi_diem', 'chuan_bi_trien_khai', 'dang_su_dung', 'vo_hieu_hoa')) DEFAULT 'dang_thi_diem',
+                    an_truong INTEGER DEFAULT 0,
                     ngay_tao TEXT DEFAULT CURRENT_TIMESTAMP
                 )
             """)
@@ -684,6 +689,7 @@ def migrate_postgres_schema(conn):
     # 1. users: ADD COLUMN IF NOT EXISTS truong_id, trang_thai
     # 2. skills: ADD COLUMN IF NOT EXISTS truong_id, hien_thi_cong_dong, trang_thai_cong_dong, nguoi_duyet_cong_dong_id, ngay_duyet_cong_dong
     # 3. sessions, ratings, community_tasks, task_registrations, blog_posts: ADD COLUMN IF NOT EXISTS truong_id
+    # 4. truong: ADD COLUMN IF NOT EXISTS an_truong
     columns_to_add = [
         # 1. users
         ("users", "truong_id", "INTEGER DEFAULT 1"),
@@ -704,6 +710,8 @@ def migrate_postgres_schema(conn):
         ("community_tasks", "anh_bia", "TEXT"),
         ("task_registrations", "truong_id", "INTEGER DEFAULT 1"),
         ("blog_posts", "truong_id", "INTEGER DEFAULT 1"),
+        # 4. truong
+        ("truong", "an_truong", "INTEGER DEFAULT 0"),
     ]
 
     for tbl, col_name, col_def in columns_to_add:
@@ -733,6 +741,13 @@ def migrate_postgres_schema(conn):
                     conn.rollback()
                 except Exception:
                     pass
+
+    # Đặt an_truong = 1 cho Trường Demo (ID 99) mặc định
+    try:
+        _exec("UPDATE truong SET an_truong = 1 WHERE id = ?", (DEMO_SCHOOL_ID,))
+        conn.commit()
+    except Exception as e:
+        app.logger.warning(f"Lỗi cập nhật an_truong cho Trường Demo: {e}")
 
     # 4. Cập nhật CHECK vai_tro của bảng users để chấp nhận 'super_admin' và 'school_admin'
     if is_sqlite:
@@ -1203,6 +1218,16 @@ def init_db():
         """)
         conn.commit()
 
+        # Prompt 32: Đảm bảo cột an_truong tồn tại trong bảng truong (SQLite)
+        cur.execute("PRAGMA table_info(truong)")
+        t_cols = [r[1] for r in cur.fetchall()]
+        if "an_truong" not in t_cols:
+            conn.execute("ALTER TABLE truong ADD COLUMN an_truong INTEGER DEFAULT 0")
+            conn.commit()
+        # Đặt an_truong = 1 cho Trường Demo (ID 99) mặc định
+        conn.execute("UPDATE truong SET an_truong = 1 WHERE id = ?", (DEMO_SCHOOL_ID,))
+        conn.commit()
+
         # Nâng cấp CHECK constraint cho bảng truong để chấp nhận 'vo_hieu_hoa'
         cur.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='truong'")
         t_row = cur.fetchone()
@@ -1280,7 +1305,7 @@ def seed_demo_school_and_accounts(conn):
     if not cur.fetchone():
         try:
             cur.execute(
-                "INSERT INTO truong (id, ten_truong, logo, trang_thai) VALUES (?, ?, ?, ?)",
+                "INSERT INTO truong (id, ten_truong, logo, trang_thai, an_truong) VALUES (?, ?, ?, ?, 1)",
                 (DEMO_SCHOOL_ID, DEMO_SCHOOL_NAME, "/static/img/logo_timebank_edu.png", "dang_thi_diem")
             )
             conn.commit()
@@ -1499,23 +1524,25 @@ def seed_demo_data(conn):
     school_count = cur.fetchone()[0]
     if school_count == 0:
         schools = [
-            (1, "Trường Tiểu học, THCS, THPT Quốc tế song ngữ học viện Anh Quốc-UK Academy", "/static/img/logo_timebank_edu.png", "dang_thi_diem"),
-            (2, "Trường THCS Nguyễn Văn Thuộc", "/static/img/logo_timebank_edu.png", "chuan_bi_trien_khai"),
-            (3, "Trường THCS Lê Văn Tám", "/static/img/logo_timebank_edu.png", "chuan_bi_trien_khai"),
-            (4, "Trường THPT Hải Đảo", "/static/img/logo_timebank_edu.png", "chuan_bi_trien_khai"),
-            (DEMO_SCHOOL_ID, DEMO_SCHOOL_NAME, "/static/img/logo_timebank_edu.png", "dang_thi_diem")
+            (1, "Trường Tiểu học, THCS, THPT Quốc tế song ngữ học viện Anh Quốc-UK Academy", "/static/img/logo_timebank_edu.png", "dang_thi_diem", 0),
+            (2, "Trường THCS Nguyễn Văn Thuộc", "/static/img/logo_timebank_edu.png", "chuan_bi_trien_khai", 0),
+            (3, "Trường THCS Lê Văn Tám", "/static/img/logo_timebank_edu.png", "chuan_bi_trien_khai", 0),
+            (4, "Trường THPT Hải Đảo", "/static/img/logo_timebank_edu.png", "chuan_bi_trien_khai", 0),
+            (DEMO_SCHOOL_ID, DEMO_SCHOOL_NAME, "/static/img/logo_timebank_edu.png", "dang_thi_diem", 1)
         ]
         cur.executemany(
-            """INSERT INTO truong (id, ten_truong, logo, trang_thai) VALUES (?, ?, ?, ?)""",
+            """INSERT INTO truong (id, ten_truong, logo, trang_thai, an_truong) VALUES (?, ?, ?, ?, ?)""",
             schools
         )
     else:
         cur.execute("SELECT COUNT(*) FROM truong WHERE id = ?", (DEMO_SCHOOL_ID,))
         if cur.fetchone()[0] == 0:
             cur.execute(
-                """INSERT INTO truong (id, ten_truong, logo, trang_thai) VALUES (?, ?, ?, ?)""",
+                """INSERT INTO truong (id, ten_truong, logo, trang_thai, an_truong) VALUES (?, ?, ?, ?, 1)""",
                 (DEMO_SCHOOL_ID, DEMO_SCHOOL_NAME, "/static/img/logo_timebank_edu.png", "dang_thi_diem")
             )
+        else:
+            cur.execute("UPDATE truong SET an_truong = 1 WHERE id = ?", (DEMO_SCHOOL_ID,))
 
     # 1. Thêm người dùng mẫu (admin hạ quyền thành school_admin của Trường Demo)
     users = [
@@ -1888,7 +1915,7 @@ def index():
         "nhiem_vu_gan_nhat": nhiem_vu_gan_nhat
     }
 
-    cur.execute("SELECT * FROM truong ORDER BY id ASC")
+    cur.execute("SELECT * FROM truong WHERE COALESCE(an_truong, 0) = 0 ORDER BY id ASC")
     schools = cur.fetchall()
     
     return render_template(
@@ -1919,7 +1946,7 @@ def check_invite_code():
     db = get_db()
     cur = db.cursor()
     cur.execute("""
-        SELECT ic.*, t.ten_truong, t.trang_thai AS trang_thai_truong
+        SELECT ic.*, t.ten_truong, t.trang_thai AS trang_thai_truong, COALESCE(t.an_truong, 0) AS an_truong
         FROM invite_codes ic
         JOIN truong t ON ic.truong_id = t.id
         WHERE ic.ma_code = ?
@@ -1928,8 +1955,8 @@ def check_invite_code():
     if not row:
         return jsonify({"valid": False, "error": "Mã mời không tồn tại trên hệ thống!"})
 
-    if row["trang_thai_truong"] == "vo_hieu_hoa":
-        return jsonify({"valid": False, "error": "Trường học gắn với mã mời này hiện đang tạm dừng hoạt động / vô hiệu hóa!"})
+    if row["an_truong"] == 1 or row["trang_thai_truong"] == "vo_hieu_hoa":
+        return jsonify({"valid": False, "error": "Trường học gắn với mã mời này hiện đang tạm dừng hoạt động hoặc đã bị ẩn / vô hiệu hóa!"})
 
     if row["da_dung"] >= row["so_luot_toi_da"]:
         return jsonify({"valid": False, "error": "Mã mời này đã hết số lượt sử dụng!"})
@@ -1951,14 +1978,14 @@ def register():
     - Nhập mã mời hợp lệ (TBEDU-XXXX-XXXX) -> tự gán đúng trường, kích hoạt ngay (trang_thai = 'hoat_dong').
     - Không có mã mời -> tự chọn trường trong dropdown -> vào hàng chờ (trang_thai = 'cho_duyet').
     - Cấp vốn khởi tạo mặc định: 2.0 giờ tín dụng.
-    - Trường bị vô hiệu hóa (vo_hieu_hoa) sẽ bị ẩn khỏi dropdown và từ chối đăng ký.
+    - Trường bị vô hiệu hóa hoặc ẩn (an_truong=1 / vo_hieu_hoa) sẽ bị ẩn khỏi dropdown và từ chối đăng ký.
     """
     if "user_id" in session:
         return redirect(url_for("profile"))
 
     db = get_db()
     cur = db.cursor()
-    cur.execute("SELECT * FROM truong WHERE trang_thai != 'vo_hieu_hoa' ORDER BY id ASC")
+    cur.execute("SELECT * FROM truong WHERE COALESCE(an_truong, 0) = 0 AND trang_thai != 'vo_hieu_hoa' ORDER BY id ASC")
     all_schools = cur.fetchall()
 
     if request.method == "POST":
@@ -1995,9 +2022,9 @@ def register():
         matched_invite_code = None
 
         if ma_code:
-            # Xác thực mã mời kèm kiểm tra trường có bị vô hiệu hóa không
+            # Xác thực mã mời kèm kiểm tra trường có bị vô hiệu hóa hoặc ẩn không
             cur.execute("""
-                SELECT ic.*, t.trang_thai AS trang_thai_truong
+                SELECT ic.*, t.trang_thai AS trang_thai_truong, COALESCE(t.an_truong, 0) AS an_truong
                 FROM invite_codes ic
                 JOIN truong t ON ic.truong_id = t.id
                 WHERE ic.ma_code = ?
@@ -2006,8 +2033,8 @@ def register():
             if not code_row:
                 flash("Mã mời không tồn tại trên hệ thống. Vui lòng kiểm tra lại!", "danger")
                 return render_template("register.html", all_schools=all_schools, schools=all_schools)
-            if code_row["trang_thai_truong"] == "vo_hieu_hoa":
-                flash("Trường học gắn với mã mời này hiện đang tạm dừng hoạt động / vô hiệu hóa!", "danger")
+            if code_row["an_truong"] == 1 or code_row["trang_thai_truong"] == "vo_hieu_hoa":
+                flash("Trường học gắn với mã mời này hiện đang tạm dừng hoạt động hoặc đã bị ẩn / vô hiệu hóa!", "danger")
                 return render_template("register.html", all_schools=all_schools, schools=all_schools)
             if code_row["da_dung"] >= code_row["so_luot_toi_da"]:
                 flash("Mã mời này đã hết số lượt sử dụng!", "danger")
@@ -2024,10 +2051,10 @@ def register():
             else:
                 assigned_truong_id = 1
 
-            cur.execute("SELECT trang_thai FROM truong WHERE id = ?", (assigned_truong_id,))
+            cur.execute("SELECT trang_thai, COALESCE(an_truong, 0) AS an_truong FROM truong WHERE id = ?", (assigned_truong_id,))
             target_school_row = cur.fetchone()
-            if target_school_row and target_school_row["trang_thai"] == "vo_hieu_hoa":
-                flash("Trường học bạn chọn hiện đang tạm dừng hoạt động / vô hiệu hóa!", "danger")
+            if target_school_row and (target_school_row["an_truong"] == 1 or target_school_row["trang_thai"] == "vo_hieu_hoa"):
+                flash("Trường học bạn chọn hiện đang tạm dừng hoạt động hoặc đã bị ẩn / vô hiệu hóa!", "danger")
                 return render_template("register.html", all_schools=all_schools, schools=all_schools)
             initial_status = "cho_duyet"
 
@@ -2807,13 +2834,16 @@ def admin_dashboard():
     community_approved_skills = cur.fetchall()
 
     # Danh sách các trường học
-    cur.execute("SELECT * FROM truong ORDER BY id ASC")
+    if is_super:
+        cur.execute("SELECT *, COALESCE(an_truong, 0) AS an_truong FROM truong ORDER BY id ASC")
+    else:
+        cur.execute("SELECT *, COALESCE(an_truong, 0) AS an_truong FROM truong WHERE COALESCE(an_truong, 0) = 0 ORDER BY id ASC")
     all_schools = cur.fetchall()
 
     all_schools_management = []
     if is_super:
         cur.execute("""
-            SELECT t.id, t.ten_truong, t.logo, t.trang_thai, t.ngay_tao,
+            SELECT t.id, t.ten_truong, t.logo, t.trang_thai, t.ngay_tao, COALESCE(t.an_truong, 0) AS an_truong,
                    (SELECT COUNT(*) FROM users u WHERE u.truong_id = t.id) AS so_tai_khoan
             FROM truong t
             ORDER BY t.id ASC
@@ -3245,17 +3275,26 @@ def admin_create_school():
     - Tự sinh truong_id tiếp theo (không đè ID 99 của Trường Demo)
     - Validate: tên trường bắt buộc, không trùng (case-insensitive)
     - Hỗ trợ tải logo ảnh thực tế hoặc dùng logo mặc định
-    - Trạng thái ban đầu: dang_thi_diem / chuan_bi_trien_khai / dang_su_dung
+    - Trạng thái ban đầu: chuan_bi_trien_khai / dang_thi_diem / dang_hoat_dong / tam_ngung
+    - an_truong mặc định 0 (nếu tam_ngung thì an_truong = 1)
     """
     ten_truong = request.form.get("ten_truong", "").strip()
-    trang_thai = request.form.get("trang_thai", "dang_thi_diem").strip()
+    raw_status = request.form.get("trang_thai", "dang_thi_diem").strip()
 
     if not ten_truong:
         flash("Tên trường học không được để trống!", "danger")
         return redirect(url_for("admin_dashboard", _anchor="tab-schools"))
 
-    if trang_thai not in ("dang_thi_diem", "chuan_bi_trien_khai", "dang_su_dung"):
-        trang_thai = "dang_thi_diem"
+    status_map = {
+        "dang_thi_diem": "dang_thi_diem",
+        "chuan_bi_trien_khai": "chuan_bi_trien_khai",
+        "dang_hoat_dong": "dang_su_dung",
+        "dang_su_dung": "dang_su_dung",
+        "tam_ngung": "vo_hieu_hoa",
+        "vo_hieu_hoa": "vo_hieu_hoa"
+    }
+    trang_thai = status_map.get(raw_status, "dang_thi_diem")
+    an_truong = 1 if trang_thai == "vo_hieu_hoa" else 0
 
     db = get_db()
     cur = db.cursor()
@@ -3291,9 +3330,9 @@ def admin_create_school():
 
     now_dt = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     cur.execute("""
-        INSERT INTO truong (id, ten_truong, logo, trang_thai, ngay_tao)
-        VALUES (?, ?, ?, ?, ?)
-    """, (next_id, ten_truong, logo_url, trang_thai, now_dt))
+        INSERT INTO truong (id, ten_truong, logo, trang_thai, an_truong, ngay_tao)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (next_id, ten_truong, logo_url, trang_thai, an_truong, now_dt))
 
     if is_postgres_configured():
         try:
@@ -3326,14 +3365,21 @@ def admin_edit_school(school_id):
         return redirect(url_for("admin_dashboard", _anchor="tab-schools"))
 
     ten_truong = request.form.get("ten_truong", "").strip()
-    trang_thai = request.form.get("trang_thai", school["trang_thai"]).strip()
+    raw_status = request.form.get("trang_thai", school["trang_thai"]).strip()
 
     if not ten_truong:
         flash("Tên trường học không được để trống!", "danger")
         return redirect(url_for("admin_dashboard", _anchor="tab-schools"))
 
-    if trang_thai not in ("dang_thi_diem", "chuan_bi_trien_khai", "dang_su_dung", "vo_hieu_hoa"):
-        trang_thai = school["trang_thai"]
+    status_map = {
+        "dang_thi_diem": "dang_thi_diem",
+        "chuan_bi_trien_khai": "chuan_bi_trien_khai",
+        "dang_hoat_dong": "dang_su_dung",
+        "dang_su_dung": "dang_su_dung",
+        "tam_ngung": "vo_hieu_hoa",
+        "vo_hieu_hoa": "vo_hieu_hoa"
+    }
+    trang_thai = status_map.get(raw_status, school["trang_thai"])
 
     cur.execute("SELECT id FROM truong WHERE LOWER(TRIM(ten_truong)) = LOWER(?) AND id != ?", (ten_truong, school_id))
     if cur.fetchone():
@@ -3350,22 +3396,27 @@ def admin_edit_school(school_id):
             file.save(str(upload_dir / filename))
             logo_url = f"/static/uploads/schools/{filename}"
 
+    # Cập nhật an_truong nếu chuyển sang tạm ngưng / hoặc giữ nguyên
+    new_an = 1 if trang_thai == "vo_hieu_hoa" else (0 if trang_thai == "dang_su_dung" else (school["an_truong"] if "an_truong" in school.keys() else 0))
+
     cur.execute("""
         UPDATE truong 
-        SET ten_truong = ?, logo = ?, trang_thai = ?
+        SET ten_truong = ?, logo = ?, trang_thai = ?, an_truong = ?
         WHERE id = ?
-    """, (ten_truong, logo_url, trang_thai, school_id))
+    """, (ten_truong, logo_url, trang_thai, new_an, school_id))
     db.commit()
     flash(f"Đã cập nhật thông tin trường '{ten_truong}' thành công!", "success")
     return redirect(url_for("admin_dashboard", _anchor="tab-schools"))
 
 
+@app.route("/admin/schools/<int:school_id>/toggle-hide", methods=["POST"])
 @app.route("/admin/schools/<int:school_id>/toggle-status", methods=["POST"])
 @super_admin_required
 def admin_toggle_school_status(school_id):
     """
-    Vô hiệu hóa hoặc kích hoạt lại trường học (không xóa cứng):
-    - Trường Demo (ID 99) không cho phép sửa/xóa/vô hiệu hóa
+    Ẩn hoặc Hiện lại trường học (thay cho xóa cứng):
+    - Trường Demo (ID 99) không cho phép sửa/xóa/ẩn
+    - Toggle an_truong (0 <-> 1) và đồng bộ trang_thai
     """
     if school_id == DEMO_SCHOOL_ID:
         flash("Trường Demo (ID 99) là trường mẫu của hệ thống, không được phép vô hiệu hóa!", "warning")
@@ -3379,17 +3430,19 @@ def admin_toggle_school_status(school_id):
         flash("Không tìm thấy trường học!", "danger")
         return redirect(url_for("admin_dashboard", _anchor="tab-schools"))
 
-    curr_status = school["trang_thai"]
-    if curr_status == "vo_hieu_hoa":
-        new_status = "dang_su_dung"
-        msg = f"Đã kích hoạt lại trường '{school['ten_truong']}'! Trường đã sẵn sàng đón nhận đăng ký mới."
+    curr_an = school["an_truong"] if ("an_truong" in school.keys() and school["an_truong"] is not None) else (1 if school["trang_thai"] == "vo_hieu_hoa" else 0)
+    if curr_an == 1 or school["trang_thai"] == "vo_hieu_hoa":
+        new_an = 0
+        new_status = "dang_su_dung" if school["trang_thai"] == "vo_hieu_hoa" else school["trang_thai"]
+        msg = f"Đã hiện lại trường / Đã kích hoạt lại trường '{school['ten_truong']}'! Trường đã sẵn sàng đón nhận đăng ký mới."
         cat = "success"
     else:
+        new_an = 1
         new_status = "vo_hieu_hoa"
-        msg = f"Đã vô hiệu hóa trường '{school['ten_truong']}'. Trường đã bị ẩn khỏi danh sách đăng ký học sinh."
+        msg = f"Đã ẩn trường / Đã vô hiệu hóa trường '{school['ten_truong']}'. Trường đã bị ẩn khỏi danh sách học sinh và trang chủ."
         cat = "warning"
 
-    cur.execute("UPDATE truong SET trang_thai = ? WHERE id = ?", (new_status, school_id))
+    cur.execute("UPDATE truong SET an_truong = ?, trang_thai = ? WHERE id = ?", (new_an, new_status, school_id))
     db.commit()
     flash(msg, cat)
     return redirect(url_for("admin_dashboard", _anchor="tab-schools"))
@@ -3778,7 +3831,7 @@ def community_market():
     cur.execute(sql, params)
     skills = cur.fetchall()
 
-    cur.execute("SELECT id, ten_truong FROM truong ORDER BY id ASC")
+    cur.execute("SELECT id, ten_truong FROM truong WHERE COALESCE(an_truong, 0) = 0 ORDER BY id ASC")
     all_schools = cur.fetchall()
 
     return render_template(

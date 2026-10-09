@@ -773,6 +773,47 @@ Nâng cấp giao diện người dùng và nhận diện thương hiệu học �
 - Test suite `test_prompt31_ui_wording_color.py` bao gồm 8 test cases chuyên sâu kiểm thử toàn diện từ ngữ, ngoặc kép và CSS phối màu.
 - Toàn bộ **30/30 bộ test trong hệ thống (100% PASS)** xác nhận regression pass hoàn hảo.
 
+---
+
+## 🏫 PROMPT 32 — QUẢN LÝ TRƯỜNG HỌC (THÊM / SỬA / ẨN TRƯỜNG HỌC)
+
+Nâng cấp trung tâm quản trị hệ thống cho Tổng Quản trị viên (Super Admin) đáp ứng nhu cầu phát triển mạng lưới trường học tham gia TimeBank EDU:
+
+### 1. Tab "Quản lý Trường học" trong `/admin` (Chỉ Super Admin):
+- **Form Thêm Trường Học Mới:**
+  - Tên trường học (*) với cơ chế tự động validate không để trống và không trùng lặp (case-insensitive).
+  - Tự động sinh `truong_id` kế tiếp (bảo vệ tránh trùng `DEMO_SCHOOL_ID = 99` của Trường Demo).
+  - Trạng thái ban đầu đầy đủ 4 tùy chọn: *Chuẩn bị triển khai*, *Đang thí điểm*, *Đang hoạt động*, *Tạm ngưng*.
+  - Upload ảnh logo trường học thực tế hoặc gán logo nhận diện chuẩn.
+- **Bảng Thống kê & Quản trị Danh sách Trường:**
+  - Cột mã trường định dạng chuẩn học đường: `Trường #ID`.
+  - Hiển thị logo, tên trường, trạng thái hoạt động và nhãn cảnh báo `Đã ẩn` (nếu trường bị ẩn).
+  - Thống kê thời gian thực số lượng tài khoản thuộc từng trường và ngày tạo.
+  - Cặp nút điều khiển tinh gọn: Nút **"Sửa"** (mở modal cập nhật tên, logo, trạng thái) và nút **"Ẩn trường" / "Hiện lại"** đặt ngay cạnh nhau trên từng dòng.
+  - **Tuyệt đối không có nút xóa cứng:** Bảo vệ 100% tính toàn vẹn dữ liệu, triệt tiêu nguy cơ mồ côi dữ liệu tài khoản, lịch sử học tập hay tín dụng giờ học.
+
+### 2. Cơ chế Ẩn / Hiện Trường Học (`an_truong`):
+- **Migration Idempotent:** Thêm cột `an_truong INTEGER DEFAULT 0` tương thích hoàn hảo cả SQLite cục bộ lẫn PostgreSQL production.
+- **Ẩn trường (`an_truong = 1`):**
+  - Biến mất hoàn toàn khỏi trang chủ (`/`), dropdown đăng ký (`/register`), sàn cộng đồng liên trường (`/community-market`) và các bộ lọc phía người dùng thông thường.
+  - Từ chối đăng ký mã mời của trường bị ẩn kèm thông báo rõ ràng cho phụ huynh/học sinh.
+- **Hiện lại (`an_truong = 0`):**
+  - Lập tức xuất hiện trở lại trên toàn bộ giao diện công khai và đón nhận đăng ký bình thường.
+- **Phân quyền Super Admin:**
+  - Tổng quản trị viên vẫn quan sát được toàn bộ danh sách trường trong bảng điều khiển và dropdown lọc với nhãn phân biệt rõ nét `(Đã ẩn)`.
+- **Bảo vệ Trường Demo (ID 99):**
+  - Thiết lập `an_truong = 1` mặc định để ẩn khỏi trang chủ và form đăng ký học sinh mới.
+  - Khóa cố định: Chặn mọi thao tác sửa tên, thay logo, ẩn hoặc xóa đối với Trường Demo.
+  - Bảo toàn đăng nhập cho 3 tài khoản demo công khai (`demo_quantruong`, `demo_giaovien`, `demo_hocsinh`) phục vụ giám khảo chấm thi.
+
+### 3. Chuẩn hóa từ ngữ toàn site:
+- Chuyển đổi toàn bộ tiền tố `Gian hàng #N` sang `Trường #N` ở mọi vị trí hiển thị người dùng.
+
+### 4. Nghiệm thu & Regression Suite:
+- Bộ test suite `test_prompt32_school_hide_management.py` (7 test cases chuyên sâu) kiểm thử tự động toàn diện.
+- Toàn bộ **31/31 bộ test trong hệ thống (100% PASS)** xác nhận chất lượng hệ thống đạt chuẩn tuyệt đối.
+
+
 
 
 
