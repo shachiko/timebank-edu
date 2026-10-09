@@ -302,3 +302,15 @@ CREATE TABLE IF NOT EXISTS document_downloads (
     FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+-- 22. BẢNG ĐĂNG KÝ TƯ VẤN TRIỂN KHAI (CONSULTATION REQUESTS): Tiếp nhận liên hệ từ các trường học
+CREATE TABLE IF NOT EXISTS tu_van_trien_khai (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ten_truong TEXT NOT NULL,
+    ho_ten TEXT NOT NULL,
+    sdt TEXT NOT NULL,
+    email TEXT,
+    ghi_chu TEXT,
+    trang_thai TEXT DEFAULT 'cho_lien_he' CHECK(trang_thai IN ('cho_lien_he', 'da_lien_he', 'da_chuyen_giao')),
+    thoi_gian_gui TEXT DEFAULT CURRENT_TIMESTAMP
+);

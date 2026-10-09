@@ -22,7 +22,7 @@
   <!-- CSS Tùy chỉnh của dự án -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   
-  <!-- Tự động đồng bộ màu chủ đạo từ file config.yaml -->
+  <!-- Tự động đồng bộ màu chủ đạo của nhà trường -->
   <style>
     :root {
       --brand-color: {{ config.mau_chu_dao }};
@@ -308,10 +308,9 @@
             {{ config.dong_gioi_thieu }}
           </p>
           <div class="p-3 rounded-3 mb-3" style="background: rgba(255,255,255,0.06); border-left: 3px solid #F5B301;">
-            <p class="small text-light mb-0">
-              <i class="bi bi-shield-check text-warning me-1"></i>
-              <strong>Sản phẩm bản quyền thuộc cá nhân:</strong> Cô giáo Nguyễn Thị Huyền — Sáng kiến Ngân hàng Thời gian Học đường.
-            </p>
+            <p class="small text-light mb-1 fw-bold">Tác giả sáng kiến & Thiết kế hệ sinh thái số:</p>
+            <p class="small text-white-50 mb-1">Cô giáo Nguyễn Thị Huyền — Giáo viên Tin học, Trường Tiểu học, THCS, THPT Quốc tế song ngữ học viện Anh Quốc-UK Academy</p>
+            <p class="small text-white-50 mb-0">Bản quyền toàn vẹn về mô hình sư phạm và giải pháp kiến trúc công nghệ School Time Bank.</p>
           </div>
         </div>
 

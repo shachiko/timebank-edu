@@ -2,6 +2,10 @@
 .env
 .env.*
 !.env.example
+KeyMeet/
+*.pk
+*.pub
+*.pem
 
 # Python
 __pycache__/

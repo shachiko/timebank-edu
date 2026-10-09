@@ -17,7 +17,7 @@ import unittest
 import os
 import re
 from pathlib import Path
-from app import app, DATABASE_PATH, init_db
+from app import app, DATABASE_PATH, init_db, get_db
 
 class TestPrompt21UIPolish(unittest.TestCase):
     @classmethod
@@ -213,6 +213,187 @@ class TestPrompt21UIPolish(unittest.TestCase):
         for route in routes:
             r = self.client.get(route)
             self.assertEqual(r.status_code, 200, f"Route {route} phải trả về 200 OK")
+
+    def test_08_prompt21_plus_author_footer_exact_3_lines(self):
+        """
+        NGHIỆM THU PROMPT 21+ (Ý 12):
+        Footer tác giả thay bằng đúng 3 dòng:
+        1: 'Tác giả sáng kiến & Thiết kế hệ sinh thái số:'
+        2: 'Cô giáo Nguyễn Thị Huyền — Giáo viên Tin học, Trường Tiểu học, THCS, THPT Quốc tế song ngữ học viện Anh Quốc-UK Academy'
+        3: 'Bản quyền toàn vẹn về mô hình sư phạm và giải pháp kiến trúc công nghệ School Time Bank.'
+        """
+        res = self.client.get("/")
+        html = res.data.decode("utf-8")
+
+        line1 = "Tác giả sáng kiến & Thiết kế hệ sinh thái số:"
+        line2 = "Cô giáo Nguyễn Thị Huyền — Giáo viên Tin học, Trường Tiểu học, THCS, THPT Quốc tế song ngữ học viện Anh Quốc-UK Academy"
+        line3 = "Bản quyền toàn vẹn về mô hình sư phạm và giải pháp kiến trúc công nghệ School Time Bank."
+
+        self.assertIn(line1, html, "Footer thiếu dòng 1 thông tin tác giả")
+        self.assertIn(line2, html, "Footer thiếu dòng 2 thông tin cô giáo Huyền")
+        self.assertIn(line3, html, "Footer thiếu dòng 3 bản quyền mô hình")
+
+    def test_09_prompt21_plus_tagline_no_extra_duong(self):
+        """
+        NGHIỆM THU PROMPT 21+ (Ý 13):
+        Tagline: 'Mô hình giáo dục sáng tạo đa trường học đường:' ->
+        'Mô hình giáo dục sáng tạo đa trường học. Mỗi học sinh vừa là người học,
+        vừa là người thầy. Không dùng tiền mặt, mọi tri thức đều được trân trọng
+        công bằng thông qua tín dụng thời gian.'
+        Tuyệt đối không còn cụm 'đa trường học đường:'
+        """
+        res = self.client.get("/")
+        html = res.data.decode("utf-8")
+
+        expected_tagline = (
+            "Mô hình giáo dục sáng tạo đa trường học. Mỗi học sinh vừa là người học, "
+            "vừa là người thầy. Không dùng tiền mặt, mọi tri thức đều được trân trọng "
+            "công bằng thông qua tín dụng thời gian."
+        )
+        self.assertIn("Mô hình giáo dục sáng tạo đa trường học. Mỗi học sinh vừa là người học", html)
+        self.assertNotIn("đa trường học đường:", html)
+        self.assertNotIn("học đường: Mỗi học sinh", html)
+
+    def test_10_prompt21_plus_virtual_classroom_section(self):
+        """
+        NGHIỆM THU PROMPT 21+ (Ý 14):
+        Thêm section 'Lớp học ảo' nổi bật (sau hero, trước quy trình 4 bước):
+        - học ngay trên trình duyệt không cần cài app;
+        - không giới hạn thời lượng buổi học;
+        - đăng ký 1 lần tham gia mọi buổi;
+        - hình ảnh rõ nét + đầy đủ chức năng sư phạm (điểm danh tự động, dàn ý AI, quiz, nút báo cáo).
+        """
+        res = self.client.get("/")
+        html = res.data.decode("utf-8")
+
+        # Kiểm tra thứ tự: Hero -> Lớp học ảo -> Quy trình 4 bước
+        hero_pos = html.find('class="hero-section"')
+        virtual_pos = html.find('id="lop-hoc-ao"')
+        steps_pos = html.find('id="mo-hinh"')
+
+        self.assertGreater(virtual_pos, -1, "Phải có section lop-hoc-ao")
+        self.assertGreater(virtual_pos, hero_pos, "Section lớp học ảo phải đặt sau hero-section")
+        self.assertGreater(steps_pos, virtual_pos, "Section lớp học ảo phải đặt trước quy trình 4 bước (mo-hinh)")
+
+        # Kiểm tra đủ 4 ý sư phạm cốt lõi
+        self.assertIn("Học ngay trên trình duyệt", html)
+        self.assertIn("Không cần cài app", html)
+
+        self.assertIn("Không giới hạn thời lượng", html)
+
+        self.assertIn("Đăng ký 1 lần tham gia", html)
+        self.assertIn("Tham gia mọi buổi", html)
+
+        self.assertIn("Đầy đủ chức năng sư phạm", html)
+        self.assertIn("Hình ảnh rõ nét", html)
+        self.assertIn("điểm danh tự động", html)
+        self.assertIn("dàn ý AI", html)
+        self.assertIn("quiz", html)
+        self.assertIn("nút báo cáo", html)
+
+    def test_11_prompt21_plus_marquee_banner_with_dot_and_gradient(self):
+        """
+        NGHIỆM THU PROMPT 21+ (Ý 3, 15):
+        - Banner chạy chữ: 'Chào mừng bạn đã đến với công cụ giáo dục TIME BANK EDU.' (có dấu chấm)
+        - CSS: gradient giáo dục, chữ đọc rõ nét
+        """
+        res = self.client.get("/")
+        html = res.data.decode("utf-8")
+        self.assertIn("Chào mừng bạn đã đến với công cụ giáo dục TIME BANK EDU.", html)
+
+        css_file = self.static_dir / "css" / "style.css"
+        css_content = css_file.read_text(encoding="utf-8", errors="replace")
+        self.assertIn(".marquee-banner-wrapper", css_content)
+        self.assertIn("linear-gradient", css_content)
+
+    def test_12_prompt21_plus_consultation_form_db_and_smtp(self):
+        """
+        NGHIỆM THU PROMPT 21+ (Ý 16):
+        Form 'Đăng ký tư vấn triển khai':
+        - Lưu DB vào bảng tu_van_trien_khai
+        - Gửi email thông báo về mshuyenuka@gmail.com
+        - Thiếu biến môi trường SMTP -> chỉ lưu DB, ghi log warning, không crash!
+        """
+        import sqlite3
+        from unittest.mock import patch, MagicMock
+
+        # 1. Test submit khi KHÔNG có cấu hình SMTP (thiếu biến môi trường)
+        # Đảm bảo lưu DB thành công, trả về 200/redirect, không 500 crash
+        smtp_keys = ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS"]
+        old_smtp_vals = {k: os.environ.get(k) for k in smtp_keys}
+        for k in smtp_keys:
+            os.environ.pop(k, None)
+
+        try:
+            payload = {
+                "ten_truong": "THPT Chuyên Hạ Long",
+                "ho_ten": "Thầy Trần Văn Nam",
+                "sdt": "0912345678",
+                "email": "namtv@halong.edu.vn",
+                "ghi_chu": "Mong muốn thí điểm mô hình cho 2 khối 10 và 11"
+            }
+            res = self.client.post("/api/contact-consultation", json=payload)
+            self.assertEqual(res.status_code, 200)
+            data = res.get_json()
+            self.assertTrue(data["success"])
+            self.assertFalse(data["email_sent"], "Chưa có SMTP thì email_sent = False")
+
+            # Kiểm tra CSDL
+            with app.app_context():
+                db = get_db()
+                cur = db.cursor()
+                cur.execute("SELECT ten_truong, ho_ten, sdt, email FROM tu_van_trien_khai WHERE sdt = '0912345678'")
+                row = cur.fetchone()
+                self.assertIsNotNone(row, "Dữ liệu tư vấn phải được lưu vào bảng tu_van_trien_khai")
+                self.assertEqual(row[0], "THPT Chuyên Hạ Long")
+                self.assertEqual(row[1], "Thầy Trần Văn Nam")
+        finally:
+            for k, v in old_smtp_vals.items():
+                if v is not None:
+                    os.environ[k] = v
+                else:
+                    os.environ.pop(k, None)
+
+        # 2. Test submit khi CÓ cấu hình SMTP -> gọi gửi mail qua SMTP
+        with patch("app.send_consultation_notification_email") as mock_send_email:
+            mock_send_email.return_value = True
+            payload2 = {
+                "ten_truong": "THCS Bãi Cháy",
+                "ho_ten": "Cô Lê Thị Mai",
+                "sdt": "0987654321",
+                "email": "mailt@baichay.edu.vn",
+                "ghi_chu": "Đăng ký thành lập CLB Ngân hàng Thời gian"
+            }
+            res2 = self.client.post("/api/contact-consultation", json=payload2)
+            self.assertEqual(res2.status_code, 200)
+            data2 = res2.get_json()
+            self.assertTrue(data2["success"])
+            self.assertTrue(data2["email_sent"], "Có SMTP thì email_sent = True")
+            mock_send_email.assert_called_once_with(
+                "THCS Bãi Cháy", "Cô Lê Thị Mai", "0987654321", "mailt@baichay.edu.vn", "Đăng ký thành lập CLB Ngân hàng Thời gian"
+            )
+
+        # 3. Test trực tiếp hàm send_consultation_notification_email với smtplib mock
+        from app import send_consultation_notification_email
+        with patch.dict(os.environ, {
+            "SMTP_HOST": "smtp.gmail.com",
+            "SMTP_PORT": "587",
+            "SMTP_USER": "test@gmail.com",
+            "SMTP_PASS": "secretpass123"
+        }):
+            with patch("smtplib.SMTP") as mock_smtp_cls:
+                mock_smtp_inst = MagicMock()
+                mock_smtp_cls.return_value = mock_smtp_inst
+
+                sent = send_consultation_notification_email(
+                    "THPT Cẩm Phả", "Thầy Hoàng", "0900000000", "campha@edu.vn", "Thử nghiệm"
+                )
+                self.assertTrue(sent)
+                mock_smtp_cls.assert_called_with("smtp.gmail.com", 587, timeout=10)
+                self.assertTrue(mock_smtp_inst.sendmail.called)
+                args = mock_smtp_inst.sendmail.call_args[0]
+                self.assertEqual(args[0], "test@gmail.com")
+                self.assertEqual(args[1], ["mshuyenuka@gmail.com"])
 
 if __name__ == "__main__":
     unittest.main()

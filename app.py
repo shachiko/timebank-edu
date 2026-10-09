@@ -427,7 +427,6 @@ def get_db():
                     timeout=30.0
                 )
                 g.db.row_factory = sqlite3.Row
-                g.db.execute("PRAGMA foreign_keys = ON")
         else:
             g.db = sqlite3.connect(
                 DATABASE_PATH,
@@ -436,6 +435,7 @@ def get_db():
             )
             g.db.row_factory = sqlite3.Row
             g.db.execute("PRAGMA foreign_keys = ON")
+            g.db.execute("PRAGMA journal_mode = WAL")
     return g.db
 
 
@@ -763,6 +763,42 @@ def migrate_postgres_schema(conn):
         except Exception:
             pass
 
+    # 8. Bảng tu_van_trien_khai (Prompt 21+: Đăng ký tư vấn triển khai)
+    try:
+        if is_sqlite:
+            _exec("""
+                CREATE TABLE IF NOT EXISTS tu_van_trien_khai (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ten_truong TEXT NOT NULL,
+                    ho_ten TEXT NOT NULL,
+                    sdt TEXT NOT NULL,
+                    email TEXT,
+                    ghi_chu TEXT,
+                    trang_thai TEXT DEFAULT 'cho_lien_he',
+                    thoi_gian_gui TEXT DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+        else:
+            _exec("""
+                CREATE TABLE IF NOT EXISTS tu_van_trien_khai (
+                    id SERIAL PRIMARY KEY,
+                    ten_truong TEXT NOT NULL,
+                    ho_ten TEXT NOT NULL,
+                    sdt TEXT NOT NULL,
+                    email TEXT,
+                    ghi_chu TEXT,
+                    trang_thai TEXT DEFAULT 'cho_lien_he',
+                    thoi_gian_gui TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+        conn.commit()
+    except Exception as e:
+        app.logger.warning(f"Lỗi tạo bảng tu_van_trien_khai trong migrate_postgres_schema: {e}")
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+
 
 def init_db():
     """
@@ -819,6 +855,7 @@ def init_db():
     
     conn = sqlite3.connect(DATABASE_PATH)
     conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("PRAGMA journal_mode = WAL")
     
     with open(SCHEMA_PATH, "r", encoding="utf-8") as f:
         conn.executescript(f.read())
@@ -845,6 +882,21 @@ def init_db():
         task_cols = [r[1] for r in cur.fetchall()]
         if "anh_bia" not in task_cols:
             conn.execute("ALTER TABLE community_tasks ADD COLUMN anh_bia TEXT")
+        conn.commit()
+
+        # Prompt 21+: Đảm bảo bảng tu_van_trien_khai tồn tại
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS tu_van_trien_khai (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ten_truong TEXT NOT NULL,
+                ho_ten TEXT NOT NULL,
+                sdt TEXT NOT NULL,
+                email TEXT,
+                ghi_chu TEXT,
+                trang_thai TEXT DEFAULT 'cho_lien_he',
+                thoi_gian_gui TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
         conn.commit()
     except Exception as e:
         app.logger.warning(f"Lỗi nâng cấp cấu trúc bảng skills/community_tasks: {e}")
@@ -5738,6 +5790,141 @@ def documents_delete(doc_id):
 
     flash(f"Đã xóa tài liệu '{doc['tieu_de']}' khỏi hệ thống và Google Drive.", "success")
     return redirect(url_for("documents_index"))
+
+
+# ==============================================================================
+# PROMPT 21+: ĐĂNG KÝ TƯ VẤN TRIỂN KHAI & THÔNG BÁO EMAIL (SMTP)
+# ==============================================================================
+def send_consultation_notification_email(ten_truong, ho_ten, sdt, email="", ghi_chu=""):
+    """
+    Gửi email thông báo khi có trường học đăng ký tư vấn triển khai về mshuyenuka@gmail.com.
+    SMTP cấu hình qua biến môi trường: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS.
+    Thiếu biến môi trường hoặc gửi lỗi -> chỉ ghi log cảnh báo, trả về False, tuyệt đối không crash.
+    """
+    smtp_host = os.getenv("SMTP_HOST")
+    smtp_port = os.getenv("SMTP_PORT")
+    smtp_user = os.getenv("SMTP_USER")
+    smtp_pass = os.getenv("SMTP_PASS")
+
+    if not all([smtp_host, smtp_port, smtp_user, smtp_pass]):
+        app.logger.warning(
+            "Cấu hình SMTP chưa đầy đủ (SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS). "
+            "Bỏ qua bước gửi email, dữ liệu đăng ký tư vấn vẫn được lưu CSDL an toàn."
+        )
+        return False
+
+    try:
+        import smtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+
+        port = int(smtp_port)
+        recipient = "mshuyenuka@gmail.com"
+        subject = f"[TimeBank EDU] Đăng ký tư vấn triển khai từ {ten_truong}"
+
+        content = (
+            f"Kính gửi Ban Đề Án TimeBank EDU & Cô Nguyễn Thị Huyền,\n\n"
+            f"Hệ thống vừa tiếp nhận yêu cầu đăng ký tư vấn triển khai mới:\n"
+            f"- Tên trường học / Đơn vị: {ten_truong}\n"
+            f"- Họ tên người đại diện: {ho_ten}\n"
+            f"- Số điện thoại / Zalo: {sdt}\n"
+            f"- Email liên hệ: {email if email else 'Chưa cung cấp'}\n"
+            f"- Nhu cầu triển khai: {ghi_chu if ghi_chu else 'Không có ghi chú'}\n"
+            f"- Thời gian tiếp nhận: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}\n\n"
+            f"Trân trọng,\n"
+            f"Hệ thống School Time Bank"
+        )
+
+        msg = MIMEMultipart()
+        msg["From"] = smtp_user
+        msg["To"] = recipient
+        msg["Subject"] = subject
+        msg.attach(MIMEText(content, "plain", "utf-8"))
+
+        if port == 465:
+            server = smtplib.SMTP_SSL(smtp_host, port, timeout=10)
+        else:
+            server = smtplib.SMTP(smtp_host, port, timeout=10)
+            server.starttls()
+
+        server.login(smtp_user, smtp_pass)
+        server.sendmail(smtp_user, [recipient], msg.as_string())
+        server.quit()
+        app.logger.info(f"Đã gửi email thông báo tư vấn thành công tới {recipient}")
+        return True
+    except Exception as e:
+        app.logger.warning(f"Lỗi khi gửi email thông báo tư vấn qua SMTP ({e}), hệ thống không crash.")
+        return False
+
+
+@app.route("/api/contact-consultation", methods=["POST"])
+@app.route("/contact", methods=["POST"])
+@app.route("/api/tu-van", methods=["POST"])
+def submit_contact_consultation():
+    """
+    Xử lý gửi form 'Đăng ký tư vấn triển khai':
+    1. Tiếp nhận JSON hoặc form-data: ten_truong, ho_ten, sdt, email, ghi_chu.
+    2. Lưu vào CSDL bảng tu_van_trien_khai.
+    3. Gửi email thông báo tới mshuyenuka@gmail.com (nếu có cấu hình SMTP).
+    4. Không cấu hình SMTP hoặc lỗi gửi -> ghi log cảnh báo, không crash.
+    """
+    if request.is_json:
+        data = request.get_json() or {}
+        ten_truong = str(data.get("ten_truong") or "").strip()
+        ho_ten = str(data.get("ho_ten") or "").strip()
+        sdt = str(data.get("sdt") or "").strip()
+        email = str(data.get("email") or "").strip()
+        ghi_chu = str(data.get("ghi_chu") or "").strip()
+    else:
+        ten_truong = str(request.form.get("ten_truong") or "").strip()
+        ho_ten = str(request.form.get("ho_ten") or "").strip()
+        sdt = str(request.form.get("sdt") or "").strip()
+        email = str(request.form.get("email") or "").strip()
+        ghi_chu = str(request.form.get("ghi_chu") or "").strip()
+
+    if not ten_truong or not ho_ten or not sdt:
+        if request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return jsonify({"success": False, "message": "Vui lòng nhập đầy đủ Tên trường, Họ tên và Số điện thoại!"}), 400
+        flash("Vui lòng nhập đầy đủ Tên trường, Họ tên và Số điện thoại!", "warning")
+        return redirect(url_for("index") + "#contactForm")
+
+    db = get_db()
+    cur = db.cursor()
+    try:
+        cur.execute(
+            """
+            INSERT INTO tu_van_trien_khai (ten_truong, ho_ten, sdt, email, ghi_chu)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (ten_truong, ho_ten, sdt, email, ghi_chu)
+        )
+        db.commit()
+        last_id = cur.lastrowid
+    except Exception as e:
+        app.logger.error(f"Lỗi lưu CSDL đăng ký tư vấn triển khai: {e}")
+        try:
+            db.rollback()
+        except Exception:
+            pass
+        if request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return jsonify({"success": False, "message": "Có lỗi khi lưu dữ liệu đăng ký!"}), 500
+        flash("Có lỗi khi lưu thông tin. Vui lòng thử lại!", "danger")
+        return redirect(url_for("index") + "#contactForm")
+
+    # Gửi email thông báo (an toàn, không crash khi không có biến môi trường hoặc lỗi)
+    email_sent = send_consultation_notification_email(ten_truong, ho_ten, sdt, email, ghi_chu)
+
+    msg = f"Đăng ký tư vấn thành công! Cảm ơn Thầy/Cô {ho_ten} ({ten_truong}). Ban tổ chức sẽ liên hệ lại trong thời gian sớm nhất."
+    if request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return jsonify({
+            "success": True,
+            "message": msg,
+            "id": last_id,
+            "email_sent": email_sent
+        }), 200
+
+    flash(msg, "success")
+    return redirect(url_for("index") + "#contactForm")
 
 
 # ==============================================================================
