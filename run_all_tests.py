@@ -28,7 +28,8 @@ test_files = [
     "test_prompt22_three_engines.py",
     "test_prompt23_account_management.py",
     "test_prompt23_5_auto_superadmin.py",
-    "test_prompt24_postgres_groupby.py"
+    "test_prompt24_postgres_groupby.py",
+    "test_prompt24_drive_packages.py"
 ]
 
 results = {}

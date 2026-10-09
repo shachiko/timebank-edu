@@ -6610,7 +6610,10 @@ def documents_upload():
             ))
             db.commit()
 
-            flash(f"🎉 Tải lên tài liệu '{tieu_de}' thành công vào thư mục {mon_hoc} trên Google Drive 5TB!", "success")
+            if drive_result.get("storage_type") == "mock_drive":
+                flash(f"Tải lên kho tạm (chưa kết nối Drive), vui lòng liên hệ quản trị viên. Tài liệu '{tieu_de}' đã được lưu tạm.", "warning")
+            else:
+                flash(f"🎉 Tải lên tài liệu '{tieu_de}' thành công vào thư mục {mon_hoc} trên Google Drive 5TB!", "success")
             return redirect(url_for("documents_index"))
 
         except Exception as e:
