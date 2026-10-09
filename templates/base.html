@@ -40,18 +40,18 @@
 
   <!-- Thanh điều hướng chính: Header Nền Trắng, 5 Nhóm Dropdown Hiện Đại -->
   <nav class="navbar navbar-expand-lg navbar-custom sticky-top py-2 shadow-sm">
-    <div class="container-fluid px-lg-4 px-3">
+    <div class="container-fluid px-xl-4 px-lg-3 px-2">
       <!-- 1. Logo Trường & Thương hiệu -->
-      <a class="navbar-brand d-flex align-items-center gap-2 me-3 py-1" href="{{ url_for('index') }}">
-        <img src="{{ url_for('static', filename='img/logo_timebank_edu.png') }}" alt="Logo School Time Bank" style="height: 42px; width: auto; max-width: 155px; object-fit: contain;">
-        <span class="d-none d-md-inline-block ps-2 border-start border-secondary border-opacity-25">
+      <a class="navbar-brand d-flex align-items-center gap-2 me-lg-3 me-2 py-1" href="{{ url_for('index') }}">
+        <img src="{{ url_for('static', filename='img/logo_timebank_edu.png') }}" alt="Logo School Time Bank" class="brand-logo-img" style="height: 42px; width: auto; max-width: 155px; object-fit: contain;">
+        <span class="d-none d-md-inline-block ps-2 border-start border-secondary border-opacity-25 brand-text-wrapper">
           <strong class="brand-title-text d-block" style="font-size: 1.05rem; line-height: 1.15;">School Time Bank</strong>
           <small class="brand-sub-text fst-italic d-block" style="font-size: 0.75rem;">Ngân hàng Thời gian Học đường</small>
         </span>
       </a>
 
-      <!-- Nút Hamburger Toggle trên màn hình di động -->
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+      <!-- Nút Hamburger Toggle trên màn hình di động (< 1024px) -->
+      <button class="navbar-toggler border-0 p-2 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
 
@@ -177,16 +177,16 @@
         </ul>
 
         <!-- 3. Nút Đăng nhập/Đăng ký Pill cùng chiều cao HOẶC User Avatar Dropdown -->
-        <div class="d-flex align-items-center gap-2 mt-2 mt-lg-0">
+        <div class="d-flex align-items-center gap-2 mt-2 mt-lg-0 user-pill-container">
           {% if current_user %}
-            <!-- Menu người dùng đã đăng nhập -->
+            <!-- Menu người dùng đã đăng nhập: thu gọn tên + số dư, không tràn mép -->
             <div class="dropdown">
-              <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 p-1 px-2 rounded-pill user-pill text-dark fw-semibold" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <span class="badge rounded-circle text-white" style="background-color: #1B2A6B; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem;">
+              <a class="nav-link dropdown-toggle d-flex align-items-center gap-1 gap-sm-2 p-1 px-2 rounded-pill user-pill text-dark fw-semibold" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="{{ current_user.ho_ten }} ({{ "%.1f"|format(current_user.so_du_gio) }}h)">
+                <span class="badge rounded-circle text-white user-avatar-badge flex-shrink-0" style="background-color: #1B2A6B; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem;">
                   {{ current_user.ho_ten[0] | upper }}
                 </span>
-                <span class="d-none d-sm-inline-block">{{ current_user.ho_ten }}</span>
-                <span class="badge bg-success text-white py-1 px-2" style="font-size: 0.75rem;">
+                <span class="user-display-name text-truncate d-none d-sm-inline-block">{{ current_user.ho_ten }}</span>
+                <span class="badge bg-success text-white py-1 px-2 flex-shrink-0 user-balance-badge" style="font-size: 0.75rem;">
                   <i class="bi bi-clock-history me-1"></i>{{ "%.1f"|format(current_user.so_du_gio) }}h
                 </span>
               </a>
@@ -266,7 +266,7 @@
             </div>
           {% else %}
             <!-- 2 Nút Đăng nhập/Đăng ký: cùng bo góc pill, cùng chiều cao 38px, Đăng nhập = nút viền ghost, Đăng ký = nền đặc cam -->
-            <div class="d-flex align-items-center gap-2">
+            <div class="d-flex align-items-center gap-2 nav-auth-buttons">
               <a href="{{ url_for('login') }}" class="btn btn-auth-ghost">
                 <i class="bi bi-box-arrow-in-right me-1"></i>Đăng nhập
               </a>
