@@ -45,6 +45,9 @@
       <a href="{{ url_for('skills_approval') }}" class="btn btn-outline-primary btn-sm rounded-pill">
         <i class="bi bi-patch-check me-1"></i> Duyệt Kỹ Năng
       </a>
+      <button class="btn btn-outline-warning btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#uploadSchoolLogoModal">
+        <i class="bi bi-image me-1"></i> Tải Logo Trường
+      </button>
     </div>
   </div>
 
@@ -928,6 +931,48 @@
       </div>
     </div>
     {% endif %}
+  </div>
+</div>
+
+<!-- Modal Tải Logo Thật cho Trường học -->
+<div class="modal fade" id="uploadSchoolLogoModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold text-dark"><i class="bi bi-image me-2 text-primary"></i>Tải Logo Thật cho Trường học</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="schoolLogoForm" method="POST" enctype="multipart/form-data" action="{{ url_for('admin_update_school_logo', school_id=current_user.truong_id or 1) }}">
+        <div class="modal-body">
+          {% if is_super_admin %}
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Chọn trường học <span class="text-danger">*</span></label>
+            <select name="school_id_select" id="schoolLogoSelect" class="form-select" onchange="document.getElementById('schoolLogoForm').action = '/admin/schools/' + this.value + '/logo';">
+              {% for s in all_schools %}
+                <option value="{{ s.id }}">{{ s.ten_truong }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          {% else %}
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Trường học</label>
+            <input type="text" class="form-control" value="{{ current_school_name }}" readonly>
+          </div>
+          {% endif %}
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Chọn file ảnh Logo thật <span class="text-danger">*</span></label>
+            <input type="file" name="logo" class="form-control" accept="image/*" required>
+            <small class="text-muted">Định dạng hỗ trợ: PNG, JPG, WEBP. Ảnh sẽ được cập nhật hiển thị tại thẻ trường học.</small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
+          <button type="submit" class="btn btn-brand rounded-pill px-4 fw-semibold">
+            <i class="bi bi-cloud-arrow-up-fill me-1"></i> Tải lên Logo
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
 

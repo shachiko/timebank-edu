@@ -1,21 +1,23 @@
 # -*- coding: utf-8 -*-
 """
 BỘ KIỂM THỬ TỰ ĐỘNG CHUYÊN SÂU — PROMPT 21:
-POLISH GIAO DIỆN (Menu vuông bo tròn + Nút bấm + Chữ nghĩa)
+ĐẠI TU GIAO DIỆN TRANG CHỦ THEO REVIEW UX
 
-Tiêu chí nghiệm thu:
-1. Menu vuông hiển thị đúng 7 nút + active state xanh đúng trang.
-2. Tìm "sổ cái" (không phân biệt hoa thường) trong toàn bộ templates: kết quả = 0.
-3. Nút Đăng nhập/Đăng ký kiểu mới, responsive mobile OK.
-4. Các dòng chữ yêu cầu đúng nội dung, đúng 1 hàng (text-nowrap).
-5. Regression: đăng nhập, các trang chính 200, không vỡ layout cũ.
+Tiêu chí nghiệm thu chuẩn Prompt 21:
+1. Không còn dòng badge "Sáng kiến Giáo dục Số 2026 / Nền tảng Đa trường Học đường".
+2. Tiêu đề căn giữa + Banner chạy chữ hoạt động, đúng nội dung, dừng khi hover.
+3. Menu 5 dropdown hoạt động, đủ 11 mục cũ, không mất mục nào; 2 nút Đăng nhập/Đăng ký pill 38px.
+4. Tìm "sổ cái" trong templates = 0 kết quả.
+5. Quy trình 4 bước có mũi tên nối; Sơ đồ tròn An-Bình-Chi hiển thị đúng vòng khép kín.
+6. Chất liệu con người thật: avatar tròn chữ cái đầu tên, thẻ nhiệm vụ có ảnh/placeholder, thẻ trường có logo/tên trường.
+7. Mobile responsive, copywriting chuẩn và regression các luồng chính status 200.
 """
 
 import unittest
 import os
 import re
 from pathlib import Path
-from app import app, DATABASE_PATH
+from app import app, DATABASE_PATH, init_db
 
 class TestPrompt21UIPolish(unittest.TestCase):
     @classmethod
@@ -24,65 +26,110 @@ class TestPrompt21UIPolish(unittest.TestCase):
         app.config["WTF_CSRF_ENABLED"] = False
         cls.client = app.test_client()
         cls.templates_dir = Path(__file__).resolve().parent / "templates"
+        cls.static_dir = Path(__file__).resolve().parent / "static"
+        init_db()
 
-    def test_01_squircle_navigation_7_buttons_and_active_states(self):
+    def test_01_no_badge_sang_kien_giao_duc_so_2026(self):
         """
-        TIÊU CHÍ 1: Menu vuông bo tròn squircle hiển thị đủ 7 nút
-        (Trang chủ, Chợ kỹ năng, Sàn cộng đồng, Diễn đàn, Kho tài liệu, Bản tin, Nội quy)
-        và active state xanh chuẩn xác theo từng trang.
-        """
-        # Đăng nhập để kiểm tra được cả các trang yêu cầu login
-        self.client.post("/login", data={"ma_hoc_sinh": "HS12001", "mat_khau": "admin123"}, follow_redirects=True)
-
-        test_pages = [
-            ("/", "Trang chủ", "bi-house-fill"),
-            ("/skills", "Chợ kỹ năng", "bi-shop"),
-            ("/community-market", "Sàn cộng đồng", "bi-globe2"),
-            ("/forum", "Diễn đàn", "bi-chat-dots-fill"),
-            ("/documents", "Kho tài liệu", "bi-folder2-open"),
-            ("/blog", "Bản tin", "bi-newspaper"),
-            ("/noi-quy", "Nội quy", "bi-shield-check")
-        ]
-
-        expected_labels = [
-            "Trang chủ", "Chợ kỹ năng", "Sàn cộng đồng",
-            "Diễn đàn", "Kho tài liệu", "Bản tin", "Nội quy"
-        ]
-
-        for path, active_label, active_icon in test_pages:
-            res = self.client.get(path, follow_redirects=True)
-            self.assertEqual(res.status_code, 200, f"Trang {path} phải trả về 200")
-            html = res.data.decode("utf-8")
-
-            # 1. Kiểm tra tồn tại nav-squircle-bar
-            self.assertIn("nav-squircle-bar", html, f"Thanh squircle bar phải tồn tại trên trang {path}")
-
-            # 2. Đếm số lượng nút nav-squircle
-            squircle_matches = re.findall(r'class="nav-squircle\s+([^"]+)"', html)
-            self.assertEqual(len(squircle_matches), 7, f"Thanh menu phải có đúng 7 nút vuông trên trang {path}")
-
-            # 3. Kiểm tra đủ 7 nhãn nút
-            for exp_lbl in expected_labels:
-                self.assertIn(f"<span>{exp_lbl}</span>", html, f"Nút {exp_lbl} phải có trong menu trang {path}")
-
-            # 4. Kiểm tra nút active
-            active_btn_pattern = re.compile(
-                r'<a\s+[^>]*class="nav-squircle\s+active"[^>]*>[\s\S]*?<i\s+class="bi\s+([^"]+)"[\s\S]*?<span>([^<]+)</span>',
-                re.IGNORECASE
-            )
-            m = active_btn_pattern.search(html)
-            self.assertIsNotNone(m, f"Phải tìm thấy nút nav-squircle active trên trang {path}")
-            icon_found, label_found = m.group(1).strip(), m.group(2).strip()
-            self.assertEqual(label_found, active_label, f"Trang {path} phải active nút '{active_label}', nhưng lại là '{label_found}'")
-            self.assertEqual(icon_found, active_icon, f"Trang {path} nút active phải có icon '{active_icon}'")
-
-    def test_02_zero_occurrences_of_so_cai_in_all_templates(self):
-        """
-        TIÊU CHÍ 2: Tìm "sổ cái" (không phân biệt hoa thường) trong toàn bộ templates: kết quả = 0.
+        NGHIỆM THU 1: XÓA HẲN dòng badge 'Sáng kiến Giáo dục Số 2026 / Nền tảng Đa trường Học đường'.
+        Đảm bảo không còn tồn tại trong bất kỳ template nào.
         """
         html_files = list(self.templates_dir.rglob("*.html"))
-        self.assertGreater(len(html_files), 0, "Phải tìm thấy các file template html")
+        violations = []
+        for f in html_files:
+            content = f.read_text(encoding="utf-8", errors="replace")
+            if "Sáng kiến Giáo dục Số 2026" in content:
+                violations.append(f"{f.name}: chứa badge 'Sáng kiến Giáo dục Số 2026'")
+        self.assertEqual(len(violations), 0, f"Vẫn còn badge 'Sáng kiến Giáo dục Số 2026':\n" + "\n".join(violations))
 
+        # Kiểm tra trên HTML trang chủ
+        res = self.client.get("/")
+        html = res.data.decode("utf-8")
+        self.assertNotIn("Sáng kiến Giáo dục Số 2026", html)
+        self.assertNotIn("Nền tảng Đa trường Học đường", html)
+
+    def test_02_centered_title_and_marquee_banner(self):
+        """
+        NGHIỆM THU 2:
+        - Tiêu đề 'School Time Bank' căn GIỮA trang + dòng nghiêng 'Ngân hàng Thời gian Học đường' bên dưới.
+        - Banner chạy chữ từ phải sang trái ngay dưới tiêu đề:
+          'Chào mừng bạn đã đến với công cụ giáo dục TIME BANK EDU'
+          (CSS marquee thuần, tốc độ vừa phải, dừng khi hover).
+        """
+        res = self.client.get("/")
+        html = res.data.decode("utf-8")
+
+        # 1. Tiêu đề căn giữa
+        self.assertIn("hero-center-title", html, "Phải có class hero-center-title cho tiêu đề căn giữa")
+        self.assertIn("hero-center-subtitle", html, "Phải có class hero-center-subtitle cho dòng chữ nghiêng")
+        self.assertIn("School Time Bank", html)
+        self.assertIn("Ngân hàng Thời gian Học đường", html)
+
+        # 2. Banner marquee chạy chữ
+        self.assertIn("marquee-banner-wrapper", html)
+        self.assertIn("marquee-banner-track", html)
+        self.assertIn("Chào mừng bạn đã đến với công cụ giáo dục TIME BANK EDU", html)
+
+        # 3. Kiểm tra CSS marquee trong style.css: dừng khi hover
+        css_file = self.static_dir / "css" / "style.css"
+        css_content = css_file.read_text(encoding="utf-8", errors="replace")
+        self.assertIn("marqueeAnimation", css_content, "Phải có keyframe marqueeAnimation")
+        self.assertIn("animation-play-state: paused", css_content, "CSS marquee phải dừng khi hover (:hover { animation-play-state: paused; })")
+
+    def test_03_dropdown_navbar_5_groups_11_items_and_pill_auth_buttons(self):
+        """
+        NGHIỆM THU 3:
+        - Menu 5 nhóm dropdown: Mô hình, Hoạt động, Tài nguyên, Vinh danh, Dành cho Nhà trường.
+        - Đủ 11 mục cũ: Mô hình hoạt động, Quy trình 4 bước, Số liệu vận hành,
+          Chợ kỹ năng, Sàn cộng đồng, Vì cộng đồng, Diễn đàn,
+          Nội quy, Kho tài liệu, Bản tin, Vinh danh.
+        - 2 nút Đăng nhập/Đăng ký: cùng bo góc pill, cùng chiều cao 38px;
+          Đăng nhập = nút viền ghost, Đăng ký = nền đặc cam.
+        - Header nền trắng.
+        """
+        res = self.client.get("/")
+        html = res.data.decode("utf-8")
+
+        # 1. 5 nhóm dropdown
+        self.assertIn("Mô hình", html)
+        self.assertIn("Hoạt động", html)
+        self.assertIn("Tài nguyên", html)
+        self.assertIn("Vinh danh", html)
+        self.assertIn("Dành cho Nhà trường", html)
+
+        # 2. Đủ 11 mục cũ
+        old_11_items = [
+            "Mô hình hoạt động",
+            "Quy trình 4 bước",
+            "Số liệu vận hành",
+            "Chợ kỹ năng",
+            "Sàn cộng đồng",
+            "Vì cộng đồng",
+            "Diễn đàn",
+            "Nội quy",
+            "Kho tài liệu",
+            "Bản tin",
+            "Bảng vàng thành tích"  # Vinh danh
+        ]
+        for item in old_11_items:
+            self.assertIn(item, html, f"Menu phải chứa mục: '{item}'")
+
+        # 3. 2 nút Đăng nhập / Đăng ký: cùng bo góc pill, viền ghost / solid cam
+        self.assertIn("btn-auth-ghost", html, "Phải có nút Đăng nhập viền ghost")
+        self.assertIn("btn-auth-solid", html, "Phải có nút Đăng ký nền đặc")
+
+        # Kiểm tra CSS của 2 nút: pill (border-radius: 50px) và height: 38px
+        css_file = self.static_dir / "css" / "style.css"
+        css_content = css_file.read_text(encoding="utf-8", errors="replace")
+        self.assertIn("btn-auth-ghost", css_content)
+        self.assertIn("btn-auth-solid", css_content)
+        self.assertIn("38px", css_content, "Hai nút auth phải có cùng chiều cao 38px")
+
+    def test_04_zero_occurrences_of_so_cai_in_all_templates(self):
+        """
+        NGHIỆM THU 4: Tìm 'sổ cái' (không phân biệt hoa thường) trong toàn bộ templates: kết quả = 0.
+        """
+        html_files = list(self.templates_dir.rglob("*.html"))
         violations = []
         pattern = re.compile(r"sổ\s+cái", re.IGNORECASE)
 
@@ -100,62 +147,72 @@ class TestPrompt21UIPolish(unittest.TestCase):
             f"Vẫn còn 'sổ cái' trong templates (yêu cầu kết quả = 0):\n" + "\n".join(violations)
         )
 
-    def test_03_redesigned_login_and_register_buttons_and_mobile_responsive(self):
+    def test_05_steps_and_circular_closed_loop_diagram(self):
         """
-        TIÊU CHÍ 3: Nút Đăng nhập / Đăng ký kiểu mới tương phản rõ rệt, responsive mobile OK.
-        """
-        anon_client = app.test_client()
-        res = anon_client.get("/")
-        html = res.data.decode("utf-8")
-
-        # Nút Đăng nhập viền & Đăng ký nền đậm
-        self.assertIn("btn-auth-login", html, "Phải có class .btn-auth-login cho nút Đăng nhập")
-        self.assertIn("btn-auth-register", html, "Phải có class .btn-auth-register cho nút Đăng ký")
-        self.assertIn("Đăng nhập", html)
-        self.assertIn("Đăng ký", html)
-
-        # Kiểm tra container squircle có class hỗ trợ cuộn ngang trên mobile
-        self.assertIn("nav-squircle-wrapper", html, "Phải có .nav-squircle-wrapper hỗ trợ cuộn ngang trên mobile")
-
-    def test_04_copywriting_and_one_line_constraints(self):
-        """
-        TIÊU CHÍ 4:
-        - "Lan tỏa trách nhiệm xã hội cùng TimeBank EDU": thu nhỏ, ép 1 hàng (text-nowrap).
-        - Section nhân rộng: "Chuyển giao và cài đặt dữ liệu cho các trường chỉ 5 phút"
-        - "Dễ dàng tùy chỉnh logo, màu sắc và thông điệp riêng để biến hệ thống thành phiên bản độc quyền của trường bạn."
+        NGHIỆM THU 5:
+        - Quy trình 4 bước: thêm mũi tên/đường nối 1->2->3->4, số thứ tự tăng độ đậm (fw-bolder).
+        - Sơ đồ tròn An-Bình-Chi: hiển thị đúng vòng khép kín An -> Bình -> Chi -> An (SVG thuần).
         """
         res = self.client.get("/")
         html = res.data.decode("utf-8")
 
-        # 1. Kiểm tra tiêu đề Lan tỏa trách nhiệm xã hội ép 1 hàng
-        self.assertIn("Lan tỏa trách nhiệm xã hội cùng TimeBank EDU", html)
-        self.assertIn("text-nowrap", html, "Tiêu đề 'Lan tỏa trách nhiệm xã hội...' phải có class 'text-nowrap'")
+        # Quy trình 4 bước
+        self.assertIn("step-connector-arrow", html, "Phải có mũi tên nối giữa các bước")
+        self.assertIn("fw-bolder", html, "Số thứ tự bước phải có class fw-bolder")
 
-        # 2. Section nhân rộng
+        # Sơ đồ tròn SVG
+        self.assertIn("circular-flow-svg", html, "Phải có sơ đồ tròn circular-flow-svg")
+        self.assertIn("An (12A1)", html)
+        self.assertIn("Bình (11B2)", html)
+        self.assertIn("Chi (10A3)", html)
+        self.assertIn("arrow-orange", html)
+        self.assertIn("arrow-green", html)
+        self.assertIn("arrow-blue", html)
+        self.assertIn("An → Bình → Chi → An", html, "Phải có dòng chú thích vòng lặp khép kín An → Bình → Chi → An")
+
+    def test_06_human_materials_genuine_avatars_and_cards(self):
+        """
+        NGHIỆM THU 6: 'Chất liệu con người' (trung thực, không bịa ảnh):
+        - Vinh danh: avatar tròn = chữ cái đầu tên học sinh trên nền màu (avatar-initial-circle).
+        - Thẻ nhiệm vụ cộng đồng: khung ảnh bìa + placeholder trang nhã.
+        - Thẻ trường liên kết: khung logo trường / tên trường.
+        """
+        res = self.client.get("/")
+        html = res.data.decode("utf-8")
+
+        # 1. Avatar tròn chữ cái đầu
+        self.assertIn("avatar-initial-circle", html, "Phải có avatar-initial-circle tạo avatar từ chữ cái đầu")
+
+        # 2. Thẻ nhiệm vụ cộng đồng: khung ảnh bìa / placeholder
+        self.assertIn("task-cover-container", html, "Phải có task-cover-container cho thẻ nhiệm vụ")
+
+        # 3. Thẻ trường: khung logo
+        self.assertIn("school-logo-frame", html, "Phải có school-logo-frame cho thẻ trường liên kết")
+
+    def test_07_regression_and_copywriting(self):
+        """
+        NGHIỆM THU 7:
+        - 'Lan tỏa trách nhiệm xã hội cùng TimeBank EDU': thu nhỏ, 1 hàng (text-nowrap).
+        - 'Chuyển giao và cài đặt dữ liệu cho các trường chỉ 5 phút'.
+        - 'Dễ dàng tùy chỉnh logo, màu sắc và thông điệp riêng để biến hệ thống thành phiên bản độc quyền của trường bạn.'
+        - Regression các luồng chính status 200.
+        """
+        res = self.client.get("/")
+        html = res.data.decode("utf-8")
+
+        # 1. Chữ nghĩa chuẩn
+        self.assertIn("Lan tỏa trách nhiệm xã hội cùng TimeBank EDU", html)
+        self.assertIn("text-nowrap", html)
         self.assertIn("Chuyển giao và cài đặt dữ liệu cho các trường chỉ 5 phút", html)
         self.assertIn("Dễ dàng tùy chỉnh logo, màu sắc và thông điệp riêng để biến hệ thống thành phiên bản độc quyền của trường bạn.", html)
-
-        # 3. Đảm bảo câu cũ đã biến mất
         self.assertNotIn("Đổi thương hiệu chỉ trong 5 phút", html)
-        self.assertNotIn("Chỉ cần chỉnh sửa tệp config.yaml là có ngay hệ thống mang logo", html)
 
-    def test_05_regression_key_pages_status_200(self):
-        """
-        TIÊU CHÍ 5: Đăng nhập & các trang chính trả về 200 OK, dropdown avatar đầy đủ 3 mục cá nhân.
-        """
-        login_res = self.client.post("/login", data={"ma_hoc_sinh": "HS12001", "mat_khau": "admin123"}, follow_redirects=True)
-        self.assertEqual(login_res.status_code, 200)
-
-        pages = ["/", "/skills", "/community-market", "/noi-quy", "/forum", "/documents", "/blog", "/wallet", "/profile", "/my-schedule"]
-        for p in pages:
-            r = self.client.get(p)
-            self.assertEqual(r.status_code, 200, f"Trang {p} phải trả về status 200")
-
-        # Kiểm tra dropdown avatar tài khoản chứa: Lịch của tôi, Ví của tôi, Hồ sơ cá nhân
-        prof_html = self.client.get("/profile").data.decode("utf-8")
-        self.assertIn("Ví của tôi", prof_html)
-        self.assertIn("Lịch của tôi", prof_html)
-        self.assertIn("Hồ sơ cá nhân", prof_html)
+        # 2. Regression các route chính
+        self.client.post("/login", data={"ma_hoc_sinh": "HS12001", "mat_khau": "admin123"}, follow_redirects=True)
+        routes = ["/", "/skills", "/community-market", "/forum", "/documents", "/blog", "/noi-quy", "/profile", "/wallet", "/my-schedule"]
+        for route in routes:
+            r = self.client.get(route)
+            self.assertEqual(r.status_code, 200, f"Route {route} phải trả về 200 OK")
 
 if __name__ == "__main__":
     unittest.main()

@@ -178,6 +178,7 @@ CREATE TABLE IF NOT EXISTS community_tasks (
     so_gio_thuong REAL DEFAULT 1.0,
     so_luong_toi_da INTEGER DEFAULT 5,
     han_dang_ky TEXT,
+    anh_bia TEXT,
     nguoi_tao_id INTEGER NOT NULL,
     trang_thai TEXT CHECK(trang_thai IN ('mo_dang_ky', 'mo', 'dong', 'hoan_thanh', 'huy')) DEFAULT 'mo_dang_ky',
     thoi_gian_tao TEXT DEFAULT CURRENT_TIMESTAMP,

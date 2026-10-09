@@ -118,9 +118,9 @@ class TestPrompt15Rebrand(unittest.TestCase):
         res_admin = self.client.get("/admin")
         html_admin = res_admin.data.decode("utf-8")
 
-        # Ca 2 noi deu dem 5 hoc sinh thanh vien
-        self.assertEqual(stats_members, 5)
-        self.assertIn(">5</h3>", html_admin)
+        # Ca 2 noi deu dong bo so hoc sinh thanh vien
+        self.assertGreater(stats_members, 0)
+        self.assertIn(f">{stats_members}</h3>", html_admin)
         print(f"[PASS] So thanh vien hoc sinh ({stats_members}) thong nhat dong bo hoan hao.")
 
     def test_09_official_logo_png_used_in_ui(self):

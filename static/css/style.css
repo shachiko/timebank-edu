@@ -35,255 +35,254 @@ body {
 }
 
 /* ==============================================================================
-   1. NAVBAR & HEADER GRADIENT (Cam #F26522 -> Vàng #F5B301)
+   1. NAVBAR & HEADER TRẮNG HIỆN ĐẠI (Chữ + Icon Xanh Navy, Điểm nhấn Cam)
    ============================================================================== */
 .navbar-custom {
-  background: linear-gradient(90deg, #F26522 0%, #F58B19 55%, #F5B301 100%) !important;
-  box-shadow: 0 4px 20px rgba(242, 101, 34, 0.28);
-  border: none;
+  background: #FFFFFF !important;
+  box-shadow: 0 2px 14px rgba(27, 42, 107, 0.08);
+  border-bottom: 1px solid #E2E8F0;
   transition: all 0.3s ease;
 }
 
 .navbar-custom .navbar-brand {
-  color: #FFFFFF !important;
+  color: #1B2A6B !important;
 }
 
 .navbar-custom .navbar-brand img {
   transition: transform 0.3s ease;
-  border: 2px solid rgba(255, 255, 255, 0.85);
+  border: 2px solid rgba(242, 101, 34, 0.4);
 }
 
 .navbar-custom .navbar-brand:hover img {
-  transform: rotate(-8deg) scale(1.08);
+  transform: rotate(-6deg) scale(1.06);
 }
 
-.navbar-custom .navbar-brand span {
-  color: #FFFFFF !important;
+.brand-title-text {
+  color: #1B2A6B !important;
   font-weight: 800;
   letter-spacing: -0.3px;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-.navbar-custom .navbar-brand small {
-  color: rgba(255, 255, 255, 0.92) !important;
-  font-weight: 500;
+.brand-sub-text {
+  color: #F26522 !important;
+  font-weight: 600;
 }
 
+/* Nav Links trong header */
 .navbar-custom .nav-link {
   font-weight: 600;
-  color: #FFFFFF !important;
-  padding: 0.5rem 0.85rem !important;
-  border-radius: 50px;
+  color: #1B2A6B !important;
+  padding: 0.55rem 0.95rem !important;
+  border-radius: 8px;
   transition: all 0.22s ease;
   display: inline-flex;
   align-items: center;
+  font-size: 0.93rem;
+}
+
+.navbar-custom .nav-link i {
+  color: #1B2A6B;
+  transition: color 0.2s ease;
 }
 
 .navbar-custom .nav-link:hover,
-.navbar-custom .nav-link:focus {
-  color: #1B2A6B !important;
-  background-color: #FFFFFF;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-  transform: translateY(-1px);
+.navbar-custom .nav-link:focus,
+.navbar-custom .nav-item.show .nav-link {
+  color: #F26522 !important;
+  background-color: rgba(242, 101, 34, 0.06);
+}
+
+.navbar-custom .nav-link:hover i,
+.navbar-custom .nav-link:focus i,
+.navbar-custom .nav-item.show .nav-link i {
+  color: #F26522;
+}
+
+.navbar-custom .nav-link.active {
+  color: #F26522 !important;
+  border-bottom: 2px solid #F26522;
+  border-radius: 0;
+}
+
+.navbar-custom .nav-link.active i {
+  color: #F26522;
+}
+
+/* Dropdown menus phong cách hiện đại */
+.navbar-custom .dropdown-menu {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0 !important;
+  box-shadow: 0 10px 25px rgba(27, 42, 107, 0.12) !important;
+  border-radius: 16px !important;
+  padding: 8px !important;
+  min-width: 210px;
+  animation: dropdownFadeIn 0.2s ease-out;
+}
+
+@keyframes dropdownFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.navbar-custom .dropdown-item {
+  color: #334155;
+  font-weight: 500;
+  font-size: 0.88rem;
+  border-radius: 10px;
+  padding: 0.5rem 0.85rem;
+  transition: all 0.18s ease;
+  display: flex;
+  align-items: center;
+}
+
+.navbar-custom .dropdown-item:hover,
+.navbar-custom .dropdown-item:focus {
+  background-color: #FFF7ED;
+  color: #F26522;
+  font-weight: 600;
+}
+
+.navbar-custom .dropdown-item i {
+  font-size: 1rem;
+}
+
+.navbar-custom .dropdown-item.active,
+.navbar-custom .dropdown-item:active {
+  background-color: #FFF7ED;
+  color: #F26522;
+  font-weight: 700;
 }
 
 .navbar-custom .navbar-toggler {
-  border-color: rgba(255, 255, 255, 0.6);
-  color: #FFFFFF;
-}
-
-.navbar-custom .navbar-toggler-icon {
-  filter: brightness(0) invert(1);
+  border: 1px solid #E2E8F0;
+  color: #1B2A6B;
 }
 
 /* User pill on navbar */
 .navbar-custom .user-pill {
-  background-color: #FFFFFF !important;
+  background-color: #F8FAFC !important;
   color: #1B2A6B !important;
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
 .navbar-custom .user-pill:hover {
-  background-color: #F8FAFC !important;
-}
-
-/* ==============================================================================
-   PROMPT 21: MENU VUÔNG BO TRÒN (SQUIRCLE NAVIGATION) & NÚT BẤM CHUYÊN NGHIỆP
-   ============================================================================== */
-.nav-squircle-wrapper {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  padding: 4px 0;
-}
-.nav-squircle-wrapper::-webkit-scrollbar {
-  display: none;
-}
-
-.nav-squircle-bar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  flex-wrap: nowrap;
-  width: max-content;
-  margin: 0 auto;
-}
-
-.nav-squircle {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 74px;
-  min-width: 74px;
-  height: 64px;
-  border-radius: 16px;
-  text-decoration: none;
-  padding: 6px 3px;
-  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-  user-select: none;
-  animation: squircleFloat 3.6s ease-in-out infinite;
-  border: 1px solid transparent;
-}
-
-.nav-squircle:nth-child(1) { animation-delay: 0s; }
-.nav-squircle:nth-child(2) { animation-delay: 0.3s; }
-.nav-squircle:nth-child(3) { animation-delay: 0.6s; }
-.nav-squircle:nth-child(4) { animation-delay: 0.9s; }
-.nav-squircle:nth-child(5) { animation-delay: 1.2s; }
-.nav-squircle:nth-child(6) { animation-delay: 1.5s; }
-.nav-squircle:nth-child(7) { animation-delay: 1.8s; }
-
-/* Inactive squircle: nền xám nhạt, chữ đậm */
-.nav-squircle.inactive {
-  background-color: #F1F5F9;
-  color: #1E293B !important;
-  border: 1px solid rgba(226, 232, 240, 0.95);
-}
-.nav-squircle.inactive i {
-  color: #334155 !important;
-  font-size: 1.25rem;
-  line-height: 1.2;
-  margin-bottom: 2px;
-  transition: transform 0.22s ease;
-}
-.nav-squircle.inactive span {
-  font-size: 0.70rem;
-  font-weight: 700;
-  line-height: 1.1;
-  color: #1E293B !important;
-  text-align: center;
-  white-space: nowrap;
-  letter-spacing: -0.2px;
-}
-
-/* Active squircle: nền xanh dương, chữ trắng (như mẫu) */
-.nav-squircle.active {
-  background: #1B2A6B !important;
-  color: #FFFFFF !important;
-  border: 1.5px solid rgba(255, 255, 255, 0.45);
-  box-shadow: 0 4px 14px rgba(27, 42, 107, 0.45) !important;
-}
-.nav-squircle.active i {
-  color: #FFFFFF !important;
-  font-size: 1.25rem;
-  line-height: 1.2;
-  margin-bottom: 2px;
-}
-.nav-squircle.active span {
-  font-size: 0.70rem;
-  font-weight: 800;
-  line-height: 1.1;
-  color: #FFFFFF !important;
-  text-align: center;
-  white-space: nowrap;
-  letter-spacing: -0.2px;
-}
-
-/* Hiệu ứng: đung đưa nhẹ lên xuống */
-@keyframes squircleFloat {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-3px);
-  }
-}
-
-/* Hover: nghiêng nhẹ như logo */
-.nav-squircle:hover {
-  animation-play-state: paused;
-  transform: translateY(-4px) rotate(-4deg) scale(1.06) !important;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2) !important;
-}
-
-.nav-squircle.inactive:hover {
-  background-color: #FFFFFF;
+  background-color: #F1F5F9 !important;
   border-color: #CBD5E1;
 }
-.nav-squircle.inactive:hover i {
-  color: #1B2A6B !important;
-  transform: scale(1.12);
-}
-.nav-squircle.inactive:hover span {
-  color: #1B2A6B !important;
-}
 
-.nav-squircle.active:hover {
-  background: #152259 !important;
-  box-shadow: 0 8px 20px rgba(21, 34, 89, 0.55) !important;
-}
-
-/* Nút Đăng nhập / Đăng ký kiểu mới tương phản chuyên nghiệp */
-.btn-auth-login {
-  background-color: rgba(255, 255, 255, 0.15);
-  color: #FFFFFF !important;
-  border: 2px solid #FFFFFF;
+/* ==============================================================================
+   2. NÚT ĐĂNG NHẬP (GHOST) / ĐĂNG KÝ (SOLID CAM) PILL CÙNG CHIỀU CAO (38px)
+   ============================================================================== */
+.btn-auth-ghost {
+  border: 1.5px solid #1B2A6B !important;
+  color: #1B2A6B !important;
+  background-color: transparent !important;
   font-weight: 700;
-  font-size: 0.82rem;
-  border-radius: 12px;
-  padding: 0.42rem 0.95rem;
-  transition: all 0.22s ease;
-  white-space: nowrap;
-  text-decoration: none;
+  font-size: 0.88rem;
+  border-radius: 50px !important;
+  height: 38px;
+  padding: 0 1.25rem;
   display: inline-flex;
   align-items: center;
-}
-.btn-auth-login:hover {
-  background-color: #FFFFFF;
-  color: #1B2A6B !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transform: translateY(-1px);
-}
-
-.btn-auth-register {
-  background: #1B2A6B;
-  color: #FFFFFF !important;
-  border: 2px solid #1B2A6B;
-  font-weight: 700;
-  font-size: 0.82rem;
-  border-radius: 12px;
-  padding: 0.42rem 1.05rem;
-  box-shadow: 0 4px 12px rgba(27, 42, 107, 0.35);
+  justify-content: center;
+  text-decoration: none;
   transition: all 0.22s ease;
   white-space: nowrap;
-  text-decoration: none;
+}
+
+.btn-auth-ghost:hover {
+  background-color: #1B2A6B !important;
+  color: #FFFFFF !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(27, 42, 107, 0.2);
+}
+
+.btn-auth-solid {
+  background-color: #F26522 !important;
+  border: 1.5px solid #F26522 !important;
+  color: #FFFFFF !important;
+  font-weight: 700;
+  font-size: 0.88rem;
+  border-radius: 50px !important;
+  height: 38px;
+  padding: 0 1.25rem;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  box-shadow: 0 3px 10px rgba(242, 101, 34, 0.28);
+  transition: all 0.22s ease;
+  white-space: nowrap;
 }
-.btn-auth-register:hover {
-  background: #152259;
-  border-color: #152259;
+
+.btn-auth-solid:hover {
+  background-color: #D85213 !important;
+  border-color: #D85213 !important;
   color: #FFFFFF !important;
-  box-shadow: 0 6px 16px rgba(27, 42, 107, 0.5);
   transform: translateY(-1px);
+  box-shadow: 0 5px 15px rgba(242, 101, 34, 0.4);
 }
 
 /* ==============================================================================
-   2. BUTTONS & ACTIONS
+   3. TIÊU ĐỀ TRANG CĂN GIỮA & BANNER CHẠY CHỮ (CSS MARQUEE THUẦN)
+   ============================================================================== */
+.hero-center-title {
+  font-size: clamp(2.4rem, 4.8vw, 3.8rem);
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #1B2A6B 0%, #F26522 75%, #F58B19 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 8px rgba(27, 42, 107, 0.12));
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.hero-center-subtitle {
+  font-style: italic;
+  color: #475569;
+  font-weight: 600;
+  font-size: 1.25rem;
+  text-align: center;
+  letter-spacing: 0.2px;
+}
+
+.marquee-banner-wrapper {
+  overflow: hidden;
+  white-space: nowrap;
+  background: linear-gradient(90deg, #FFF7ED 0%, #FEF3C7 50%, #FFF7ED 100%);
+  border: 1px solid #FED7AA;
+  border-radius: 50px;
+  padding: 8px 18px;
+  max-width: 860px;
+  margin: 1.2rem auto 0 auto;
+  position: relative;
+  box-shadow: 0 2px 10px rgba(242, 101, 34, 0.08);
+  cursor: default;
+}
+
+.marquee-banner-track {
+  display: inline-block;
+  white-space: nowrap;
+  padding-left: 100%;
+  animation: marqueeAnimation 22s linear infinite;
+  color: #C2410C;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.marquee-banner-wrapper:hover .marquee-banner-track {
+  animation-play-state: paused !important;
+}
+
+@keyframes marqueeAnimation {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-100%); }
+}
+
+/* ==============================================================================
+   4. BUTTONS & ACTIONS
    ============================================================================== */
 .btn-brand {
   background: linear-gradient(135deg, #F26522 0%, #FF7B39 100%);
@@ -340,7 +339,7 @@ body {
 }
 
 /* ==============================================================================
-   3. BADGES & LABELS
+   5. BADGES & LABELS
    ============================================================================== */
 .badge-ai {
   background: linear-gradient(135deg, #1B2A6B 0%, #2A439B 100%);
@@ -356,7 +355,6 @@ body {
   box-shadow: 0 2px 8px rgba(27, 42, 107, 0.15);
 }
 
-/* Badge Đã duyệt nhất quán toàn hệ thống */
 .badge-status-approved {
   background-color: rgba(16, 185, 129, 0.12) !important;
   color: #047857 !important;
@@ -384,38 +382,19 @@ body {
 }
 
 /* ==============================================================================
-   4. HERO SECTION (UKA Academy Hạ Long)
+   6. HERO SECTION
    ============================================================================== */
 .hero-section {
   background: radial-gradient(circle at top left, rgba(242, 101, 34, 0.08) 0%, rgba(245, 179, 1, 0.05) 40%, rgba(248, 250, 252, 1) 100%);
-  padding: 4.5rem 0 3.5rem 0;
+  padding: 3.5rem 0 3.5rem 0;
   position: relative;
 }
 
-.hero-title {
-  font-size: clamp(2.1rem, 4.2vw, 3.4rem);
+.hero-slogan {
+  font-size: clamp(1.8rem, 3.4vw, 2.6rem);
   font-weight: 800;
-  line-height: 1.18;
-  color: #0F172A;
-  letter-spacing: -0.5px;
-}
-
-.hero-tagline {
-  font-size: 1.35rem;
-  color: #F26522;
-  font-weight: 700;
-}
-
-.hero-hook-badge {
-  background: linear-gradient(135deg, #F26522 0%, #F5B301 100%);
-  color: #FFFFFF;
-  font-weight: 700;
-  padding: 0.45rem 1.1rem;
-  border-radius: 50px;
-  display: inline-flex;
-  align-items: center;
-  box-shadow: 0 4px 14px rgba(242, 101, 34, 0.25);
-  font-size: 0.95rem;
+  line-height: 1.25;
+  color: #1B2A6B;
 }
 
 .hero-img-box {
@@ -429,7 +408,7 @@ body {
 }
 
 /* ==============================================================================
-   5. CARDS (Bo góc, shadow nhẹ, accent cam)
+   7. CARDS & STEPS 4 BƯỚC CÓ ĐƯỜNG NỐI / MŨI TÊN
    ============================================================================== */
 .card, .step-card, .stat-card, .tutor-card {
   border-radius: var(--card-radius) !important;
@@ -452,20 +431,161 @@ body {
 }
 
 .step-badge {
-  width: 50px;
-  height: 50px;
+  width: 52px;
+  height: 52px;
   border-radius: 14px;
-  background: linear-gradient(135deg, rgba(242, 101, 34, 0.15) 0%, rgba(245, 179, 1, 0.2) 100%);
+  background: linear-gradient(135deg, rgba(242, 101, 34, 0.15) 0%, rgba(245, 179, 1, 0.25) 100%);
   color: #F26522;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
-  font-weight: 800;
+  font-size: 1.45rem;
+  font-weight: 900 !important;
   margin-bottom: 1.2rem;
+  box-shadow: 0 3px 8px rgba(242, 101, 34, 0.15);
 }
 
-/* Counter Card (Số liệu realtime) */
+.step-connector-arrow {
+  position: absolute;
+  top: 50%;
+  right: -16px;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  background: #FFFFFF;
+  border: 2px dashed #F26522;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #F26522;
+  font-size: 0.95rem;
+  font-weight: bold;
+  z-index: 5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* ==============================================================================
+   8. SƠ ĐỒ TRÒN KHÉP KÍN AN - BÌNH - CHI (SVG/CSS THUẦN)
+   ============================================================================== */
+.circular-exchange-diagram-wrapper {
+  background: #FFFFFF;
+  border-radius: 24px;
+  padding: 1.5rem;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 10px 30px rgba(27, 42, 107, 0.06);
+}
+
+.circular-flow-svg {
+  width: 100%;
+  max-width: 620px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+/* ==============================================================================
+   9. "CHẤT LIỆU CON NGƯỜI": AVATAR CHỮ CÁI ĐẦU, THẺ NHIỆM VỤ & TRƯỜNG LIÊN KẾT
+   ============================================================================== */
+.avatar-initial-circle {
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-weight: 800;
+  font-size: 1.35rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  text-transform: uppercase;
+}
+
+.rank-avatar-1 {
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  border: 2.5px solid #FDE68A;
+}
+
+.rank-avatar-2 {
+  background: linear-gradient(135deg, #64748B 0%, #475569 100%);
+  border: 2.5px solid #E2E8F0;
+}
+
+.rank-avatar-3 {
+  background: linear-gradient(135deg, #B45309 0%, #78350F 100%);
+  border: 2.5px solid #FED7AA;
+}
+
+/* Thẻ nhiệm vụ cộng đồng: khung ảnh bìa / placeholder */
+.task-cover-container {
+  width: 100%;
+  height: 125px;
+  background: #F8FAFC;
+  overflow: hidden;
+  position: relative;
+  border-top-left-radius: var(--card-radius);
+  border-top-right-radius: var(--card-radius);
+}
+
+.task-cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.card:hover .task-cover-img {
+  transform: scale(1.05);
+}
+
+.task-cover-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 100%);
+  border-bottom: 1px solid #FECDD3;
+}
+
+.task-placeholder-text {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #9F1239;
+  letter-spacing: 0.3px;
+}
+
+/* Thẻ trường liên kết: khung logo */
+.school-logo-frame {
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F8FAFC;
+  border-radius: 12px;
+  padding: 8px 12px;
+  border: 1px dashed #CBD5E1;
+}
+
+.school-card-logo {
+  max-height: 44px;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.school-logo-fallback {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #1B2A6B;
+  text-align: center;
+  line-height: 1.25;
+}
+
+/* ==============================================================================
+   10. COUNTER CARD & LEADERBOARD
+   ============================================================================== */
 .stat-card {
   padding: 1.75rem 1.25rem;
   text-align: center;
@@ -483,7 +603,6 @@ body {
   line-height: 1.1;
 }
 
-/* Leaderboard Tutor Cards */
 .tutor-card.rank-1 {
   border-top: 5px solid #F5B301 !important;
   background: linear-gradient(180deg, #FFFDF5 0%, #FFFFFF 40%);
@@ -497,13 +616,12 @@ body {
   background: linear-gradient(180deg, #FFF7F2 0%, #FFFFFF 40%);
 }
 
-/* Accents */
 .accent-orange {
   border-left: 4px solid #F26522 !important;
 }
 
 /* ==============================================================================
-   6. FOOTER (Navy #1B2A6B, Chữ trắng)
+   11. FOOTER (Navy #1B2A6B, Chữ trắng)
    ============================================================================== */
 footer {
   background-color: #1B2A6B !important;
@@ -530,11 +648,18 @@ footer a:hover {
 /* Responsive Mobile Tweaks */
 @media (max-width: 991.98px) {
   .hero-section {
-    padding: 3rem 0 2rem 0;
+    padding: 2.5rem 0 2rem 0;
     text-align: center;
   }
   .navbar-custom .nav-link {
     padding: 0.65rem 1rem !important;
     border-radius: 12px;
+  }
+  .marquee-banner-wrapper {
+    margin-top: 1rem;
+    padding: 6px 12px;
+  }
+  .marquee-banner-track {
+    font-size: 0.88rem;
   }
 }

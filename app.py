@@ -544,6 +544,7 @@ def migrate_postgres_schema(conn):
         ("sessions", "truong_id", "INTEGER DEFAULT 1"),
         ("ratings", "truong_id", "INTEGER DEFAULT 1"),
         ("community_tasks", "truong_id", "INTEGER DEFAULT 1"),
+        ("community_tasks", "anh_bia", "TEXT"),
         ("task_registrations", "truong_id", "INTEGER DEFAULT 1"),
         ("blog_posts", "truong_id", "INTEGER DEFAULT 1"),
     ]
@@ -838,8 +839,15 @@ def init_db():
         if "ngay_duyet_cong_dong" not in skill_cols:
             conn.execute("ALTER TABLE skills ADD COLUMN ngay_duyet_cong_dong TEXT")
         conn.commit()
+
+        # Prompt 21: Tự động nâng cấp bảng community_tasks có cột anh_bia
+        cur.execute("PRAGMA table_info(community_tasks)")
+        task_cols = [r[1] for r in cur.fetchall()]
+        if "anh_bia" not in task_cols:
+            conn.execute("ALTER TABLE community_tasks ADD COLUMN anh_bia TEXT")
+        conn.commit()
     except Exception as e:
-        app.logger.warning(f"Lỗi nâng cấp cấu trúc bảng skills (Prompt 19): {e}")
+        app.logger.warning(f"Lỗi nâng cấp cấu trúc bảng skills/community_tasks: {e}")
     
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) FROM users")
@@ -1249,12 +1257,16 @@ def index():
         "tong_gio_cong_ich": round(tong_gio_cong_ich, 1),
         "nhiem_vu_gan_nhat": nhiem_vu_gan_nhat
     }
+
+    cur.execute("SELECT * FROM truong ORDER BY id ASC")
+    schools = cur.fetchall()
     
     return render_template(
         "index.html",
         stats=stats,
         top_tutors=top_tutors,
-        community_stats=community_stats
+        community_stats=community_stats,
+        schools=schools
     )
 
 
@@ -2150,6 +2162,37 @@ def admin_dismiss_violation(violation_id):
         cur.execute("UPDATE users SET trang_thai = 'hoat_dong' WHERE id = ? AND trang_thai = 'de_xuat_khoa'", (viol["user_id"],))
         db.commit()
     flash("Đã xử lý / hủy đề xuất kỷ luật.", "info")
+    return redirect(url_for("admin_dashboard"))
+
+
+@app.route("/admin/schools/<int:school_id>/logo", methods=["POST"])
+@admin_required
+def admin_update_school_logo(school_id):
+    """
+    Quản trị viên tải logo thật lên cho trường học liên kết:
+    - Nếu là school_admin thì chỉ được đổi logo trường mình.
+    - super_admin được đổi logo của bất kỳ trường nào.
+    """
+    if not is_super_admin() and session.get("truong_id") != school_id:
+        flash("Bạn không có quyền cập nhật logo cho trường này.", "danger")
+        return redirect(url_for("admin_dashboard"))
+
+    if "logo" in request.files:
+        file = request.files["logo"]
+        if file and file.filename and allowed_image_file(file.filename):
+            filename = secure_filename(f"school_{school_id}_{int(time.time())}_{file.filename}")
+            upload_dir = BASE_DIR / "static" / "uploads" / "schools"
+            upload_dir.mkdir(parents=True, exist_ok=True)
+            save_path = upload_dir / filename
+            file.save(str(save_path))
+            logo_url = f"/static/uploads/schools/{filename}"
+            db = get_db()
+            cur = db.cursor()
+            cur.execute("UPDATE truong SET logo = ? WHERE id = ?", (logo_url, school_id))
+            db.commit()
+            flash("Đã cập nhật logo trường thành công!", "success")
+        else:
+            flash("Vui lòng chọn file ảnh hợp lệ (PNG, JPG, WEBP).", "warning")
     return redirect(url_for("admin_dashboard"))
 
 
@@ -4323,14 +4366,25 @@ def create_community_task():
         flash("Vui lòng nhập tiêu đề cho nhiệm vụ cộng đồng.", "danger")
         return redirect(url_for("community_tasks_view"))
 
+    anh_bia = None
+    if "anh_bia" in request.files:
+        file = request.files["anh_bia"]
+        if file and file.filename and allowed_image_file(file.filename):
+            filename = secure_filename(f"task_{int(time.time())}_{file.filename}")
+            upload_dir = BASE_DIR / "static" / "uploads" / "tasks"
+            upload_dir.mkdir(parents=True, exist_ok=True)
+            save_path = upload_dir / filename
+            file.save(str(save_path))
+            anh_bia = f"/static/uploads/tasks/{filename}"
+
     db = get_db()
     cur = db.cursor()
     school_id = session.get("truong_id", 1)
     cur.execute(
         """INSERT INTO community_tasks 
-           (tieu_de, mo_ta, dia_diem, so_gio_thuong, so_luong_toi_da, han_dang_ky, nguoi_tao_id, trang_thai, truong_id) 
-           VALUES (?, ?, ?, ?, ?, ?, ?, 'mo_dang_ky', ?)""",
-        (tieu_de, mo_ta, dia_diem, so_gio_thuong, so_luong_toi_da, han_dang_ky, session["user_id"], school_id)
+           (tieu_de, mo_ta, dia_diem, so_gio_thuong, so_luong_toi_da, han_dang_ky, nguoi_tao_id, trang_thai, truong_id, anh_bia) 
+           VALUES (?, ?, ?, ?, ?, ?, ?, 'mo_dang_ky', ?, ?)""",
+        (tieu_de, mo_ta, dia_diem, so_gio_thuong, so_luong_toi_da, han_dang_ky, session["user_id"], school_id, anh_bia)
     )
     db.commit()
 
