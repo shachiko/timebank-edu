@@ -6764,7 +6764,7 @@ def documents_upload():
             except Exception as e:
                 app.logger.error(f"Lỗi tải lên tệp {filename} lên Google Drive: {e}")
                 failed_count += 1
-                flash(f"Lỗi khi truyền tệp '{orig_name}' lên Google Drive: {str(e)}", "danger")
+                flash(f"Lỗi khi tải tệp '{orig_name}' lên hệ thống: {str(e)}", "danger")
                 continue
 
         # Thông báo tổng kết: Đã tải X/Y thành công
@@ -6774,14 +6774,14 @@ def documents_upload():
             if total_files == 1:
                 single_title = uploaded_titles[0]
                 if is_all_mock:
-                    flash(f"Tải lên kho tạm (chưa kết nối Drive), vui lòng liên hệ quản trị viên. Tài liệu '{single_title}' đã được lưu tạm. Đã tải 1/1 thành công.", "warning")
+                    flash(f"Tải lên kho tạm (chưa kết nối hệ thống), vui lòng liên hệ quản trị viên. Tài liệu '{single_title}' đã được lưu tạm. Đã tải 1/1 thành công.", "warning")
                 else:
-                    flash(f"🎉 Tải lên tài liệu '{single_title}' thành công vào thư mục {mon_hoc} trên Google Drive 5TB! Đã tải 1/1 thành công.", "success")
+                    flash(f"🎉 Tải lên tài liệu '{single_title}' thành công vào thư mục {mon_hoc} trên hệ thống! Đã tải 1/1 thành công.", "success")
             else:
                 if is_all_mock:
-                    flash(f"Tải lên kho tạm (chưa kết nối Drive), vui lòng liên hệ quản trị viên. Đã tải {success_count}/{total_files} thành công.", "warning")
+                    flash(f"Tải lên kho tạm (chưa kết nối hệ thống), vui lòng liên hệ quản trị viên. Đã tải {success_count}/{total_files} thành công.", "warning")
                 else:
-                    flash(f"🎉 Đã tải {success_count}/{total_files} thành công vào thư mục {mon_hoc} trên Google Drive 5TB!", "success")
+                    flash(f"🎉 Đã tải {success_count}/{total_files} thành công vào thư mục {mon_hoc} trên hệ thống!", "success")
 
             return redirect(url_for("documents_index"))
         else:
@@ -6840,7 +6840,7 @@ def documents_download(doc_id):
 
     except Exception as e:
         app.logger.error(f"Lỗi tải tài liệu từ Google Drive #{doc_id}: {e}")
-        flash(f"Không thể tải tài liệu từ Google Drive: {str(e)}", "danger")
+        flash(f"Không thể tải tài liệu từ hệ thống: {str(e)}", "danger")
         return redirect(url_for("documents_index"))
 
 
@@ -6915,7 +6915,7 @@ def documents_delete(doc_id):
     cur.execute("UPDATE documents SET trang_thai = 'da_xoa' WHERE id = ?", (doc_id,))
     db.commit()
 
-    flash(f"Đã xóa tài liệu '{doc['tieu_de']}' khỏi hệ thống và Google Drive.", "success")
+    flash(f"Đã xóa tài liệu '{doc['tieu_de']}' khỏi hệ thống thành công.", "success")
     return redirect(url_for("documents_index"))
 
 

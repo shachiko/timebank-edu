@@ -6,11 +6,11 @@
 <div class="row mb-4 align-items-center">
     <div class="col-md-7">
         <h2 class="fw-bold mb-1" style="color: #0f172a;">
-            <i class="bi bi-folder2-open text-primary me-2"></i>Kho Tài Liệu Học Tập 5TB
+            <i class="bi bi-folder2-open text-primary me-2"></i>Kho Tài Liệu Học Tập
         </h2>
         <p class="text-muted mb-0">
             Trường: <span class="badge bg-primary-subtle text-primary fw-semibold px-2 py-1">{{ school_name or "Chung" }}</span>
-            &bull; Hệ thống lưu trữ đám mây Google Drive tốc độ cao
+            &bull; Hệ thống lưu trữ đám mây tốc độ cao
         </p>
     </div>
     <div class="col-md-5 text-md-end mt-3 mt-md-0">
@@ -110,7 +110,7 @@
                                     {% if is_teacher_or_admin or doc.user_id == current_user.id %}
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
-                                        <form method="POST" action="{{ url_for('documents_delete', doc_id=doc.id) }}" onsubmit="return confirm('Bạn có chắc chắn muốn xóa tài liệu này khỏi Drive?');">
+                                        <form method="POST" action="{{ url_for('documents_delete', doc_id=doc.id) }}" onsubmit="return confirm('Bạn có chắc chắn muốn xóa tài liệu này khỏi hệ thống?');">
                                             <button type="submit" class="dropdown-item text-danger">
                                                 <i class="bi bi-trash3 me-2"></i>Xóa tài liệu
                                             </button>

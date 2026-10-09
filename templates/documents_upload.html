@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Tải Lên Tài Liệu - Kho 5TB Google Drive{% endblock %}
+{% block title %}Tải Lên Tài Liệu - Kho tài liệu{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -13,7 +13,7 @@
                 <h3 class="fw-bold mb-0" style="color: #0f172a;">
                     <i class="bi bi-cloud-arrow-up text-primary me-2"></i>Tải Lên Tài Liệu Học Tập
                 </h3>
-                <small class="text-muted">Lưu trữ đám mây Google Drive 5TB &bull; Thư mục trường: <strong>{{ school_name or "Chung" }}</strong></small>
+                <small class="text-muted">Lưu trữ đám mây hệ thống &bull; Thư mục trường: <strong>{{ school_name or "Chung" }}</strong></small>
             </div>
         </div>
 
@@ -32,7 +32,7 @@
                             {% endfor %}
                             <option value="Khác">Khác / Ngoại khóa</option>
                         </select>
-                        <div class="form-text">Tài liệu sẽ được lưu tự động vào thư mục môn học tương ứng trên Google Drive.</div>
+                        <div class="form-text">Tài liệu sẽ được lưu tự động vào thư mục môn học tương ứng trên hệ thống.</div>
                     </div>
 
                     <!-- Tiêu đề tài liệu (Tùy chọn) -->
@@ -62,7 +62,7 @@
                         <input type="file" name="files" id="files" class="form-control form-control-lg rounded-3" required multiple
                                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,.7z,.mp4,.avi,.mov,.mp3,.jpg,.jpeg,.png,.webp">
                         <div class="form-text d-flex justify-content-between mt-1">
-                            <span class="text-muted"><i class="bi bi-shield-check me-1 text-success"></i>Tối đa 500MB/tệp &bull; Stream trực tiếp lên Google Drive 5TB</span>
+                            <span class="text-muted"><i class="bi bi-shield-check me-1 text-success"></i>Tối đa 500MB/tệp &bull; Tải trực tiếp lên hệ thống</span>
                             <span id="fileSizeNotice" class="fw-semibold"></span>
                         </div>
 
@@ -82,7 +82,7 @@
                     <!-- Tiến trình tải lên (ẩn ban đầu) -->
                     <div id="uploadProgressContainer" class="d-none mb-4">
                         <div class="d-flex justify-content-between mb-1">
-                            <span class="small fw-semibold text-primary"><i class="bi bi-cloud-upload me-1"></i>Đang truyền tệp sang Google Drive...</span>
+                            <span class="small fw-semibold text-primary"><i class="bi bi-cloud-upload me-1"></i>Đang tải tệp lên hệ thống...</span>
                             <span class="small text-muted" id="progressPercentage">Vui lòng chờ...</span>
                         </div>
                         <div class="progress" style="height: 10px;">
@@ -173,7 +173,7 @@ document.getElementById('files').addEventListener('change', function(e) {
 document.getElementById('uploadForm').addEventListener('submit', function() {
     const submitBtn = document.getElementById('submitBtn');
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Đang truyền tệp sang Google Drive...';
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Đang tải tệp lên hệ thống...';
     document.getElementById('uploadProgressContainer').classList.remove('d-none');
 });
 </script>

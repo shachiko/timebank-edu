@@ -97,17 +97,17 @@ class TestPrompt24DrivePackages(unittest.TestCase):
             self.assertEqual(resp.status_code, 200)
             html = resp.data.decode("utf-8")
             # Phải có thông báo trung thực
-            self.assertIn("Tải lên kho tạm (chưa kết nối Drive), vui lòng liên hệ quản trị viên", html)
-            # Tuyệt đối KHÔNG được báo thành công trên Google Drive 5TB
-            self.assertNotIn("thành công vào thư mục Toán trên Google Drive 5TB", html)
+            self.assertIn("Tải lên kho tạm (chưa kết nối hệ thống), vui lòng liên hệ quản trị viên", html)
+            # Tuyệt đối KHÔNG được báo thành công trên hệ thống
+            self.assertNotIn("thành công vào thư mục Toán trên hệ thống", html)
 
         print("\n[PASS - TC 3]: Thông báo khi rơi vào kho tạm chính xác, trung thực (không nói dối người dùng).")
 
     # =========================================================================
-    # TIÊU CHÍ 4: THÔNG BÁO THÀNH CÔNG KHI KẾT NỐI GOOGLE DRIVE THẬT
+    # TIÊU CHÍ 4: THÔNG BÁO THÀNH CÔNG KHI KẾT NỐI DRIVE THẬT
     # =========================================================================
     def test_04_upload_message_success_when_real_drive(self):
-        """[TIÊU CHÍ 4]: Khi kết nối Drive thật -> Báo thành công vào thư mục trên Google Drive 5TB."""
+        """[TIÊU CHÍ 4]: Khi kết nối Drive thật -> Báo thành công vào thư mục trên hệ thống."""
         with self.client.session_transaction() as sess:
             sess["user_id"] = 1
             sess["vai_tro"] = "hoc_sinh"
@@ -126,15 +126,15 @@ class TestPrompt24DrivePackages(unittest.TestCase):
             resp = self.client.post("/documents/upload", data={
                 "mon_hoc": "Vật lý",
                 "tieu_de": "Tài liệu Vật lý 12 thực tế",
-                "mo_ta": "Tài liệu trên Google Drive 5TB thật",
+                "mo_ta": "Tài liệu trên hệ thống thật",
                 "file": fake_pdf
             }, content_type="multipart/form-data", follow_redirects=True)
 
             self.assertEqual(resp.status_code, 200)
             html = resp.data.decode("utf-8")
-            self.assertIn("thành công vào thư mục Vật lý trên Google Drive 5TB!", html)
+            self.assertIn("thành công vào thư mục Vật lý trên hệ thống!", html)
 
-        print("\n[PASS - TC 4]: Thông báo khi kết nối Drive thật chúc mừng đúng trên Google Drive 5TB.")
+        print("\n[PASS - TC 4]: Thông báo khi kết nối Drive thật chúc mừng đúng trên hệ thống.")
 
 
 if __name__ == "__main__":
