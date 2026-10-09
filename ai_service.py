@@ -497,7 +497,7 @@ def ai_admin_early_warning(db, admin_user_id):
         FROM users u
         LEFT JOIN sessions s ON (u.id = s.nguoi_day_id OR u.id = s.nguoi_hoc_id)
         WHERE u.vai_tro = 'hoc_sinh'
-        GROUP BY u.id
+        GROUP BY u.id, u.ho_ten, u.lop, u.ma_hoc_sinh, u.so_du_gio
     """)
     students = cur.fetchall()
     
@@ -538,7 +538,7 @@ def ai_admin_early_warning(db, admin_user_id):
         JOIN users u1 ON r.nguoi_danh_gia_id = u1.id
         JOIN users u2 ON r.nguoi_duoc_danh_gia_id = u2.id
         WHERE r.so_sao <= 2
-        GROUP BY r.nguoi_danh_gia_id, r.nguoi_duoc_danh_gia_id
+        GROUP BY r.nguoi_danh_gia_id, r.nguoi_duoc_danh_gia_id, u1.ho_ten, u2.ho_ten
         HAVING COUNT(*) >= 2
     """)
     low_rated_pairs = cur.fetchall()
@@ -1142,7 +1142,7 @@ def ai_generate_weekly_newsletter(db, user_id=None):
         JOIN sessions s ON u.id = s.nguoi_day_id
         LEFT JOIN ratings r ON s.id = r.session_id AND r.nguoi_duoc_danh_gia_id = u.id
         WHERE u.vai_tro = 'hoc_sinh'
-        GROUP BY u.id
+        GROUP BY u.id, u.ho_ten, u.lop
         ORDER BY tong_gio DESC, so_phien DESC, sao_tb DESC
         LIMIT 3
     """)
