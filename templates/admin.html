@@ -129,6 +129,12 @@
         {% endif %}
       </button>
     </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link rounded-pill fw-semibold position-relative text-danger" id="tab-community-tasks-btn" data-bs-toggle="pill" data-bs-target="#tab-community-tasks" type="button" role="tab">
+        <i class="bi bi-heart-fill me-1"></i> Chương trình Cộng đồng
+        <span class="badge bg-danger rounded-pill ms-1">{{ admin_community_tasks|length }}</span>
+      </button>
+    </li>
     {% if is_super_admin %}
     <li class="nav-item" role="presentation">
       <button class="nav-link rounded-pill fw-semibold text-primary" id="tab-schools-btn" data-bs-toggle="pill" data-bs-target="#tab-schools" type="button" role="tab">
@@ -894,6 +900,257 @@
         </div>
       </div>
       {% endif %}
+    </div>
+
+    <!-- =========================================================================
+         TAB: CHƯƠNG TRÌNH CỘNG ĐỒNG (SCHOOL ADMIN & SUPER ADMIN)
+         ========================================================================= -->
+    <div class="tab-pane fade" id="tab-community-tasks" role="tabpanel">
+      <!-- Card: Form Thêm Chương Trình Mới -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+        <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+          <div>
+            <h5 class="fw-bold text-dark mb-1">
+              <i class="bi bi-heart-fill text-danger me-2"></i>Thêm Chương Trình Giờ Công Ích Mới
+            </h5>
+            <p class="text-muted small mb-0">Quản trị viên chủ động phát động các chương trình thiện nguyện, lao động công ích, hỗ trợ thư viện để học sinh cống hiến và nhận giờ tín dụng.</p>
+          </div>
+          <span class="badge bg-danger-subtle text-danger border border-danger px-3 py-2 rounded-pill">
+            <i class="bi bi-people-fill me-1"></i> Giờ Công Ích Học Đường
+          </span>
+        </div>
+
+        <form method="POST" action="{{ url_for('admin_create_community_task') }}">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Tên chương trình cộng đồng <span class="text-danger">*</span></label>
+              <input type="text" name="tieu_de" class="form-control rounded-3" placeholder="Ví dụ: Trồng cây xanh khuôn viên trường, Thăm mái ấm..." required>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold">Số giờ thưởng (*) <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <input type="number" step="0.5" min="0.5" name="so_gio_thuong" class="form-control rounded-start-3" value="1.0" required>
+                <span class="input-group-text bg-light">giờ (h)</span>
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold">Trạng thái <span class="text-danger">*</span></label>
+              <select name="trang_thai" class="form-select rounded-3" required>
+                <option value="sap_dien_ra">Sắp diễn ra</option>
+                <option value="dang_dien_ra" selected>Đang diễn ra</option>
+                <option value="da_ket_thuc">Đã kết thúc</option>
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">Ngày bắt đầu</label>
+              <input type="date" name="ngay_bat_dau" class="form-control rounded-3">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">Ngày kết thúc</label>
+              <input type="date" name="ngay_ket_thuc" class="form-control rounded-3">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">Trường áp dụng</label>
+              {% if is_super_admin %}
+                <select name="truong_id" class="form-select rounded-3">
+                  {% for s in all_schools %}
+                    <option value="{{ s.id }}" {% if selected_truong_id and selected_truong_id|int == s.id %}selected{% endif %}>{{ s.ten_truong }}</option>
+                  {% endfor %}
+                </select>
+              {% else %}
+                <input type="hidden" name="truong_id" value="{{ session.get('truong_id', 1) }}">
+                <input type="text" class="form-control rounded-3 bg-light text-muted" value="{{ current_school_name }}" readonly disabled>
+              {% endif %}
+            </div>
+
+            <div class="col-md-8">
+              <label class="form-label small fw-semibold">Mô tả chi tiết chương trình</label>
+              <textarea name="mo_ta" class="form-control rounded-3" rows="2" placeholder="Nội dung công việc, kế hoạch tổ chức, ý nghĩa cộng đồng..."></textarea>
+            </div>
+
+            <div class="col-md-4 d-flex align-items-end">
+              <button type="submit" class="btn btn-brand w-100 py-2 rounded-3 fw-bold shadow-sm">
+                <i class="bi bi-plus-circle me-1"></i> Lưu & Phát động chương trình
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Card: Bảng Danh Sách Chương Trình -->
+      <div class="card border-0 shadow-sm rounded-4 bg-white mb-4">
+        <div class="card-header bg-white border-0 pt-4 px-4 pb-2 d-flex justify-content-between align-items-center">
+          <div>
+            <h5 class="fw-bold text-dark mb-1">
+              <i class="bi bi-card-checklist text-primary me-2"></i>Danh Sách Chương Trình Giờ Công Ích Học Đường
+            </h5>
+            <small class="text-muted">Quản trị viên có thể theo dõi số lượng đăng ký, chỉnh sửa thông tin hoặc kết thúc chương trình.</small>
+          </div>
+          <span class="badge bg-secondary rounded-pill px-3 py-2">{{ admin_community_tasks|length }} chương trình</span>
+        </div>
+
+        <div class="card-body p-4">
+          {% if admin_community_tasks %}
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light small text-secondary">
+                <tr>
+                  <th style="width: 60px;">#ID</th>
+                  <th>Tên chương trình & Mô tả</th>
+                  <th style="width: 120px;">Số giờ thưởng</th>
+                  <th>Thời gian bắt đầu / kết thúc</th>
+                  {% if is_super_admin %}
+                  <th>Trường áp dụng</th>
+                  {% endif %}
+                  <th style="width: 130px;">Trạng thái</th>
+                  <th style="width: 120px;">Học sinh đăng ký</th>
+                  <th style="width: 160px;" class="text-end">Hành động</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for task in admin_community_tasks %}
+                <tr>
+                  <td class="text-muted fw-bold">#{{ task.id }}</td>
+                  <td>
+                    <div class="fw-bold text-dark">{{ task.tieu_de }}</div>
+                    {% if task.mo_ta %}
+                      <div class="small text-muted text-truncate" style="max-width: 320px;" title="{{ task.mo_ta }}">{{ task.mo_ta }}</div>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <span class="badge bg-danger bg-opacity-10 text-danger fw-bold px-2 py-1">
+                      +{{ "%.1f"|format(task.so_gio_thuong) }}h
+                    </span>
+                  </td>
+                  <td>
+                    <div class="small text-secondary">
+                      <i class="bi bi-calendar-range text-primary me-1"></i>
+                      {% if task.ngay_bat_dau or task.ngay_ket_thuc %}
+                        {{ task.ngay_bat_dau or '---' }} &rarr; {{ task.ngay_ket_thuc or '---' }}
+                      {% else %}
+                        Hạn: {{ task.han_dang_ky or 'Không giới hạn' }}
+                      {% endif %}
+                    </div>
+                  </td>
+                  {% if is_super_admin %}
+                  <td>
+                    <span class="badge bg-light text-dark border">{{ task.ten_truong or 'Toàn hệ thống' }}</span>
+                  </td>
+                  {% endif %}
+                  <td>
+                    {% if task.trang_thai == 'sap_dien_ra' %}
+                      <span class="badge bg-info text-dark rounded-pill px-2 py-1"><i class="bi bi-hourglass-split me-1"></i>Sắp diễn ra</span>
+                    {% elif task.trang_thai in ('dang_dien_ra', 'mo_dang_ky', 'mo') %}
+                      <span class="badge bg-success rounded-pill px-2 py-1"><i class="bi bi-play-circle me-1"></i>Đang diễn ra</span>
+                    {% else %}
+                      <span class="badge bg-secondary rounded-pill px-2 py-1"><i class="bi bi-check2-circle me-1"></i>Đã kết thúc</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 fw-bold">
+                      <i class="bi bi-people me-1"></i>{{ task.so_luong_da_dang_ky }} bạn
+                    </span>
+                  </td>
+                  <td class="text-end">
+                    <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2 py-1 me-1" data-bs-toggle="modal" data-bs-target="#modalEditTask{{ task.id }}">
+                      <i class="bi bi-pencil-square me-1"></i>Sửa
+                    </button>
+                    <form method="POST" action="{{ url_for('admin_delete_community_task', task_id=task.id) }}" class="d-inline" onsubmit="return confirm('{{ 'Chương trình này đã có học sinh đăng ký tham gia. Hệ thống sẽ chuyển trạng thái sang Đã kết thúc thay vì xóa vĩnh viễn để bảo toàn lịch sử học tập. Bạn có đồng ý không?' if task.so_luong_da_dang_ky > 0 else 'Bạn có chắc chắn muốn xóa vĩnh viễn chương trình cộng đồng này không?' }}');">
+                      <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-2 py-1" title="{{ 'Chuyển sang Đã kết thúc' if task.so_luong_da_dang_ky > 0 else 'Xóa vĩnh viễn' }}">
+                        <i class="bi bi-trash me-1"></i>Xóa
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+
+                <!-- Modal Sửa Chương Trình #{{ task.id }} -->
+                <div class="modal fade" id="modalEditTask{{ task.id }}" tabindex="-1" aria-labelledby="modalEditTaskLabel{{ task.id }}" aria-hidden="true">
+                  <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content rounded-4 shadow border-0">
+                      <div class="modal-header border-bottom pb-3">
+                        <h5 class="modal-title fw-bold text-dark" id="modalEditTaskLabel{{ task.id }}">
+                          <i class="bi bi-pencil-square text-primary me-2"></i>Chỉnh Sửa Chương Trình Cộng Đồng #{{ task.id }}
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <form method="POST" action="{{ url_for('admin_edit_community_task', task_id=task.id) }}">
+                        <div class="modal-body p-4">
+                          <div class="row g-3">
+                            <div class="col-md-8">
+                              <label class="form-label small fw-semibold">Tên chương trình <span class="text-danger">*</span></label>
+                              <input type="text" name="tieu_de" class="form-control rounded-3" value="{{ task.tieu_de }}" required>
+                            </div>
+                            <div class="col-md-4">
+                              <label class="form-label small fw-semibold">Số giờ thưởng (*) <span class="text-danger">*</span></label>
+                              <div class="input-group">
+                                <input type="number" step="0.5" min="0.5" name="so_gio_thuong" class="form-control rounded-start-3" value="{{ task.so_gio_thuong }}" required>
+                                <span class="input-group-text bg-light">giờ (h)</span>
+                              </div>
+                            </div>
+                            <div class="col-md-4">
+                              <label class="form-label small fw-semibold">Trạng thái <span class="text-danger">*</span></label>
+                              <select name="trang_thai" class="form-select rounded-3" required>
+                                <option value="sap_dien_ra" {% if task.trang_thai == 'sap_dien_ra' %}selected{% endif %}>Sắp diễn ra</option>
+                                <option value="dang_dien_ra" {% if task.trang_thai in ('dang_dien_ra', 'mo_dang_ky', 'mo') %}selected{% endif %}>Đang diễn ra</option>
+                                <option value="da_ket_thuc" {% if task.trang_thai in ('da_ket_thuc', 'hoan_thanh', 'dong') %}selected{% endif %}>Đã kết thúc</option>
+                              </select>
+                            </div>
+                            <div class="col-md-4">
+                              <label class="form-label small fw-semibold">Ngày bắt đầu</label>
+                              <input type="date" name="ngay_bat_dau" class="form-control rounded-3" value="{{ task.ngay_bat_dau or '' }}">
+                            </div>
+                            <div class="col-md-4">
+                              <label class="form-label small fw-semibold">Ngày kết thúc</label>
+                              <input type="date" name="ngay_ket_thuc" class="form-control rounded-3" value="{{ task.ngay_ket_thuc or task.han_dang_ky or '' }}">
+                            </div>
+                            {% if is_super_admin %}
+                            <div class="col-md-6">
+                              <label class="form-label small fw-semibold">Trường áp dụng</label>
+                              <select name="truong_id" class="form-select rounded-3">
+                                {% for s in all_schools %}
+                                  <option value="{{ s.id }}" {% if task.truong_id == s.id %}selected{% endif %}>{{ s.ten_truong }}</option>
+                                {% endfor %}
+                              </select>
+                            </div>
+                            {% endif %}
+                            <div class="col-md-{{ '6' if is_super_admin else '12' }}">
+                              <label class="form-label small fw-semibold">Địa điểm tổ chức</label>
+                              <input type="text" name="dia_diem" class="form-control rounded-3" value="{{ task.dia_diem or '' }}" placeholder="Ví dụ: Thư viện tầng 2, Sân trường...">
+                            </div>
+                            <div class="col-12">
+                              <label class="form-label small fw-semibold">Mô tả nội dung</label>
+                              <textarea name="mo_ta" class="form-control rounded-3" rows="3">{{ task.mo_ta or '' }}</textarea>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="modal-footer border-top bg-light rounded-bottom-4">
+                          <button type="button" class="btn btn-light rounded-pill px-3" data-bs-dismiss="modal">Hủy</button>
+                          <button type="submit" class="btn btn-brand rounded-pill px-4 fw-semibold">
+                            <i class="bi bi-check2-circle me-1"></i> Lưu thay đổi
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center py-5 text-muted">
+            <i class="bi bi-heartbreak fs-1 text-danger opacity-50 d-block mb-2"></i>
+            <h6 class="fw-bold">Chưa có chương trình cộng đồng nào</h6>
+            <p class="small mb-0">Hãy sử dụng biểu mẫu phía trên để phát động chương trình giờ công ích đầu tiên cho học sinh!</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
     </div>
 
     {% if is_super_admin %}

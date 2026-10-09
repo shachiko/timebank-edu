@@ -859,7 +859,55 @@ Hệ thống được quốc tế hóa (i18n) và địa phương hóa (l10n) to
   6. Giao diện tiếng Đức (`de`) chính xác.
   7. Nội dung người dùng tạo (user content) được giữ nguyên, không bị can thiệp.
   8. Xử lý mã ngôn ngữ không hợp lệ an toàn, tự động fallback về tiếng Việt.
-- **Toàn bộ 32/32 bộ test regression (100% PASS)** xác nhận tương thích hoàn hảo với mọi tính năng trước đó.
+- **Toàn bộ 33/33 bộ test regression (100% PASS)** xác nhận tương thích hoàn hảo với mọi tính năng trước đó.
+
+---
+
+## 🤝 QUẢN LÝ CHƯƠNG TRÌNH GIỜ CÔNG ÍCH HỌC ĐƯỜNG (THÊM / SỬA / XÓA)
+
+Hệ thống nâng cấp toàn diện phân hệ hoạt động phục vụ cộng đồng, chuyển đổi từ danh mục định sẵn trong mã nguồn sang cơ chế quản trị động hoàn toàn trong CSDL, cho phép nhà trường tự chủ tổ chức các chiến dịch thiện nguyện và giờ công ích học đường:
+
+### 1. Bảng Điều Khiển Quản Trị (`/admin` & Tab "Chương trình Cộng đồng"):
+- **Giao diện Tab chuyên biệt (`#tab-community-tasks`):**
+  - Tích hợp liền mạch vào hệ thống tab quản trị viện với icon `bi-heart-fill` nổi bật.
+  - Hỗ trợ cả **Quản trị trường (`school_admin`)** và **Tổng quản trị (`super_admin`)**.
+- **Form thêm mới chương trình:**
+  - Nhập liệu đầy đủ: Tên chương trình (*), Mô tả chi tiết, Số giờ tín dụng thưởng (*), Ngày bắt đầu, Ngày kết thúc, Địa điểm thực hiện, Số lượng học sinh tối đa.
+  - Lựa chọn trạng thái: *Sắp diễn ra (`sap_dien_ra`)*, *Đang diễn ra (`dang_dien_ra`)*, *Đã kết thúc (`da_ket_thuc`)*.
+  - Phân quyền gán trường: Super Admin có quyền chọn phân bổ cho bất kỳ trường học nào trong hệ thống; Quản trị trường tự động gán cho trường của mình.
+- **Bảng thống kê & Quản lý danh sách:**
+  - Liệt kê trực quan: Tên chương trình, mô tả tóm tắt, số giờ thưởng, thời gian diễn ra, trạng thái (badge màu tương ứng), trường áp dụng và số lượng học sinh đã đăng ký tham gia theo thời gian thực.
+  - Nút **"Sửa"**: Mở Modal chỉnh sửa tức thì toàn bộ thông tin chương trình và cập nhật trực tiếp vào CSDL.
+  - Nút **"Xóa" an toàn:**
+    + **Chương trình chưa có ai đăng ký:** Thực hiện xóa vĩnh viễn (hard delete) khỏi CSDL.
+    + **Chương trình đã có học sinh đăng ký:** Hệ thống **chặn tuyệt đối việc xóa cứng**, tự động chuyển trạng thái sang **"Đã kết thúc"** kèm thông báo bảo vệ tính toàn vẹn dữ liệu điểm tích lũy và lịch sử tham gia của học sinh.
+
+### 2. Cách Ly Đa Trường (Multi-tenant Data Isolation):
+- Quản trị viên của trường A chỉ nhìn thấy, chỉnh sửa và quản lý các chương trình thuộc phạm vi trường A.
+- Ngăn chặn mọi hành vi can thiệp trái phép (chặn đọc, chặn sửa, chặn xóa) giữa các trường học khác nhau.
+- Super Admin có góc nhìn toàn cục, giám sát và quản lý chương trình công ích trên toàn bộ mạng lưới trường học.
+
+### 3. Tự Động Hiển Thị Trang "Vì Cộng Đồng" (`/community`):
+- Toàn bộ chương trình mới tạo hoặc cập nhật lập tức hiển thị động trên trang `/community` của học sinh.
+- Hiển thị badge trạng thái chuẩn hóa (*Sắp diễn ra*, *Đang diễn ra*), mốc thời gian bắt đầu – kết thúc và số giờ tín dụng học đường nhận được.
+- Học sinh có thể đăng ký tham gia trực tiếp chỉ với 1 click.
+
+### 4. AI Gợi Ý Nhiệm Vụ Thông Minh (`ai_recommend_tasks`):
+- Trợ lý AI tự động truy vấn động danh sách nhiệm vụ từ bảng `community_tasks` trong CSDL thay cho danh sách fix cứng.
+- Phân tích sở thích, năng khiếu và kỹ năng của từng học sinh để gợi ý nhiệm vụ công ích phù hợp nhất (trồng cây xanh, bảo vệ môi trường, hỗ trợ thư viện, gia sư thiện nguyện, thăm mái ấm tình thương...).
+
+### 5. Nghiệm Thu & Kiểm Thử Tự Động:
+- **Test suite `test_prompt_community_management.py` (8/8 test cases PASS):**
+  1. Kiểm tra sự hiện diện của Tab Chương trình Cộng đồng cho Super Admin và School Admin.
+  2. Tạo chương trình mới và kiểm tra hiển thị thời gian thực trên trang `/community`.
+  3. Sửa thông tin chương trình và xác thực cập nhật tức thì trong CSDL và giao diện.
+  4. Xóa cứng thành công khi chương trình chưa có ai đăng ký.
+  5. Chặn xóa cứng và tự động chuyển 'đã kết thúc' khi chương trình đã có học sinh đăng ký.
+  6. Cách ly đa trường tuyệt đối giữa Quản trị trường A và Trường B.
+  7. AI gợi ý nhiệm vụ động từ CSDL theo kỹ năng người dùng.
+  8. Phân quyền Super Admin quản trị và phân bổ chương trình cho mọi trường.
+- **Toàn bộ 33/33 bộ kiểm thử hồi quy (100% PASS):** Hệ thống ổn định tuyệt đối, sẵn sàng triển khai thực tế.
+
 
 
 

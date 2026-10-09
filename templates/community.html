@@ -204,7 +204,11 @@
               <span class="badge bg-danger bg-opacity-10 text-danger fw-semibold px-2 py-1 rounded">
                 <i class="bi bi-gift-fill me-1"></i>Thưởng +{{ "%.1f"|format(task.so_gio_thuong) }} giờ
               </span>
-            {% if task.is_full %}
+            {% if task.trang_thai == 'sap_dien_ra' %}
+            <span class="badge bg-info bg-opacity-10 text-info fw-medium px-2 py-1 rounded">
+              Sắp diễn ra
+            </span>
+            {% elif task.is_full %}
             <span class="badge bg-warning bg-opacity-10 text-warning-emphasis fw-medium px-2 py-1 rounded">
               Đã đủ người
             </span>
@@ -227,6 +231,13 @@
           <div class="small text-muted mb-2">
             <i class="bi bi-geo-alt-fill text-danger me-1"></i>Địa điểm: <strong>{{ task.dia_diem or 'Tại trường' }}</strong>
           </div>
+
+          {% if task.ngay_bat_dau or task.ngay_ket_thuc %}
+          <div class="small text-muted mb-2">
+            <i class="bi bi-clock-history text-warning me-1"></i>Thời gian: 
+            <strong>{{ task.ngay_bat_dau or '' }}{% if task.ngay_bat_dau and task.ngay_ket_thuc %} &rarr; {% endif %}{{ task.ngay_ket_thuc or '' }}</strong>
+          </div>
+          {% endif %}
 
           <div class="small text-muted mb-2">
             <i class="bi bi-calendar-event text-primary me-1"></i>Hạn đăng ký: 

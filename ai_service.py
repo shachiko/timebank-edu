@@ -745,7 +745,7 @@ Xuất kết quả đúng định dạng JSON sau:
 # ==============================================================================
 # 7. AI GỢI Ý NHIỆM VỤ CỘNG ĐỒNG "VIỆC PHÙ HỢP VỚI BẠN" (MILESTONE M6)
 # ==============================================================================
-def ai_recommend_tasks(db, user_id, open_tasks):
+def ai_recommend_tasks(db, user_id, open_tasks=None):
     """
     Điểm chạm AI: Gợi ý 3 nhiệm vụ cộng đồng phù hợp nhất với học sinh:
     - Phân tích kỹ năng, sở thích, lớp học và lịch sử hoạt động của học sinh.
@@ -754,6 +754,17 @@ def ai_recommend_tasks(db, user_id, open_tasks):
     - Ghi nhận nhật ký suy luận vào bảng ai_logs (chuc_nang = 'goi_y_nhiem_vu').
     - Trả về danh sách (tối đa 3 task kèm trường 'ly_do_ai_goi_y') và cờ is_live.
     """
+    if open_tasks is None:
+        cur = db.cursor()
+        cur.execute("""
+            SELECT t.*,
+                   (SELECT COUNT(*) FROM task_registrations r WHERE r.task_id = t.id AND r.trang_thai NOT IN ('huy')) AS so_luong_da_dang_ky
+            FROM community_tasks t
+            WHERE t.trang_thai IN ('mo_dang_ky', 'mo', 'sap_dien_ra', 'dang_dien_ra')
+            ORDER BY t.id DESC
+        """)
+        open_tasks = [dict(r) for r in cur.fetchall()]
+
     if not open_tasks:
         return [], is_ai_live()
 
@@ -876,8 +887,8 @@ Nhiệm vụ của bạn:
             if kw in text_content:
                 score += 2
 
-        # Ưu tiên các nhiệm vụ có nội dung giáo dục, hỗ trợ học tập, công nghệ, cộng đồng
-        if any(term in text_content for term in ["thư viện", "sách", "tin học", "số hóa", "dạy", "tiểu học", "môi trường"]):
+        # Ưu tiên các nhiệm vụ có nội dung giáo dục, hỗ trợ học tập, công nghệ, cộng đồng, môi trường, thiện nguyện
+        if any(term in text_content for term in ["thư viện", "sách", "tin học", "số hóa", "dạy", "tiểu học", "môi trường", "trồng cây", "cây xanh", "mái ấm", "từ thiện", "dọn", "vệ sinh"]):
             score += 1
 
         scored_tasks.append((score, t))
@@ -889,16 +900,20 @@ Nhiệm vụ của bạn:
     for _, t in scored_tasks[:3]:
         t_copy = dict(t)
         t_text = f"{t_copy.get('tieu_de', '')} {t_copy.get('mo_ta', '')}".lower()
-        if "thư viện" in t_text or "sách" in t_text:
+        if "trồng cây" in t_text or "cây xanh" in t_text or "hoa" in t_text:
+            ly_do = f"Hoạt động trồng cây xanh giúp làm đẹp trường lớp, rèn luyện kỹ năng đội nhóm và nhận {t_copy.get('so_gio_thuong', 1)} giờ thưởng."
+        elif "mái ấm" in t_text or "từ thiện" in t_text or "tình thương" in t_text or "mái ấm" in t_text:
+            ly_do = f"Lan tỏa tình yêu thương và sẻ chia trách nhiệm xã hội cùng bạn bè; nhận {t_copy.get('so_gio_thuong', 1)} giờ thưởng."
+        elif "thư viện" in t_text or "sách" in t_text:
             ly_do = f"Phù hợp với tính cẩn thận và thói quen đọc sách của bạn; giúp bạn tích lũy thêm {t_copy.get('so_gio_thuong', 1)} giờ tín dụng."
         elif "tin học" in t_text or "số hóa" in t_text or "công nghệ" in t_text:
             ly_do = f"Tận dụng tốt thế mạnh kỹ năng số và tin học của bạn để đóng góp vào hoạt động chuyển đổi số của trường."
         elif "tiểu học" in t_text or "dạy" in t_text or "kèm" in t_text:
             ly_do = f"Phát huy khả năng sư phạm và truyền đạt kiến thức; tạo sự gắn kết học đường tích cực."
-        elif "môi trường" in t_text or "rác" in t_text or "xanh" in t_text:
-            ly_do = f"Hoạt động rèn luyện thể chất và nâng cao ý thức bảo vệ môi trường cùng các bạn trong trường."
+        elif "môi trường" in t_text or "rác" in t_text or "xanh" in t_text or "dọn" in t_text or "vệ sinh" in t_text:
+            ly_do = f"Hoạt động rèn luyện thể chất và nâng cao ý thức giữ gìn môi trường xanh sạch đẹp cùng trường học."
         else:
-            ly_do = f"Nhiệm vụ vừa sức, giúp bạn lan tỏa tinh thần trách nhiệm cộng đồng và nhận {t_copy.get('so_gio_thuong', 1)} giờ thưởng."
+            ly_do = f"Nhiệm vụ ý nghĩa '{t_copy.get('tieu_de', '')}', giúp bạn lan tỏa tinh thần trách nhiệm cộng đồng và nhận {t_copy.get('so_gio_thuong', 1)} giờ thưởng."
 
         t_copy["ly_do_ai_goi_y"] = ly_do
         recommended.append(t_copy)

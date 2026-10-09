@@ -182,9 +182,11 @@ CREATE TABLE IF NOT EXISTS community_tasks (
     so_gio_thuong REAL DEFAULT 1.0,
     so_luong_toi_da INTEGER DEFAULT 5,
     han_dang_ky TEXT,
+    ngay_bat_dau TEXT,
+    ngay_ket_thuc TEXT,
     anh_bia TEXT,
     nguoi_tao_id INTEGER NOT NULL,
-    trang_thai TEXT CHECK(trang_thai IN ('mo_dang_ky', 'mo', 'dong', 'hoan_thanh', 'huy')) DEFAULT 'mo_dang_ky',
+    trang_thai TEXT CHECK(trang_thai IN ('mo_dang_ky', 'mo', 'dong', 'hoan_thanh', 'huy', 'sap_dien_ra', 'dang_dien_ra', 'da_ket_thuc')) DEFAULT 'dang_dien_ra',
     thoi_gian_tao TEXT DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (truong_id) REFERENCES truong(id),
     FOREIGN KEY (nguoi_tao_id) REFERENCES users(id)

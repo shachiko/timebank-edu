@@ -757,6 +757,8 @@ def migrate_postgres_schema(conn):
         ("ratings", "truong_id", "INTEGER DEFAULT 1"),
         ("community_tasks", "truong_id", "INTEGER DEFAULT 1"),
         ("community_tasks", "anh_bia", "TEXT"),
+        ("community_tasks", "ngay_bat_dau", "TEXT"),
+        ("community_tasks", "ngay_ket_thuc", "TEXT"),
         ("task_registrations", "truong_id", "INTEGER DEFAULT 1"),
         ("blog_posts", "truong_id", "INTEGER DEFAULT 1"),
         # 4. truong
@@ -877,6 +879,56 @@ def migrate_postgres_schema(conn):
                 conn.rollback()
             except Exception:
                 pass
+
+        # Cập nhật CHECK trang_thai của bảng community_tasks để chấp nhận 'sap_dien_ra', 'dang_dien_ra', 'da_ket_thuc' (SQLite)
+        try:
+            cur.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='community_tasks'")
+            row = cur.fetchone()
+            if row and row[0] and "sap_dien_ra" not in row[0]:
+                old_sql = row[0]
+                new_sql = re.sub(
+                    r"trang_thai\s+IN\s*\([^)]+\)",
+                    "trang_thai IN ('mo_dang_ky', 'mo', 'dong', 'hoan_thanh', 'huy', 'sap_dien_ra', 'dang_dien_ra', 'da_ket_thuc')",
+                    old_sql
+                )
+                cur.execute("PRAGMA foreign_keys = OFF")
+                cur.execute("PRAGMA legacy_alter_table = ON")
+                cur.execute("ALTER TABLE community_tasks RENAME TO _community_tasks_old")
+                cur.execute(new_sql)
+                cur.execute("PRAGMA table_info(_community_tasks_old)")
+                old_cols = [r[1] for r in cur.fetchall()]
+                cols_str = ", ".join(old_cols)
+                cur.execute(f"INSERT INTO community_tasks ({cols_str}) SELECT {cols_str} FROM _community_tasks_old")
+                cur.execute("DROP TABLE _community_tasks_old")
+                cur.execute("PRAGMA legacy_alter_table = OFF")
+                cur.execute("PRAGMA foreign_keys = ON")
+                conn.commit()
+
+            # Tự động khắc phục nếu có bảng con nào bị trỏ nhầm vào _community_tasks_old
+            cur.execute("SELECT name, sql FROM sqlite_master WHERE type='table' AND sql LIKE '%_community_tasks_old%'")
+            corrupt_tables = cur.fetchall()
+            if corrupt_tables:
+                cur.execute("PRAGMA foreign_keys = OFF")
+                cur.execute("PRAGMA legacy_alter_table = ON")
+                for c_tbl, c_sql in corrupt_tables:
+                    fixed_sql = c_sql.replace('"_community_tasks_old"', 'community_tasks').replace('_community_tasks_old', 'community_tasks')
+                    tmp_name = f"_{c_tbl}_repair_tmp"
+                    cur.execute(f"ALTER TABLE {c_tbl} RENAME TO {tmp_name}")
+                    cur.execute(fixed_sql)
+                    cur.execute(f"PRAGMA table_info({tmp_name})")
+                    c_cols = [r[1] for r in cur.fetchall()]
+                    c_cols_str = ", ".join(c_cols)
+                    cur.execute(f"INSERT INTO {c_tbl} ({c_cols_str}) SELECT {c_cols_str} FROM {tmp_name}")
+                    cur.execute(f"DROP TABLE {tmp_name}")
+                cur.execute("PRAGMA legacy_alter_table = OFF")
+                cur.execute("PRAGMA foreign_keys = ON")
+                conn.commit()
+        except Exception as e:
+            app.logger.warning(f"Lỗi nâng cấp check constraint community_tasks (SQLite): {e}")
+            try:
+                conn.rollback()
+            except Exception:
+                pass
     else:
         constraint_names = set()
         # Tìm trong information_schema
@@ -971,6 +1023,36 @@ def migrate_postgres_schema(conn):
             conn.commit()
         except Exception as e:
             app.logger.warning(f"Lỗi nâng cấp check constraint truong (PostgreSQL): {e}")
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+
+        # Cập nhật CHECK trang_thai của bảng community_tasks trên PostgreSQL
+        try:
+            _exec("""
+                SELECT con.conname
+                FROM pg_constraint con
+                JOIN pg_class rel ON rel.oid = con.conrelid
+                WHERE rel.relname = 'community_tasks'
+                  AND con.contype = 'c'
+                  AND (con.conname ILIKE '%trang_thai%' OR pg_get_constraintdef(con.oid) ILIKE '%trang_thai%')
+            """)
+            ct_cnames = [r[0] for r in cur.fetchall()]
+            conn.commit()
+            for cname in ct_cnames:
+                try:
+                    _exec(f"ALTER TABLE community_tasks DROP CONSTRAINT IF EXISTS {cname}")
+                    conn.commit()
+                except Exception:
+                    pass
+            _exec("""
+                ALTER TABLE community_tasks ADD CONSTRAINT community_tasks_trang_thai_check
+                CHECK (trang_thai IN ('mo_dang_ky', 'mo', 'dong', 'hoan_thanh', 'huy', 'sap_dien_ra', 'dang_dien_ra', 'da_ket_thuc'))
+            """)
+            conn.commit()
+        except Exception as e:
+            app.logger.warning(f"Lỗi nâng cấp check constraint community_tasks (PostgreSQL): {e}")
             try:
                 conn.rollback()
             except Exception:
@@ -1216,11 +1298,15 @@ def init_db():
             conn.execute("ALTER TABLE skills ADD COLUMN ngay_duyet_cong_dong TEXT")
         conn.commit()
 
-        # Prompt 21: Tự động nâng cấp bảng community_tasks có cột anh_bia
+        # Prompt 21 & Prompt Quản lý Chương trình Cộng đồng: Tự động nâng cấp bảng community_tasks
         cur.execute("PRAGMA table_info(community_tasks)")
         task_cols = [r[1] for r in cur.fetchall()]
         if "anh_bia" not in task_cols:
             conn.execute("ALTER TABLE community_tasks ADD COLUMN anh_bia TEXT")
+        if "ngay_bat_dau" not in task_cols:
+            conn.execute("ALTER TABLE community_tasks ADD COLUMN ngay_bat_dau TEXT")
+        if "ngay_ket_thuc" not in task_cols:
+            conn.execute("ALTER TABLE community_tasks ADD COLUMN ngay_ket_thuc TEXT")
         conn.commit()
 
         # Prompt 22: Tự động nâng cấp bảng sessions có cột daily_room_name, daily_room_url
@@ -1308,6 +1394,49 @@ def init_db():
             conn.execute("PRAGMA legacy_alter_table = ON")
             for c_tbl, c_sql in corrupt_tables:
                 fixed_sql = c_sql.replace('"_truong_old"', 'truong').replace('_truong_old', 'truong')
+                tmp_name = f"_{c_tbl}_repair_tmp"
+                conn.execute(f"ALTER TABLE {c_tbl} RENAME TO {tmp_name}")
+                conn.execute(fixed_sql)
+                cur.execute(f"PRAGMA table_info({tmp_name})")
+                c_cols = [r[1] for r in cur.fetchall()]
+                c_cols_str = ", ".join(c_cols)
+                conn.execute(f"INSERT INTO {c_tbl} ({c_cols_str}) SELECT {c_cols_str} FROM {tmp_name}")
+                conn.execute(f"DROP TABLE {tmp_name}")
+            conn.execute("PRAGMA legacy_alter_table = OFF")
+            conn.execute("PRAGMA foreign_keys = ON")
+            conn.commit()
+
+        # Nâng cấp CHECK constraint cho bảng community_tasks để chấp nhận 'sap_dien_ra', 'dang_dien_ra', 'da_ket_thuc' (SQLite)
+        cur.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='community_tasks'")
+        ct_row = cur.fetchone()
+        if ct_row and ct_row[0] and "sap_dien_ra" not in ct_row[0]:
+            ct_old_sql = ct_row[0]
+            ct_new_sql = re.sub(
+                r"trang_thai\s+IN\s*\([^)]+\)",
+                "trang_thai IN ('mo_dang_ky', 'mo', 'dong', 'hoan_thanh', 'huy', 'sap_dien_ra', 'dang_dien_ra', 'da_ket_thuc')",
+                ct_old_sql
+            )
+            conn.execute("PRAGMA foreign_keys = OFF")
+            conn.execute("PRAGMA legacy_alter_table = ON")
+            conn.execute("ALTER TABLE community_tasks RENAME TO _community_tasks_old")
+            conn.execute(ct_new_sql)
+            cur.execute("PRAGMA table_info(_community_tasks_old)")
+            ct_cols = [r[1] for r in cur.fetchall()]
+            ct_cols_str = ", ".join(ct_cols)
+            conn.execute(f"INSERT INTO community_tasks ({ct_cols_str}) SELECT {ct_cols_str} FROM _community_tasks_old")
+            conn.execute("DROP TABLE _community_tasks_old")
+            conn.execute("PRAGMA legacy_alter_table = OFF")
+            conn.execute("PRAGMA foreign_keys = ON")
+            conn.commit()
+
+        # Tự động khắc phục nếu có bảng con nào bị trỏ nhầm vào _community_tasks_old
+        cur.execute("SELECT name, sql FROM sqlite_master WHERE type='table' AND sql LIKE '%_community_tasks_old%'")
+        ct_corrupt = cur.fetchall()
+        if ct_corrupt:
+            conn.execute("PRAGMA foreign_keys = OFF")
+            conn.execute("PRAGMA legacy_alter_table = ON")
+            for c_tbl, c_sql in ct_corrupt:
+                fixed_sql = c_sql.replace('"_community_tasks_old"', 'community_tasks').replace('_community_tasks_old', 'community_tasks')
                 tmp_name = f"_{c_tbl}_repair_tmp"
                 conn.execute(f"ALTER TABLE {c_tbl} RENAME TO {tmp_name}")
                 conn.execute(fixed_sql)
@@ -1952,8 +2081,8 @@ def index():
         SELECT t.*, u.ho_ten AS ten_nguoi_tao,
                (SELECT COUNT(*) FROM task_registrations r WHERE r.task_id = t.id AND r.trang_thai NOT IN ('huy')) AS so_luong_da_dang_ky
         FROM community_tasks t
-        JOIN users u ON t.nguoi_tao_id = u.id
-        WHERE t.trang_thai IN ('mo_dang_ky', 'mo')
+        LEFT JOIN users u ON t.nguoi_tao_id = u.id
+        WHERE t.trang_thai IN ('mo_dang_ky', 'mo', 'sap_dien_ra', 'dang_dien_ra')
         ORDER BY t.id DESC
         LIMIT 3
     """)
@@ -2899,6 +3028,42 @@ def admin_dashboard():
         """)
         all_schools_management = cur.fetchall()
 
+    # Danh sách chương trình cộng đồng cho tab Quản lý Chương trình Cộng đồng trong /admin
+    if is_super:
+        if filter_school_id:
+            comm_tasks_sql = """
+                SELECT t.*, tr.ten_truong, u.ho_ten AS ten_nguoi_tao,
+                       (SELECT COUNT(*) FROM task_registrations r WHERE r.task_id = t.id AND r.trang_thai NOT IN ('huy')) AS so_luong_da_dang_ky
+                FROM community_tasks t
+                LEFT JOIN truong tr ON t.truong_id = tr.id
+                LEFT JOIN users u ON t.nguoi_tao_id = u.id
+                WHERE t.truong_id = ?
+                ORDER BY t.id DESC
+            """
+            cur.execute(comm_tasks_sql, (filter_school_id,))
+        else:
+            comm_tasks_sql = """
+                SELECT t.*, tr.ten_truong, u.ho_ten AS ten_nguoi_tao,
+                       (SELECT COUNT(*) FROM task_registrations r WHERE r.task_id = t.id AND r.trang_thai NOT IN ('huy')) AS so_luong_da_dang_ky
+                FROM community_tasks t
+                LEFT JOIN truong tr ON t.truong_id = tr.id
+                LEFT JOIN users u ON t.nguoi_tao_id = u.id
+                ORDER BY t.id DESC
+            """
+            cur.execute(comm_tasks_sql)
+    else:
+        comm_tasks_sql = """
+            SELECT t.*, tr.ten_truong, u.ho_ten AS ten_nguoi_tao,
+                   (SELECT COUNT(*) FROM task_registrations r WHERE r.task_id = t.id AND r.trang_thai NOT IN ('huy')) AS so_luong_da_dang_ky
+            FROM community_tasks t
+            LEFT JOIN truong tr ON t.truong_id = tr.id
+            LEFT JOIN users u ON t.nguoi_tao_id = u.id
+            WHERE t.truong_id = ? OR t.truong_id IS NULL
+            ORDER BY t.id DESC
+        """
+        cur.execute(comm_tasks_sql, (current_user_school_id,))
+    admin_community_tasks = [dict(r) for r in cur.fetchall()]
+
     return render_template(
         "admin.html",
         users=all_users,
@@ -2921,7 +3086,8 @@ def admin_dashboard():
         violations_list=violations_list,
         google_drive_configured=is_google_drive_configured(),
         community_pending_skills=community_pending_skills,
-        community_approved_skills=community_approved_skills
+        community_approved_skills=community_approved_skills,
+        admin_community_tasks=admin_community_tasks
     )
 
 
@@ -3479,10 +3645,12 @@ def admin_toggle_school_status(school_id):
         flash("Không tìm thấy trường học!", "danger")
         return redirect(url_for("admin_dashboard", _anchor="tab-schools"))
 
-    curr_an = school["an_truong"] if ("an_truong" in school.keys() and school["an_truong"] is not None) else (1 if school["trang_thai"] == "vo_hieu_hoa" else 0)
-    if curr_an == 1 or school["trang_thai"] == "vo_hieu_hoa":
+    has_an_col = "an_truong" in school.keys()
+    an_val = school["an_truong"] if has_an_col and school["an_truong"] is not None else 0
+    is_disabled = (school["trang_thai"] in ("vo_hieu_hoa", "tam_ngung")) or (an_val == 1 and school["trang_thai"] not in ("dang_su_dung", "dang_hoat_dong", "dang_thi_diem"))
+    if is_disabled:
         new_an = 0
-        new_status = "dang_su_dung" if school["trang_thai"] == "vo_hieu_hoa" else school["trang_thai"]
+        new_status = "dang_su_dung"
         msg = f"Đã hiện lại trường / Đã kích hoạt lại trường '{school['ten_truong']}'! Trường đã sẵn sàng đón nhận đăng ký mới."
         cat = "success"
     else:
@@ -3495,6 +3663,176 @@ def admin_toggle_school_status(school_id):
     db.commit()
     flash(msg, cat)
     return redirect(url_for("admin_dashboard", _anchor="tab-schools"))
+
+# ==============================================================================
+# QUẢN LÝ CHƯƠNG TRÌNH GIỜ CÔNG ÍCH HỌC ĐƯỜNG (THÊM / SỬA / XÓA)
+# ==============================================================================
+@app.route("/admin/community-tasks/create", methods=["POST"])
+@admin_required
+def admin_create_community_task():
+    """
+    Thêm mới chương trình giờ công ích / cộng đồng:
+    - Quản trị trường + Super Admin đều dùng được
+    - Tên (*), mô tả, số giờ thưởng (*), ngày bắt đầu, ngày kết thúc, trường áp dụng, trạng thái
+    """
+    tieu_de = request.form.get("tieu_de", "").strip()
+    mo_ta = request.form.get("mo_ta", "").strip()
+    dia_diem = request.form.get("dia_diem", "").strip()
+    ngay_bat_dau = request.form.get("ngay_bat_dau", "").strip()
+    ngay_ket_thuc = request.form.get("ngay_ket_thuc", "").strip()
+    trang_thai = request.form.get("trang_thai", "dang_dien_ra").strip()
+
+    if not tieu_de:
+        flash(_("Vui lòng nhập tên chương trình cộng đồng."), "danger")
+        return redirect(url_for("admin_dashboard", _anchor="tab-community-tasks"))
+
+    try:
+        so_gio_thuong = float(request.form.get("so_gio_thuong", 1.0))
+        if so_gio_thuong <= 0:
+            so_gio_thuong = 1.0
+    except ValueError:
+        so_gio_thuong = 1.0
+
+    try:
+        so_luong_toi_da = int(request.form.get("so_luong_toi_da", 10))
+        if so_luong_toi_da <= 0:
+            so_luong_toi_da = 10
+    except ValueError:
+        so_luong_toi_da = 10
+
+    # Phân quyền trường áp dụng:
+    if is_super_admin():
+        try:
+            truong_id = int(request.form.get("truong_id", session.get("truong_id", 1)))
+        except (ValueError, TypeError):
+            truong_id = session.get("truong_id", 1)
+    else:
+        truong_id = session.get("truong_id", 1)
+
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("""
+        INSERT INTO community_tasks 
+        (tieu_de, mo_ta, dia_diem, so_gio_thuong, so_luong_toi_da, han_dang_ky, ngay_bat_dau, ngay_ket_thuc, nguoi_tao_id, trang_thai, truong_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        tieu_de, mo_ta, dia_diem, so_gio_thuong, so_luong_toi_da,
+        ngay_ket_thuc or ngay_bat_dau, ngay_bat_dau, ngay_ket_thuc,
+        session["user_id"], trang_thai, truong_id
+    ))
+    db.commit()
+
+    flash(_(f"Đã thêm mới chương trình cộng đồng: '{tieu_de}' (+{so_gio_thuong}h thưởng) thành công!"), "success")
+    return redirect(url_for("admin_dashboard", _anchor="tab-community-tasks"))
+
+
+@app.route("/admin/community-tasks/<int:task_id>/edit", methods=["POST"])
+@admin_required
+def admin_edit_community_task(task_id):
+    """
+    Chỉnh sửa chương trình cộng đồng:
+    - Quản trị trường chỉ sửa trường mình; Super Admin sửa được tất cả
+    - Cập nhật tức thì vào CSDL
+    """
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("SELECT * FROM community_tasks WHERE id = ?", (task_id,))
+    task = cur.fetchone()
+    if not task:
+        flash(_("Chương trình cộng đồng không tồn tại."), "danger")
+        return redirect(url_for("admin_dashboard", _anchor="tab-community-tasks"))
+
+    # Kiểm tra phân quyền trường học
+    if not is_super_admin() and task["truong_id"] != session.get("truong_id", 1):
+        flash(_("Bạn không có quyền chỉnh sửa chương trình của trường khác."), "danger")
+        return redirect(url_for("admin_dashboard", _anchor="tab-community-tasks"))
+
+    tieu_de = request.form.get("tieu_de", "").strip()
+    mo_ta = request.form.get("mo_ta", "").strip()
+    dia_diem = request.form.get("dia_diem", "").strip()
+    ngay_bat_dau = request.form.get("ngay_bat_dau", "").strip()
+    ngay_ket_thuc = request.form.get("ngay_ket_thuc", "").strip()
+    trang_thai = request.form.get("trang_thai", task["trang_thai"]).strip()
+
+    if not tieu_de:
+        flash(_("Tên chương trình không được để trống."), "danger")
+        return redirect(url_for("admin_dashboard", _anchor="tab-community-tasks"))
+
+    try:
+        so_gio_thuong = float(request.form.get("so_gio_thuong", task["so_gio_thuong"]))
+        if so_gio_thuong <= 0:
+            so_gio_thuong = 1.0
+    except ValueError:
+        so_gio_thuong = task["so_gio_thuong"]
+
+    try:
+        so_luong_toi_da = int(request.form.get("so_luong_toi_da", task["so_luong_toi_da"]))
+        if so_luong_toi_da <= 0:
+            so_luong_toi_da = 10
+    except ValueError:
+        so_luong_toi_da = task["so_luong_toi_da"]
+
+    if is_super_admin():
+        try:
+            truong_id = int(request.form.get("truong_id", task["truong_id"]))
+        except (ValueError, TypeError):
+            truong_id = task["truong_id"]
+    else:
+        truong_id = task["truong_id"]
+
+    cur.execute("""
+        UPDATE community_tasks
+        SET tieu_de = ?, mo_ta = ?, dia_diem = ?, so_gio_thuong = ?, so_luong_toi_da = ?,
+            han_dang_ky = ?, ngay_bat_dau = ?, ngay_ket_thuc = ?, trang_thai = ?, truong_id = ?
+        WHERE id = ?
+    """, (
+        tieu_de, mo_ta, dia_diem, so_gio_thuong, so_luong_toi_da,
+        ngay_ket_thuc or ngay_bat_dau or task["han_dang_ky"], ngay_bat_dau, ngay_ket_thuc,
+        trang_thai, truong_id, task_id
+    ))
+    db.commit()
+
+    flash(_(f"Đã cập nhật thông tin chương trình: '{tieu_de}' thành công!"), "success")
+    return redirect(url_for("admin_dashboard", _anchor="tab-community-tasks"))
+
+
+@app.route("/admin/community-tasks/<int:task_id>/delete", methods=["POST"])
+@admin_required
+def admin_delete_community_task(task_id):
+    """
+    Xóa chương trình cộng đồng:
+    - Xóa vĩnh viễn (hard delete) nếu CHƯA có ai đăng ký
+    - Nếu ĐÃ có học sinh đăng ký: Không xóa cứng, chỉ cho chuyển sang 'Đã kết thúc'
+    """
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("SELECT * FROM community_tasks WHERE id = ?", (task_id,))
+    task = cur.fetchone()
+    if not task:
+        flash(_("Chương trình cộng đồng không tồn tại."), "danger")
+        return redirect(url_for("admin_dashboard", _anchor="tab-community-tasks"))
+
+    # Kiểm tra phân quyền trường học
+    if not is_super_admin() and task["truong_id"] != session.get("truong_id", 1):
+        flash(_("Bạn không có quyền xóa chương trình của trường khác."), "danger")
+        return redirect(url_for("admin_dashboard", _anchor="tab-community-tasks"))
+
+    # Kiểm tra số học sinh đã đăng ký
+    cur.execute("SELECT COUNT(*) FROM task_registrations WHERE task_id = ? AND trang_thai NOT IN ('huy')", (task_id,))
+    registered_count = cur.fetchone()[0]
+
+    if registered_count > 0:
+        # Đã có người đăng ký -> chuyển trạng thái 'da_ket_thuc', không xóa cứng
+        cur.execute("UPDATE community_tasks SET trang_thai = 'da_ket_thuc' WHERE id = ?", (task_id,))
+        db.commit()
+        flash(_(f"Chương trình '{task['tieu_de']}' đã có {registered_count} học sinh đăng ký tham gia, không thể xóa vĩnh viễn. Đã tự động chuyển trạng thái sang 'Đã kết thúc'."), "warning")
+    else:
+        # Chưa có ai đăng ký -> xóa vĩnh viễn khỏi CSDL
+        cur.execute("DELETE FROM community_tasks WHERE id = ?", (task_id,))
+        db.commit()
+        flash(_(f"Đã xóa vĩnh viễn chương trình cộng đồng '{task['tieu_de']}' thành công."), "success")
+
+    return redirect(url_for("admin_dashboard", _anchor="tab-community-tasks"))
 
 
 @app.route("/admin/export-csv")
@@ -5777,8 +6115,8 @@ def community_tasks_view():
             SELECT t.*, u.ho_ten AS ten_nguoi_tao,
                    (SELECT COUNT(*) FROM task_registrations r WHERE r.task_id = t.id AND r.trang_thai NOT IN ('huy')) AS so_luong_da_dang_ky
             FROM community_tasks t
-            JOIN users u ON t.nguoi_tao_id = u.id
-            WHERE t.trang_thai IN ('mo_dang_ky', 'mo')
+            LEFT JOIN users u ON t.nguoi_tao_id = u.id
+            WHERE t.trang_thai IN ('mo_dang_ky', 'mo', 'sap_dien_ra', 'dang_dien_ra')
             ORDER BY t.id DESC
         """)
     else:
@@ -5786,8 +6124,8 @@ def community_tasks_view():
             SELECT t.*, u.ho_ten AS ten_nguoi_tao,
                    (SELECT COUNT(*) FROM task_registrations r WHERE r.task_id = t.id AND r.trang_thai NOT IN ('huy')) AS so_luong_da_dang_ky
             FROM community_tasks t
-            JOIN users u ON t.nguoi_tao_id = u.id
-            WHERE t.trang_thai IN ('mo_dang_ky', 'mo') AND (t.truong_id = ? OR t.truong_id IS NULL)
+            LEFT JOIN users u ON t.nguoi_tao_id = u.id
+            WHERE t.trang_thai IN ('mo_dang_ky', 'mo', 'sap_dien_ra', 'dang_dien_ra') AND (t.truong_id = ? OR t.truong_id IS NULL)
             ORDER BY t.id DESC
         """, (current_user_school_id,))
     open_tasks = [dict(row) for row in cur.fetchall()]
@@ -5803,8 +6141,8 @@ def community_tasks_view():
             SELECT t.*, u.ho_ten AS ten_nguoi_tao,
                    (SELECT COUNT(*) FROM task_registrations r WHERE r.task_id = t.id AND r.trang_thai = 'hoan_thanh') AS so_luong_hoan_thanh
             FROM community_tasks t
-            JOIN users u ON t.nguoi_tao_id = u.id
-            WHERE t.trang_thai = 'hoan_thanh'
+            LEFT JOIN users u ON t.nguoi_tao_id = u.id
+            WHERE t.trang_thai IN ('hoan_thanh', 'dong', 'da_ket_thuc')
             ORDER BY t.id DESC
             LIMIT 6
         """)
@@ -5813,8 +6151,8 @@ def community_tasks_view():
             SELECT t.*, u.ho_ten AS ten_nguoi_tao,
                    (SELECT COUNT(*) FROM task_registrations r WHERE r.task_id = t.id AND r.trang_thai = 'hoan_thanh') AS so_luong_hoan_thanh
             FROM community_tasks t
-            JOIN users u ON t.nguoi_tao_id = u.id
-            WHERE t.trang_thai = 'hoan_thanh' AND (t.truong_id = ? OR t.truong_id IS NULL)
+            LEFT JOIN users u ON t.nguoi_tao_id = u.id
+            WHERE t.trang_thai IN ('hoan_thanh', 'dong', 'da_ket_thuc') AND (t.truong_id = ? OR t.truong_id IS NULL)
             ORDER BY t.id DESC
             LIMIT 6
         """, (current_user_school_id,))
@@ -5936,8 +6274,8 @@ def register_community_task(task_id):
         flash("Nhiệm vụ cộng đồng không tồn tại.", "danger")
         return redirect(url_for("community_tasks_view"))
 
-    if task["trang_thai"] not in ("mo_dang_ky", "mo"):
-        flash("Nhiệm vụ này hiện đã đóng đăng ký.", "warning")
+    if task["trang_thai"] not in ("mo_dang_ky", "mo", "sap_dien_ra", "dang_dien_ra"):
+        flash("Nhiệm vụ này hiện đã đóng hoặc kết thúc đăng ký.", "warning")
         return redirect(url_for("community_tasks_view"))
 
     # Kiểm tra hạn đăng ký
