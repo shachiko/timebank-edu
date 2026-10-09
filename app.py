@@ -6453,20 +6453,34 @@ def admin_google_drive_callback():
     if refresh_token:
         # Cập nhật tạm thời vào bộ nhớ runtime process
         os.environ["GOOGLE_REFRESH_TOKEN"] = refresh_token
-        flash(
-            f"🎉 Kết nối Google Drive 5TB thành công! "
-            f"Mã Refresh Token: '{refresh_token[:10]}...{refresh_token[-6:]}'. "
-            f"Thầy/Cô hãy thêm biến môi trường 'GOOGLE_REFRESH_TOKEN' vào Render Dashboard để duy trì vĩnh viễn.",
-            "success"
-        )
+        # Lưu vào session để hiển thị 1 lần duy nhất trên trang token-hien-thi (Prompt 24 Việc 2)
+        session["temp_drive_refresh_token"] = refresh_token
+        return redirect(url_for("admin_google_drive_token_display"))
     else:
         flash(
             "Đã nhận Token từ Google, nhưng tài khoản chưa cấp lại Refresh Token mới "
             "(thường xảy ra nếu đã cấp quyền trước đó). Nếu cần tạo lại, hãy thu hồi quyền trong tài khoản Google và thử lại.",
             "info"
         )
+        return redirect(url_for("admin_dashboard"))
 
-    return redirect(url_for("admin_dashboard"))
+
+@app.route("/admin/google-drive/token-hien-thi")
+@super_admin_required
+def admin_google_drive_token_display():
+    """
+    Prompt 24 (Việc 2): Trang hiển thị Refresh Token đầy đủ cho Super Admin:
+    - Chỉ super_admin vào được.
+    - Hiển thị FULL refresh_token trong ô text để super admin copy.
+    - Hiện token 1 lần duy nhất (xem xong hoặc tải lại là mất, pop từ session).
+    - Có nút 'Đã copy xong' -> chuyển về /admin.
+    """
+    token = session.pop("temp_drive_refresh_token", None)
+    if not token:
+        flash("Mã Refresh Token chỉ hiển thị 1 lần duy nhất và đã được xóa khỏi phiên làm việc để đảm bảo an toàn.", "info")
+        return redirect(url_for("admin_dashboard"))
+
+    return render_template("admin_drive_token_display.html", refresh_token=token)
 
 
 @app.route("/documents")

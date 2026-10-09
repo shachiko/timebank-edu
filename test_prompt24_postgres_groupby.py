@@ -148,6 +148,89 @@ class TestPrompt24PostgresGroupBy(unittest.TestCase):
 
         print("\n[PASS - TC 3]: Truy vấn Top gia sư trong bản tin tuần thực thi chính xác và chuẩn PostgreSQL.")
 
+    # =========================================================================
+    # TIÊU CHÍ 4: LUỒNG OAUTH GOOGLE DRIVE HIỂN THỊ FULL REFRESH TOKEN (VIỆC 2)
+    # =========================================================================
+    def test_04_drive_oauth_token_display_page(self):
+        """[TIÊU CHÍ 4]: Luồng OAuth đổi code thành công -> Render trang hiển thị FULL token và nút 'Đã copy xong'."""
+        from unittest.mock import patch
+
+        mock_full_token = "1//04mock_super_long_refresh_token_example_for_google_drive_5tb_production_2026"
+
+        with self.client.session_transaction() as sess:
+            sess["user_id"] = 1
+            sess["vai_tro"] = "super_admin"
+            sess["ma_hoc_sinh"] = "admin_super"
+            sess["truong_id"] = 1
+
+        with patch("app.exchange_code_for_tokens") as mock_exchange:
+            mock_exchange.return_value = {"refresh_token": mock_full_token, "access_token": "mock_acc"}
+
+            # Gọi callback với mã code giả lập
+            res = self.client.get("/admin/google-drive/callback?code=mock_valid_auth_code", follow_redirects=True)
+            self.assertEqual(res.status_code, 200)
+
+            html = res.data.decode("utf-8")
+            # Kiểm tra token đầy đủ xuất hiện nguyên vẹn trong ô text
+            self.assertIn(mock_full_token, html, "Token phải hiển thị FULL đầy đủ không bị che giấu!")
+            # Kiểm tra nút 'Đã copy xong'
+            self.assertIn("Đã copy xong", html, "Phải có nút 'Đã copy xong' để quay lại /admin!")
+            # Kiểm tra nút sao chép
+            self.assertIn("Sao chép Token đầy đủ", html)
+
+        print("\n[PASS - TC 4]: Luồng OAuth hiển thị đầy đủ FULL Refresh Token trong ô text cho Super Admin copy.")
+
+    # =========================================================================
+    # TIÊU CHÍ 5: AN TOÀN BẢO MẬT: HIỂN THỊ 1 LẦN DUY NHẤT (POP SESSION)
+    # =========================================================================
+    def test_05_drive_token_single_use_security(self):
+        """[TIÊU CHÍ 5]: Trang hiển thị token chỉ xem được 1 lần duy nhất, tải lại là mất và chuyển về /admin."""
+        with self.client.session_transaction() as sess:
+            sess["user_id"] = 1
+            sess["vai_tro"] = "super_admin"
+            sess["temp_drive_refresh_token"] = "mock_secret_token_one_time"
+
+        # Lần 1: Xem được token
+        res1 = self.client.get("/admin/google-drive/token-hien-thi")
+        self.assertEqual(res1.status_code, 200)
+        self.assertIn("mock_secret_token_one_time", res1.data.decode("utf-8"))
+
+        # Lần 2 (Tải lại trang hoặc truy cập lại): Token đã bị pop khỏi session -> chuyển hướng về /admin
+        res2 = self.client.get("/admin/google-drive/token-hien-thi", follow_redirects=True)
+        self.assertEqual(res2.status_code, 200)
+        html2 = res2.data.decode("utf-8")
+        self.assertNotIn("mock_secret_token_one_time", html2, "Token tuyệt đối không còn tồn tại sau khi xem xong!")
+        self.assertIn("chỉ hiển thị 1 lần duy nhất", html2)
+
+        print("\n[PASS - TC 5]: Token chỉ hiển thị đúng 1 lần duy nhất; tự động hủy khi tải lại trang.")
+
+    # =========================================================================
+    # TIÊU CHÍ 6: PHÂN QUYỀN: CHỈ SUPER ADMIN MỚI ĐƯỢC TRUY CẬP TRANG TOKEN
+    # =========================================================================
+    def test_06_non_superadmin_blocked_from_token_display(self):
+        """[TIÊU CHÍ 6]: Học sinh hoặc School Admin không được phép truy cập trang token-hien-thi."""
+        # 1. Học sinh truy cập
+        with self.client.session_transaction() as sess:
+            sess["user_id"] = 2
+            sess["vai_tro"] = "hoc_sinh"
+            sess["temp_drive_refresh_token"] = "token_that_should_not_be_seen"
+
+        res_hs = self.client.get("/admin/google-drive/token-hien-thi")
+        # Phải bị chặn (403 hoặc chuyển hướng)
+        self.assertIn(res_hs.status_code, [302, 403])
+
+        # 2. School Admin truy cập
+        with self.client.session_transaction() as sess:
+            sess["user_id"] = 3
+            sess["vai_tro"] = "school_admin"
+            sess["temp_drive_refresh_token"] = "token_that_should_not_be_seen"
+
+        res_sa = self.client.get("/admin/google-drive/token-hien-thi")
+        self.assertIn(res_sa.status_code, [302, 403])
+
+        print("\n[PASS - TC 6]: Phân quyền nghiêm ngặt: Chỉ Super Admin mới có quyền xem trang token.")
+
 
 if __name__ == "__main__":
     unittest.main()
+

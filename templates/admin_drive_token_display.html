@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Mã Refresh Token Google Drive 5TB - School Time Bank{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+      
+      <!-- Card chính hiển thị Refresh Token -->
+      <div class="card border-0 shadow-lg rounded-4 overflow-hidden bg-white">
+        <!-- Header có dải màu gradient công nghệ -->
+        <div class="card-header bg-gradient p-4 text-white border-0" style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #0284c7 100%);">
+          <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle bg-white text-primary p-3 d-flex align-items-center justify-content-center shadow-sm" style="width: 56px; height: 56px;">
+              <i class="bi bi-cloud-check-fill fs-2 text-primary"></i>
+            </div>
+            <div>
+              <div class="badge bg-white text-primary rounded-pill px-3 py-1 fw-bold mb-1 shadow-sm">
+                <i class="bi bi-shield-lock-fill me-1"></i> XÁC THỰC GOOGLE DRIVE 5TB THÀNH CÔNG
+              </div>
+              <h3 class="fw-bold mb-0 text-white">Mã Refresh Token Đầy Đủ</h3>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body p-4 p-md-5">
+          <!-- Cảnh báo hiển thị 1 lần duy nhất -->
+          <div class="alert alert-warning border-0 rounded-4 p-3 mb-4 d-flex align-items-start gap-3 shadow-sm bg-warning-subtle text-dark">
+            <i class="bi bi-exclamation-triangle-fill fs-3 text-warning flex-shrink-0 mt-1"></i>
+            <div>
+              <h6 class="fw-bold mb-1 text-dark">Lưu ý bảo mật quan trọng:</h6>
+              <p class="small mb-0 text-secondary">
+                Mã Refresh Token dưới đây <strong>chỉ hiển thị 1 lần duy nhất</strong> trên trang này và sẽ tự động bị xóa khỏi phiên làm việc ngay khi thầy/cô tải lại trang hoặc rời đi. Hệ thống không lưu trữ mã này trong mã nguồn hay cơ sở dữ liệu.
+              </p>
+            </div>
+          </div>
+
+          <!-- Ô hiển thị Full Refresh Token -->
+          <div class="mb-4">
+            <label for="refreshTokenBox" class="form-label fw-bold text-dark d-flex justify-content-between align-items-center">
+              <span><i class="bi bi-key-fill text-primary me-1"></i> Full Refresh Token (Google OAuth2):</span>
+              <span class="badge bg-secondary-subtle text-secondary small px-2 py-1">Sẵn sàng sao chép</span>
+            </label>
+            <div class="position-relative">
+              <textarea 
+                id="refreshTokenBox" 
+                class="form-control font-monospace p-3 rounded-4 bg-light text-dark border-2" 
+                rows="4" 
+                readonly 
+                style="resize: none; font-size: 0.95rem; word-break: break-all; letter-spacing: 0.5px;"
+              >{{ refresh_token }}</textarea>
+            </div>
+            <div class="d-flex justify-content-end mt-2">
+              <button 
+                type="button" 
+                id="copyTokenBtn" 
+                class="btn btn-success rounded-pill px-4 fw-bold shadow-sm d-flex align-items-center gap-2"
+                onclick="copyRefreshToken()"
+              >
+                <i class="bi bi-clipboard-check-fill" id="copyIcon"></i>
+                <span id="copyBtnText">Sao chép Token đầy đủ</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Hướng dẫn cấu hình vào Render -->
+          <div class="p-4 rounded-4 bg-light border mb-4">
+            <h6 class="fw-bold text-dark mb-3">
+              <i class="bi bi-gear-wide-connected text-primary me-2"></i>Hướng dẫn thêm vào Render (Để lưu trữ vĩnh viễn):
+            </h6>
+            <ol class="small text-secondary mb-0 ps-3 d-flex flex-column gap-2">
+              <li>Nhấn nút <strong>"Sao chép Token đầy đủ"</strong> ở trên.</li>
+              <li>Truy cập <strong>Render Dashboard</strong> &rarr; Chọn Web Service <code>timebankEDU</code> &rarr; Chọn tab <strong>Environment</strong>.</li>
+              <li>Thêm biến môi trường mới:
+                <div class="mt-1 p-2 bg-white rounded-3 border font-monospace text-dark d-inline-block">
+                  <strong>Key:</strong> <code>GOOGLE_REFRESH_TOKEN</code> <br>
+                  <strong>Value:</strong> <em>[Dán mã vừa copy vào đây]</em>
+                </div>
+              </li>
+              <li>Nhấn <strong>Save Changes</strong> để hệ thống tự động duy trì kết nối Google Drive 5TB vĩnh viễn.</li>
+            </ol>
+          </div>
+
+          <!-- Nút hành động chính: Đã copy xong -->
+          <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3 pt-3 border-top">
+            <span class="text-muted small">
+              <i class="bi bi-info-circle me-1"></i>Sau khi bấm nút bên dưới, trang sẽ chuyển về Trang Quản Trị.
+            </span>
+            <a 
+              href="{{ url_for('admin_dashboard') }}" 
+              class="btn btn-primary btn-lg rounded-pill px-5 fw-bold shadow d-flex align-items-center gap-2"
+            >
+              <i class="bi bi-check-circle-fill"></i>
+              <span>Đã copy xong</span>
+            </a>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function copyRefreshToken() {
+  const tokenBox = document.getElementById("refreshTokenBox");
+  tokenBox.select();
+  tokenBox.setSelectionRange(0, 99999); // Dành cho thiết bị di động
+
+  navigator.clipboard.writeText(tokenBox.value).then(function() {
+    const btnText = document.getElementById("copyBtnText");
+    const icon = document.getElementById("copyIcon");
+    const copyBtn = document.getElementById("copyTokenBtn");
+
+    btnText.textContent = "Đã sao chép vào bộ nhớ tạm! ✓";
+    copyBtn.classList.remove("btn-success");
+    copyBtn.classList.add("btn-dark");
+    icon.className = "bi bi-check-all";
+
+    setTimeout(function() {
+      btnText.textContent = "Sao chép Token đầy đủ";
+      copyBtn.classList.remove("btn-dark");
+      copyBtn.classList.add("btn-success");
+      icon.className = "bi bi-clipboard-check-fill";
+    }, 3000);
+  }).catch(function(err) {
+    alert("Không thể tự động sao chép, vui lòng chọn toàn bộ văn bản trong ô và nhấn Ctrl+C!");
+  });
+}
+</script>
+{% endblock %}
