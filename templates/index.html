@@ -29,7 +29,7 @@
     <div class="row align-items-center g-5 mt-1">
       <div class="col-lg-7">
         <p class="hero-tagline mb-2">
-          <i class="bi bi-quote fs-4 text-warning"></i> Một giờ bạn dạy — một giờ bạn được học. <i class="bi bi-quote fs-4 text-warning"></i>
+          “Một giờ bạn dạy — một giờ bạn được học.”
         </p>
 
         <p class="text-secondary small mb-3 fst-italic">
@@ -99,7 +99,7 @@
         Không Gian Trao Đổi Kỹ Năng Trực Tuyến Chuẩn Sư Phạm
       </h2>
       <p class="text-secondary fs-6 mb-0">
-        Trải nghiệm phòng học JaaS WebRTC hiện đại, kết nối người dạy và người học không khoảng cách với 4 ưu điểm vượt trội:
+        Trải nghiệm lớp học ảo hiện đại, kết nối người dạy và người học không khoảng cách với 4 ưu điểm vượt trội:
       </p>
     </div>
 
@@ -203,7 +203,7 @@
     <div class="row g-4 mb-5">
       <!-- Bước 1 -->
       <div class="col-md-6 col-lg-3 position-relative">
-        <div class="step-card h-100">
+        <div class="step-card step-card-1 h-100">
           <div class="step-badge fw-bolder">1</div>
           <h5 class="fw-bold mb-2">Đăng kỹ năng</h5>
           <p class="text-muted small mb-0">Học sinh đăng ký thế mạnh của mình: Toán, Ngữ văn, Lập trình, Vẽ tranh, Đàn guitar, Cờ vua...</p>
@@ -215,7 +215,7 @@
 
       <!-- Bước 2 -->
       <div class="col-md-6 col-lg-3 position-relative">
-        <div class="step-card h-100">
+        <div class="step-card step-card-2 h-100">
           <div class="step-badge fw-bolder"><i class="bi bi-stars text-warning me-1"></i>2</div>
           <h5 class="fw-bold mb-2">AI gợi ý ghép cặp</h5>
           <p class="text-muted small mb-0">Trợ lý AI (Trí tuệ nhân tạo) tự động phân tích nhu cầu, kiểm duyệt nội dung và ghép cặp đôi bạn cùng tiến tối ưu.</p>
@@ -228,7 +228,7 @@
 
       <!-- Bước 3 -->
       <div class="col-md-6 col-lg-3 position-relative">
-        <div class="step-card h-100">
+        <div class="step-card step-card-3 h-100">
           <div class="step-badge fw-bolder">3</div>
           <h5 class="fw-bold mb-2">Học & Check-in QR</h5>
           <p class="text-muted small mb-0">Hai bạn gặp gỡ trực tiếp hoặc online. Cùng quét mã QR xác thực 2 chiều để ghi nhận thời gian học chuẩn xác.</p>
@@ -240,7 +240,7 @@
 
       <!-- Bước 4 -->
       <div class="col-md-6 col-lg-3 position-relative">
-        <div class="step-card h-100">
+        <div class="step-card step-card-4 h-100">
           <div class="step-badge fw-bolder">4</div>
           <h5 class="fw-bold mb-2">Tích giờ & Đổi kỹ năng</h5>
           <p class="text-muted small mb-0">Người dạy nhận ngay tín dụng thời gian vào ví; dùng giờ này để "mua" buổi học kỹ năng mới từ bạn khác.</p>
@@ -337,34 +337,34 @@
 
     <div class="row g-4 justify-content-center">
       <div class="col-6 col-md-3">
-        <div class="stat-card">
+        <div class="stat-card stat-card-1">
           <div class="text-primary mb-2"><i class="bi bi-people-fill fs-2"></i></div>
           <div class="stat-number">{{ stats.tong_thanh_vien }}</div>
-          <div class="text-muted small fw-medium mt-1">Học sinh thành viên</div>
+          <div class="stat-label small fw-medium mt-1">Học sinh thành viên</div>
         </div>
       </div>
 
       <div class="col-6 col-md-3">
-        <div class="stat-card">
+        <div class="stat-card stat-card-2">
           <div class="text-success mb-2"><i class="bi bi-patch-check-fill fs-2"></i></div>
           <div class="stat-number">{{ stats.phien_hoan_thanh }}</div>
-          <div class="text-muted small fw-medium mt-1">Phiên hoàn thành</div>
+          <div class="stat-label small fw-medium mt-1">Phiên hoàn thành</div>
         </div>
       </div>
 
       <div class="col-6 col-md-3">
-        <div class="stat-card">
+        <div class="stat-card stat-card-3">
           <div class="text-warning mb-2"><i class="bi bi-hourglass-split fs-2"></i></div>
           <div class="stat-number">{{ stats.gio_luu_thong }}h</div>
-          <div class="text-muted small fw-medium mt-1">Giờ lưu thông</div>
+          <div class="stat-label small fw-medium mt-1">Giờ lưu thông</div>
         </div>
       </div>
 
       <div class="col-6 col-md-3">
-        <div class="stat-card">
+        <div class="stat-card stat-card-4">
           <div class="text-indigo mb-2" style="color: #6366f1;"><i class="bi bi-journal-bookmark-fill fs-2"></i></div>
           <div class="stat-number">{{ stats.ky_nang_san_sang }}</div>
-          <div class="text-muted small fw-medium mt-1">Kỹ năng sẵn sàng</div>
+          <div class="stat-label small fw-medium mt-1">Kỹ năng sẵn sàng</div>
         </div>
       </div>
     </div>
@@ -538,7 +538,7 @@
     <!-- Danh sách các trường tham gia hệ thống từ CSDL -->
     <div class="mb-5 pb-3 border-bottom">
       <div class="text-center max-w-700 mx-auto mb-4">
-        <span class="badge bg-warning text-dark fw-bold px-3 py-2 rounded-pill mb-2"><i class="bi bi-buildings-fill me-1"></i> HỆ THỐNG GIAN HÀNG ĐA TRƯỜNG</span>
+        <span class="badge bg-warning text-dark fw-bold px-3 py-2 rounded-pill mb-2"><i class="bi bi-buildings-fill me-1"></i> HỆ THỐNG ĐA TRƯỜNG HỌC</span>
         <h3 class="fw-bold">Các Trường Học Tham Gia Thí Điểm & Triển Khai</h3>
         <p class="text-muted small">Không gian trao đổi kỹ năng học đường được cá nhân hóa và quản trị độc lập cho từng trường.</p>
       </div>
@@ -553,7 +553,7 @@
                   <i class="bi {{ 'bi-broadcast' if s.trang_thai == 'dang_thi_diem' else 'bi-clock-history' }} me-1"></i>
                   {{ 'Đang thí điểm' if s.trang_thai == 'dang_thi_diem' else 'Chuẩn bị triển khai' }}
                 </span>
-                <small class="text-muted">Gian hàng #{{ s.id }}</small>
+                <small class="text-muted">Trường #{{ s.id }}</small>
               </div>
 
               <!-- Vị trí logo thật hoặc tên trường nổi bật trang nhã -->
@@ -587,7 +587,7 @@
             <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100 border-top border-4 border-success">
               <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="badge bg-success bg-opacity-10 text-success fw-bold"><i class="bi bi-broadcast me-1"></i>Đang thí điểm</span>
-                <small class="text-muted">Gian hàng #1</small>
+                <small class="text-muted">Trường #1</small>
               </div>
               <div class="school-logo-frame mb-3 text-center">
                 <div class="school-logo-fallback"><i class="bi bi-buildings-fill text-primary me-1"></i>UKA Academy Hạ Long</div>

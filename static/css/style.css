@@ -91,44 +91,50 @@ pre, code {
   font-weight: 600;
 }
 
-/* Nav Links trong header */
+/* Nav Links trong header - Tách từng mục hiện đại, giữ tông cam-vàng */
 .navbar-custom .nav-link {
   font-weight: 600;
-  color: #1B2A6B !important;
-  padding: 0.55rem 0.95rem !important;
-  border-radius: 8px;
+  color: #1E293B !important;
+  background-color: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  padding: 0.48rem 0.95rem !important;
+  border-radius: 9999px;
   transition: all 0.22s ease;
   display: inline-flex;
   align-items: center;
-  font-size: 0.93rem;
+  font-size: 0.92rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .navbar-custom .nav-link i {
-  color: #1B2A6B;
+  color: #F26522;
   transition: color 0.2s ease;
 }
 
 .navbar-custom .nav-link:hover,
 .navbar-custom .nav-link:focus,
 .navbar-custom .nav-item.show .nav-link {
-  color: #F26522 !important;
-  background-color: rgba(242, 101, 34, 0.06);
+  color: #EA580C !important;
+  background-color: #FFF7ED;
+  border-color: #FED7AA;
+  box-shadow: 0 2px 8px rgba(242, 101, 34, 0.14);
 }
 
 .navbar-custom .nav-link:hover i,
 .navbar-custom .nav-link:focus i,
 .navbar-custom .nav-item.show .nav-link i {
-  color: #F26522;
+  color: #EA580C;
 }
 
 .navbar-custom .nav-link.active {
-  color: #F26522 !important;
-  border-bottom: 2px solid #F26522;
-  border-radius: 0;
+  color: #FFFFFF !important;
+  background: linear-gradient(135deg, #F26522 0%, #F59E0B 100%) !important;
+  border-color: transparent !important;
+  box-shadow: 0 3px 10px rgba(242, 101, 34, 0.3) !important;
 }
 
 .navbar-custom .nav-link.active i {
-  color: #F26522;
+  color: #FFFFFF !important;
 }
 
 /* Dropdown menus phong cách hiện đại */
@@ -457,6 +463,14 @@ pre, code {
   color: #1B2A6B;
 }
 
+.hero-tagline {
+  font-size: clamp(1.15rem, 2vw, 1.38rem);
+  font-weight: 700;
+  color: #1B2A6B;
+  line-height: 1.4;
+  letter-spacing: -0.2px;
+}
+
 .hero-img-box {
   animation: float 4s ease-in-out infinite;
   border: 1px solid rgba(242, 101, 34, 0.2) !important;
@@ -488,6 +502,63 @@ pre, code {
   padding: 1.75rem;
   height: 100%;
   position: relative;
+}
+
+/* 4 Thẻ mô hình hoạt động - Màu nền nhẹ pastel khác nhau cho từng thẻ */
+.step-card.step-card-1 {
+  background: linear-gradient(180deg, #FFF7ED 0%, #FFFFFF 100%) !important;
+  border: 1px solid #FFEDD5 !important;
+}
+.step-card.step-card-1 .step-badge {
+  background: linear-gradient(135deg, rgba(242, 101, 34, 0.2) 0%, rgba(245, 179, 1, 0.3) 100%);
+  color: #F26522;
+  box-shadow: 0 3px 8px rgba(242, 101, 34, 0.18);
+}
+.step-card.step-card-1:hover {
+  border-color: #FDBA74 !important;
+  box-shadow: 0 12px 28px rgba(242, 101, 34, 0.16) !important;
+}
+
+.step-card.step-card-2 {
+  background: linear-gradient(180deg, #FAF5FF 0%, #FFFFFF 100%) !important;
+  border: 1px solid #EDE9FE !important;
+}
+.step-card.step-card-2 .step-badge {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.18) 0%, rgba(168, 85, 247, 0.28) 100%);
+  color: #7C3AED;
+  box-shadow: 0 3px 8px rgba(124, 58, 237, 0.18);
+}
+.step-card.step-card-2:hover {
+  border-color: #C4B5FD !important;
+  box-shadow: 0 12px 28px rgba(124, 58, 237, 0.16) !important;
+}
+
+.step-card.step-card-3 {
+  background: linear-gradient(180deg, #F0F9FF 0%, #FFFFFF 100%) !important;
+  border: 1px solid #E0F2FE !important;
+}
+.step-card.step-card-3 .step-badge {
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.18) 0%, rgba(56, 189, 248, 0.28) 100%);
+  color: #0284C7;
+  box-shadow: 0 3px 8px rgba(2, 132, 199, 0.18);
+}
+.step-card.step-card-3:hover {
+  border-color: #7DD3FC !important;
+  box-shadow: 0 12px 28px rgba(2, 132, 199, 0.16) !important;
+}
+
+.step-card.step-card-4 {
+  background: linear-gradient(180deg, #F0FDF4 0%, #FFFFFF 100%) !important;
+  border: 1px solid #DCFCE7 !important;
+}
+.step-card.step-card-4 .step-badge {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.18) 0%, rgba(52, 211, 153, 0.28) 100%);
+  color: #059669;
+  box-shadow: 0 3px 8px rgba(16, 185, 129, 0.18);
+}
+.step-card.step-card-4:hover {
+  border-color: #86EFAC !important;
+  box-shadow: 0 12px 28px rgba(16, 185, 129, 0.16) !important;
 }
 
 .step-badge {
@@ -647,20 +718,99 @@ pre, code {
    10. COUNTER CARD & LEADERBOARD
    ============================================================================== */
 .stat-card {
-  padding: 1.75rem 1.25rem;
+  padding: 1.85rem 1.25rem;
   text-align: center;
+  border-radius: 18px !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
 }
 
-.stat-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(242, 101, 34, 0.35);
-}
-
-.stat-number {
-  font-size: 2.5rem;
+.stat-card .stat-number {
+  font-size: 2.75rem;
   font-weight: 800;
-  color: #F26522;
   line-height: 1.1;
+  letter-spacing: -0.5px;
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.stat-card .stat-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+/* Thẻ 1: Học sinh thành viên - Gradient Sky / Blue */
+.stat-card.stat-card-1 {
+  background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%) !important;
+  border: 1px solid #BFDBFE !important;
+  box-shadow: 0 6px 18px rgba(30, 64, 175, 0.08) !important;
+}
+.stat-card.stat-card-1 .stat-number {
+  color: #1E40AF !important;
+}
+.stat-card.stat-card-1 .stat-label {
+  color: #1E3A8A !important;
+}
+.stat-card.stat-card-1:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 28px rgba(30, 64, 175, 0.16) !important;
+  border-color: #93C5FD !important;
+}
+
+/* Thẻ 2: Phiên hoàn thành - Gradient Mint / Emerald Green */
+.stat-card.stat-card-2 {
+  background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%) !important;
+  border: 1px solid #A7F3D0 !important;
+  box-shadow: 0 6px 18px rgba(6, 95, 70, 0.08) !important;
+}
+.stat-card.stat-card-2 .stat-number {
+  color: #065F46 !important;
+}
+.stat-card.stat-card-2 .stat-label {
+  color: #064E3B !important;
+}
+.stat-card.stat-card-2:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 28px rgba(6, 95, 70, 0.16) !important;
+  border-color: #6EE7B7 !important;
+}
+
+/* Thẻ 3: Giờ lưu thông - Gradient Warm Amber / Sunset Orange */
+.stat-card.stat-card-3 {
+  background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%) !important;
+  border: 1px solid #FED7AA !important;
+  box-shadow: 0 6px 18px rgba(194, 65, 12, 0.08) !important;
+}
+.stat-card.stat-card-3 .stat-number {
+  color: #C2410C !important;
+}
+.stat-card.stat-card-3 .stat-label {
+  color: #9A3412 !important;
+}
+.stat-card.stat-card-3:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 28px rgba(194, 65, 12, 0.16) !important;
+  border-color: #FDBA74 !important;
+}
+
+/* Thẻ 4: Kỹ năng sẵn sàng - Gradient Royal Purple / Indigo */
+.stat-card.stat-card-4 {
+  background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%) !important;
+  border: 1px solid #C7D2FE !important;
+  box-shadow: 0 6px 18px rgba(55, 48, 163, 0.08) !important;
+}
+.stat-card.stat-card-4 .stat-number {
+  color: #3730A3 !important;
+}
+.stat-card.stat-card-4 .stat-label {
+  color: #312E81 !important;
+}
+.stat-card.stat-card-4:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 28px rgba(55, 48, 163, 0.16) !important;
+  border-color: #A5B4FC !important;
 }
 
 .tutor-card.rank-1 {

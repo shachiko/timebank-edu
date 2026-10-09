@@ -730,6 +730,49 @@ Nâng cấp Bảng điều khiển Quản trị (`/admin`) giúp Cô Huyền (T�
 - Bộ test suite `test_prompt30_school_management.py` bao gồm 8 test cases chuyên sâu kiểm thử toàn diện quy trình thêm, sửa, validate, phân quyền, cách ly dữ liệu và bảo vệ trường Demo.
 - Toàn bộ **29/29 bộ test trong hệ thống (100% PASS)** xác nhận không có bất kỳ lỗi hồi quy nào.
 
+---
+
+## 🎨 PROMPT 31 — CHỈNH TỪ NGỮ + PHỐI MÀU GIAO DIỆN HIỆN ĐẠI
+
+Nâng cấp giao diện người dùng và nhận diện thương hiệu học đường chuẩn mực, tinh tế và hiện đại:
+
+### 1. Chuẩn hóa từ ngữ toàn site (UI Wording):
+- **"GIAN HÀNG" → "TRƯỜNG HỌC":**
+  - Trang chủ: *"HỆ THỐNG GIAN HÀNG ĐA TRƯỜNG"* → *"HỆ THỐNG ĐA TRƯỜNG HỌC"*; *"Gian hàng #1"* → *"Trường #1"*.
+  - Bảng Quản trị (`/admin`): *"Hệ thống Quản trị Gian hàng Đa trường"* → *"Hệ thống Quản trị Đa trường học"*.
+  - Trang Đăng ký (`/register`): *"Hệ thống Gian hàng Đa trường — School Time Bank"* → *"Hệ thống Đa trường học — School Time Bank"*.
+- **"phòng học JaaS WebRTC" → "lớp học ảo":**
+  - Trang chủ: *"Trải nghiệm phòng học JaaS WebRTC hiện đại"* → *"Trải nghiệm lớp học ảo hiện đại"*.
+  - Trang phòng học ảo (`/phong-hoc/<id>`): Tiêu đề, hướng dẫn và thông báo kết nối chuyển sang *"Lớp học ảo trực tuyến"* thân thiện, ẩn hoàn toàn các tên công nghệ kỹ thuật bên dưới khỏi mắt học sinh/giáo viên.
+- **Giữ nguyên code kỹ thuật:** Các biến cấu hình môi trường, hàm backend và log kỹ thuật được bảo toàn nguyên vẹn 100%.
+
+### 2. Dấu ngoặc kép chuẩn tiếng Việt:
+- Câu slogan sư phạm: `“Một giờ bạn dạy — một giờ bạn được học.”` được sửa đúng chuẩn dấu mở `“` và đóng `”` tiếng Việt, loại bỏ lỗi hiển thị 2 icon đóng `bi-quote` trước đây.
+
+### 3. Phối màu hiện đại (Modern Palette & UI/UX):
+- **Menu ngang (`.navbar-custom .nav-link`):**
+  - Tách từng mục thành các tab pill bo tròn (`border-radius: 9999px`) với màu nền nhẹ `#F8FAFC` và viền `#E2E8F0`, chữ `#1E293B` tương phản cao dễ đọc.
+  - Hover chuyển sang nền cam ấm `#FFF7ED` viền `#FED7AA` và chữ `#EA580C`.
+  - Mục active hiển thị dải màu gradient cam-vàng chủ đạo (`#F26522` → `#F59E0B`) nổi bật.
+  - Tối ưu hoàn hảo trên cả desktop, laptop nhỏ và mobile menu drawer.
+- **4 thẻ mô hình hoạt động (`.step-card`):**
+  - Đổ 4 màu nền pastel dịu mắt riêng biệt cho 4 bước:
+    - Bước 1 (Đăng kỹ năng): Nền cam ấm `#FFF7ED` → `#FFFFFF`, viền `#FFEDD5`, badge cam `#F26522`.
+    - Bước 2 (AI gợi ý ghép cặp): Nền tím AI `#FAF5FF` → `#FFFFFF`, viền `#EDE9FE`, badge tím `#7C3AED`.
+    - Bước 3 (Học & Check-in QR): Nền xanh dương `#F0F9FF` → `#FFFFFF`, viền `#E0F2FE`, badge xanh `#0284C7`.
+    - Bước 4 (Tích giờ & Đổi kỹ năng): Nền xanh lá `#F0FDF4` → `#FFFFFF`, viền `#DCFCE7`, badge xanh ngọc `#059669`.
+- **4 chỉ số vận hành (`.stat-card`):**
+  - Đổ màu nền gradient hiện đại cho từng thẻ số liệu:
+    - Thẻ 1 (Học sinh thành viên): Gradient Sky Blue `#EFF6FF` → `#DBEAFE`, số `#1E40AF`.
+    - Thẻ 2 (Phiên hoàn thành): Gradient Mint Green `#ECFDF5` → `#D1FAE5`, số `#065F46`.
+    - Thẻ 3 (Giờ lưu thông): Gradient Sunset Amber `#FFF7ED` → `#FFEDD5`, số `#C2410C`.
+    - Thẻ 4 (Kỹ năng sẵn sàng): Gradient Royal Indigo `#EEF2FF` → `#E0E7FF`, số `#3730A3`.
+  - Kích thước số lớn nổi bật (`2.75rem`, `font-weight: 800`), hiệu ứng hover đổ bóng mượt mà.
+
+### 4. Nghiệm thu & Regression Testing:
+- Test suite `test_prompt31_ui_wording_color.py` bao gồm 8 test cases chuyên sâu kiểm thử toàn diện từ ngữ, ngoặc kép và CSS phối màu.
+- Toàn bộ **30/30 bộ test trong hệ thống (100% PASS)** xác nhận regression pass hoàn hảo.
+
 
 
 

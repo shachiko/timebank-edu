@@ -62,9 +62,9 @@
                 <i class="bi bi-shield-exclamation text-warning" style="font-size: 2.8rem;"></i>
               </span>
             </div>
-            <h4 class="fw-bold text-dark mb-2">Phòng Học Trực Tuyến JaaS (8x8) Chưa Được Cấu Hình</h4>
+            <h4 class="fw-bold text-dark mb-2">Lớp Học Ảo Trực Tuyến Chưa Được Cấu Hình</h4>
             <p class="text-muted small mb-4" style="max-width: 600px;">
-              Hệ thống phòng học ảo ứng dụng giải pháp phòng học đa nòng (<strong>Daily.co</strong> & <strong>JaaS 8x8 RS256 JWT</strong>) để học sinh và gia sư tham gia phòng học 1 chạm an toàn mà không cần tạo tài khoản riêng.
+              Hệ thống lớp học ảo ứng dụng giải pháp công nghệ đa tầng an toàn để học sinh và gia sư tham gia lớp học 1 chạm mà không cần tạo tài khoản riêng.
             </p>
             
             <div class="bg-light p-3 rounded-4 border text-start mb-4 shadow-sm" style="max-width: 500px; width: 100%;">
@@ -138,7 +138,7 @@
         {% endif %}
       </div>
       <div class="mt-2 d-flex justify-content-between align-items-center small text-muted px-2">
-        <span><i class="bi bi-shield-check text-success me-1"></i> Phòng học trực tuyến JaaS: <code>{{ room_name }}</code></span>
+        <span><i class="bi bi-shield-check text-success me-1"></i> Lớp học ảo trực tuyến: <code>{{ room_name }}</code></span>
         <span><span class="badge-ai" style="font-size: 0.7rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Trí tuệ nhân tạo)</span> Giám sát thời lượng tự động</span>
       </div>
     </div>
@@ -323,8 +323,8 @@ document.addEventListener("DOMContentLoaded", function() {
     .then(function(result) {
       if (!result.ok || !result.data.success || result.data.provider !== "daily") {
         console.warn("Daily.co token request failed or returned fallback:", result);
-        // Tự động fallback sang JaaS (Nòng 2)
-        switchToJaaS("Không thể kết nối Daily.co. Tự động chuyển nòng dự phòng JaaS...");
+        // Tự động fallback sang nòng dự phòng 1
+        switchToJaaS("Không thể kết nối Daily.co. Tự động chuyển nòng dự phòng...");
         return;
       }
 
@@ -332,14 +332,14 @@ document.addEventListener("DOMContentLoaded", function() {
       const meetingToken = result.data.token;
 
       if (!roomUrl || !meetingToken) {
-        switchToJaaS("Thiếu URL hoặc token phòng học Daily.co. Tự động chuyển nòng dự phòng JaaS...");
+        switchToJaaS("Thiếu URL hoặc token phòng học Daily.co. Tự động chuyển nòng dự phòng...");
         return;
       }
 
       function initDailyFrame() {
         try {
           if (!window.DailyIframe) {
-            switchToJaaS("Không thể tải SDK Daily.co. Tự động chuyển nòng dự phòng JaaS...");
+            switchToJaaS("Không thể tải SDK Daily.co. Tự động chuyển nòng dự phòng...");
             return;
           }
 
@@ -359,7 +359,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
           dailyCallFrame.on("error", function(e) {
             console.warn("Daily call frame runtime error:", e);
-            switchToJaaS("Lỗi phòng học Daily.co (" + (e.errorMsg || "mất kết nối") + "). Tự động chuyển nòng dự phòng JaaS...");
+            switchToJaaS("Lỗi phòng học Daily.co (" + (e.errorMsg || "mất kết nối") + "). Tự động chuyển nòng dự phòng...");
           });
 
           dailyCallFrame.join({
@@ -371,11 +371,11 @@ document.addEventListener("DOMContentLoaded", function() {
             console.log("Daily.co joined successfully!");
           }).catch(function(err) {
             console.warn("Daily join failed:", err);
-            switchToJaaS("Không thể vào phòng Daily.co. Tự động chuyển nòng dự phòng JaaS...");
+            switchToJaaS("Không thể vào phòng Daily.co. Tự động chuyển nòng dự phòng...");
           });
         } catch (e) {
           console.warn("Daily init error:", e);
-          switchToJaaS("Lỗi khởi tạo Daily.co: " + e.message + ". Tự động chuyển nòng dự phòng JaaS...");
+          switchToJaaS("Lỗi khởi tạo Daily.co: " + e.message + ". Tự động chuyển nòng dự phòng...");
         }
       }
 
@@ -389,14 +389,14 @@ document.addEventListener("DOMContentLoaded", function() {
         script.onload = initDailyFrame;
         script.onerror = function() {
           console.warn("Failed to load Daily.js script CDN");
-          switchToJaaS("Không thể tải thư viện Daily.co qua CDN. Tự động chuyển nòng dự phòng JaaS...");
+          switchToJaaS("Không thể tải thư viện Daily.co qua CDN. Tự động chuyển nòng dự phòng...");
         };
         document.head.appendChild(script);
       }
     })
     .catch(function(err) {
       console.warn("Daily network error:", err);
-      switchToJaaS("Lỗi mạng Daily.co: " + err.message + ". Tự động chuyển nòng dự phòng JaaS...");
+      switchToJaaS("Lỗi mạng Daily.co: " + err.message + ". Tự động chuyển nòng dự phòng...");
     });
   }
 
@@ -413,7 +413,7 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   function startJaaS(isFallback, reasonMsg) {
-    showLoading("Đang Kết Nối Phòng Học JaaS (8x8)...", reasonMsg || "Đang khởi tạo mã định danh 1 chạm JaaS RS256 cho " + userName);
+    showLoading("Đang Kết Nối Lớp Học Ảo...", reasonMsg || ("Đang khởi tạo mã định danh 1 chạm an toàn cho " + userName));
 
     fetch("{{ url_for('get_virtual_room_token', session_id=session_data.id) }}?provider=jaas", {
       method: "POST",
@@ -430,7 +430,7 @@ document.addEventListener("DOMContentLoaded", function() {
     .then(function(result) {
       if (!result.ok || !result.data.success || !result.data.token) {
         console.warn("JaaS token error:", result);
-        window.switchToPublicJitsi("Không thể cấp token JaaS (" + (result.data.error || "lỗi cấu hình") + "). Tự động chuyển nòng dự phòng Jitsi...");
+        window.switchToPublicJitsi("Không thể cấp token lớp học (" + (result.data.error || "lỗi cấu hình") + "). Tự động chuyển nòng dự phòng (Jitsi)...");
         return;
       }
 
@@ -442,7 +442,7 @@ document.addEventListener("DOMContentLoaded", function() {
       function mountJitsiAPI() {
         try {
           if (typeof JitsiMeetExternalAPI === "undefined") {
-            window.switchToPublicJitsi("Không thể nạp đối tượng JitsiMeetExternalAPI từ 8x8. Chuyển nòng Jitsi...");
+            window.switchToPublicJitsi("Không thể nạp thư viện kết nối lớp học. Chuyển nòng dự phòng (Jitsi)...");
             return;
           }
 
@@ -479,7 +479,7 @@ document.addEventListener("DOMContentLoaded", function() {
           hideLoading();
         } catch (e) {
           console.warn("JaaS mount error:", e);
-          window.switchToPublicJitsi("Không thể khởi tạo JaaS: " + e.message + ". Chuyển nòng Jitsi...");
+          window.switchToPublicJitsi("Không thể khởi tạo lớp học: " + e.message + ". Chuyển nòng dự phòng (Jitsi)...");
         }
       }
 
@@ -496,7 +496,7 @@ document.addEventListener("DOMContentLoaded", function() {
           fallbackScript.async = true;
           fallbackScript.onload = mountJitsiAPI;
           fallbackScript.onerror = function() {
-            window.switchToPublicJitsi("Không thể tải thư viện 8x8 JaaS. Chuyển nòng Jitsi...");
+            window.switchToPublicJitsi("Không thể tải thư viện lớp học ảo. Chuyển nòng dự phòng (Jitsi)...");
           };
           document.head.appendChild(fallbackScript);
         };
@@ -505,7 +505,7 @@ document.addEventListener("DOMContentLoaded", function() {
     })
     .catch(function(err) {
       console.warn("JaaS network error:", err);
-      window.switchToPublicJitsi("Lỗi kết nối JaaS: " + err.message + ". Chuyển nòng Jitsi...");
+      window.switchToPublicJitsi("Lỗi kết nối lớp học: " + err.message + ". Chuyển nòng dự phòng (Jitsi)...");
     });
   }
 
