@@ -2911,7 +2911,7 @@ def admin_generate_invite_codes():
 
     db.commit()
     flash(f"Đã sinh thành công {len(created_codes)} mã mời dạng TBEDU-XXXX-XXXX!", "success")
-    return redirect(url_for("admin_dashboard"))
+    return redirect(url_for("admin_dashboard", _anchor="tab-invite"))
 
 
 @app.route("/admin/approve-student/<int:user_id>", methods=["POST"])

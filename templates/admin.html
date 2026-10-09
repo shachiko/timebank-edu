@@ -2,6 +2,27 @@
 
 {% block title %}Bảng điều khiển Quản trị - School Time Bank{% endblock %}
 
+{% block extra_head %}
+<style>
+  /* Cơ chế hiển thị Tab Quản trị độc lập, ổn định 100% không phụ thuộc Bootstrap JS */
+  #adminTabsContent > .tab-pane {
+    display: none !important;
+  }
+  #adminTabsContent > .tab-pane.active {
+    display: block !important;
+    opacity: 1 !important;
+  }
+  #adminTabs .nav-link {
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  #adminTabs .nav-link.active {
+    background-color: var(--brand-color, #f26522) !important;
+    color: #ffffff !important;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container py-4">
   <!-- Thanh tiêu đề Quản trị & Thông tin vai trò -->
@@ -292,6 +313,9 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
       <!-- KHỐI VINH DANH TOP HỌC SINH TÍCH CỰC (MILESTONE M4-LITE) -->
       {% if top_active_students %}
       <div class="card border-0 shadow-sm rounded-4 bg-white mb-4 overflow-hidden">
@@ -738,6 +762,8 @@
           </div>
         </div>
       </div>
+    </div>
+
     <!-- =========================================================================
          TAB: DUYỆT SÀN GIAO DỊCH CHUNG LIÊN TRƯỜNG (PROMPT 19)
          ========================================================================= -->
@@ -1010,5 +1036,68 @@ function handleInviteTypeChange(val) {
     boxMax.style.display = 'none';
   }
 }
+
+// =========================================================================
+// CƠ CHẾ CHUYỂN TAB QUẢN TRỊ ĐỘC LẬP & TỰ ĐỘNG KHÔI PHỤC THEO URL HASH
+// =========================================================================
+function activateAdminTab(targetId) {
+  if (!targetId) return;
+  if (!targetId.startsWith('#')) targetId = '#' + targetId;
+  
+  const targetPane = document.querySelector(targetId);
+  if (!targetPane) return;
+
+  // 1. Cập nhật nút bấm Tab
+  const tabButtons = document.querySelectorAll('#adminTabs .nav-link');
+  tabButtons.forEach(btn => {
+    const target = btn.getAttribute('data-bs-target') || btn.getAttribute('data-tab-target');
+    if (target === targetId) {
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+    } else {
+      btn.classList.remove('active');
+      btn.setAttribute('aria-selected', 'false');
+    }
+  });
+
+  // 2. Cập nhật vùng hiển thị Tab Pane
+  const allPanes = document.querySelectorAll('#adminTabsContent > .tab-pane');
+  allPanes.forEach(pane => {
+    if ('#' + pane.id === targetId) {
+      pane.classList.add('active', 'show');
+      pane.style.display = 'block';
+    } else {
+      pane.classList.remove('active', 'show');
+      pane.style.display = 'none';
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Gán sự kiện click cho các tab
+  const tabButtons = document.querySelectorAll('#adminTabs .nav-link');
+  tabButtons.forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      const target = this.getAttribute('data-bs-target') || this.getAttribute('data-tab-target');
+      if (target) {
+        activateAdminTab(target);
+        if (history.pushState) {
+          history.pushState(null, null, target);
+        } else {
+          location.hash = target;
+        }
+      }
+    });
+  });
+
+  // Kiểm tra URL hash (ví dụ: #tab-invite, #tab-queue...)
+  const hash = window.location.hash;
+  if (hash && document.querySelector(hash)) {
+    activateAdminTab(hash);
+  } else {
+    activateAdminTab('#tab-overview');
+  }
+});
 </script>
 {% endblock %}
