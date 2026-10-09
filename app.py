@@ -448,6 +448,320 @@ def close_db(error=None):
         db.close()
 
 
+def migrate_postgres_schema(conn):
+    """
+    Hotfix Prompt 20: Tự động di chuyển (migrate) cấu trúc cơ sở dữ liệu PostgreSQL production (P17–P19):
+    1. users: ADD COLUMN IF NOT EXISTS truong_id INTEGER DEFAULT 1;
+              ADD COLUMN IF NOT EXISTS trang_thai TEXT DEFAULT 'hoat_dong';
+    2. skills: ADD COLUMN IF NOT EXISTS truong_id INTEGER DEFAULT 1;
+               ADD COLUMN IF NOT EXISTS hien_thi_cong_dong INTEGER DEFAULT 0;
+               ADD COLUMN IF NOT EXISTS trang_thai_cong_dong TEXT DEFAULT 'chua_dang';
+               ADD COLUMN IF NOT EXISTS nguoi_duyet_cong_dong_id INTEGER;
+               ADD COLUMN IF NOT EXISTS ngay_duyet_cong_dong TEXT;
+    3. sessions, ratings, community_tasks, task_registrations, blog_posts:
+       mỗi bảng ADD COLUMN IF NOT EXISTS truong_id INTEGER DEFAULT 1;
+    4. Cập nhật CHECK vai_tro của bảng users để chấp nhận 'super_admin' và 'school_admin':
+       DROP CONSTRAINT cũ (nếu tên constraint không biết thì tìm trong information_schema)
+       rồi ADD CONSTRAINT mới. Bọc try/except từng lệnh để không crash nếu constraint đã đúng.
+    5. Seed 4 trường vào bảng truong NẾU bảng rỗng (giống seed_demo_data).
+    6. UPDATE các dòng cũ: SET truong_id = 1 WHERE truong_id IS NULL (đề phòng DEFAULT không backfill).
+    7. Nâng tài khoản 'admin' cũ lên vai_tro = 'super_admin' NẾU đang là 'admin'.
+
+    Hàm idempotent (chạy lại nhiều lần không lỗi, không mất dữ liệu).
+    Tương thích cả PostgreSQL production lẫn SQLite (mô phỏng trong test suite).
+    """
+    is_sqlite = False
+    if isinstance(conn, sqlite3.Connection):
+        is_sqlite = True
+    elif not hasattr(conn, "_conn"):
+        try:
+            c = conn.cursor()
+            c.execute("SELECT sqlite_version()")
+            is_sqlite = True
+        except Exception:
+            is_sqlite = False
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+
+    cur = conn.cursor()
+
+    def _exec(sql, params=None):
+        if params is not None:
+            if is_sqlite or isinstance(cur, PostgresCursorWrapper) or hasattr(conn, "_conn"):
+                cur.execute(sql, params)
+            else:
+                cur.execute(sql.replace("?", "%s"), params)
+        else:
+            cur.execute(sql)
+
+    # 0. Đảm bảo bảng truong tồn tại trước khi seed hoặc tham chiếu
+    try:
+        if is_sqlite:
+            _exec("""
+                CREATE TABLE IF NOT EXISTS truong (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ten_truong TEXT NOT NULL,
+                    logo TEXT,
+                    trang_thai TEXT CHECK(trang_thai IN ('dang_thi_diem', 'chuan_bi_trien_khai', 'dang_su_dung')) DEFAULT 'dang_thi_diem',
+                    ngay_tao TEXT DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+        else:
+            _exec("""
+                CREATE TABLE IF NOT EXISTS truong (
+                    id SERIAL PRIMARY KEY,
+                    ten_truong TEXT NOT NULL,
+                    logo TEXT,
+                    trang_thai TEXT CHECK(trang_thai IN ('dang_thi_diem', 'chuan_bi_trien_khai', 'dang_su_dung')) DEFAULT 'dang_thi_diem',
+                    ngay_tao TEXT DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+        conn.commit()
+    except Exception as e:
+        app.logger.warning(f"Lỗi kiểm tra/tạo bảng truong: {e}")
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+
+    # 1. users: ADD COLUMN IF NOT EXISTS truong_id, trang_thai
+    # 2. skills: ADD COLUMN IF NOT EXISTS truong_id, hien_thi_cong_dong, trang_thai_cong_dong, nguoi_duyet_cong_dong_id, ngay_duyet_cong_dong
+    # 3. sessions, ratings, community_tasks, task_registrations, blog_posts: ADD COLUMN IF NOT EXISTS truong_id
+    columns_to_add = [
+        # 1. users
+        ("users", "truong_id", "INTEGER DEFAULT 1"),
+        ("users", "trang_thai", "TEXT DEFAULT 'hoat_dong'"),
+        # 2. skills
+        ("skills", "truong_id", "INTEGER DEFAULT 1"),
+        ("skills", "hien_thi_cong_dong", "INTEGER DEFAULT 0"),
+        ("skills", "trang_thai_cong_dong", "TEXT DEFAULT 'chua_dang'"),
+        ("skills", "nguoi_duyet_cong_dong_id", "INTEGER"),
+        ("skills", "ngay_duyet_cong_dong", "TEXT"),
+        # 3. sessions, ratings, community_tasks, task_registrations, blog_posts
+        ("sessions", "truong_id", "INTEGER DEFAULT 1"),
+        ("ratings", "truong_id", "INTEGER DEFAULT 1"),
+        ("community_tasks", "truong_id", "INTEGER DEFAULT 1"),
+        ("task_registrations", "truong_id", "INTEGER DEFAULT 1"),
+        ("blog_posts", "truong_id", "INTEGER DEFAULT 1"),
+    ]
+
+    for tbl, col_name, col_def in columns_to_add:
+        if is_sqlite:
+            try:
+                cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name = ?", (tbl,))
+                if not cur.fetchone():
+                    continue
+                _exec(f"PRAGMA table_info({tbl})")
+                existing_cols = [r[1] for r in cur.fetchall()]
+                if col_name not in existing_cols:
+                    _exec(f"ALTER TABLE {tbl} ADD COLUMN {col_name} {col_def}")
+                    conn.commit()
+            except Exception as e:
+                app.logger.warning(f"Lỗi thêm cột {tbl}.{col_name} trên SQLite: {e}")
+                try:
+                    conn.rollback()
+                except Exception:
+                    pass
+        else:
+            try:
+                _exec(f"ALTER TABLE {tbl} ADD COLUMN IF NOT EXISTS {col_name} {col_def}")
+                conn.commit()
+            except Exception as e:
+                app.logger.warning(f"Lỗi ADD COLUMN IF NOT EXISTS {tbl}.{col_name} trên PostgreSQL: {e}")
+                try:
+                    conn.rollback()
+                except Exception:
+                    pass
+
+    # 4. Cập nhật CHECK vai_tro của bảng users để chấp nhận 'super_admin' và 'school_admin'
+    if is_sqlite:
+        # Trong SQLite, nếu bảng users cũ có CHECK constraint chặn super_admin
+        try:
+            cur.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='users'")
+            row = cur.fetchone()
+            if row and row[0] and "super_admin" not in row[0]:
+                old_sql = row[0]
+                new_sql = re.sub(
+                    r"vai_tro\s+IN\s*\([^)]+\)",
+                    "vai_tro IN ('hoc_sinh', 'giao_vien', 'school_admin', 'super_admin', 'admin')",
+                    old_sql
+                )
+                cur.execute("PRAGMA foreign_keys = OFF")
+                cur.execute("ALTER TABLE users RENAME TO _users_old")
+                cur.execute(new_sql)
+                cur.execute("PRAGMA table_info(_users_old)")
+                old_cols = [r[1] for r in cur.fetchall()]
+                cols_str = ", ".join(old_cols)
+                cur.execute(f"INSERT INTO users ({cols_str}) SELECT {cols_str} FROM _users_old")
+                cur.execute("DROP TABLE _users_old")
+                cur.execute("PRAGMA foreign_keys = ON")
+                conn.commit()
+        except Exception as e:
+            app.logger.warning(f"Lỗi nâng cấp check constraint users (SQLite): {e}")
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+    else:
+        constraint_names = set()
+        # Tìm trong information_schema
+        try:
+            _exec("""
+                SELECT tc.constraint_name
+                FROM information_schema.table_constraints tc
+                JOIN information_schema.check_constraints cc
+                  ON tc.constraint_name = cc.constraint_name
+                 AND tc.constraint_schema = cc.constraint_schema
+                WHERE tc.table_name = 'users'
+                  AND tc.constraint_type = 'CHECK'
+                  AND (cc.check_clause ILIKE '%vai_tro%' OR tc.constraint_name ILIKE '%vai_tro%')
+            """)
+            for row in cur.fetchall():
+                constraint_names.add(row[0])
+            conn.commit()
+        except Exception:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+
+        # Tìm trong pg_constraint (catalog hệ thống PostgreSQL)
+        try:
+            _exec("""
+                SELECT con.conname
+                FROM pg_constraint con
+                JOIN pg_class rel ON rel.oid = con.conrelid
+                WHERE rel.relname = 'users'
+                  AND con.contype = 'c'
+                  AND (con.conname ILIKE '%vai_tro%' OR pg_get_constraintdef(con.oid) ILIKE '%vai_tro%')
+            """)
+            for row in cur.fetchall():
+                constraint_names.add(row[0])
+            conn.commit()
+        except Exception:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+
+        constraint_names.add("users_vai_tro_check")
+
+        # Xóa các constraint cũ tìm được
+        for cname in constraint_names:
+            try:
+                _exec(f"ALTER TABLE users DROP CONSTRAINT IF EXISTS {cname}")
+                conn.commit()
+            except Exception:
+                try:
+                    conn.rollback()
+                except Exception:
+                    pass
+
+        # Thêm constraint mới hỗ trợ super_admin và school_admin
+        try:
+            _exec("""
+                ALTER TABLE users ADD CONSTRAINT users_vai_tro_check
+                CHECK (vai_tro IN ('hoc_sinh', 'giao_vien', 'school_admin', 'super_admin', 'admin'))
+            """)
+            conn.commit()
+        except Exception as e:
+            app.logger.warning(f"Lỗi ADD CONSTRAINT users_vai_tro_check: {e}")
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+
+    # 5. Seed 4 trường vào bảng truong NẾU bảng rỗng (giống seed_demo_data)
+    try:
+        _exec("SELECT COUNT(*) FROM truong")
+        row = cur.fetchone()
+        school_count = row[0] if row else 0
+        if school_count == 0:
+            schools = [
+                (1, "Trường Tiểu học, THCS, THPT Quốc tế song ngữ học viện Anh Quốc-UK Academy", "/static/img/logo_timebank_edu.png", "dang_thi_diem"),
+                (2, "Trường THCS Nguyễn Văn Thuộc", "/static/img/logo_timebank_edu.png", "chuan_bi_trien_khai"),
+                (3, "Trường THCS Lê Văn Tám", "/static/img/logo_timebank_edu.png", "chuan_bi_trien_khai"),
+                (4, "Trường THPT Hải Đảo", "/static/img/logo_timebank_edu.png", "chuan_bi_trien_khai")
+            ]
+            for s in schools:
+                try:
+                    _exec("INSERT INTO truong (id, ten_truong, logo, trang_thai) VALUES (?, ?, ?, ?)", s)
+                except Exception:
+                    try:
+                        conn.rollback()
+                    except Exception:
+                        pass
+            conn.commit()
+
+            if not is_sqlite:
+                try:
+                    _exec("SELECT setval(pg_get_serial_sequence('truong', 'id'), COALESCE(MAX(id), 1)) FROM truong")
+                    conn.commit()
+                except Exception:
+                    try:
+                        conn.rollback()
+                    except Exception:
+                        pass
+    except Exception as e:
+        app.logger.warning(f"Lỗi seed 4 trường học trong migrate_postgres_schema: {e}")
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+
+    # 6. UPDATE các dòng cũ: SET truong_id = 1 WHERE truong_id IS NULL (đề phòng DEFAULT không backfill)
+    tables_to_backfill = [
+        "users", "skills", "sessions", "ratings",
+        "community_tasks", "task_registrations", "blog_posts"
+    ]
+    for tbl in tables_to_backfill:
+        try:
+            if is_sqlite:
+                cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name = ?", (tbl,))
+                if not cur.fetchone():
+                    continue
+            _exec(f"UPDATE {tbl} SET truong_id = 1 WHERE truong_id IS NULL")
+            conn.commit()
+        except Exception:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+
+    # Backfill thêm trang_thai nếu NULL
+    try:
+        _exec("UPDATE users SET trang_thai = 'hoat_dong' WHERE trang_thai IS NULL")
+        conn.commit()
+    except Exception:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+
+    try:
+        _exec("UPDATE skills SET hien_thi_cong_dong = 0 WHERE hien_thi_cong_dong IS NULL")
+        _exec("UPDATE skills SET trang_thai_cong_dong = 'chua_dang' WHERE trang_thai_cong_dong IS NULL")
+        conn.commit()
+    except Exception:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+
+    # 7. Nâng tài khoản 'admin' cũ lên vai_tro = 'super_admin' NẾU đang là 'admin'
+    try:
+        _exec("UPDATE users SET vai_tro = 'super_admin' WHERE ma_hoc_sinh = 'admin' AND vai_tro = 'admin'")
+        conn.commit()
+    except Exception as e:
+        app.logger.warning(f"Lỗi nâng cấp tài khoản admin lên super_admin: {e}")
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+
+
 def init_db():
     """
     Khởi tạo cấu trúc cơ sở dữ liệu (13 bảng):
@@ -477,9 +791,16 @@ def init_db():
                 if stmt:
                     try:
                         cur.execute(stmt)
+                        conn.commit()
                     except Exception:
-                        pass
+                        try:
+                            conn.rollback()
+                        except Exception:
+                            pass
             conn.commit()
+
+            # Hotfix Prompt 20: Tự động migrate PostgreSQL Production (P17–P19)
+            migrate_postgres_schema(conn)
 
             cur.execute("SELECT COUNT(*) FROM users")
             row = cur.fetchone()

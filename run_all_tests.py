@@ -17,7 +17,8 @@ test_files = [
     "test_prompt15_rebrand.py",
     "test_prompt17_multitenant.py",
     "test_prompt18_forum_drive.py",
-    "test_prompt19_community_market.py"
+    "test_prompt19_community_market.py",
+    "test_prompt20_migration.py"
 ]
 
 results = {}
