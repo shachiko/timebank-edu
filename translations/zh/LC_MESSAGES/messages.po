@@ -1,0 +1,868 @@
+# Chinese translations for PROJECT.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-10-09 21:37+0700\n"
+"PO-Revision-Date: 2026-10-09 21:38+0700\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh\n"
+"Language-Team: zh <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: app.py:324
+msgid "Vui lòng đăng nhập để tiếp tục truy cập."
+msgstr "请登录以继续访问。"
+
+#: app.py:338
+msgid "Vui lòng đăng nhập bằng tài khoản Quản trị viên."
+msgstr "请使用管理员账户登录。"
+
+#: app.py:353
+msgid "Vui lòng đăng nhập bằng tài khoản Tổng quản trị."
+msgstr "请使用总管理员账户登录。"
+
+#: app.py:369
+msgid "Vui lòng đăng nhập với quyền Giáo viên hoặc Quản trị viên."
+msgstr "请使用教师或管理员权限登录。"
+
+#: app.py:2052
+msgid "Vui lòng điền đầy đủ các thông tin bắt buộc (*)."
+msgstr "请填写所有必填信息（*）。"
+
+#: app.py:2056
+msgid "Mật khẩu phải có độ dài tối thiểu từ 6 ký tự trở lên."
+msgstr "密码长度必须至少为6个字符。"
+
+#: app.py:2060
+msgid "Mật khẩu xác nhận không khớp với mật khẩu đã nhập."
+msgstr "确认密码与输入的密码不一致。"
+
+#: app.py:2066
+msgid "Mã học sinh đã tồn tại trong hệ thống. Vui lòng kiểm tra lại!"
+msgstr "学号已存在于系统中，请检查后重试！"
+
+#: app.py:2083
+msgid "Mã mời không tồn tại trên hệ thống. Vui lòng kiểm tra lại!"
+msgstr "邀请码不存在，请检查后重试！"
+
+#: app.py:2086
+msgid ""
+"Trường học gắn với mã mời này hiện đang tạm dừng hoạt động hoặc đã bị ẩn "
+"/ vô hiệu hóa!"
+msgstr "与该邀请码关联的学校当前已暂停或被禁用！"
+
+#: app.py:2089
+msgid "Mã mời này đã hết số lượt sử dụng!"
+msgstr "该邀请码已达到最大使用次数！"
+
+#: app.py:2106
+msgid ""
+"Trường học bạn chọn hiện đang tạm dừng hoạt động hoặc đã bị ẩn / vô hiệu "
+"hóa!"
+msgstr "您选择的学校当前已暂停或被禁用！"
+
+#: app.py:2156
+msgid ""
+"Chúc mừng bạn đã kích hoạt mở sổ thành công bằng mã mời và nhận ngay 2.0 "
+"giờ tín dụng!"
+msgstr "恭喜您！已通过邀请码成功激活账户，并获得2.0小时时间积分！"
+
+#: app.py:2158
+msgid ""
+"Đăng ký thành công! Tài khoản của bạn đang ở trạng thái 'Chờ duyệt' bởi "
+"Quản trị viên nhà trường. Bạn chưa thể đăng kỹ năng hoặc đặt lịch học cho"
+" đến khi được duyệt."
+msgstr "注册成功！您的账户处于学校管理员“待审核”状态。在获得批准之前，您尚无法发布技能或预约课程。"
+
+#: app.py:2190
+msgid "Mã đăng nhập hoặc mật khẩu không chính xác!"
+msgstr "登录账号或密码不正确！"
+
+#: app.py:2196
+msgid ""
+"Tài khoản của bạn đã bị khóa do vi phạm nội quy học đường. Vui lòng liên "
+"hệ ban quản trị nhà trường để được hỗ trợ giải quyết."
+msgstr "由于违反校规，您的账户已被锁定。请联系学校管理员以获取支持。"
+
+#: app.py:2216
+#, python-format
+msgid "Đăng nhập thành công! Xin chào %(name)s."
+msgstr "登录成功！欢迎您，%(name)s。"
+
+#: app.py:2236
+msgid "Bạn đã đăng xuất khỏi hệ thống thành công."
+msgstr "您已成功退出系统。"
+
+#: templates/base.html:6 templates/base.html:49 templates/base.html:336
+#: templates/base.html:372 templates/index.html:17
+msgid "Ngân hàng Thời gian Học đường"
+msgstr "校园时间银行"
+
+#: templates/base.html:66 templates/base.html:381
+msgid "Mô hình"
+msgstr "模式"
+
+#: templates/base.html:71
+msgid "Mô hình hoạt động"
+msgstr "运作模式"
+
+#: templates/base.html:76
+msgid "Quy trình 4 bước"
+msgstr "四步流程"
+
+#: templates/base.html:81
+msgid "Số liệu vận hành"
+msgstr "运营数据"
+
+#: templates/base.html:90
+msgid "Hoạt động"
+msgstr "活动"
+
+#: templates/base.html:95 templates/base.html:377
+msgid "Chợ kỹ năng"
+msgstr "技能市集"
+
+#: templates/base.html:100
+msgid "Sàn cộng đồng"
+msgstr "社区集市"
+
+#: templates/base.html:105 templates/base.html:379
+msgid "Vì cộng đồng"
+msgstr "公益奉献"
+
+#: templates/base.html:110
+msgid "Diễn đàn"
+msgstr "论坛"
+
+#: templates/base.html:119
+msgid "Tài nguyên"
+msgstr "资源"
+
+#: templates/base.html:124
+msgid "Nội quy"
+msgstr "规章制度"
+
+#: templates/base.html:129
+msgid "Kho tài liệu"
+msgstr "资料库"
+
+#: templates/base.html:134 templates/base.html:383
+msgid "Bản tin"
+msgstr "校园快讯"
+
+#: templates/base.html:143
+msgid "Vinh danh"
+msgstr "光荣榜"
+
+#: templates/base.html:148
+msgid "Bảng vàng thành tích"
+msgstr "成就荣誉榜"
+
+#: templates/base.html:153
+msgid "Top gia sư tiêu biểu"
+msgstr "优秀小导师"
+
+#: templates/base.html:162
+msgid "Dành cho Nhà trường"
+msgstr "学校专区"
+
+#: templates/base.html:167
+msgid "Mô hình chuyển giao"
+msgstr "推广转移模式"
+
+#: templates/base.html:172
+msgid "Liên hệ & Tư vấn"
+msgstr "联系与咨询"
+
+#: templates/base.html:183
+msgid "Chuyển đổi ngôn ngữ"
+msgstr "切换语言"
+
+#: templates/base.html:222
+msgid "Mã"
+msgstr "编号"
+
+#: templates/base.html:228
+msgid "Lịch của tôi (Dạy & Học)"
+msgstr "我的课表（教与学）"
+
+#: templates/base.html:233
+msgid "Ví của tôi"
+msgstr "我的钱包"
+
+#: templates/base.html:238
+msgid "Hồ sơ cá nhân & Cài đặt"
+msgstr "个人资料与设置"
+
+#: templates/base.html:244
+msgid "Đăng kỹ năng mới"
+msgstr "发布新技能"
+
+#: templates/base.html:249
+msgid "Hoạt động Vì cộng đồng"
+msgstr "社区公益活动"
+
+#: templates/base.html:256
+msgid "Quản lý Bảng tin"
+msgstr "管理校园快讯"
+
+#: templates/base.html:261
+msgid "Giám sát phòng học ảo"
+msgstr "虚拟教室监控"
+
+#: templates/base.html:266
+msgid "Duyệt kỹ năng học sinh"
+msgstr "审核学生技能"
+
+#: templates/base.html:273
+msgid "Bảng điều khiển Admin"
+msgstr "管理员控制台"
+
+#: templates/base.html:280
+msgid "Quản lý Tài khoản"
+msgstr "账户管理"
+
+#: templates/base.html:287
+msgid "Đăng xuất"
+msgstr "退出登录"
+
+#: templates/base.html:296 templates/index.html:54 templates/login.html:3
+msgid "Đăng nhập"
+msgstr "登录"
+
+#: templates/base.html:299
+msgid "Đăng ký"
+msgstr "注册"
+
+#: templates/base.html:343
+msgid "Tác giả sáng kiến & Thiết kế hệ sinh thái số:"
+msgstr "倡议发起人与数字生态系统设计者："
+
+#: templates/base.html:344
+msgid ""
+"Cô giáo Nguyễn Thị Huyền — Giáo viên Tin học, Trường Tiểu học, THCS, THPT"
+" Quốc tế song ngữ học viện Anh Quốc-UK Academy"
+msgstr "阮氏玄老师 — 英国学院（UK Academy）国际双语学校计算机教师"
+
+#: templates/base.html:345
+msgid ""
+"Bản quyền toàn vẹn về mô hình sư phạm và giải pháp kiến trúc công nghệ "
+"School Time Bank."
+msgstr "保留校园时间银行教学模式与技术架构的完整版权。"
+
+#: templates/base.html:350
+msgid "Đơn vị triển khai"
+msgstr "实施单位"
+
+#: templates/base.html:351
+msgid "Hệ thống TimeBank EDU Học đường"
+msgstr "TimeBank EDU 校园系统"
+
+#: templates/base.html:352
+msgid "Đường Phan Đăng Lưu, Phường Hồng Hải, thành phố Quảng Ninh"
+msgstr "广宁市红海坊潘登流路"
+
+#: templates/base.html:353
+msgid "SĐT:"
+msgstr "电话："
+
+#: templates/base.html:354
+msgid "Email:"
+msgstr "邮箱："
+
+#: templates/base.html:358
+msgid "Triết lý sư phạm"
+msgstr "教育理念"
+
+#: templates/base.html:360
+msgid "1 giờ dạy = 1 tín dụng thời gian"
+msgstr "1小时教学 = 1时间积分"
+
+#: templates/base.html:361
+msgid "Mọi tri thức đều có giá trị bình đẳng"
+msgstr "所有知识皆享有平等价值"
+
+#: templates/base.html:362
+msgid "Học sinh vừa là người học, vừa là người dạy"
+msgstr "学生既是受教者，也是施教者"
+
+#: templates/base.html:363
+msgid "Học thầy không tày học bạn"
+msgstr "三人行必有我师，学同窗益匪浅"
+
+#: templates/base.html:375
+msgid "Nội quy Học đường"
+msgstr "校园守则"
+
+#: templates/base.html:394
+msgid "Đăng nhập tài khoản trường"
+msgstr "学校账号登录"
+
+#: templates/base.html:398
+msgid "Học sinh và giáo viên sử dụng Mã số định danh để truy cập ví tín dụng."
+msgstr "学生和教师使用身份识别码登录时间积分钱包。"
+
+#: templates/base.html:401
+msgid "Mã học sinh / Cán bộ"
+msgstr "学号 / 教工号"
+
+#: templates/base.html:406
+msgid "Tài khoản demo sẵn:"
+msgstr "可用演示账号："
+
+#: templates/base.html:409
+msgid "Tiếp tục vào hệ thống"
+msgstr "继续进入系统"
+
+#: templates/base.html:437
+msgid "Trò chuyện cùng Trợ lý Học đường AI"
+msgstr "与AI校园助手对话"
+
+#: templates/base.html:440
+msgid "Tin nhắn mới"
+msgstr "新消息"
+
+#: templates/base.html:453
+msgid "Trợ lý Học đường AI"
+msgstr "AI校园助手"
+
+#: templates/base.html:455 templates/index.html:222 templates/register.html:92
+msgid "Hỗ trợ bởi AI (Trí tuệ nhân tạo)"
+msgstr "由AI（人工智能）驱动"
+
+#: templates/base.html:461
+msgid "Làm mới đoạn chat"
+msgstr "刷新对话"
+
+#: templates/base.html:464
+msgid "Đóng khung chat"
+msgstr "关闭对话框"
+
+#: templates/base.html:477
+msgid "Đang kết nối Trợ lý Học đường..."
+msgstr "正在连接校园助手..."
+
+#: templates/base.html:488
+msgid "Trợ lý AI đang suy nghĩ..."
+msgstr "AI助手正在思考..."
+
+#: templates/base.html:495
+msgid "Gợi ý câu hỏi nhanh:"
+msgstr "快捷提问建议："
+
+#: templates/base.html:499
+msgid "Tôi còn bao nhiêu giờ?"
+msgstr "我还剩多少小时？"
+
+#: templates/base.html:502
+msgid "Lịch học sắp tới của tôi?"
+msgstr "我近期的课程安排是什么？"
+
+#: templates/base.html:505
+msgid "Làm sao đăng kỹ năng?"
+msgstr "如何发布一项技能？"
+
+#: templates/base.html:508
+msgid "Gợi ý lộ trình học Toán trong 4 tuần?"
+msgstr "建议一个4周数学学习路线图？"
+
+#: templates/base.html:517
+msgid "Hỏi trợ lý (số dư, lịch học, kỹ năng...)"
+msgstr "向助手提问（余额、课表、技能...）"
+
+#: templates/index.html:23
+msgid "Chào mừng bạn đã đến với công cụ giáo dục TIME BANK EDU."
+msgstr "欢迎使用 TIME BANK EDU 校园教育工具。"
+
+#: templates/index.html:32
+msgid "“Một giờ bạn dạy — một giờ bạn được học.”"
+msgstr "“授人一小时，受教一小时。”"
+
+#: templates/index.html:36
+msgid "Học thầy không tày học bạn."
+msgstr "独学而无友，则孤陋而寡闻。"
+
+#: templates/index.html:40
+msgid ""
+"Mô hình giáo dục sáng tạo đa trường học. Mỗi học sinh vừa là người học, "
+"vừa là người thầy. Không dùng tiền mặt, mọi tri thức đều được trân trọng "
+"công bằng thông qua tín dụng thời gian."
+msgstr "创新的跨校教育模式。每位学生既是学习者，也是小老师。不涉及任何现金，所有知识皆通过时间信用获得公平尊重。"
+
+#: templates/index.html:47
+msgid "Vào ví tín dụng"
+msgstr "进入时间钱包"
+
+#: templates/index.html:51
+msgid "Tham gia ngay (+2.0h)"
+msgstr "立即加入（+2.0h）"
+
+#: templates/index.html:58
+msgid "Khám phá mô hình"
+msgstr "探索模式"
+
+#: templates/index.html:67
+msgid "Không gian trao đổi kỹ năng đa trường thế hệ mới"
+msgstr "新一代跨校技能交流空间"
+
+#: templates/index.html:71
+msgid "Định giá"
+msgstr "定价规则"
+
+#: templates/index.html:72
+msgid "1 giờ = 1 tín dụng"
+msgstr "1小时 = 1积分"
+
+#: templates/index.html:76
+msgid "Vốn ban đầu"
+msgstr "启动资金"
+
+#: templates/index.html:77
+msgid "+2.0 giờ trải nghiệm"
+msgstr "+2.0小时体验积分"
+
+#: templates/index.html:96
+msgid "LỚP HỌC ẢO TRỰC TUYẾN THẾ HỆ MỚI"
+msgstr "新一代在线虚拟课堂"
+
+#: templates/index.html:99
+msgid "Không Gian Trao Đổi Kỹ Năng Trực Tuyến Chuẩn Sư Phạm"
+msgstr "符合教育标准的在线技能互助空间"
+
+#: templates/index.html:102
+msgid ""
+"Trải nghiệm lớp học ảo hiện đại, kết nối người dạy và người học không "
+"khoảng cách với 4 ưu điểm vượt trội:"
+msgstr "体验现代化虚拟教室，零距离连接导师与学员，拥有四大突出优势："
+
+#: templates/index.html:114
+msgid "Học ngay trên trình duyệt"
+msgstr "直接在浏览器中学习"
+
+#: templates/index.html:116
+msgid "Không cần cài app:"
+msgstr "无需安装客户端："
+
+#: templates/index.html:116
+msgid ""
+"Mở trực tiếp trên mọi trình duyệt web (Chrome, Edge, Safari) từ máy tính,"
+" laptop đến điện thoại. Tham gia buổi học chỉ với một cú nhấp chuột."
+msgstr "直接在电脑、笔记本或手机上的主流浏览器中打开。一键即可进入课堂。"
+
+#: templates/index.html:127
+msgid "Không giới hạn thời lượng"
+msgstr "不限课程时长"
+
+#: templates/index.html:129
+msgid "Buổi học không gián đoạn:"
+msgstr "无间断学习："
+
+#: templates/index.html:129
+msgid ""
+"Tự do trao đổi, giải đáp bài tập khó và thảo luận chuyên sâu mà không lo "
+"bị ngắt quãng thời gian hay giới hạn 40 phút."
+msgstr "自由交流、解答难题并进行深入探讨，无须担心被强制中断或受限于40分钟。"
+
+#: templates/index.html:140
+msgid "Đăng ký 1 lần tham gia"
+msgstr "一次注册，畅享全课"
+
+#: templates/index.html:142
+msgid "Tham gia mọi buổi:"
+msgstr "畅享所有课程："
+
+#: templates/index.html:142
+msgid ""
+"Định danh học đường an toàn qua tài khoản và mã học sinh. Đăng ký một lần"
+" là có thể truy cập tất cả các buổi học kỹ năng liên trường."
+msgstr "通过学号与账号安全验证。注册一次即可参加所有跨校技能课程。"
+
+#: templates/index.html:153
+msgid "Đầy đủ chức năng sư phạm"
+msgstr "全面的教学辅助功能"
+
+#: templates/index.html:155
+msgid "Hình ảnh rõ nét:"
+msgstr "高清流畅画质："
+
+#: templates/index.html:155
+msgid ""
+"Video HD mượt mà, tích hợp điểm danh tự động 2 chiều, trợ lý dàn ý AI, "
+"bài tập trắc nghiệm quiz và nút báo cáo an toàn."
+msgstr "流畅高清视频、双向自动考勤、AI教案大纲助手、测验小测以及安全举报机制。"
+
+#: templates/index.html:166
+msgid "Chuẩn Sư Phạm 4.0"
+msgstr "教育4.0标准"
+
+#: templates/index.html:167
+msgid "Bảo vệ an toàn học sinh"
+msgstr "学生安全保障"
+
+#: templates/index.html:169
+msgid "Môi trường kèm bạn tích cực — Tự động tính tín dụng thời gian"
+msgstr "互助共进学习环境 — 自动结算时间信用"
+
+#: templates/index.html:171
+msgid ""
+"Phòng học tích hợp thuật toán đo lường thời gian tương tác online đồng "
+"thời (80% Online Overlap), cộng giờ dạy và trừ giờ học vào ví hoàn toàn "
+"tự động, minh bạch."
+msgstr "虚拟教室整合80%同步在线重合度算法，授课加分与学习扣分全自动透明执行。"
+
+#: templates/index.html:177
+msgid "Lịch học của tôi"
+msgstr "我的课程表"
+
+#: templates/index.html:181
+msgid "Khám phá lớp kỹ năng"
+msgstr "探索技能课堂"
+
+#: templates/index.html:197
+msgid "QUY TRÌNH SƯ PHẠM 4 BƯỚC"
+msgstr "四步教学闭环流程"
+
+#: templates/index.html:198
+msgid "Mô hình hoạt động của Ngân hàng Thời gian"
+msgstr "时间银行运作模式"
+
+#: templates/index.html:199
+msgid ""
+"Một vòng tuần hoàn học tập tích cực, giúp học sinh chủ động sẻ chia thế "
+"mạnh và hoàn thiện kỹ năng còn thiếu."
+msgstr "良性互助循环，帮助学生主动分享优势特长，互补所缺。"
+
+#: templates/index.html:208
+msgid "Đăng kỹ năng"
+msgstr "发布技能"
+
+#: templates/index.html:209
+msgid ""
+"Học sinh đăng ký thế mạnh của mình: Toán, Ngữ văn, Lập trình, Vẽ tranh, "
+"Đàn guitar, Cờ vua..."
+msgstr "学生登记自己的优势：数学、文学、编程、绘画、吉他、国际象棋..."
+
+#: templates/index.html:220
+msgid "AI gợi ý ghép cặp"
+msgstr "AI智能匹配建议"
+
+#: templates/index.html:221
+msgid ""
+"Trợ lý AI (Trí tuệ nhân tạo) tự động phân tích nhu cầu, kiểm duyệt nội "
+"dung và ghép cặp đôi bạn cùng tiến tối ưu."
+msgstr "AI助手自动分析学习需求、审核内容，并推荐最佳结对伙伴。"
+
+#: templates/index.html:233
+msgid "Học & Check-in QR"
+msgstr "学习与QR扫码签到"
+
+#: templates/index.html:234
+msgid ""
+"Hai bạn gặp gỡ trực tiếp hoặc online. Cùng quét mã QR xác thực 2 chiều để"
+" ghi nhận thời gian học chuẩn xác."
+msgstr "在线或线下会面。双方扫描双向二维码以精确记录学习时间。"
+
+#: templates/index.html:245
+msgid "Tích giờ & Đổi kỹ năng"
+msgstr "积累时间与换取技能"
+
+#: templates/index.html:246
+msgid ""
+"Người dạy nhận ngay tín dụng thời gian vào ví; dùng giờ này để \"mua\" "
+"buổi học kỹ năng mới từ bạn khác."
+msgstr "教学者立即获得时间积分存入钱包，并可用此积分向其他同学“换取”新的技能课。"
+
+#: templates/index.html:333
+msgid "DỮ LIỆU THỜI GIAN THỰC"
+msgstr "实时统计数据"
+
+#: templates/index.html:334
+msgid "Chỉ số vận hành tại"
+msgstr "运营指标："
+
+#: templates/index.html:335
+msgid "Cập nhật trực tiếp từ hệ thống ví tín dụng và phiên học"
+msgstr "从时间钱包与已完成课时实时同步"
+
+#: templates/index.html:343
+msgid "Học sinh thành viên"
+msgstr "注册会员学生"
+
+#: templates/index.html:351
+msgid "Phiên hoàn thành"
+msgstr "已完成课时"
+
+#: templates/index.html:359
+msgid "Giờ lưu thông"
+msgstr "已流转小时数"
+
+#: templates/index.html:367
+msgid "Kỹ năng sẵn sàng"
+msgstr "现有开放技能"
+
+#: templates/index.html:380
+msgid "BẢNG VÀNG THÁNG & TUẦN"
+msgstr "周与月度光荣榜"
+
+#: templates/index.html:381
+msgid "Vinh danh Gia sư Học đường Tích cực"
+msgstr "致敬积极奉献的小导师"
+
+#: templates/index.html:382
+msgid ""
+"Ghi nhận những tấm gương học sinh nhiệt huyết cống hiến thời gian giảng "
+"dạy cho bạn bè"
+msgstr "表彰热心奉献时间、积极辅导同窗的优秀学子楷模"
+
+#: templates/index.html:395
+msgid "Hạng"
+msgstr "名次"
+
+#: templates/index.html:407
+msgid "Lớp:"
+msgstr "班级："
+
+#: templates/index.html:407
+msgid "Mã:"
+msgstr "学号："
+
+#: templates/index.html:414
+msgid "Số giờ đã dạy:"
+msgstr "已授课时："
+
+#: templates/index.html:415
+msgid "giờ"
+msgstr "小时"
+
+#: templates/index.html:418
+msgid "Đánh giá trung bình:"
+msgstr "平均评价："
+
+#: templates/index.html:428
+msgid "\"Sẵn sàng chia sẻ tri thức cùng bạn bè\""
+msgstr "“乐于同窗共勉，共享智慧之光”"
+
+#: templates/index.html:445
+msgid "VÌ CỘNG ĐỒNG & GIỜ CÔNG ÍCH"
+msgstr "公益奉献与志愿服务课时"
+
+#: templates/index.html:447
+msgid "Lan tỏa trách nhiệm xã hội cùng TimeBank EDU"
+msgstr "携手 TimeBank EDU 践行社会责任"
+
+#: templates/index.html:449
+msgid ""
+"Không chỉ trao đổi kiến thức giữa học sinh, Ngân hàng Thời gian mở rộng "
+"sang các hoạt động công ích học đường: thu gom rác bãi biển, hỗ trợ thư "
+"viện, phụ đạo tin học cho thiếu nhi để nhận tín dụng thời gian."
+msgstr "除了同学间的知识互助，时间银行更延伸至校园公益：海滩环保、图书馆志愿协助、少儿信息素养辅导等均可获得时间信用。"
+
+#: templates/login.html:12
+msgid "Đăng nhập TimeBank"
+msgstr "TimeBank 登录"
+
+#: templates/login.html:19
+msgid "Mã học sinh / Tên đăng nhập"
+msgstr "学号 / 用户名"
+
+#: templates/login.html:22
+msgid "Ví dụ: admin hoặc HS12001"
+msgstr "例如：admin 或 HS12001"
+
+#: templates/login.html:27 templates/register.html:97
+msgid "Mật khẩu"
+msgstr "密码"
+
+#: templates/login.html:30
+msgid "Nhập mật khẩu..."
+msgstr "输入密码..."
+
+#: templates/login.html:37
+msgid "Ghi nhớ đăng nhập"
+msgstr "记住登录状态"
+
+#: templates/login.html:39
+msgid "Quên mật khẩu?"
+msgstr "忘记密码？"
+
+#: templates/login.html:43
+msgid "Đăng nhập hệ thống"
+msgstr "登录系统"
+
+#: templates/login.html:48
+msgid "Chưa có tài khoản học sinh?"
+msgstr "还没有学生账号？"
+
+#: templates/login.html:50
+msgid "Đăng ký tài khoản mới (+2.0 giờ)"
+msgstr "注册新账号（+2.0小时）"
+
+#: templates/login.html:58
+msgid "Tài khoản demo cho giám khảo"
+msgstr "评委专用演示账户"
+
+#: templates/login.html:60
+msgid "Mật khẩu:"
+msgstr "密码："
+
+#: templates/login.html:63
+msgid "Dành riêng cho Ban Giám Khảo trải nghiệm trong môi trường"
+msgstr "专为评委在"
+
+#: templates/login.html:63
+msgid "Trường Demo"
+msgstr "演示学校"
+
+#: templates/login.html:63
+msgid "độc lập (không chạm dữ liệu thật):"
+msgstr "独立沙盒（不影响真实数据）："
+
+#: templates/login.html:68
+msgid "(Quản trị trường)"
+msgstr "（校级管理）"
+
+#: templates/login.html:70 templates/login.html:76 templates/login.html:82
+msgid "Điền nhanh"
+msgstr "快捷填入"
+
+#: templates/login.html:74
+msgid "(Giáo viên)"
+msgstr "（教师）"
+
+#: templates/login.html:80
+msgid "(Học sinh)"
+msgstr "（学生）"
+
+#: templates/login.html:86
+msgid "Hoặc tài khoản"
+msgstr "或使用账号"
+
+#: templates/login.html:87
+msgid "Điền admin"
+msgstr "填入 admin"
+
+#: templates/register.html:3
+msgid "Đăng ký tài khoản"
+msgstr "账户注册"
+
+#: templates/register.html:12
+msgid "TẶNG NGAY 2.0 GIỜ TÍN DỤNG KHI MỞ VÍ"
+msgstr "开通时间钱包即刻获赠 2.0 小时积分"
+
+#: templates/register.html:14
+msgid "Mở ví Ngân hàng Thời gian"
+msgstr "开立时间银行钱包"
+
+#: templates/register.html:15
+msgid "Hệ thống Đa trường học"
+msgstr "多校联合生态"
+
+#: templates/register.html:25
+msgid "Mã mời trường học"
+msgstr "学校邀请码"
+
+#: templates/register.html:31
+msgid "Kiểm tra"
+msgstr "检查"
+
+#: templates/register.html:35
+msgid "Có mã mời: Tự gán trường & kích hoạt ngay."
+msgstr "持有邀请码：自动归属对应学校并即刻激活。"
+
+#: templates/register.html:41
+msgid "Đơn vị trường học"
+msgstr "所属学校"
+
+#: templates/register.html:44
+msgid "-- Chọn trường của bạn --"
+msgstr "-- 选择您所在的学校 --"
+
+#: templates/register.html:53
+msgid "Không mã: Vào hàng chờ quản trị trường duyệt."
+msgstr "无邀请码：进入学校管理员审核队列。"
+
+#: templates/register.html:62
+msgid "Mã học sinh"
+msgstr "学号"
+
+#: templates/register.html:65
+msgid "VD: HS10009"
+msgstr "例如：HS10009"
+
+#: templates/register.html:70
+msgid "Lớp học"
+msgstr "班级"
+
+#: templates/register.html:73
+msgid "VD: 10A1, 11B2..."
+msgstr "例如：10A1, 11B2..."
+
+#: templates/register.html:79
+msgid "Họ và tên học sinh"
+msgstr "学生姓名"
+
+#: templates/register.html:82
+msgid "Nhập đầy đủ họ và tên..."
+msgstr "输入完整姓名..."
+
+#: templates/register.html:87
+msgid "Khung giờ rảnh dự kiến (AI hỗ trợ ghép cặp)"
+msgstr "预计空闲时间段（AI协助智能匹配）"
+
+#: templates/register.html:90
+msgid "VD: Chiều thứ 4, sáng thứ 7, tối CN..."
+msgstr "例如：周三下午、周六上午、周日晚上..."
+
+#: templates/register.html:92
+msgid "để tự động đề xuất lịch học thích hợp."
+msgstr "以自动推荐最契合的辅导时间表。"
+
+#: templates/register.html:100
+msgid "Tối thiểu 6 ký tự"
+msgstr "至少6个字符"
+
+#: templates/register.html:105
+msgid "Xác nhận mật khẩu"
+msgstr "确认密码"
+
+#: templates/register.html:108
+msgid "Nhập lại mật khẩu"
+msgstr "再次输入密码"
+
+#: templates/register.html:116
+msgid "Chính sách số dư ban đầu:"
+msgstr "初始积分政策："
+
+#: templates/register.html:116
+msgid "Ngay sau khi mở ví, hệ thống tự động cấp vốn"
+msgstr "在成功开通钱包后，系统将自动注入"
+
+#: templates/register.html:116
+msgid "giờ tín dụng"
+msgstr "小时时间积分"
+
+#: templates/register.html:116
+msgid "vào ví để bạn sẵn sàng đăng ký học kỹ năng mới."
+msgstr "入账，以便您立即报名学习心仪的新技能。"
+
+#: templates/register.html:121
+msgid "Hoàn tất đăng ký & Nhận 2.0h"
+msgstr "完成注册并领取 2.0h"
+
+#: templates/register.html:126
+msgid "Đã có tài khoản?"
+msgstr "已有账号？"
+
+#: templates/register.html:126
+msgid "Đăng nhập tại đây"
+msgstr "在此处登录"
+

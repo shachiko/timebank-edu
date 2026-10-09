@@ -11,3 +11,5 @@ cryptography>=42.0.0
 requests>=2.31.0
 google-api-python-client>=2.0.0
 google-auth>=2.0.0
+Flask-Babel>=4.0.0
+Babel>=2.12.0

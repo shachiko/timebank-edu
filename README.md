@@ -813,6 +813,55 @@ Nâng cấp trung tâm quản trị hệ thống cho Tổng Quản trị viên (
 - Bộ test suite `test_prompt32_school_hide_management.py` (7 test cases chuyên sâu) kiểm thử tự động toàn diện.
 - Toàn bộ **31/31 bộ test trong hệ thống (100% PASS)** xác nhận chất lượng hệ thống đạt chuẩn tuyệt đối.
 
+---
+
+## 🌐 PROMPT 16 — ĐA NGÔN NGỮ (VIỆT / ANH / TRUNG / PHÁP / ĐỨC)
+
+Hệ thống được quốc tế hóa (i18n) và địa phương hóa (l10n) toàn diện với **Flask-Babel** nhằm mở rộng quy mô hợp tác quốc tế và nâng cao điểm số sáng tạo tại các hội thi khoa học - giáo dục:
+
+### 1. Kiến trúc Đa ngôn ngữ (Flask-Babel & Session):
+- **5 ngôn ngữ hỗ trợ chính thức:**
+  - 🇻🇳 **Tiếng Việt (`vi`)**: Ngôn ngữ mặc định của nền tảng học đường.
+  - 🇬🇧 **English (`en`)**: Tiếng Anh chuẩn mực, tự nhiên.
+  - 🇨🇳 **中文 (`zh`)**: Tiếng Trung Quốc giản thể (sư phạm, chuẩn giáo dục).
+  - 🇫🇷 **Français (`fr`)**: Tiếng Pháp thanh lịch, chuẩn mực.
+  - 🇩🇪 **Deutsch (`de`)**: Tiếng Đức chính xác, chuẩn xác thuật ngữ sư phạm.
+- **Nguyên tắc chọn ngôn ngữ (User-Driven, No Auto-IP):**
+  - **KHÔNG tự động nhận diện** qua IP hay `Accept-Language` của trình duyệt.
+  - Người dùng chủ động lựa chọn ngôn ngữ qua dropdown chuyển đổi trên thanh header điều hướng.
+  - Lưu lựa chọn vào `session['lang']`; tải lại trang, đổi thiết bị hay điều hướng vẫn duy trì ngôn ngữ đã chọn.
+  - Cung cấp route `/set-language/<lang_code>` với cơ chế kiểm tra mã ngôn ngữ hợp lệ và redirect an toàn (`request.referrer`).
+
+### 2. Phân định ranh giới bản dịch (UI Translation vs. User-Generated Content):
+- **Dịch CHỈ giao diện:**
+  - Toàn bộ thanh điều hướng (navbar), các nút bấm (buttons), tiêu đề (headings), nhãn trường (form labels), thông báo hệ thống (flash messages), lỗi xác thực (validation errors) và chân trang (footer).
+  - Sử dụng chuẩn `gettext` với hàm `_()` trong Python code và `{{ _('...') }}` trong Jinja2 templates.
+- **KHÔNG dịch nội dung do người dùng / nhà trường tạo:**
+  - Tên kỹ năng của gia sư, mô tả chi tiết, bài viết diễn đàn, bình luận, bài tập, dàn ý bài dạy, tên trường học và tài liệu học tập được giữ nguyên bản gốc để bảo toàn tính xác thực của dữ liệu trao đổi tri thức.
+
+### 3. Quy trình biên dịch & Biên tập bản dịch:
+- **Trích xuất chuỗi:** Cấu hình `babel.cfg` và sinh tệp mẫu `messages.pot` với hơn 200 thông điệp giao diện.
+- **5 tệp bản dịch chuyên nghiệp (`.po`):**
+  - `translations/vi/LC_MESSAGES/messages.po`
+  - `translations/en/LC_MESSAGES/messages.po`
+  - `translations/zh/LC_MESSAGES/messages.po`
+  - `translations/fr/LC_MESSAGES/messages.po`
+  - `translations/de/LC_MESSAGES/messages.po`
+- **Biên dịch mã nhị phân (`.mo`):** Toàn bộ 5 tệp nhị phân `.mo` được biên dịch sẵn sàng bằng `pybabel compile -d translations` và được commit đầy đủ lên GitHub để triển khai tức thì trên mọi môi trường máy chủ.
+
+### 4. Kiểm thử nghiệm thu & Regression Suite:
+- **Test suite độc lập `test_prompt16_multilingual.py`:** 8 test cases chuyên sâu bao gồm:
+  1. Ngôn ngữ mặc định `vi`.
+  2. Nút chuyển đổi `/set-language/<lang_code>` và lưu `session['lang']`.
+  3. Giao diện tiếng Anh (`en`) chính xác.
+  4. Giao diện tiếng Trung (`zh`) chính xác.
+  5. Giao diện tiếng Pháp (`fr`) chính xác.
+  6. Giao diện tiếng Đức (`de`) chính xác.
+  7. Nội dung người dùng tạo (user content) được giữ nguyên, không bị can thiệp.
+  8. Xử lý mã ngôn ngữ không hợp lệ an toàn, tự động fallback về tiếng Việt.
+- **Toàn bộ 32/32 bộ test regression (100% PASS)** xác nhận tương thích hoàn hảo với mọi tính năng trước đó.
+
+
 
 
 

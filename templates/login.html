@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Đăng nhập - {{ config.ten_truong }}{% endblock %}
+{% block title %}{{ _('Đăng nhập') }} - {{ config.ten_truong }}{% endblock %}
 
 {% block content %}
 <div class="container py-5">
@@ -9,45 +9,45 @@
       <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
         <div class="card-header bg-white border-0 pt-4 pb-2 text-center">
           <img src="{{ url_for('static', filename='img/logo_timebank_edu.png') }}" alt="Logo TimeBank EDU" style="height: 48px; width: auto; max-width: 180px; object-fit: contain;" class="mb-2">
-          <h4 class="fw-bold text-dark mb-1">Đăng nhập TimeBank</h4>
+          <h4 class="fw-bold text-dark mb-1">{{ _('Đăng nhập TimeBank') }}</h4>
           <p class="text-muted small mb-0">{{ config.ten_truong }}</p>
         </div>
 
         <div class="card-body p-4 p-md-5 pt-3">
           <form method="POST" action="{{ url_for('login') }}">
             <div class="mb-3">
-              <label for="ma_hoc_sinh" class="form-label small fw-semibold">Mã học sinh / Tên đăng nhập <span class="text-danger">*</span></label>
+              <label for="ma_hoc_sinh" class="form-label small fw-semibold">{{ _('Mã học sinh / Tên đăng nhập') }} <span class="text-danger">*</span></label>
               <div class="input-group">
                 <span class="input-group-text bg-light"><i class="bi bi-person-badge"></i></span>
-                <input type="text" class="form-control" id="ma_hoc_sinh" name="ma_hoc_sinh" placeholder="Ví dụ: admin hoặc HS12001" required autofocus value="{{ request.form.get('ma_hoc_sinh', '') }}">
+                <input type="text" class="form-control" id="ma_hoc_sinh" name="ma_hoc_sinh" placeholder="{{ _('Ví dụ: admin hoặc HS12001') }}" required autofocus value="{{ request.form.get('ma_hoc_sinh', '') }}">
               </div>
             </div>
 
             <div class="mb-3">
-              <label for="mat_khau" class="form-label small fw-semibold">Mật khẩu <span class="text-danger">*</span></label>
+              <label for="mat_khau" class="form-label small fw-semibold">{{ _('Mật khẩu') }} <span class="text-danger">*</span></label>
               <div class="input-group">
                 <span class="input-group-text bg-light"><i class="bi bi-key"></i></span>
-                <input type="password" class="form-control" id="mat_khau" name="mat_khau" placeholder="Nhập mật khẩu..." required>
+                <input type="password" class="form-control" id="mat_khau" name="mat_khau" placeholder="{{ _('Nhập mật khẩu...') }}" required>
               </div>
             </div>
 
             <div class="d-flex justify-content-between align-items-center mb-4">
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" id="rememberMe">
-                <label class="form-check-label small text-muted" for="rememberMe">Ghi nhớ đăng nhập</label>
+                <label class="form-check-label small text-muted" for="rememberMe">{{ _('Ghi nhớ đăng nhập') }}</label>
               </div>
-              <a href="{{ url_for('forgot_password') }}" class="small text-decoration-none text-primary fw-semibold">Quên mật khẩu?</a>
+              <a href="{{ url_for('forgot_password') }}" class="small text-decoration-none text-primary fw-semibold">{{ _('Quên mật khẩu?') }}</a>
             </div>
 
             <button type="submit" class="btn btn-brand w-100 py-2 fw-semibold">
-              <i class="bi bi-box-arrow-in-right me-1"></i> Đăng nhập hệ thống
+              <i class="bi bi-box-arrow-in-right me-1"></i> {{ _('Đăng nhập hệ thống') }}
             </button>
           </form>
 
           <div class="mt-4 pt-3 border-top text-center">
-            <p class="small text-muted mb-2">Chưa có tài khoản học sinh?</p>
+            <p class="small text-muted mb-2">{{ _('Chưa có tài khoản học sinh?') }}</p>
             <a href="{{ url_for('register') }}" class="btn btn-outline-brand btn-sm px-4">
-              <i class="bi bi-person-plus me-1"></i> Đăng ký tài khoản mới (+2.0 giờ)
+              <i class="bi bi-person-plus me-1"></i> {{ _('Đăng ký tài khoản mới (+2.0 giờ)') }}
             </a>
           </div>
 
@@ -55,36 +55,36 @@
           <div class="mt-4 p-3 rounded-3 border bg-light shadow-sm">
             <div class="d-flex align-items-center justify-content-between mb-2">
               <span class="fw-bold text-dark small">
-                <i class="bi bi-person-badge-fill text-warning me-1"></i> Tài khoản demo cho giám khảo
+                <i class="bi bi-person-badge-fill text-warning me-1"></i> {{ _('Tài khoản demo cho giám khảo') }}
               </span>
-              <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 0.7rem;">Mật khẩu: demo123</span>
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 0.7rem;">{{ _('Mật khẩu:') }} demo123</span>
             </div>
             <p class="text-muted mb-2" style="font-size: 0.78rem;">
-              Dành riêng cho Ban Giám Khảo trải nghiệm trong môi trường <strong>Trường Demo</strong> độc lập (không chạm dữ liệu thật):
+              {{ _('Dành riêng cho Ban Giám Khảo trải nghiệm trong môi trường') }} <strong>{{ _('Trường Demo') }}</strong> {{ _('độc lập (không chạm dữ liệu thật):') }}
             </p>
             <div class="d-grid gap-1">
               <button type="button" class="btn btn-outline-secondary btn-sm text-start py-1 px-2 d-flex justify-content-between align-items-center" onclick="fillDemo('demo_quantruong', 'demo123')">
                 <span style="font-size: 0.78rem;">
-                  <i class="bi bi-building me-1 text-primary"></i><strong>demo_quantruong</strong> <span class="text-muted">(Quản trị trường)</span>
+                  <i class="bi bi-building me-1 text-primary"></i><strong>demo_quantruong</strong> <span class="text-muted">{{ _('(Quản trị trường)') }}</span>
                 </span>
-                <span class="badge bg-light text-secondary border">Điền nhanh</span>
+                <span class="badge bg-light text-secondary border">{{ _('Điền nhanh') }}</span>
               </button>
               <button type="button" class="btn btn-outline-secondary btn-sm text-start py-1 px-2 d-flex justify-content-between align-items-center" onclick="fillDemo('demo_giaovien', 'demo123')">
                 <span style="font-size: 0.78rem;">
-                  <i class="bi bi-mortarboard me-1 text-success"></i><strong>demo_giaovien</strong> <span class="text-muted">(Giáo viên)</span>
+                  <i class="bi bi-mortarboard me-1 text-success"></i><strong>demo_giaovien</strong> <span class="text-muted">{{ _('(Giáo viên)') }}</span>
                 </span>
-                <span class="badge bg-light text-secondary border">Điền nhanh</span>
+                <span class="badge bg-light text-secondary border">{{ _('Điền nhanh') }}</span>
               </button>
               <button type="button" class="btn btn-outline-secondary btn-sm text-start py-1 px-2 d-flex justify-content-between align-items-center" onclick="fillDemo('demo_hocsinh', 'demo123')">
                 <span style="font-size: 0.78rem;">
-                  <i class="bi bi-person-fill me-1 text-info"></i><strong>demo_hocsinh</strong> <span class="text-muted">(Học sinh)</span>
+                  <i class="bi bi-person-fill me-1 text-info"></i><strong>demo_hocsinh</strong> <span class="text-muted">{{ _('(Học sinh)') }}</span>
                 </span>
-                <span class="badge bg-light text-secondary border">Điền nhanh</span>
+                <span class="badge bg-light text-secondary border">{{ _('Điền nhanh') }}</span>
               </button>
             </div>
             <div class="mt-2 pt-2 border-top text-muted d-flex justify-content-between align-items-center" style="font-size: 0.75rem;">
-              <span>Hoặc tài khoản <code>admin</code> / <code>admin123</code></span>
-              <a href="javascript:void(0)" class="text-decoration-none" onclick="fillDemo('admin', 'admin123')">Điền admin</a>
+              <span>{{ _('Hoặc tài khoản') }} <code>admin</code> / <code>admin123</code></span>
+              <a href="javascript:void(0)" class="text-decoration-none" onclick="fillDemo('admin', 'admin123')">{{ _('Điền admin') }}</a>
             </div>
           </div>
 

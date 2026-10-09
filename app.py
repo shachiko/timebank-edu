@@ -33,6 +33,7 @@ from werkzeug.utils import secure_filename
 from flask import (
     Flask, render_template, request, jsonify, g, flash, redirect, url_for, session, abort, make_response, Response
 )
+from flask_babel import Babel, gettext as _, lazy_gettext as _l
 from ai_service import (
     ai_moderate_skill, ai_matchmake, ai_generate_lesson_plan, 
     ai_summarize_feedback, ai_admin_early_warning, is_ai_live,
@@ -73,6 +74,38 @@ app.config["SECRET_KEY"] = os.getenv("SECRET_KEY") or os.getenv("FLASK_SECRET_KE
 
 # Bộ nhớ đệm kết quả gợi ý ghép cặp hàng ngày: key = (user_id, YYYY-MM-DD), val = (matches, is_live, subject)
 DAILY_RECOMMENDATION_CACHE = {}
+
+# ------------------------------------------------------------------------------
+# CẤU HÌNH ĐA NGÔN NGỮ (PROMPT 16: FLASK-BABEL)
+# Hỗ trợ 5 ngôn ngữ: vi (mặc định), en, zh, fr, de
+# KHÔNG tự nhận diện IP hay Accept-Language — người dùng tự chọn trên header
+# ------------------------------------------------------------------------------
+SUPPORTED_LANGUAGES = {
+    "vi": "Tiếng Việt",
+    "en": "English",
+    "zh": "中文",
+    "fr": "Français",
+    "de": "Deutsch"
+}
+
+app.config["BABEL_DEFAULT_LOCALE"] = "vi"
+app.config["BABEL_TRANSLATION_DIRECTORIES"] = str(BASE_DIR / "translations")
+
+def get_locale():
+    # 1. Người dùng tự chọn bằng nút chuyển ngôn ngữ trên header, lưu vào session
+    lang = session.get("lang")
+    if lang in SUPPORTED_LANGUAGES:
+        return lang
+    # 2. KHÔNG tự nhận diện qua IP hay Accept-Language -> Mặc định tiếng Việt
+    return "vi"
+
+babel = Babel(app, locale_selector=get_locale)
+
+app.jinja_env.globals["_"] = _
+app.jinja_env.globals["gettext"] = _
+app.jinja_env.globals["SUPPORTED_LANGUAGES"] = SUPPORTED_LANGUAGES
+app.jinja_env.globals["get_locale"] = get_locale
+
 
 
 # ==============================================================================
@@ -226,8 +259,24 @@ def inject_template_globals():
         "current_user": current_user,
         "all_schools": all_schools,
         "is_demo_user": is_demo_user,
-        "is_demo": is_demo_user(session.get("ma_hoc_sinh")) if "user_id" in session else False
+        "is_demo": is_demo_user(session.get("ma_hoc_sinh")) if "user_id" in session else False,
+        "current_lang": get_locale(),
+        "supported_languages": SUPPORTED_LANGUAGES
     }
+
+
+@app.route("/set-language/<lang_code>")
+def set_language(lang_code):
+    """
+    Chuyển đổi ngôn ngữ hiển thị giao diện và lưu vào session.
+    Hỗ trợ 5 ngôn ngữ: vi, en, zh, fr, de. Mặc định là vi.
+    """
+    if lang_code in SUPPORTED_LANGUAGES:
+        session["lang"] = lang_code
+    referrer = request.referrer
+    if referrer and request.host_url in referrer:
+        return redirect(referrer)
+    return redirect(url_for("index"))
 
 
 # ==============================================================================
@@ -272,7 +321,7 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if "user_id" not in session:
-            flash("Vui lòng đăng nhập để tiếp tục truy cập.", "warning")
+            flash(_("Vui lòng đăng nhập để tiếp tục truy cập."), "warning")
             return redirect(url_for("login", next=request.url))
         return f(*args, **kwargs)
     return decorated_function
@@ -286,7 +335,7 @@ def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if "user_id" not in session:
-            flash("Vui lòng đăng nhập bằng tài khoản Quản trị viên.", "warning")
+            flash(_("Vui lòng đăng nhập bằng tài khoản Quản trị viên."), "warning")
             return redirect(url_for("login", next=request.url))
         if session.get("vai_tro") not in ("admin", "super_admin", "school_admin"):
             return render_template("errors/403.html"), 403
@@ -301,7 +350,7 @@ def super_admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if "user_id" not in session:
-            flash("Vui lòng đăng nhập bằng tài khoản Tổng quản trị.", "warning")
+            flash(_("Vui lòng đăng nhập bằng tài khoản Tổng quản trị."), "warning")
             return redirect(url_for("login", next=request.url))
         if not is_super_admin():
             return render_template("errors/403.html"), 403
@@ -317,7 +366,7 @@ def teacher_or_admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if "user_id" not in session:
-            flash("Vui lòng đăng nhập với quyền Giáo viên hoặc Quản trị viên.", "warning")
+            flash(_("Vui lòng đăng nhập với quyền Giáo viên hoặc Quản trị viên."), "warning")
             return redirect(url_for("login", next=request.url))
         if session.get("vai_tro") not in ("giao_vien", "admin", "super_admin", "school_admin"):
             return render_template("errors/403.html"), 403
@@ -2000,21 +2049,21 @@ def register():
 
         # Kiểm tra tính hợp lệ của dữ liệu đầu vào
         if not ma_hoc_sinh or not ho_ten or not mat_khau:
-            flash("Vui lòng điền đầy đủ các thông tin bắt buộc (*).", "danger")
+            flash(_("Vui lòng điền đầy đủ các thông tin bắt buộc (*)."), "danger")
             return render_template("register.html", all_schools=all_schools, schools=all_schools)
 
         if len(mat_khau) < 6:
-            flash("Mật khẩu phải có độ dài tối thiểu từ 6 ký tự trở lên.", "danger")
+            flash(_("Mật khẩu phải có độ dài tối thiểu từ 6 ký tự trở lên."), "danger")
             return render_template("register.html", all_schools=all_schools, schools=all_schools)
 
         if mat_khau != mat_khau_xac_nhan:
-            flash("Mật khẩu xác nhận không khớp với mật khẩu đã nhập.", "danger")
+            flash(_("Mật khẩu xác nhận không khớp với mật khẩu đã nhập."), "danger")
             return render_template("register.html", all_schools=all_schools, schools=all_schools)
 
         # Kiểm tra xem mã học sinh đã tồn tại chưa
         cur.execute("SELECT id FROM users WHERE ma_hoc_sinh = ?", (ma_hoc_sinh,))
         if cur.fetchone():
-            flash("Mã học sinh đã tồn tại trong hệ thống. Vui lòng kiểm tra lại!", "danger")
+            flash(_("Mã học sinh đã tồn tại trong hệ thống. Vui lòng kiểm tra lại!"), "danger")
             return render_template("register.html", all_schools=all_schools, schools=all_schools)
 
         assigned_truong_id = 1
@@ -2031,13 +2080,13 @@ def register():
             """, (ma_code,))
             code_row = cur.fetchone()
             if not code_row:
-                flash("Mã mời không tồn tại trên hệ thống. Vui lòng kiểm tra lại!", "danger")
+                flash(_("Mã mời không tồn tại trên hệ thống. Vui lòng kiểm tra lại!"), "danger")
                 return render_template("register.html", all_schools=all_schools, schools=all_schools)
             if code_row["an_truong"] == 1 or code_row["trang_thai_truong"] == "vo_hieu_hoa":
-                flash("Trường học gắn với mã mời này hiện đang tạm dừng hoạt động hoặc đã bị ẩn / vô hiệu hóa!", "danger")
+                flash(_("Trường học gắn với mã mời này hiện đang tạm dừng hoạt động hoặc đã bị ẩn / vô hiệu hóa!"), "danger")
                 return render_template("register.html", all_schools=all_schools, schools=all_schools)
             if code_row["da_dung"] >= code_row["so_luot_toi_da"]:
-                flash("Mã mời này đã hết số lượt sử dụng!", "danger")
+                flash(_("Mã mời này đã hết số lượt sử dụng!"), "danger")
                 return render_template("register.html", all_schools=all_schools, schools=all_schools)
 
             # Mã hợp lệ: tự gán đúng trường của mã mời, kích hoạt ngay
@@ -2054,7 +2103,7 @@ def register():
             cur.execute("SELECT trang_thai, COALESCE(an_truong, 0) AS an_truong FROM truong WHERE id = ?", (assigned_truong_id,))
             target_school_row = cur.fetchone()
             if target_school_row and (target_school_row["an_truong"] == 1 or target_school_row["trang_thai"] == "vo_hieu_hoa"):
-                flash("Trường học bạn chọn hiện đang tạm dừng hoạt động hoặc đã bị ẩn / vô hiệu hóa!", "danger")
+                flash(_("Trường học bạn chọn hiện đang tạm dừng hoạt động hoặc đã bị ẩn / vô hiệu hóa!"), "danger")
                 return render_template("register.html", all_schools=all_schools, schools=all_schools)
             initial_status = "cho_duyet"
 
@@ -2104,9 +2153,9 @@ def register():
         session["trang_thai"] = initial_status
 
         if initial_status == "hoat_dong":
-            flash("Chúc mừng bạn đã kích hoạt mở sổ thành công bằng mã mời và nhận ngay 2.0 giờ tín dụng!", "success")
+            flash(_("Chúc mừng bạn đã kích hoạt mở sổ thành công bằng mã mời và nhận ngay 2.0 giờ tín dụng!"), "success")
         else:
-            flash("Đăng ký thành công! Tài khoản của bạn đang ở trạng thái 'Chờ duyệt' bởi Quản trị viên nhà trường. Bạn chưa thể đăng kỹ năng hoặc đặt lịch học cho đến khi được duyệt.", "warning")
+            flash(_("Đăng ký thành công! Tài khoản của bạn đang ở trạng thái 'Chờ duyệt' bởi Quản trị viên nhà trường. Bạn chưa thể đăng kỹ năng hoặc đặt lịch học cho đến khi được duyệt."), "warning")
 
         return redirect(url_for("profile"))
 
@@ -2138,13 +2187,13 @@ def login():
 
         # Kiểm tra người dùng và so khớp mật khẩu băm
         if not user or not user["mat_khau"] or not check_password_hash(user["mat_khau"], mat_khau):
-            flash("Mã đăng nhập hoặc mật khẩu không chính xác!", "danger")
+            flash(_("Mã đăng nhập hoặc mật khẩu không chính xác!"), "danger")
             return render_template("login.html"), 401
 
         # Kiểm tra trạng thái tài khoản
         user_status = user["trang_thai"] if "trang_thai" in user.keys() else "hoat_dong"
         if user_status == "da_khoa":
-            flash("Tài khoản của bạn đã bị khóa do vi phạm nội quy học đường. Vui lòng liên hệ ban quản trị nhà trường để được hỗ trợ giải quyết.", "danger")
+            flash(_("Tài khoản của bạn đã bị khóa do vi phạm nội quy học đường. Vui lòng liên hệ ban quản trị nhà trường để được hỗ trợ giải quyết."), "danger")
             return render_template("login.html"), 403
 
         # Tự động nhận diện trường học từ tài khoản người dùng
@@ -2164,7 +2213,7 @@ def login():
         session["ten_truong"] = ten_truong
         session["trang_thai"] = user_status
 
-        flash(f"Đăng nhập thành công! Xin chào {user['ho_ten']}.", "success")
+        flash(_("Đăng nhập thành công! Xin chào %(name)s.", name=user['ho_ten']), "success")
 
         # Chuyển hướng phù hợp theo vai trò
         next_url = request.args.get("next")
@@ -2184,7 +2233,7 @@ def logout():
     Đăng xuất: Xóa toàn bộ dữ liệu phiên và trở về trang chủ.
     """
     session.clear()
-    flash("Bạn đã đăng xuất khỏi hệ thống thành công.", "info")
+    flash(_("Bạn đã đăng xuất khỏi hệ thống thành công."), "info")
     return redirect(url_for("index"))
 
 

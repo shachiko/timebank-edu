@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="{{ current_lang or 'vi' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}School Time Bank{% endblock %} - Ngân hàng Thời gian Học đường</title>
+  <title>{% block title %}School Time Bank{% endblock %} - {{ _('Ngân hàng Thời gian Học đường') }}</title>
   
   <!-- Favicon chính thức của trường -->
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo_timebank_edu.png') }}">
@@ -46,7 +46,7 @@
         <img src="{{ url_for('static', filename='img/logo_timebank_edu.png') }}" alt="Logo School Time Bank" class="brand-logo-img" style="height: 42px; width: auto; max-width: 155px; object-fit: contain;">
         <span class="d-none d-md-inline-block ps-2 border-start border-secondary border-opacity-25 brand-text-wrapper">
           <strong class="brand-title-text d-block" style="font-size: 1.05rem; line-height: 1.15;">School Time Bank</strong>
-          <small class="brand-sub-text fst-italic d-block" style="font-size: 0.75rem;">Ngân hàng Thời gian Học đường</small>
+          <small class="brand-sub-text fst-italic d-block" style="font-size: 0.75rem;">{{ _('Ngân hàng Thời gian Học đường') }}</small>
         </span>
       </a>
 
@@ -63,22 +63,22 @@
           <!-- Nhóm 1: Mô hình (Mô hình hoạt động, Quy trình 4 bước, Số liệu vận hành) -->
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="dropMoHinh" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="bi bi-diagram-3-fill me-1"></i> Mô hình
+              <i class="bi bi-diagram-3-fill me-1"></i> {{ _('Mô hình') }}
             </a>
             <ul class="dropdown-menu shadow border-0" aria-labelledby="dropMoHinh">
               <li>
                 <a class="dropdown-item" href="{{ url_for('index', _anchor='mo-hinh') }}">
-                  <i class="bi bi-gear-wide-connected text-primary me-2"></i>Mô hình hoạt động
+                  <i class="bi bi-gear-wide-connected text-primary me-2"></i>{{ _('Mô hình hoạt động') }}
                 </a>
               </li>
               <li>
                 <a class="dropdown-item" href="{{ url_for('index', _anchor='quy-trinh') }}">
-                  <i class="bi bi-123 text-success me-2"></i>Quy trình 4 bước
+                  <i class="bi bi-123 text-success me-2"></i>{{ _('Quy trình 4 bước') }}
                 </a>
               </li>
               <li>
                 <a class="dropdown-item" href="{{ url_for('index', _anchor='so-lieu') }}">
-                  <i class="bi bi-graph-up-arrow text-warning me-2"></i>Số liệu vận hành
+                  <i class="bi bi-graph-up-arrow text-warning me-2"></i>{{ _('Số liệu vận hành') }}
                 </a>
               </li>
             </ul>
@@ -87,27 +87,27 @@
           <!-- Nhóm 2: Hoạt động (Chợ kỹ năng, Sàn cộng đồng, Vì cộng đồng, Diễn đàn) -->
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle {{ 'active' if ('skills' in ep or 'community' in ep or 'forum' in ep) else '' }}" href="#" id="dropHoatDong" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="bi bi-activity me-1"></i> Hoạt động
+              <i class="bi bi-activity me-1"></i> {{ _('Hoạt động') }}
             </a>
             <ul class="dropdown-menu shadow border-0" aria-labelledby="dropHoatDong">
               <li>
                 <a class="dropdown-item {{ 'active' if ('skills' in ep and ep != 'skills_approval') else '' }}" href="{{ url_for('skills_market') }}">
-                  <i class="bi bi-shop text-primary me-2"></i>Chợ kỹ năng
+                  <i class="bi bi-shop text-primary me-2"></i>{{ _('Chợ kỹ năng') }}
                 </a>
               </li>
               <li>
                 <a class="dropdown-item {{ 'active' if 'community_market' in ep else '' }}" href="{{ url_for('community_market') }}">
-                  <i class="bi bi-globe2 text-info me-2"></i>Sàn cộng đồng
+                  <i class="bi bi-globe2 text-info me-2"></i>{{ _('Sàn cộng đồng') }}
                 </a>
               </li>
               <li>
                 <a class="dropdown-item" href="{{ url_for('index', _anchor='vi-cong-dong') }}">
-                  <i class="bi bi-heart-fill text-danger me-2"></i>Vì cộng đồng
+                  <i class="bi bi-heart-fill text-danger me-2"></i>{{ _('Vì cộng đồng') }}
                 </a>
               </li>
               <li>
                 <a class="dropdown-item {{ 'active' if 'forum' in ep else '' }}" href="{{ url_for('forum_index') }}">
-                  <i class="bi bi-chat-dots-fill text-success me-2"></i>Diễn đàn
+                  <i class="bi bi-chat-dots-fill text-success me-2"></i>{{ _('Diễn đàn') }}
                 </a>
               </li>
             </ul>
@@ -116,22 +116,22 @@
           <!-- Nhóm 3: Tài nguyên (Nội quy, Kho tài liệu, Bản tin) -->
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle {{ 'active' if (ep == 'noi_quy' or 'document' in ep or 'blog' in ep) else '' }}" href="#" id="dropTaiNguyen" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="bi bi-collection-fill me-1"></i> Tài nguyên
+              <i class="bi bi-collection-fill me-1"></i> {{ _('Tài nguyên') }}
             </a>
             <ul class="dropdown-menu shadow border-0" aria-labelledby="dropTaiNguyen">
               <li>
                 <a class="dropdown-item {{ 'active' if ep == 'noi_quy' else '' }}" href="{{ url_for('noi_quy') }}">
-                  <i class="bi bi-shield-check text-primary me-2"></i>Nội quy
+                  <i class="bi bi-shield-check text-primary me-2"></i>{{ _('Nội quy') }}
                 </a>
               </li>
               <li>
                 <a class="dropdown-item {{ 'active' if 'document' in ep else '' }}" href="{{ url_for('documents_index') }}">
-                  <i class="bi bi-folder2-open text-warning me-2"></i>Kho tài liệu
+                  <i class="bi bi-folder2-open text-warning me-2"></i>{{ _('Kho tài liệu') }}
                 </a>
               </li>
               <li>
                 <a class="dropdown-item {{ 'active' if ('blog' in ep and ep != 'blog_manage') else '' }}" href="{{ url_for('blog_index') }}">
-                  <i class="bi bi-newspaper text-info me-2"></i>Bản tin
+                  <i class="bi bi-newspaper text-info me-2"></i>{{ _('Bản tin') }}
                 </a>
               </li>
             </ul>
@@ -140,17 +140,17 @@
           <!-- Nhóm 4: Vinh danh -->
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="dropVinhDanh" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="bi bi-trophy-fill me-1 text-warning"></i> Vinh danh
+              <i class="bi bi-trophy-fill me-1 text-warning"></i> {{ _('Vinh danh') }}
             </a>
             <ul class="dropdown-menu shadow border-0" aria-labelledby="dropVinhDanh">
               <li>
                 <a class="dropdown-item" href="{{ url_for('index', _anchor='vinh-danh') }}">
-                  <i class="bi bi-award text-warning me-2"></i>Bảng vàng thành tích
+                  <i class="bi bi-award text-warning me-2"></i>{{ _('Bảng vàng thành tích') }}
                 </a>
               </li>
               <li>
                 <a class="dropdown-item" href="{{ url_for('index', _anchor='vinh-danh') }}">
-                  <i class="bi bi-star-fill text-primary me-2"></i>Top gia sư tiêu biểu
+                  <i class="bi bi-star-fill text-primary me-2"></i>{{ _('Top gia sư tiêu biểu') }}
                 </a>
               </li>
             </ul>
@@ -159,25 +159,50 @@
           <!-- Nhóm 5: Dành cho Nhà trường -->
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="dropNhaTruong" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="bi bi-buildings-fill me-1"></i> Dành cho Nhà trường
+              <i class="bi bi-buildings-fill me-1"></i> {{ _('Dành cho Nhà trường') }}
             </a>
             <ul class="dropdown-menu shadow border-0" aria-labelledby="dropNhaTruong">
               <li>
                 <a class="dropdown-item" href="{{ url_for('index', _anchor='nha-truong') }}">
-                  <i class="bi bi-mortarboard text-primary me-2"></i>Mô hình chuyển giao
+                  <i class="bi bi-mortarboard text-primary me-2"></i>{{ _('Mô hình chuyển giao') }}
                 </a>
               </li>
               <li>
                 <a class="dropdown-item" href="{{ url_for('index', _anchor='nha-truong') }}">
-                  <i class="bi bi-envelope-paper text-success me-2"></i>Liên hệ & Tư vấn
+                  <i class="bi bi-envelope-paper text-success me-2"></i>{{ _('Liên hệ & Tư vấn') }}
                 </a>
               </li>
             </ul>
           </li>
         </ul>
 
-        <!-- 3. Nút Đăng nhập/Đăng ký Pill cùng chiều cao HOẶC User Avatar Dropdown -->
+        <!-- 3. Bộ chọn ngôn ngữ & Nút Đăng nhập/Đăng ký Pill / User Avatar Dropdown -->
         <div class="d-flex align-items-center gap-2 mt-2 mt-lg-0 user-pill-container">
+          <!-- Dropdown Chuyển Đổi Ngôn Ngữ (5 Ngôn ngữ: vi, en, zh, fr, de) -->
+          <div class="dropdown me-1">
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-1 rounded-pill px-2 py-1" type="button" id="languageSelectorDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="{{ _('Chuyển đổi ngôn ngữ') }}">
+              <i class="bi bi-translate text-primary"></i>
+              {% if current_lang == 'en' %}
+                <span class="fw-semibold">🇬🇧 EN</span>
+              {% elif current_lang == 'zh' %}
+                <span class="fw-semibold">🇨🇳 中文</span>
+              {% elif current_lang == 'fr' %}
+                <span class="fw-semibold">🇫🇷 FR</span>
+              {% elif current_lang == 'de' %}
+                <span class="fw-semibold">🇩🇪 DE</span>
+              {% else %}
+                <span class="fw-semibold">🇻🇳 VI</span>
+              {% endif %}
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 py-1" aria-labelledby="languageSelectorDropdown" style="min-width: 150px;">
+              <li><a class="dropdown-item py-1 d-flex align-items-center justify-content-between {{ 'active fw-bold' if current_lang == 'vi' else '' }}" href="{{ url_for('set_language', lang_code='vi') }}"><span>🇻🇳 Tiếng Việt</span>{% if current_lang == 'vi' %}<i class="bi bi-check2"></i>{% endif %}</a></li>
+              <li><a class="dropdown-item py-1 d-flex align-items-center justify-content-between {{ 'active fw-bold' if current_lang == 'en' else '' }}" href="{{ url_for('set_language', lang_code='en') }}"><span>🇬🇧 English</span>{% if current_lang == 'en' %}<i class="bi bi-check2"></i>{% endif %}</a></li>
+              <li><a class="dropdown-item py-1 d-flex align-items-center justify-content-between {{ 'active fw-bold' if current_lang == 'zh' else '' }}" href="{{ url_for('set_language', lang_code='zh') }}"><span>🇨🇳 中文</span>{% if current_lang == 'zh' %}<i class="bi bi-check2"></i>{% endif %}</a></li>
+              <li><a class="dropdown-item py-1 d-flex align-items-center justify-content-between {{ 'active fw-bold' if current_lang == 'fr' else '' }}" href="{{ url_for('set_language', lang_code='fr') }}"><span>🇫🇷 Français</span>{% if current_lang == 'fr' %}<i class="bi bi-check2"></i>{% endif %}</a></li>
+              <li><a class="dropdown-item py-1 d-flex align-items-center justify-content-between {{ 'active fw-bold' if current_lang == 'de' else '' }}" href="{{ url_for('set_language', lang_code='de') }}"><span>🇩🇪 Deutsch</span>{% if current_lang == 'de' %}<i class="bi bi-check2"></i>{% endif %}</a></li>
+            </ul>
+          </div>
+
           {% if current_user %}
             <!-- Menu người dùng đã đăng nhập: thu gọn tên + số dư, không tràn mép -->
             <div class="dropdown">
@@ -194,72 +219,72 @@
                 <li>
                   <div class="px-3 py-2 border-bottom mb-1">
                     <div class="fw-bold text-dark">{{ current_user.ho_ten }}</div>
-                    <small class="text-muted">Mã: <code>{{ current_user.ma_hoc_sinh }}</code> ({{ current_user.vai_tro }})</small>
+                    <small class="text-muted">{{ _('Mã') }}: <code>{{ current_user.ma_hoc_sinh }}</code> ({{ current_user.vai_tro }})</small>
                   </div>
                 </li>
                 <!-- 3 Mục cá nhân trong dropdown avatar: Lịch của tôi, Ví của tôi, Hồ sơ -->
                 <li>
                   <a class="dropdown-item py-2 fw-semibold" href="{{ url_for('my_schedule') }}">
-                    <i class="bi bi-calendar-check text-info me-2 fs-6"></i>Lịch của tôi (Dạy & Học)
+                    <i class="bi bi-calendar-check text-info me-2 fs-6"></i>{{ _('Lịch của tôi (Dạy & Học)') }}
                   </a>
                 </li>
                 <li>
                   <a class="dropdown-item py-2 fw-semibold" href="{{ url_for('wallet') }}">
-                    <i class="bi bi-wallet2 text-success me-2 fs-6"></i>Ví của tôi ({{ "%.1f"|format(current_user.so_du_gio) }}h)
+                    <i class="bi bi-wallet2 text-success me-2 fs-6"></i>{{ _('Ví của tôi') }} ({{ "%.1f"|format(current_user.so_du_gio) }}h)
                   </a>
                 </li>
                 <li>
                   <a class="dropdown-item py-2 fw-semibold" href="{{ url_for('profile') }}">
-                    <i class="bi bi-person-circle text-primary me-2 fs-6"></i>Hồ sơ cá nhân & Cài đặt
+                    <i class="bi bi-person-circle text-primary me-2 fs-6"></i>{{ _('Hồ sơ cá nhân & Cài đặt') }}
                   </a>
                 </li>
                 <li><hr class="dropdown-divider my-1"></li>
                 <li>
                   <a class="dropdown-item py-2" href="{{ url_for('new_skill') }}">
-                    <i class="bi bi-plus-circle text-warning me-2"></i>Đăng kỹ năng mới
+                    <i class="bi bi-plus-circle text-warning me-2"></i>{{ _('Đăng kỹ năng mới') }}
                   </a>
                 </li>
                 <li>
                   <a class="dropdown-item py-2" href="{{ url_for('community_tasks_view') }}">
-                    <i class="bi bi-heart-fill text-danger me-2"></i>Hoạt động Vì cộng đồng
+                    <i class="bi bi-heart-fill text-danger me-2"></i>{{ _('Hoạt động Vì cộng đồng') }}
                   </a>
                 </li>
                 {% if current_user.vai_tro in ('giao_vien', 'school_admin', 'super_admin', 'admin') %}
                 <li><hr class="dropdown-divider my-1"></li>
                 <li>
                   <a class="dropdown-item py-2" href="{{ url_for('blog_manage') }}">
-                    <i class="bi bi-journal-text text-warning me-2"></i>Quản lý Bảng tin
+                    <i class="bi bi-journal-text text-warning me-2"></i>{{ _('Quản lý Bảng tin') }}
                   </a>
                 </li>
                 <li>
                   <a class="dropdown-item py-2" href="{{ url_for('virtual_rooms_dashboard') }}">
-                    <i class="bi bi-camera-video text-primary me-2"></i>Giám sát phòng học ảo
+                    <i class="bi bi-camera-video text-primary me-2"></i>{{ _('Giám sát phòng học ảo') }}
                   </a>
                 </li>
                 <li>
                   <a class="dropdown-item py-2" href="{{ url_for('skills_approval') }}">
-                    <i class="bi bi-check2-square text-success me-2"></i>Duyệt kỹ năng học sinh
+                    <i class="bi bi-check2-square text-success me-2"></i>{{ _('Duyệt kỹ năng học sinh') }}
                   </a>
                 </li>
                 {% endif %}
                 {% if current_user.vai_tro in ('school_admin', 'super_admin', 'admin') %}
                 <li>
                   <a class="dropdown-item py-2" href="{{ url_for('admin_dashboard') }}">
-                    <i class="bi bi-speedometer2 text-danger me-2"></i>Bảng điều khiển Admin
+                    <i class="bi bi-speedometer2 text-danger me-2"></i>{{ _('Bảng điều khiển Admin') }}
                   </a>
                 </li>
                 {% endif %}
                 {% if current_user.vai_tro == 'super_admin' %}
                 <li>
                   <a class="dropdown-item py-2 fw-semibold text-primary" href="{{ url_for('admin_accounts') }}">
-                    <i class="bi bi-people-fill text-primary me-2"></i>Quản lý Tài khoản
+                    <i class="bi bi-people-fill text-primary me-2"></i>{{ _('Quản lý Tài khoản') }}
                   </a>
                 </li>
                 {% endif %}
                 <li><hr class="dropdown-divider my-1"></li>
                 <li>
                   <a class="dropdown-item py-2 text-danger fw-semibold" href="{{ url_for('logout') }}">
-                    <i class="bi bi-box-arrow-right me-2"></i>Đăng xuất
+                    <i class="bi bi-box-arrow-right me-2"></i>{{ _('Đăng xuất') }}
                   </a>
                 </li>
               </ul>
@@ -268,10 +293,10 @@
             <!-- 2 Nút Đăng nhập/Đăng ký: cùng bo góc pill, cùng chiều cao 38px, Đăng nhập = nút viền ghost, Đăng ký = nền đặc cam -->
             <div class="d-flex align-items-center gap-2 nav-auth-buttons">
               <a href="{{ url_for('login') }}" class="btn btn-auth-ghost">
-                <i class="bi bi-box-arrow-in-right me-1"></i>Đăng nhập
+                <i class="bi bi-box-arrow-in-right me-1"></i>{{ _('Đăng nhập') }}
               </a>
               <a href="{{ url_for('register') }}" class="btn btn-auth-solid">
-                <i class="bi bi-person-plus-fill me-1"></i>Đăng ký
+                <i class="bi bi-person-plus-fill me-1"></i>{{ _('Đăng ký') }}
               </a>
             </div>
           {% endif %}
@@ -308,34 +333,34 @@
             <img src="{{ url_for('static', filename='img/logo_timebank_edu.png') }}" alt="Logo School Time Bank" style="height: 44px; width: auto; max-width: 175px; object-fit: contain;" class="bg-white p-2 rounded-3 shadow-sm">
             <div>
               <h5 class="text-white mb-0 fw-bold">School Time Bank</h5>
-              <small class="text-warning fw-semibold fst-italic">Ngân hàng Thời gian Học đường</small>
+              <small class="text-warning fw-semibold fst-italic">{{ _('Ngân hàng Thời gian Học đường') }}</small>
             </div>
           </div>
           <p class="small text-white-50 mb-3 lh-base">
             {{ config.dong_gioi_thieu }}
           </p>
           <div class="p-3 rounded-3 mb-3" style="background: rgba(255,255,255,0.06); border-left: 3px solid #F5B301;">
-            <p class="small text-light mb-1 fw-bold">Tác giả sáng kiến & Thiết kế hệ sinh thái số:</p>
-            <p class="small text-white-50 mb-1">Cô giáo Nguyễn Thị Huyền — Giáo viên Tin học, Trường Tiểu học, THCS, THPT Quốc tế song ngữ học viện Anh Quốc-UK Academy</p>
-            <p class="small text-white-50 mb-0">Bản quyền toàn vẹn về mô hình sư phạm và giải pháp kiến trúc công nghệ School Time Bank.</p>
+            <p class="small text-light mb-1 fw-bold">{{ _('Tác giả sáng kiến & Thiết kế hệ sinh thái số:') | safe }}</p>
+            <p class="small text-white-50 mb-1">{{ _('Cô giáo Nguyễn Thị Huyền — Giáo viên Tin học, Trường Tiểu học, THCS, THPT Quốc tế song ngữ học viện Anh Quốc-UK Academy') | safe }}</p>
+            <p class="small text-white-50 mb-0">{{ _('Bản quyền toàn vẹn về mô hình sư phạm và giải pháp kiến trúc công nghệ School Time Bank.') | safe }}</p>
           </div>
         </div>
 
         <div class="col-lg-4 col-md-6">
-          <h6 class="text-warning text-uppercase fw-bold mb-3"><i class="bi bi-building me-2"></i>Đơn vị triển khai</h6>
-          <p class="mb-2 text-white fw-bold"><i class="bi bi-mortarboard-fill text-warning me-2"></i>Hệ thống TimeBank EDU Học đường</p>
-          <p class="mb-2 small text-white-50"><i class="bi bi-geo-alt-fill text-warning me-2"></i>Đường Phan Đăng Lưu, Phường Hồng Hải, thành phố Quảng Ninh</p>
-          <p class="mb-2 small text-white-50"><i class="bi bi-telephone-fill text-warning me-2"></i>SĐT: <a href="tel:0766667999" class="text-white fw-semibold">07.6666.7999</a></p>
-          <p class="mb-0 small text-white-50"><i class="bi bi-envelope-at-fill text-warning me-2"></i>Email: <a href="mailto:mshuyenuka@gmail.com" class="text-white fw-semibold">mshuyenuka@gmail.com</a></p>
+          <h6 class="text-warning text-uppercase fw-bold mb-3"><i class="bi bi-building me-2"></i>{{ _('Đơn vị triển khai') }}</h6>
+          <p class="mb-2 text-white fw-bold"><i class="bi bi-mortarboard-fill text-warning me-2"></i>{{ _('Hệ thống TimeBank EDU Học đường') }}</p>
+          <p class="mb-2 small text-white-50"><i class="bi bi-geo-alt-fill text-warning me-2"></i>{{ _('Đường Phan Đăng Lưu, Phường Hồng Hải, thành phố Quảng Ninh') }}</p>
+          <p class="mb-2 small text-white-50"><i class="bi bi-telephone-fill text-warning me-2"></i>{{ _('SĐT:') }} <a href="tel:0766667999" class="text-white fw-semibold">07.6666.7999</a></p>
+          <p class="mb-0 small text-white-50"><i class="bi bi-envelope-at-fill text-warning me-2"></i>{{ _('Email:') }} <a href="mailto:mshuyenuka@gmail.com" class="text-white fw-semibold">mshuyenuka@gmail.com</a></p>
         </div>
 
         <div class="col-lg-3 col-md-12">
-          <h6 class="text-warning text-uppercase fw-bold mb-3"><i class="bi bi-lightbulb-fill me-2"></i>Triết lý sư phạm</h6>
+          <h6 class="text-warning text-uppercase fw-bold mb-3"><i class="bi bi-lightbulb-fill me-2"></i>{{ _('Triết lý sư phạm') }}</h6>
           <ul class="list-unstyled small text-white-50 mb-0">
-            <li class="mb-2"><i class="bi bi-check2-circle text-warning me-2"></i>1 giờ dạy = 1 tín dụng thời gian</li>
-            <li class="mb-2"><i class="bi bi-check2-circle text-warning me-2"></i>Mọi tri thức đều có giá trị bình đẳng</li>
-            <li class="mb-2"><i class="bi bi-check2-circle text-warning me-2"></i>Học sinh vừa là người học, vừa là người dạy</li>
-            <li class="mb-0"><i class="bi bi-check2-circle text-warning me-2"></i>Học thầy không tày học bạn</li>
+            <li class="mb-2"><i class="bi bi-check2-circle text-warning me-2"></i>{{ _('1 giờ dạy = 1 tín dụng thời gian') }}</li>
+            <li class="mb-2"><i class="bi bi-check2-circle text-warning me-2"></i>{{ _('Mọi tri thức đều có giá trị bình đẳng') }}</li>
+            <li class="mb-2"><i class="bi bi-check2-circle text-warning me-2"></i>{{ _('Học sinh vừa là người học, vừa là người dạy') }}</li>
+            <li class="mb-0"><i class="bi bi-check2-circle text-warning me-2"></i>{{ _('Học thầy không tày học bạn') }}</li>
           </ul>
         </div>
       </div>
@@ -344,18 +369,18 @@
 
       <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 small text-white-50">
         <div>
-          © 2026 <strong>School Time Bank</strong> — Ngân hàng Thời gian Học đường.
+          © 2026 <strong>School Time Bank</strong> — {{ _('Ngân hàng Thời gian Học đường') }}.
         </div>
         <div class="d-flex align-items-center gap-3 flex-wrap justify-content-center">
-          <a href="{{ url_for('noi_quy') }}" class="text-warning text-decoration-none fw-semibold"><i class="bi bi-shield-check me-1"></i>Nội quy Học đường</a>
+          <a href="{{ url_for('noi_quy') }}" class="text-warning text-decoration-none fw-semibold"><i class="bi bi-shield-check me-1"></i>{{ _('Nội quy Học đường') }}</a>
           <span>•</span>
-          <a href="{{ url_for('skills_market') }}" class="text-white text-decoration-none">Chợ kỹ năng</a>
+          <a href="{{ url_for('skills_market') }}" class="text-white text-decoration-none">{{ _('Chợ kỹ năng') }}</a>
           <span>•</span>
-          <a href="{{ url_for('community_tasks_view') }}" class="text-white text-decoration-none">Vì cộng đồng</a>
+          <a href="{{ url_for('community_tasks_view') }}" class="text-white text-decoration-none">{{ _('Vì cộng đồng') }}</a>
           <span>•</span>
-          <a href="{{ url_for('index') }}#mo-hinh" class="text-white text-decoration-none">Mô hình</a>
+          <a href="{{ url_for('index') }}#mo-hinh" class="text-white text-decoration-none">{{ _('Mô hình') }}</a>
           <span>•</span>
-          <a href="{{ url_for('blog_index') }}" class="text-white text-decoration-none">Bản tin</a>
+          <a href="{{ url_for('blog_index') }}" class="text-white text-decoration-none">{{ _('Bản tin') }}</a>
         </div>
       </div>
     </div>
@@ -366,22 +391,22 @@
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content rounded-4 shadow border-0">
         <div class="modal-header border-bottom-0 pb-0">
-          <h5 class="modal-title fw-bold" id="loginModalLabel">Đăng nhập tài khoản trường</h5>
+          <h5 class="modal-title fw-bold" id="loginModalLabel">{{ _('Đăng nhập tài khoản trường') }}</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body p-4">
-          <p class="text-muted small mb-3">Học sinh và giáo viên {{ config.ten_truong }} sử dụng Mã số định danh để truy cập ví tín dụng.</p>
+          <p class="text-muted small mb-3">{{ _('Học sinh và giáo viên sử dụng Mã số định danh để truy cập ví tín dụng.') }}</p>
           <form onsubmit="handleDemoLogin(event)">
             <div class="mb-3">
-              <label class="form-label small fw-semibold">Mã học sinh / Cán bộ</label>
+              <label class="form-label small fw-semibold">{{ _('Mã học sinh / Cán bộ') }}</label>
               <div class="input-group">
                 <span class="input-group-text bg-light"><i class="bi bi-person-badge"></i></span>
-                <input type="text" id="demoStudentId" class="form-control" placeholder="Ví dụ: HS12001, GV01..." required value="HS12001">
+                <input type="text" id="demoStudentId" class="form-control" placeholder="HS12001, GV01..." required value="HS12001">
               </div>
-              <div class="form-text">Tài khoản demo sẵn: <code>HS12001</code> (Nguyễn Hoàng An), <code>HS12002</code> (Trần Thanh Bình).</div>
+              <div class="form-text">{{ _('Tài khoản demo sẵn:') }} <code>HS12001</code>, <code>HS12002</code>.</div>
             </div>
             <button type="submit" class="btn btn-brand w-100 py-2">
-              <i class="bi bi-box-arrow-in-right me-1"></i> Tiếp tục vào hệ thống
+              <i class="bi bi-box-arrow-in-right me-1"></i> {{ _('Tiếp tục vào hệ thống') }}
             </button>
           </form>
         </div>
@@ -409,10 +434,10 @@
   <div id="aiChatWidgetContainer">
     <!-- Nút tròn nổi mở chat -->
     <button id="aiChatFloatingBtn" class="btn btn-brand rounded-circle shadow-lg" 
-            title="Trò chuyện cùng Trợ lý Học đường AI" onclick="toggleAiChat()">
+            title="{{ _('Trò chuyện cùng Trợ lý Học đường AI') }}" onclick="toggleAiChat()">
       <i class="bi bi-chat-dots-fill fs-4" id="aiChatBtnIcon"></i>
       <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle d-none" id="chatBadgeDot">
-        <span class="visually-hidden">Tin nhắn mới</span>
+        <span class="visually-hidden">{{ _('Tin nhắn mới') }}</span>
       </span>
     </button>
 
@@ -425,18 +450,18 @@
             <i class="bi bi-robot fs-5 text-warning"></i>
           </div>
           <div>
-            <div class="fw-bold fs-6 lh-sm mb-0">Trợ lý Học đường AI</div>
+            <div class="fw-bold fs-6 lh-sm mb-0">{{ _('Trợ lý Học đường AI') }}</div>
             <span class="badge bg-white bg-opacity-25 text-white" style="font-size: 0.68rem;">
-              <i class="bi bi-stars"></i> Hỗ trợ bởi AI (Trí tuệ nhân tạo)
+              <i class="bi bi-stars"></i> {{ _('Hỗ trợ bởi AI (Trí tuệ nhân tạo)') }}
             </span>
           </div>
         </div>
 
         <div class="d-flex align-items-center gap-1">
-          <button type="button" class="btn btn-sm btn-link text-white text-opacity-75 p-1" title="Làm mới đoạn chat" onclick="clearAiChat()">
+          <button type="button" class="btn btn-sm btn-link text-white text-opacity-75 p-1" title="{{ _('Làm mới đoạn chat') }}" onclick="clearAiChat()">
             <i class="bi bi-arrow-clockwise fs-6"></i>
           </button>
-          <button type="button" class="btn btn-sm btn-link text-white p-1" title="Đóng khung chat" onclick="toggleAiChat()">
+          <button type="button" class="btn btn-sm btn-link text-white p-1" title="{{ _('Đóng khung chat') }}" onclick="toggleAiChat()">
             <i class="bi bi-dash-lg fs-5"></i>
           </button>
         </div>
@@ -449,7 +474,7 @@
           <div class="d-flex align-items-start gap-2">
             <i class="bi bi-bell-fill text-primary mt-1"></i>
             <div id="chatGreetingText" class="text-dark" style="white-space: pre-line;">
-              Đang kết nối Trợ lý Học đường...
+              {{ _('Đang kết nối Trợ lý Học đường...') }}
             </div>
           </div>
         </div>
@@ -460,27 +485,27 @@
         <!-- Trạng thái đang trả lời (Typing Indicator) -->
         <div id="aiChatTyping" class="d-none align-self-start p-2 rounded-3 bg-white text-muted small border shadow-sm">
           <span class="spinner-grow spinner-grow-sm text-primary me-1" role="status"></span>
-          Trợ lý AI đang suy nghĩ...
+          {{ _('Trợ lý AI đang suy nghĩ...') }}
         </div>
       </div>
 
       <!-- Gợi ý câu hỏi nhanh (Quick Prompts) -->
       <div class="px-3 py-2 bg-light border-top border-bottom small" id="quickPromptsContainer">
         <div class="text-muted fw-semibold mb-1" style="font-size: 0.72rem;">
-          <i class="bi bi-lightbulb text-warning me-1"></i>Gợi ý câu hỏi nhanh:
+          <i class="bi bi-lightbulb text-warning me-1"></i>{{ _('Gợi ý câu hỏi nhanh:') }}
         </div>
         <div class="d-flex flex-wrap gap-1">
           <button type="button" class="btn btn-outline-primary btn-sm py-0 px-2 rounded-pill" style="font-size: 0.75rem;" onclick="sendQuickPrompt('Tôi còn bao nhiêu giờ?')">
-            Tôi còn bao nhiêu giờ?
+            {{ _('Tôi còn bao nhiêu giờ?') }}
           </button>
           <button type="button" class="btn btn-outline-primary btn-sm py-0 px-2 rounded-pill" style="font-size: 0.75rem;" onclick="sendQuickPrompt('Lịch học sắp tới của tôi?')">
-            Lịch học sắp tới của tôi?
+            {{ _('Lịch học sắp tới của tôi?') }}
           </button>
           <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2 rounded-pill" style="font-size: 0.75rem;" onclick="sendQuickPrompt('Làm sao đăng kỹ năng?')">
-            Làm sao đăng kỹ năng?
+            {{ _('Làm sao đăng kỹ năng?') }}
           </button>
           <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2 rounded-pill" style="font-size: 0.75rem;" onclick="sendQuickPrompt('Gợi ý lộ trình học Toán trong 4 tuần?')">
-            Gợi ý lộ trình học Toán trong 4 tuần?
+            {{ _('Gợi ý lộ trình học Toán trong 4 tuần?') }}
           </button>
         </div>
       </div>
@@ -489,7 +514,7 @@
       <div class="card-footer bg-white p-2 border-0">
         <form id="aiChatForm" onsubmit="handleSendAiChat(event)" class="d-flex gap-2">
           <input type="text" id="aiChatInput" class="form-control form-control-sm rounded-pill px-3" 
-                 placeholder="Hỏi trợ lý (số dư, lịch học, kỹ năng...)" autocomplete="off" required>
+                 placeholder="{{ _('Hỏi trợ lý (số dư, lịch học, kỹ năng...)') }}" autocomplete="off" required>
           <button type="submit" id="aiChatSendBtn" class="btn btn-brand btn-sm rounded-circle d-flex align-items-center justify-content-center" style="width: 34px; height: 34px; flex-shrink: 0;">
             <i class="bi bi-send-fill" style="font-size: 0.85rem;"></i>
           </button>
