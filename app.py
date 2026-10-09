@@ -922,6 +922,10 @@ def init_db():
             user_count = row[0] if row else 0
             if user_count == 0:
                 seed_demo_data(conn)
+            # Luôn đồng bộ Trường Demo và tài khoản demo công khai (Prompt 23)
+            seed_demo_school_and_accounts(conn)
+            # Tự động tạo Super Admin từ biến môi trường khi khởi động (Prompt 23.5)
+            auto_create_superadmin_from_env(conn)
             conn.close()
             return
         except Exception as e:
@@ -1016,6 +1020,8 @@ def init_db():
         
     # Luôn đồng bộ Trường Demo và tài khoản demo công khai (Prompt 23)
     seed_demo_school_and_accounts(conn)
+    # Tự động tạo Super Admin từ biến môi trường khi khởi động (Prompt 23.5)
+    auto_create_superadmin_from_env(conn)
     conn.close()
 
 
@@ -1133,6 +1139,66 @@ def seed_demo_school_and_accounts(conn):
                     conn.commit()
     except Exception as e:
         app.logger.warning(f"Lỗi khởi tạo kỹ năng/phiên học mẫu trường demo: {e}")
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+
+
+def auto_create_superadmin_from_env(conn=None):
+    """
+    Prompt 23.5: TỰ ĐỘNG TẠO SUPER ADMIN KHI KHỞI ĐỘNG (thay cho lệnh Shell trên Render)
+
+    # =============================================================================
+    # HƯỚNG DẪN CHO THẦY (Prompt 23.5):
+    # 1. Render -> Environment -> thêm SUPERADMIN_USER + SUPERADMIN_PASS -> Save
+    # 2. Đợi deploy xong (~3 phút) -> đăng nhập thử tài khoản mới
+    # 3. Xóa ngay 2 biến -> Save
+    # =============================================================================
+    """
+    super_user = (os.getenv("SUPERADMIN_USER") or "").strip()
+    super_pass = (os.getenv("SUPERADMIN_PASS") or "").strip()
+
+    # Thiếu biến môi trường -> bỏ qua, không làm gì
+    if not super_user or not super_pass:
+        return
+
+    should_close = False
+    if conn is None:
+        conn = get_db()
+
+    cur = conn.cursor()
+    # Kiểm tra xem user có ma_hoc_sinh tương ứng đã tồn tại hay chưa
+    cur.execute("SELECT id, mat_khau FROM users WHERE ma_hoc_sinh = ?", (super_user,))
+    existing_user = cur.fetchone()
+    if existing_user:
+        # User đã tồn tại -> bỏ qua, không ghi đè, không đổi mật khẩu cũ
+        return
+
+    # Chưa tồn tại -> tạo mới super admin
+    try:
+        pwd_hash = generate_password_hash(super_pass)
+        cur.execute("""
+            INSERT INTO users (ma_hoc_sinh, ho_ten, lop, vai_tro, so_du_gio, gio_ranh, mat_khau, truong_id, trang_thai, email)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            super_user,
+            "Tổng Quản trị viên (Cô Huyền)",
+            "Ban Điều Hành Quốc Gia",
+            "super_admin",
+            999.0,
+            "Toàn thời gian",
+            pwd_hash,
+            1,
+            "hoat_dong",
+            "mshuyenuka@gmail.com"
+        ))
+        conn.commit()
+        # Log xác nhận (TUYỆT ĐỐI KHÔNG log user hoặc pass)
+        app.logger.info("Đã tạo super admin từ biến môi trường")
+        print("Đã tạo super admin từ biến môi trường")
+    except Exception as e:
+        app.logger.warning(f"Lỗi khi tự động tạo super admin từ biến môi trường: {e}")
         try:
             conn.rollback()
         except Exception:
