@@ -232,7 +232,7 @@ class TestPrompt18ForumAndDrive(unittest.TestCase):
     # PHẦN 2: KHO TÀI LIỆU GOOGLE DRIVE 5TB
     # --------------------------------------------------------------------------
     def test_05_drive_upload_stream_and_hierarchy(self):
-        """Học sinh tải lên file (<=200MB); nằm đúng thư mục /SchoolTimeBank/{ten_truong}/{mon_hoc}/."""
+        """Học sinh tải lên file (<=500MB); nằm đúng thư mục /SchoolTimeBank/{ten_truong}/{mon_hoc}/."""
         with self.client.session_transaction() as sess:
             sess["user_id"] = self.user1_id
             sess["vai_tro"] = "hoc_sinh"

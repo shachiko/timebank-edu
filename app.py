@@ -66,8 +66,8 @@ def allowed_image_file(filename):
 
 # Khởi tạo ứng dụng Flask
 app = Flask(__name__)
-# Cấu hình kích thước tải lên tối đa 200MB (Google Drive 5TB storage)
-app.config["MAX_CONTENT_LENGTH"] = 200 * 1024 * 1024
+# Cấu hình kích thước tải lên tối đa 500MB (Google Drive 5TB storage)
+app.config["MAX_CONTENT_LENGTH"] = 500 * 1024 * 1024
 # Bảo mật: SECRET_KEY đọc từ biến môi trường khi deploy production
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY") or os.getenv("FLASK_SECRET_KEY") or "timebank-edu-secret-key-2026"
 
@@ -6546,7 +6546,8 @@ def documents_index():
 @login_required
 def documents_upload():
     """
-    Tải lên tài liệu/ảnh/video (tối đa 200MB/file):
+    Tải lên tài liệu/ảnh/video (tối đa 500MB/file):
+    - Hỗ trợ tải nhiều file cùng lúc (multiple files).
     - Tự động phân cấp thư mục: /SchoolTimeBank/{ten_truong}/{mon_hoc}/
     - Stream trực tiếp lên Google Drive 5TB, KHÔNG lưu file lên server Render.
     - Hiển thị ngay sau khi tải lên thành công.
@@ -6562,63 +6563,115 @@ def documents_upload():
 
     if request.method == "POST":
         mon_hoc = request.form.get("mon_hoc", "").strip()
-        tieu_de = request.form.get("tieu_de", "").strip()
+        tieu_de_input = request.form.get("tieu_de", "").strip()
         mo_ta = request.form.get("mo_ta", "").strip()
-        file = request.files.get("file")
 
-        if not mon_hoc or not tieu_de or not file or not file.filename:
-            flash("Vui lòng điền đầy đủ môn học, tiêu đề và chọn tệp đính kèm.", "warning")
+        # Lấy danh sách files: hỗ trợ cả 'files' (mới) và 'file' (cũ)
+        uploaded_files = request.files.getlist("files")
+        if not uploaded_files or not any(f and f.filename for f in uploaded_files):
+            uploaded_files = request.files.getlist("file")
+
+        valid_files = [f for f in uploaded_files if f and f.filename]
+
+        if not mon_hoc:
+            flash("Vui lòng chọn môn học cho tài liệu.", "warning")
             return render_template("documents_upload.html", school_name=school_name, subjects_list=DOC_SUBJECTS_LIST)
 
-        filename = secure_filename(file.filename) or f"document_{int(time.time())}.bin"
-        mime_type = file.mimetype or "application/octet-stream"
-
-        # Đọc độ dài file stream để xác định dung lượng
-        file.stream.seek(0, io.SEEK_END)
-        file_size = file.stream.tell()
-        file.stream.seek(0)
-
-        # Kiểm tra giới hạn 200MB
-        if file_size > 200 * 1024 * 1024:
-            flash("Tệp đính kèm vượt quá dung lượng tối đa cho phép (200MB).", "danger")
+        if not valid_files:
+            flash("Vui lòng chọn ít nhất một tệp đính kèm.", "warning")
             return render_template("documents_upload.html", school_name=school_name, subjects_list=DOC_SUBJECTS_LIST)
 
-        try:
-            # Stream tải trực tiếp lên Google Drive 5TB (không lưu trên đĩa Render)
-            drive_result = upload_document_stream(
-                file_stream=file.stream,
-                filename=filename,
-                mime_type=mime_type,
-                school_name=school_name,
-                subject_name=mon_hoc
-            )
+        success_count = 0
+        failed_count = 0
+        total_files = len(valid_files)
+        storage_types = []
+        uploaded_titles = []
 
-            drive_file_id = drive_result.get("file_id")
-            drive_web_view_link = drive_result.get("web_view_link")
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-            now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            cur.execute("""
-                INSERT INTO documents (
-                    truong_id, user_id, tieu_de, mo_ta, mon_hoc,
-                    file_name, file_size, file_type, drive_file_id,
-                    drive_web_view_link, luot_tai, ngay_tao, trang_thai
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, 'hoat_dong')
-            """, (
-                user_school_id, user_id, tieu_de, mo_ta, mon_hoc,
-                filename, file_size, mime_type, drive_file_id,
-                drive_web_view_link, now_str
-            ))
-            db.commit()
+        for idx, file in enumerate(valid_files):
+            orig_name = file.filename
+            filename = secure_filename(orig_name) or f"document_{int(time.time())}_{idx}.bin"
+            mime_type = file.mimetype or "application/octet-stream"
 
-            if drive_result.get("storage_type") == "mock_drive":
-                flash(f"Tải lên kho tạm (chưa kết nối Drive), vui lòng liên hệ quản trị viên. Tài liệu '{tieu_de}' đã được lưu tạm.", "warning")
+            # Xác định tiêu đề cho từng file:
+            # Để trống -> lấy tên file làm tiêu đề
+            # Điền -> dùng làm tiền tố chung (cho nhiều file) hoặc làm tiêu đề (cho 1 file)
+            if total_files > 1:
+                file_title = f"{tieu_de_input} - {filename}" if tieu_de_input else filename
             else:
-                flash(f"🎉 Tải lên tài liệu '{tieu_de}' thành công vào thư mục {mon_hoc} trên Google Drive 5TB!", "success")
-            return redirect(url_for("documents_index"))
+                file_title = tieu_de_input if tieu_de_input else filename
 
-        except Exception as e:
-            app.logger.error(f"Lỗi tải lên tài liệu Google Drive: {e}")
-            flash(f"Lỗi khi truyền tệp lên Google Drive: {str(e)}", "danger")
+            # Đọc độ dài file stream để xác định dung lượng
+            try:
+                file.stream.seek(0, io.SEEK_END)
+                file_size = file.stream.tell()
+                file.stream.seek(0)
+            except Exception:
+                file_size = 0
+
+            # Kiểm tra giới hạn 500MB (500 * 1024 * 1024 bytes)
+            if file_size > 500 * 1024 * 1024:
+                app.logger.warning(f"File {filename} ({file_size} bytes) vượt quá 500MB")
+                flash(f"Tệp '{orig_name}' vượt quá dung lượng tối đa cho phép (500MB), đã bị bỏ qua.", "danger")
+                failed_count += 1
+                continue
+
+            try:
+                # Stream tải trực tiếp lên Google Drive 5TB (không lưu trên đĩa Render)
+                drive_result = upload_document_stream(
+                    file_stream=file.stream,
+                    filename=filename,
+                    mime_type=mime_type,
+                    school_name=school_name,
+                    subject_name=mon_hoc
+                )
+
+                drive_file_id = drive_result.get("file_id")
+                drive_web_view_link = drive_result.get("web_view_link")
+                storage_types.append(drive_result.get("storage_type"))
+
+                cur.execute("""
+                    INSERT INTO documents (
+                        truong_id, user_id, tieu_de, mo_ta, mon_hoc,
+                        file_name, file_size, file_type, drive_file_id,
+                        drive_web_view_link, luot_tai, ngay_tao, trang_thai
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, 'hoat_dong')
+                """, (
+                    user_school_id, user_id, file_title, mo_ta, mon_hoc,
+                    filename, file_size, mime_type, drive_file_id,
+                    drive_web_view_link, now_str
+                ))
+                db.commit()
+
+                success_count += 1
+                uploaded_titles.append(file_title)
+
+            except Exception as e:
+                app.logger.error(f"Lỗi tải lên tệp {filename} lên Google Drive: {e}")
+                failed_count += 1
+                flash(f"Lỗi khi truyền tệp '{orig_name}' lên Google Drive: {str(e)}", "danger")
+                continue
+
+        # Thông báo tổng kết: Đã tải X/Y thành công
+        is_all_mock = all(st == "mock_drive" for st in storage_types) if storage_types else False
+
+        if success_count > 0:
+            if total_files == 1:
+                single_title = uploaded_titles[0]
+                if is_all_mock:
+                    flash(f"Tải lên kho tạm (chưa kết nối Drive), vui lòng liên hệ quản trị viên. Tài liệu '{single_title}' đã được lưu tạm. Đã tải 1/1 thành công.", "warning")
+                else:
+                    flash(f"🎉 Tải lên tài liệu '{single_title}' thành công vào thư mục {mon_hoc} trên Google Drive 5TB! Đã tải 1/1 thành công.", "success")
+            else:
+                if is_all_mock:
+                    flash(f"Tải lên kho tạm (chưa kết nối Drive), vui lòng liên hệ quản trị viên. Đã tải {success_count}/{total_files} thành công.", "warning")
+                else:
+                    flash(f"🎉 Đã tải {success_count}/{total_files} thành công vào thư mục {mon_hoc} trên Google Drive 5TB!", "success")
+
+            return redirect(url_for("documents_index"))
+        else:
+            flash(f"Không có tài liệu nào được tải lên thành công (0/{total_files}).", "danger")
             return render_template("documents_upload.html", school_name=school_name, subjects_list=DOC_SUBJECTS_LIST)
 
     return render_template("documents_upload.html", school_name=school_name, subjects_list=DOC_SUBJECTS_LIST)

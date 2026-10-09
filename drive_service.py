@@ -6,7 +6,7 @@ DỊCH VỤ TÍCH HỢP GOOGLE DRIVE 5TB (TIMEBANK EDU - PROMPT 18)
 - Refresh token và Client credentials lưu trong BIẾN MÔI TRƯỜNG (os.getenv),
   TUYỆT ĐỐI KHÔNG HARDCODE TRONG CODE, KHÔNG PUSH LÊN GITHUB.
 - Tự động tạo cây thư mục: /SchoolTimeBank/{ten_truong}/{mon_hoc}/
-- Hỗ trợ tải lên (tối đa 200MB) và tải về qua streaming trực tiếp,
+- Hỗ trợ tải lên (tối đa 500MB) và tải về qua streaming trực tiếp,
   KHÔNG lưu trữ file vĩnh viễn trên server Render.
 - Hỗ trợ cơ chế Local Mock Storage tự động khi chưa cấu hình Google Credentials,
   giúp môi trường Local và Test Suite hoạt động 100% trơn tru, không lỗi.

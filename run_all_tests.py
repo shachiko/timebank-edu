@@ -30,14 +30,15 @@ test_files = [
     "test_prompt23_5_auto_superadmin.py",
     "test_prompt24_postgres_groupby.py",
     "test_prompt24_drive_packages.py",
-    "test_prompt25_responsive_header.py"
+    "test_prompt25_responsive_header.py",
+    "test_prompt26_multi_upload_500mb.py"
 ]
 
 results = {}
 all_passed = True
 
 print("=" * 70)
-print("CHẠY TOÀN BỘ REGRESSION TEST SUITE CHO TIMEBANK EDU (PROMPT 25)")
+print("CHẠY TOÀN BỘ REGRESSION TEST SUITE CHO TIMEBANK EDU (PROMPT 26)")
 print("=" * 70)
 
 for tf in test_files:

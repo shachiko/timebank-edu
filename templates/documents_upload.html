@@ -35,13 +35,14 @@
                         <div class="form-text">Tài liệu sẽ được lưu tự động vào thư mục môn học tương ứng trên Google Drive.</div>
                     </div>
 
-                    <!-- Tiêu đề tài liệu -->
+                    <!-- Tiêu đề tài liệu (Tùy chọn) -->
                     <div class="mb-3">
                         <label for="tieu_de" class="form-label fw-semibold text-secondary">
-                            <i class="bi bi-type me-1"></i>Tiêu đề tài liệu <span class="text-danger">*</span>
+                            <i class="bi bi-type me-1"></i>Tiêu đề tài liệu <span class="badge bg-light text-muted border ms-1">Tùy chọn</span>
                         </label>
                         <input type="text" name="tieu_de" id="tieu_de" class="form-control form-control-lg rounded-3" 
-                               placeholder="Ví dụ: Đề cương ôn tập Toán giữa kỳ 1 lớp 10, Slide Vật lý..." required maxlength="250">
+                               placeholder="Để trống: tự lấy tên file; hoặc điền làm tiền tố chung (VD: [Toán 10])..." maxlength="250">
+                        <div class="form-text">Để trống: tự động lấy tên file làm tiêu đề. Điền tiêu đề: dùng làm tiền tố chung cho các tệp tải lên.</div>
                     </div>
 
                     <!-- Mô tả -->
@@ -53,16 +54,28 @@
                                   placeholder="Nêu ngắn gọn nội dung tài liệu, dành cho khối nào, lưu ý khi ôn tập..."></textarea>
                     </div>
 
-                    <!-- File đính kèm (Tối đa 200MB) -->
+                    <!-- File đính kèm (Tối đa 500MB, chọn nhiều tệp) -->
                     <div class="mb-4">
-                        <label for="file" class="form-label fw-semibold text-secondary">
-                            <i class="bi bi-paperclip me-1"></i>Tệp đính kèm (PDF, Word, Excel, Slide, Ảnh, Video...) <span class="text-danger">*</span>
+                        <label for="files" class="form-label fw-semibold text-secondary">
+                            <i class="bi bi-paperclip me-1"></i>Tệp đính kèm (Hỗ trợ chọn nhiều tệp cùng lúc) <span class="text-danger">*</span>
                         </label>
-                        <input type="file" name="file" id="file" class="form-control form-control-lg rounded-3" required
+                        <input type="file" name="files" id="files" class="form-control form-control-lg rounded-3" required multiple
                                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,.7z,.mp4,.avi,.mov,.mp3,.jpg,.jpeg,.png,.webp">
                         <div class="form-text d-flex justify-content-between mt-1">
-                            <span class="text-muted"><i class="bi bi-shield-check me-1 text-success"></i>Tối đa 200MB/tệp &bull; Stream trực tiếp lên Google Drive 5TB</span>
+                            <span class="text-muted"><i class="bi bi-shield-check me-1 text-success"></i>Tối đa 500MB/tệp &bull; Stream trực tiếp lên Google Drive 5TB</span>
                             <span id="fileSizeNotice" class="fw-semibold"></span>
+                        </div>
+
+                        <!-- Danh sách tệp đã chọn (Tên + Dung lượng) -->
+                        <div id="selectedFilesContainer" class="d-none mt-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-semibold text-secondary small">
+                                    <i class="bi bi-files me-1"></i>Danh sách tệp đã chọn (<span id="fileCountBadge">0</span> tệp):
+                                </span>
+                                <span class="badge bg-primary-subtle text-primary fw-semibold" id="totalSizeBadge">0 MB</span>
+                            </div>
+                            <ul class="list-group list-group-flush border rounded-3 overflow-hidden shadow-xs" id="fileListPreview" style="max-height: 240px; overflow-y: auto;">
+                            </ul>
                         </div>
                     </div>
 
@@ -92,29 +105,75 @@
 </div>
 
 <script>
-document.getElementById('file').addEventListener('change', function(e) {
-    const file = e.target.files[0];
+function formatFileSize(bytes) {
+    if (bytes >= 1024 * 1024) {
+        return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    } else if (bytes >= 1024) {
+        return (bytes / 1024).toFixed(1) + ' KB';
+    } else {
+        return bytes + ' bytes';
+    }
+}
+
+document.getElementById('files').addEventListener('change', function(e) {
+    const files = Array.from(e.target.files);
+    const container = document.getElementById('selectedFilesContainer');
+    const listPreview = document.getElementById('fileListPreview');
+    const countBadge = document.getElementById('fileCountBadge');
+    const totalBadge = document.getElementById('totalSizeBadge');
     const notice = document.getElementById('fileSizeNotice');
     const submitBtn = document.getElementById('submitBtn');
-    
-    if (file) {
-        const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
-        if (file.size > 200 * 1024 * 1024) {
-            notice.className = 'text-danger fw-bold';
-            notice.textContent = `Kích thước: ${sizeMB} MB (Vượt quá 200MB quy định!)`;
-            submitBtn.disabled = true;
-        } else {
-            notice.className = 'text-success fw-semibold';
-            notice.textContent = `Kích thước: ${sizeMB} MB (Hợp lệ)`;
-            submitBtn.disabled = false;
-        }
+
+    if (!files || files.length === 0) {
+        container.classList.add('d-none');
+        notice.textContent = '';
+        return;
+    }
+
+    container.classList.remove('d-none');
+    listPreview.innerHTML = '';
+    countBadge.textContent = files.length;
+
+    let totalBytes = 0;
+    let hasOversized = false;
+    const MAX_SIZE = 500 * 1024 * 1024; // 500MB
+
+    files.forEach((file, index) => {
+        totalBytes += file.size;
+        const isOver = file.size > MAX_SIZE;
+        if (isOver) hasOversized = true;
+
+        const li = document.createElement('li');
+        li.className = `list-group-item d-flex justify-content-between align-items-center py-2 ${isOver ? 'bg-danger-subtle text-danger' : ''}`;
+        li.innerHTML = `
+            <div class="d-flex align-items-center text-truncate me-2">
+                <i class="bi ${isOver ? 'bi-exclamation-triangle-fill text-danger' : 'bi-file-earmark-check text-primary'} me-2 fs-6"></i>
+                <span class="text-truncate fw-medium small" title="${file.name}">${index + 1}. ${file.name}</span>
+            </div>
+            <span class="badge ${isOver ? 'bg-danger text-white' : 'bg-light text-dark border'} rounded-pill flex-shrink-0">
+                ${formatFileSize(file.size)} ${isOver ? '(>500MB!)' : ''}
+            </span>
+        `;
+        listPreview.appendChild(li);
+    });
+
+    totalBadge.textContent = 'Tổng: ' + formatFileSize(totalBytes);
+
+    if (hasOversized) {
+        notice.className = 'text-danger fw-bold';
+        notice.textContent = 'Có tệp vượt quá giới hạn 500MB!';
+        submitBtn.disabled = true;
+    } else {
+        notice.className = 'text-success fw-semibold';
+        notice.textContent = `Hợp lệ (${files.length} tệp)`;
+        submitBtn.disabled = false;
     }
 });
 
 document.getElementById('uploadForm').addEventListener('submit', function() {
     const submitBtn = document.getElementById('submitBtn');
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Đang xử lý tải lên...';
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Đang truyền tệp sang Google Drive...';
     document.getElementById('uploadProgressContainer').classList.remove('d-none');
 });
 </script>
