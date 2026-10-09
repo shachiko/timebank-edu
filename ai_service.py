@@ -1109,13 +1109,26 @@ def ai_generate_weekly_newsletter(db, user_id=None):
     -> Hỗ trợ Rule-based Fallback chuẩn xác khi thiếu API key hoặc offline.
     """
     cur = db.cursor()
+    # Tự động thích ứng nếu nhận con trỏ raw sqlite3 để hỗ trợ cú pháp ::numeric
+    if isinstance(cur, sqlite3.Cursor):
+        class _SqliteCurAdapter:
+            def __init__(self, c): self._c = c
+            def execute(self, q, p=None):
+                q = q.replace("::numeric", "") if "::numeric" in q else q
+                return self._c.execute(q, p) if p is not None else self._c.execute(q)
+            def fetchone(self): return self._c.fetchone()
+            def fetchall(self): return self._c.fetchall()
+            def __iter__(self): return iter(self._c)
+            def __getattr__(self, name): return getattr(self._c, name)
+        cur = _SqliteCurAdapter(cur)
 
     # 1. Gom dữ liệu phiên học 7 ngày gần đây
+    seven_days_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")
     cur.execute("""
         SELECT COUNT(*) AS so_phien, COALESCE(SUM(so_gio), 0.0) AS tong_gio
         FROM sessions
-        WHERE thoi_gian_bat_dau >= datetime('now', '-7 days')
-    """)
+        WHERE thoi_gian_bat_dau >= ?
+    """, (seven_days_ago,))
     row_recent = cur.fetchone()
     so_phien_7ngay = row_recent["so_phien"] if row_recent and row_recent["so_phien"] else 0
     tong_gio_7ngay = round(float(row_recent["tong_gio"]), 1) if row_recent and row_recent["tong_gio"] else 0.0
@@ -1137,7 +1150,7 @@ def ai_generate_weekly_newsletter(db, user_id=None):
         SELECT u.id, u.ho_ten, u.lop,
                COUNT(s.id) AS so_phien,
                COALESCE(SUM(s.so_gio), 0.0) AS tong_gio,
-               ROUND(COALESCE(AVG(r.so_sao), 5.0), 1) AS sao_tb
+               ROUND(COALESCE(AVG(r.so_sao), 5.0)::numeric, 1) AS sao_tb
         FROM users u
         JOIN sessions s ON u.id = s.nguoi_day_id
         LEFT JOIN ratings r ON s.id = r.session_id AND r.nguoi_duoc_danh_gia_id = u.id

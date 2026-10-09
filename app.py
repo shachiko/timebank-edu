@@ -372,6 +372,16 @@ class PostgresCursorWrapper:
         if "?" in converted_query:
             converted_query = converted_query.replace("?", "%s")
 
+        # Đảm bảo hàm ROUND(expr, n) trên PostgreSQL luôn được ép kiểu ::numeric
+        if "ROUND(" in converted_query.upper():
+            import re
+            converted_query = re.sub(
+                r'ROUND\s*\(\s*(COALESCE\s*\([^()]*(?:\([^()]*\)[^()]*)*\)|[a-zA-Z0-9_.]+\s*\([^()]*\)|[a-zA-Z0-9_.]+)(?!::numeric)\s*,\s*(\d+)\s*\)',
+                r'ROUND(\1::numeric, \2)',
+                converted_query,
+                flags=re.IGNORECASE
+            )
+
         is_insert = converted_query.strip().upper().startswith("INSERT INTO")
         has_returning = "RETURNING" in converted_query.upper()
 
@@ -406,6 +416,16 @@ class PostgresCursorWrapper:
 
     def fetchall(self):
         return self._cur.fetchall()
+
+    def fetchmany(self, size=None):
+        return self._cur.fetchmany(size) if size is not None else self._cur.fetchmany()
+
+    def __iter__(self):
+        return iter(self._cur)
+
+    @property
+    def description(self):
+        return self._cur.description
 
     @property
     def lastrowid(self):
@@ -446,6 +466,98 @@ class PostgresConnectionWrapper:
         self._conn.close()
 
 
+class SqliteCursorWrapper:
+    """
+    Lớp bọc con trỏ SQLite để tương thích với cú pháp PostgreSQL:
+    - Tự động gỡ bỏ ép kiểu '::numeric' khi chạy trên SQLite cục bộ.
+    """
+    def __init__(self, cursor):
+        self._cur = cursor
+
+    def execute(self, query, params=None):
+        cleaned_query = query.replace("::numeric", "") if "::numeric" in query else query
+        if params is not None:
+            return self._cur.execute(cleaned_query, params)
+        return self._cur.execute(cleaned_query)
+
+    def executemany(self, query, seq_of_params):
+        cleaned_query = query.replace("::numeric", "") if "::numeric" in query else query
+        return self._cur.executemany(cleaned_query, seq_of_params)
+
+    def fetchone(self):
+        return self._cur.fetchone()
+
+    def fetchall(self):
+        return self._cur.fetchall()
+
+    def fetchmany(self, size=None):
+        return self._cur.fetchmany(size) if size is not None else self._cur.fetchmany()
+
+    @property
+    def lastrowid(self):
+        return self._cur.lastrowid
+
+    @property
+    def rowcount(self):
+        return self._cur.rowcount
+
+    @property
+    def description(self):
+        return self._cur.description
+
+    def close(self):
+        self._cur.close()
+
+    def __iter__(self):
+        return iter(self._cur)
+
+    def __getattr__(self, name):
+        return getattr(self._cur, name)
+
+
+class SqliteConnectionWrapper:
+    """
+    Lớp bọc kết nối SQLite để tự động gỡ bỏ cú pháp '::numeric'
+    giúp đồng nhất mã nguồn SQL tương thích cả PostgreSQL lẫn SQLite.
+    """
+    def __init__(self, conn):
+        self._conn = conn
+
+    def cursor(self):
+        return SqliteCursorWrapper(self._conn.cursor())
+
+    def execute(self, query, params=None):
+        cleaned_query = query.replace("::numeric", "") if "::numeric" in query else query
+        if params is not None:
+            return SqliteCursorWrapper(self._conn.execute(cleaned_query, params))
+        return SqliteCursorWrapper(self._conn.execute(cleaned_query))
+
+    def executemany(self, query, seq_of_params):
+        cleaned_query = query.replace("::numeric", "") if "::numeric" in query else query
+        return SqliteCursorWrapper(self._conn.executemany(cleaned_query, seq_of_params))
+
+    def commit(self):
+        self._conn.commit()
+
+    def rollback(self):
+        self._conn.rollback()
+
+    def close(self):
+        self._conn.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is not None:
+            self.rollback()
+        else:
+            self.commit()
+
+    def __getattr__(self, item):
+        return getattr(self._conn, item)
+
+
 def get_db():
     """
     Mở kết nối tới cơ sở dữ liệu cho mỗi request:
@@ -461,21 +573,23 @@ def get_db():
                 g.db = PostgresConnectionWrapper(raw_conn)
             except Exception as e:
                 app.logger.warning(f"Lỗi kết nối PostgreSQL ({e}), tự động chuyển về SQLite dự phòng.")
-                g.db = sqlite3.connect(
+                raw_sqlite = sqlite3.connect(
                     DATABASE_PATH,
                     detect_types=sqlite3.PARSE_DECLTYPES,
                     timeout=30.0
                 )
-                g.db.row_factory = sqlite3.Row
+                raw_sqlite.row_factory = sqlite3.Row
+                g.db = SqliteConnectionWrapper(raw_sqlite)
         else:
-            g.db = sqlite3.connect(
+            raw_sqlite = sqlite3.connect(
                 DATABASE_PATH,
                 detect_types=sqlite3.PARSE_DECLTYPES,
                 timeout=30.0
             )
-            g.db.row_factory = sqlite3.Row
-            g.db.execute("PRAGMA foreign_keys = ON")
-            g.db.execute("PRAGMA journal_mode = WAL")
+            raw_sqlite.row_factory = sqlite3.Row
+            raw_sqlite.execute("PRAGMA foreign_keys = ON")
+            raw_sqlite.execute("PRAGMA journal_mode = WAL")
+            g.db = SqliteConnectionWrapper(raw_sqlite)
     return g.db
 
 
@@ -512,7 +626,7 @@ def migrate_postgres_schema(conn):
     Tương thích cả PostgreSQL production lẫn SQLite (mô phỏng trong test suite).
     """
     is_sqlite = False
-    if isinstance(conn, sqlite3.Connection):
+    if isinstance(conn, (sqlite3.Connection, SqliteConnectionWrapper)) or isinstance(getattr(conn, "_conn", None), sqlite3.Connection):
         is_sqlite = True
     elif not hasattr(conn, "_conn"):
         try:
@@ -1598,7 +1712,7 @@ def get_top_tutors(db, limit=3, truong_id=None):
             u.lop, 
             COALESCE(SUM(s.so_gio), 0.0) AS so_gio_day,
             COUNT(s.id) AS so_phien_day,
-            ROUND(COALESCE(AVG(r.so_sao), 5.0), 1) AS sao_tb
+            ROUND(COALESCE(AVG(r.so_sao), 5.0)::numeric, 1) AS sao_tb
         FROM users u
         LEFT JOIN sessions s ON u.id = s.nguoi_day_id AND s.trang_thai = 'hoan_thanh'
         LEFT JOIN ratings r ON s.id = r.session_id AND r.nguoi_duoc_danh_gia_id = u.id
@@ -2206,7 +2320,7 @@ def profile():
         search_kw = "Toán" if "toán" in target_subject.lower() else target_subject
         cur.execute("""
             SELECT s.*, u.ho_ten, u.lop, u.gio_ranh,
-                   ROUND(COALESCE(AVG(r.so_sao), 5.0), 1) AS sao_tb
+                   ROUND(COALESCE(AVG(r.so_sao), 5.0)::numeric, 1) AS sao_tb
             FROM skills s
             JOIN users u ON s.user_id = u.id
             LEFT JOIN sessions ses ON s.id = ses.skill_id AND ses.trang_thai = 'hoan_thanh'
@@ -2277,7 +2391,7 @@ def profile():
 
     # 3. Số sao đánh giá trung bình nhận được từ bạn bè
     cur.execute(
-        """SELECT ROUND(AVG(so_sao), 1), COUNT(*) 
+        """SELECT ROUND(AVG(so_sao)::numeric, 1), COUNT(*) 
            FROM ratings 
            WHERE nguoi_duoc_danh_gia_id = ?""",
         (user["id"],)
@@ -2368,10 +2482,10 @@ def admin_dashboard():
         SELECT 
             sk.linh_vuc,
             COUNT(qr.id) AS so_bai_lam,
-            ROUND(AVG(qr.diem_so), 2) AS diem_tb,
+            ROUND(AVG(qr.diem_so)::numeric, 2) AS diem_tb,
             SUM(CASE WHEN qr.diem_so >= 4.0 THEN 1 ELSE 0 END) AS so_luong_gioi,
             SUM(CASE WHEN qr.diem_so >= 3.0 THEN 1 ELSE 0 END) AS so_luong_dat_chuan,
-            ROUND(AVG(qr.tu_danh_gia_truoc), 2) AS tu_tin_truoc_tb
+            ROUND(AVG(qr.tu_danh_gia_truoc)::numeric, 2) AS tu_tin_truoc_tb
         FROM quiz_results qr
         JOIN sessions s ON qr.session_id = s.id
         JOIN skills sk ON s.skill_id = sk.id
@@ -2459,7 +2573,7 @@ def admin_dashboard():
             COALESCE(SUM(CASE WHEN s.nguoi_day_id = u.id AND s.trang_thai = 'hoan_thanh' THEN s.so_gio ELSE 0 END), 0.0) AS gio_day,
             COALESCE(SUM(CASE WHEN s.nguoi_hoc_id = u.id AND s.trang_thai = 'hoan_thanh' THEN s.so_gio ELSE 0 END), 0.0) AS gio_hoc,
             COUNT(DISTINCT CASE WHEN s.trang_thai = 'hoan_thanh' THEN s.id END) AS so_phien,
-            ROUND(COALESCE((SELECT AVG(so_sao) FROM ratings WHERE nguoi_duoc_danh_gia_id = u.id), 5.0), 1) AS sao_tb
+            ROUND(COALESCE((SELECT AVG(so_sao) FROM ratings WHERE nguoi_duoc_danh_gia_id = u.id), 5.0)::numeric, 1) AS sao_tb
         FROM users u
         LEFT JOIN sessions s ON (s.nguoi_day_id = u.id OR s.nguoi_hoc_id = u.id)
         WHERE u.vai_tro = 'hoc_sinh'
@@ -3321,7 +3435,7 @@ def community_market():
             u.lop,
             t.ten_truong,
             t.logo AS logo_truong,
-            ROUND(COALESCE(AVG(r.so_sao), 5.0), 1) AS sao_tb
+            ROUND(COALESCE(AVG(r.so_sao), 5.0)::numeric, 1) AS sao_tb
         FROM skills s
         JOIN users u ON s.user_id = u.id
         LEFT JOIN truong t ON s.truong_id = t.id
@@ -3387,7 +3501,7 @@ def skills_market():
             u.ho_ten, 
             u.ma_hoc_sinh, 
             u.lop,
-            ROUND(COALESCE(AVG(r.so_sao), 5.0), 1) AS sao_tb
+            ROUND(COALESCE(AVG(r.so_sao), 5.0)::numeric, 1) AS sao_tb
         FROM skills s
         JOIN users u ON s.user_id = u.id
         LEFT JOIN sessions ses ON s.id = ses.skill_id AND ses.trang_thai = 'hoan_thanh'
@@ -3458,7 +3572,7 @@ def ai_matchmake_view():
         if mon_hoc:
             cur.execute("""
                 SELECT s.*, u.ho_ten, u.lop, u.gio_ranh,
-                       ROUND(COALESCE(AVG(r.so_sao), 5.0), 1) AS sao_tb
+                       ROUND(COALESCE(AVG(r.so_sao), 5.0)::numeric, 1) AS sao_tb
                 FROM skills s
                 JOIN users u ON s.user_id = u.id
                 LEFT JOIN sessions ses ON s.id = ses.skill_id AND ses.trang_thai = 'hoan_thanh'
@@ -3551,7 +3665,7 @@ def book_skill_page(skill_id):
     cur = db.cursor()
     cur.execute("""
         SELECT s.*, u.ho_ten, u.lop, u.gio_ranh, u.ma_hoc_sinh,
-               ROUND(COALESCE(AVG(r.so_sao), 5.0), 1) AS sao_tb
+               ROUND(COALESCE(AVG(r.so_sao), 5.0)::numeric, 1) AS sao_tb
         FROM skills s
         JOIN users u ON s.user_id = u.id
         LEFT JOIN sessions ses ON s.id = ses.skill_id AND ses.trang_thai = 'hoan_thanh'
