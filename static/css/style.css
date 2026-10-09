@@ -109,6 +109,180 @@ body {
 }
 
 /* ==============================================================================
+   PROMPT 21: MENU VUÔNG BO TRÒN (SQUIRCLE NAVIGATION) & NÚT BẤM CHUYÊN NGHIỆP
+   ============================================================================== */
+.nav-squircle-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 4px 0;
+}
+.nav-squircle-wrapper::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-squircle-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  width: max-content;
+  margin: 0 auto;
+}
+
+.nav-squircle {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 74px;
+  min-width: 74px;
+  height: 64px;
+  border-radius: 16px;
+  text-decoration: none;
+  padding: 6px 3px;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  user-select: none;
+  animation: squircleFloat 3.6s ease-in-out infinite;
+  border: 1px solid transparent;
+}
+
+.nav-squircle:nth-child(1) { animation-delay: 0s; }
+.nav-squircle:nth-child(2) { animation-delay: 0.3s; }
+.nav-squircle:nth-child(3) { animation-delay: 0.6s; }
+.nav-squircle:nth-child(4) { animation-delay: 0.9s; }
+.nav-squircle:nth-child(5) { animation-delay: 1.2s; }
+.nav-squircle:nth-child(6) { animation-delay: 1.5s; }
+.nav-squircle:nth-child(7) { animation-delay: 1.8s; }
+
+/* Inactive squircle: nền xám nhạt, chữ đậm */
+.nav-squircle.inactive {
+  background-color: #F1F5F9;
+  color: #1E293B !important;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+}
+.nav-squircle.inactive i {
+  color: #334155 !important;
+  font-size: 1.25rem;
+  line-height: 1.2;
+  margin-bottom: 2px;
+  transition: transform 0.22s ease;
+}
+.nav-squircle.inactive span {
+  font-size: 0.70rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #1E293B !important;
+  text-align: center;
+  white-space: nowrap;
+  letter-spacing: -0.2px;
+}
+
+/* Active squircle: nền xanh dương, chữ trắng (như mẫu) */
+.nav-squircle.active {
+  background: #1B2A6B !important;
+  color: #FFFFFF !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 4px 14px rgba(27, 42, 107, 0.45) !important;
+}
+.nav-squircle.active i {
+  color: #FFFFFF !important;
+  font-size: 1.25rem;
+  line-height: 1.2;
+  margin-bottom: 2px;
+}
+.nav-squircle.active span {
+  font-size: 0.70rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: #FFFFFF !important;
+  text-align: center;
+  white-space: nowrap;
+  letter-spacing: -0.2px;
+}
+
+/* Hiệu ứng: đung đưa nhẹ lên xuống */
+@keyframes squircleFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+/* Hover: nghiêng nhẹ như logo */
+.nav-squircle:hover {
+  animation-play-state: paused;
+  transform: translateY(-4px) rotate(-4deg) scale(1.06) !important;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2) !important;
+}
+
+.nav-squircle.inactive:hover {
+  background-color: #FFFFFF;
+  border-color: #CBD5E1;
+}
+.nav-squircle.inactive:hover i {
+  color: #1B2A6B !important;
+  transform: scale(1.12);
+}
+.nav-squircle.inactive:hover span {
+  color: #1B2A6B !important;
+}
+
+.nav-squircle.active:hover {
+  background: #152259 !important;
+  box-shadow: 0 8px 20px rgba(21, 34, 89, 0.55) !important;
+}
+
+/* Nút Đăng nhập / Đăng ký kiểu mới tương phản chuyên nghiệp */
+.btn-auth-login {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #FFFFFF !important;
+  border: 2px solid #FFFFFF;
+  font-weight: 700;
+  font-size: 0.82rem;
+  border-radius: 12px;
+  padding: 0.42rem 0.95rem;
+  transition: all 0.22s ease;
+  white-space: nowrap;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+.btn-auth-login:hover {
+  background-color: #FFFFFF;
+  color: #1B2A6B !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.btn-auth-register {
+  background: #1B2A6B;
+  color: #FFFFFF !important;
+  border: 2px solid #1B2A6B;
+  font-weight: 700;
+  font-size: 0.82rem;
+  border-radius: 12px;
+  padding: 0.42rem 1.05rem;
+  box-shadow: 0 4px 12px rgba(27, 42, 107, 0.35);
+  transition: all 0.22s ease;
+  white-space: nowrap;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+.btn-auth-register:hover {
+  background: #152259;
+  border-color: #152259;
+  color: #FFFFFF !important;
+  box-shadow: 0 6px 16px rgba(27, 42, 107, 0.5);
+  transform: translateY(-1px);
+}
+
+/* ==============================================================================
    2. BUTTONS & ACTIONS
    ============================================================================== */
 .btn-brand {

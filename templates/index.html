@@ -41,7 +41,7 @@
         <div class="d-flex flex-wrap align-items-center gap-3">
           {% if current_user %}
             <a href="{{ url_for('profile') }}" class="btn btn-brand btn-lg">
-              <i class="bi bi-wallet2 me-2"></i> Vào sổ tín dụng ({{ "%.1f"|format(current_user.so_du_gio) }}h)
+              <i class="bi bi-wallet2 me-2"></i> Vào ví tín dụng ({{ "%.1f"|format(current_user.so_du_gio) }}h)
             </a>
           {% else %}
             <a href="{{ url_for('register') }}" class="btn btn-brand btn-lg">
@@ -132,7 +132,7 @@
         <div class="step-card">
           <div class="step-badge">4</div>
           <h5 class="fw-bold mb-2">Tích giờ & Đổi kỹ năng</h5>
-          <p class="text-muted small mb-0">Người dạy nhận ngay tín dụng thời gian vào sổ cái; dùng giờ này để "mua" buổi học kỹ năng mới từ bạn khác.</p>
+          <p class="text-muted small mb-0">Người dạy nhận ngay tín dụng thời gian vào ví; dùng giờ này để "mua" buổi học kỹ năng mới từ bạn khác.</p>
         </div>
       </div>
     </div>
@@ -191,7 +191,7 @@
     <div class="text-center mb-4">
       <span class="badge bg-info bg-opacity-10 text-info-emphasis fw-semibold px-3 py-2 rounded-pill mb-2">DỮ LIỆU THỜI GIAN THỰC</span>
       <h2 class="fw-bold">Chỉ số vận hành tại {{ config.ten_truong }}</h2>
-      <p class="text-muted small">Cập nhật trực tiếp từ hệ thống sổ cái tín dụng và phiên học</p>
+      <p class="text-muted small">Cập nhật trực tiếp từ hệ thống ví tín dụng và phiên học</p>
     </div>
 
     <div class="row g-4 justify-content-center">
@@ -295,7 +295,7 @@
         <span class="badge bg-danger bg-opacity-10 text-danger fw-semibold px-3 py-2 rounded-pill mb-2">
           <i class="bi bi-heart-fill me-1"></i> VÌ CỘNG ĐỒNG & GIỜ CÔNG ÍCH
         </span>
-        <h2 class="fw-bold display-6 text-dark">Lan tỏa trách nhiệm xã hội cùng TimeBank EDU</h2>
+        <h3 class="fw-bold text-dark text-nowrap mb-2" style="font-size: clamp(1.15rem, 2.3vw, 1.7rem);">Lan tỏa trách nhiệm xã hội cùng TimeBank EDU</h3>
         <p class="text-muted mb-0">
           Không chỉ trao đổi kiến thức giữa học sinh, Ngân hàng Thời gian mở rộng sang các hoạt động công ích học đường:
           thu gom rác bãi biển, hỗ trợ thư viện, phụ đạo tin học cho thiếu nhi để nhận tín dụng thời gian.
@@ -443,8 +443,8 @@
           <div class="school-benefit-item">
             <div class="benefit-icon"><i class="bi bi-sliders"></i></div>
             <div>
-              <h6 class="fw-bold mb-1">Đổi thương hiệu chỉ trong 5 phút</h6>
-              <p class="small text-muted mb-0">Chỉ cần chỉnh sửa tệp <code>config.yaml</code> là có ngay hệ thống mang logo, màu sắc và thông điệp riêng của trường.</p>
+              <h6 class="fw-bold mb-1">Chuyển giao và cài đặt dữ liệu cho các trường chỉ 5 phút</h6>
+              <p class="small text-muted mb-0">Dễ dàng tùy chỉnh logo, màu sắc và thông điệp riêng để biến hệ thống thành phiên bản độc quyền của trường bạn.</p>
             </div>
           </div>
 

@@ -18,14 +18,15 @@ test_files = [
     "test_prompt17_multitenant.py",
     "test_prompt18_forum_drive.py",
     "test_prompt19_community_market.py",
-    "test_prompt20_migration.py"
+    "test_prompt20_migration.py",
+    "test_prompt21_ui_polish.py"
 ]
 
 results = {}
 all_passed = True
 
 print("=" * 70)
-print("CHẠY TOÀN BỘ REGRESSION TEST SUITE CHO TIMEBANK EDU (PROMPT 19)")
+print("CHẠY TOÀN BỘ REGRESSION TEST SUITE CHO TIMEBANK EDU (PROMPT 21)")
 print("=" * 70)
 
 for tf in test_files:
@@ -52,7 +53,7 @@ for tf, st in results.items():
 
 print("=" * 70)
 if all_passed:
-    print("XÁC NHẬN: 100% TẤT CẢ 13 BỘ TEST PASSED! SẴN SÀNG TRIỂN KHAI & PUSH GIT!")
+    print(f"XÁC NHẬN: 100% TẤT CẢ {len(test_files)} BỘ TEST PASSED! SẴN SÀNG TRIỂN KHAI & PUSH GIT!")
     sys.exit(0)
 else:
     print("CẢNH BÁO: CÓ TEST CASE THẤT BẠI. CẦN KHẮC PHỤC TRƯỚC KHI PUSH GIT.")
