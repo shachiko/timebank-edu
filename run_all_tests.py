@@ -34,14 +34,15 @@ test_files = [
     "test_prompt26_multi_upload_500mb.py",
     "test_prompt27_postgres_round.py",
     "test_prompt28_hide_google_drive.py",
-    "test_prompt29_admin_tabs.py"
+    "test_prompt29_admin_tabs.py",
+    "test_prompt30_school_management.py"
 ]
 
 results = {}
 all_passed = True
 
 print("=" * 70)
-print("CHẠY TOÀN BỘ REGRESSION TEST SUITE CHO TIMEBANK EDU (PROMPT 29)")
+print("CHẠY TOÀN BỘ REGRESSION TEST SUITE CHO TIMEBANK EDU (PROMPT 30)")
 print("=" * 70)
 
 for tf in test_files:
@@ -53,10 +54,12 @@ for tf in test_files:
         results[tf] = "PASS"
     else:
         print(f"  --> [FAIL] {tf}")
-        print("--- STDOUT ---")
-        print(res.stdout[-500:] if len(res.stdout) > 500 else res.stdout)
-        print("--- STDERR ---")
-        print(res.stderr[-500:] if len(res.stderr) > 500 else res.stderr)
+        print("--- STDERR SUMMARY ---")
+        for line in res.stderr.splitlines():
+            if any(k in line for k in ["FAIL:", "ERROR:", "AssertionError", "test_0", "Traceback", "File "]):
+                print("  ", line)
+        if not any(k in res.stderr for k in ["FAIL:", "ERROR:"]):
+            print(res.stderr[-800:])
         results[tf] = "FAIL"
         all_passed = False
 

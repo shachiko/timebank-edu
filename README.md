@@ -699,6 +699,38 @@ Hệ thống được nâng cấp toàn diện từ mô hình đơn trường sa
   6. Học sinh chưa qua cổng không thấy nút "Đăng lên sàn chung".
   7. Regression suite toàn bộ **15/15 test suites đạt 100% PASS**.
 
+---
+
+## 🏫 PROMPT 30 — QUẢN LÝ TRƯỜNG HỌC (THÊM / SỬA / VÔ HIỆU HÓA TRƯỜNG MỚI)
+
+Nâng cấp Bảng điều khiển Quản trị (`/admin`) giúp Cô Huyền (Tổng Quản trị - `super_admin`) chủ động thêm trường học mới khi có trường đối tác đăng ký tham gia mô hình TimeBank EDU, chỉnh sửa thông tin hoặc vô hiệu hóa trường khi cần:
+
+### 1. Tab "Quản lý Trường học" trong `/admin`:
+- **Chỉ hiển thị cho `super_admin`:** Thẻ Tab riêng biệt có badge hiển thị số lượng trường đang quản trị.
+- **Form thêm trường học mới:**
+  - Tên trường (*): validate bắt buộc, không được để trống, không được trùng với trường đã có (case-insensitive).
+  - Trạng thái ban đầu: Đang thí điểm (`dang_thi_diem`), Chuẩn bị triển khai (`chuan_bi_trien_khai`), Đang sử dụng (`dang_su_dung`).
+  - Logo trường: hỗ trợ tải lên tệp ảnh thực tế (PNG, JPG, WEBP) hoặc tự động dùng logo mặc định hệ thống.
+  - Tự động sinh `truong_id` tiếp theo kế tiếp an toàn, tuyệt đối không đè lên ID mẫu của Trường Demo (`DEMO_SCHOOL_ID = 99`).
+- **Bảng danh sách trường học quản trị:**
+  - Cột hiển thị: Mã ID, Logo trường, Tên trường, Trạng thái (badge màu sắc trực quan), Số lượng tài khoản hiện tại, Ngày tạo, Thao tác.
+  - Nút **"Sửa"**: Mở modal cho phép sửa tên trường, cập nhật logo mới và thay đổi trạng thái hoạt động.
+  - Nút **"Vô hiệu hóa" / "Kích hoạt"**: Chuyển đổi trạng thái mềm (`vo_hieu_hoa`), tuyệt đối **không xóa cứng** để bảo toàn toàn vẹn dữ liệu học sinh, phiên học và sổ cái thời gian.
+  - **Bảo vệ Trường Demo (ID 99):** Hiển thị huy hiệu "Cố định (Không sửa/xóa)", các nút chỉnh sửa/vô hiệu hóa bị khóa và được bảo vệ nghiêm ngặt ở tầng backend.
+
+### 2. Tự động liên kết và cách ly dữ liệu trường mới:
+- Trường mới tự động xuất hiện trong dropdown lọc trường tại `/admin`.
+- Trường mới có thể sinh mã mời riêng (`invite_codes`), tạo tài khoản quản trị trường (`school_admin`) và giáo viên (`giao_vien`) riêng biệt.
+- Khi trường bị vô hiệu hóa (`vo_hieu_hoa`):
+  - Tự động ẩn khỏi danh sách lựa chọn trường trên form đăng ký (`/register`).
+  - Hệ thống từ chối các mã mời thuộc về trường bị vô hiệu hóa kèm thông báo rõ ràng.
+  - Khi được kích hoạt lại (`dang_su_dung`), trường lập tức xuất hiện trở lại trên form đăng ký.
+
+### 3. Nghiệm thu & Regression Suite:
+- Bộ test suite `test_prompt30_school_management.py` bao gồm 8 test cases chuyên sâu kiểm thử toàn diện quy trình thêm, sửa, validate, phân quyền, cách ly dữ liệu và bảo vệ trường Demo.
+- Toàn bộ **29/29 bộ test trong hệ thống (100% PASS)** xác nhận không có bất kỳ lỗi hồi quy nào.
+
+
 
 
 

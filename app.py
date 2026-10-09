@@ -659,7 +659,7 @@ def migrate_postgres_schema(conn):
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     ten_truong TEXT NOT NULL,
                     logo TEXT,
-                    trang_thai TEXT CHECK(trang_thai IN ('dang_thi_diem', 'chuan_bi_trien_khai', 'dang_su_dung')) DEFAULT 'dang_thi_diem',
+                    trang_thai TEXT CHECK(trang_thai IN ('dang_thi_diem', 'chuan_bi_trien_khai', 'dang_su_dung', 'vo_hieu_hoa')) DEFAULT 'dang_thi_diem',
                     ngay_tao TEXT DEFAULT CURRENT_TIMESTAMP
                 )
             """)
@@ -669,7 +669,7 @@ def migrate_postgres_schema(conn):
                     id SERIAL PRIMARY KEY,
                     ten_truong TEXT NOT NULL,
                     logo TEXT,
-                    trang_thai TEXT CHECK(trang_thai IN ('dang_thi_diem', 'chuan_bi_trien_khai', 'dang_su_dung')) DEFAULT 'dang_thi_diem',
+                    trang_thai TEXT CHECK(trang_thai IN ('dang_thi_diem', 'chuan_bi_trien_khai', 'dang_su_dung', 'vo_hieu_hoa')) DEFAULT 'dang_thi_diem',
                     ngay_tao TEXT DEFAULT CURRENT_TIMESTAMP
                 )
             """)
@@ -763,6 +763,56 @@ def migrate_postgres_schema(conn):
                 conn.rollback()
             except Exception:
                 pass
+
+        # Cập nhật CHECK trang_thai của bảng truong để chấp nhận 'vo_hieu_hoa' (SQLite)
+        try:
+            cur.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='truong'")
+            row = cur.fetchone()
+            if row and row[0] and "vo_hieu_hoa" not in row[0]:
+                old_sql = row[0]
+                new_sql = re.sub(
+                    r"trang_thai\s+IN\s*\([^)]+\)",
+                    "trang_thai IN ('dang_thi_diem', 'chuan_bi_trien_khai', 'dang_su_dung', 'vo_hieu_hoa')",
+                    old_sql
+                )
+                cur.execute("PRAGMA foreign_keys = OFF")
+                cur.execute("PRAGMA legacy_alter_table = ON")
+                cur.execute("ALTER TABLE truong RENAME TO _truong_old")
+                cur.execute(new_sql)
+                cur.execute("PRAGMA table_info(_truong_old)")
+                old_cols = [r[1] for r in cur.fetchall()]
+                cols_str = ", ".join(old_cols)
+                cur.execute(f"INSERT INTO truong ({cols_str}) SELECT {cols_str} FROM _truong_old")
+                cur.execute("DROP TABLE _truong_old")
+                cur.execute("PRAGMA legacy_alter_table = OFF")
+                cur.execute("PRAGMA foreign_keys = ON")
+                conn.commit()
+
+            # Tự động khắc phục nếu có bảng con nào bị trỏ nhầm vào _truong_old
+            cur.execute("SELECT name, sql FROM sqlite_master WHERE type='table' AND sql LIKE '%_truong_old%'")
+            corrupt_tables = cur.fetchall()
+            if corrupt_tables:
+                cur.execute("PRAGMA foreign_keys = OFF")
+                cur.execute("PRAGMA legacy_alter_table = ON")
+                for c_tbl, c_sql in corrupt_tables:
+                    fixed_sql = c_sql.replace('"_truong_old"', 'truong').replace('_truong_old', 'truong')
+                    tmp_name = f"_{c_tbl}_repair_tmp"
+                    cur.execute(f"ALTER TABLE {c_tbl} RENAME TO {tmp_name}")
+                    cur.execute(fixed_sql)
+                    cur.execute(f"PRAGMA table_info({tmp_name})")
+                    c_cols = [r[1] for r in cur.fetchall()]
+                    c_cols_str = ", ".join(c_cols)
+                    cur.execute(f"INSERT INTO {c_tbl} ({c_cols_str}) SELECT {c_cols_str} FROM {tmp_name}")
+                    cur.execute(f"DROP TABLE {tmp_name}")
+                cur.execute("PRAGMA legacy_alter_table = OFF")
+                cur.execute("PRAGMA foreign_keys = ON")
+                conn.commit()
+        except Exception as e:
+            app.logger.warning(f"Lỗi nâng cấp check constraint truong (SQLite): {e}")
+            try:
+                conn.rollback()
+            except Exception:
+                pass
     else:
         constraint_names = set()
         # Tìm trong information_schema
@@ -827,6 +877,36 @@ def migrate_postgres_schema(conn):
             conn.commit()
         except Exception as e:
             app.logger.warning(f"Lỗi ADD CONSTRAINT users_vai_tro_check: {e}")
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+
+        # Cập nhật CHECK trang_thai của bảng truong trên PostgreSQL
+        try:
+            _exec("""
+                SELECT con.conname
+                FROM pg_constraint con
+                JOIN pg_class rel ON rel.oid = con.conrelid
+                WHERE rel.relname = 'truong'
+                  AND con.contype = 'c'
+                  AND (con.conname ILIKE '%trang_thai%' OR pg_get_constraintdef(con.oid) ILIKE '%trang_thai%')
+            """)
+            t_cnames = [r[0] for r in cur.fetchall()]
+            conn.commit()
+            for cname in t_cnames:
+                try:
+                    _exec(f"ALTER TABLE truong DROP CONSTRAINT IF EXISTS {cname}")
+                    conn.commit()
+                except Exception:
+                    pass
+            _exec("""
+                ALTER TABLE truong ADD CONSTRAINT truong_trang_thai_check
+                CHECK (trang_thai IN ('dang_thi_diem', 'chuan_bi_trien_khai', 'dang_su_dung', 'vo_hieu_hoa'))
+            """)
+            conn.commit()
+        except Exception as e:
+            app.logger.warning(f"Lỗi nâng cấp check constraint truong (PostgreSQL): {e}")
             try:
                 conn.rollback()
             except Exception:
@@ -1122,8 +1202,51 @@ def init_db():
             )
         """)
         conn.commit()
+
+        # Nâng cấp CHECK constraint cho bảng truong để chấp nhận 'vo_hieu_hoa'
+        cur.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='truong'")
+        t_row = cur.fetchone()
+        if t_row and t_row[0] and "vo_hieu_hoa" not in t_row[0]:
+            t_old_sql = t_row[0]
+            t_new_sql = re.sub(
+                r"trang_thai\s+IN\s*\([^)]+\)",
+                "trang_thai IN ('dang_thi_diem', 'chuan_bi_trien_khai', 'dang_su_dung', 'vo_hieu_hoa')",
+                t_old_sql
+            )
+            conn.execute("PRAGMA foreign_keys = OFF")
+            conn.execute("PRAGMA legacy_alter_table = ON")
+            conn.execute("ALTER TABLE truong RENAME TO _truong_old")
+            conn.execute(t_new_sql)
+            cur.execute("PRAGMA table_info(_truong_old)")
+            t_cols = [r[1] for r in cur.fetchall()]
+            t_cols_str = ", ".join(t_cols)
+            conn.execute(f"INSERT INTO truong ({t_cols_str}) SELECT {t_cols_str} FROM _truong_old")
+            conn.execute("DROP TABLE _truong_old")
+            conn.execute("PRAGMA legacy_alter_table = OFF")
+            conn.execute("PRAGMA foreign_keys = ON")
+            conn.commit()
+
+        # Tự động khắc phục nếu có bảng con nào bị trỏ nhầm vào _truong_old
+        cur.execute("SELECT name, sql FROM sqlite_master WHERE type='table' AND sql LIKE '%_truong_old%'")
+        corrupt_tables = cur.fetchall()
+        if corrupt_tables:
+            conn.execute("PRAGMA foreign_keys = OFF")
+            conn.execute("PRAGMA legacy_alter_table = ON")
+            for c_tbl, c_sql in corrupt_tables:
+                fixed_sql = c_sql.replace('"_truong_old"', 'truong').replace('_truong_old', 'truong')
+                tmp_name = f"_{c_tbl}_repair_tmp"
+                conn.execute(f"ALTER TABLE {c_tbl} RENAME TO {tmp_name}")
+                conn.execute(fixed_sql)
+                cur.execute(f"PRAGMA table_info({tmp_name})")
+                c_cols = [r[1] for r in cur.fetchall()]
+                c_cols_str = ", ".join(c_cols)
+                conn.execute(f"INSERT INTO {c_tbl} ({c_cols_str}) SELECT {c_cols_str} FROM {tmp_name}")
+                conn.execute(f"DROP TABLE {tmp_name}")
+            conn.execute("PRAGMA legacy_alter_table = OFF")
+            conn.execute("PRAGMA foreign_keys = ON")
+            conn.commit()
     except Exception as e:
-        app.logger.warning(f"Lỗi nâng cấp cấu trúc bảng skills/community_tasks/password_reset_tokens: {e}")
+        app.logger.warning(f"Lỗi nâng cấp cấu trúc bảng skills/community_tasks/password_reset_tokens/truong: {e}")
     
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) FROM users")
@@ -1796,7 +1919,7 @@ def check_invite_code():
     db = get_db()
     cur = db.cursor()
     cur.execute("""
-        SELECT ic.*, t.ten_truong
+        SELECT ic.*, t.ten_truong, t.trang_thai AS trang_thai_truong
         FROM invite_codes ic
         JOIN truong t ON ic.truong_id = t.id
         WHERE ic.ma_code = ?
@@ -1804,6 +1927,9 @@ def check_invite_code():
     row = cur.fetchone()
     if not row:
         return jsonify({"valid": False, "error": "Mã mời không tồn tại trên hệ thống!"})
+
+    if row["trang_thai_truong"] == "vo_hieu_hoa":
+        return jsonify({"valid": False, "error": "Trường học gắn với mã mời này hiện đang tạm dừng hoạt động / vô hiệu hóa!"})
 
     if row["da_dung"] >= row["so_luot_toi_da"]:
         return jsonify({"valid": False, "error": "Mã mời này đã hết số lượt sử dụng!"})
@@ -1825,13 +1951,14 @@ def register():
     - Nhập mã mời hợp lệ (TBEDU-XXXX-XXXX) -> tự gán đúng trường, kích hoạt ngay (trang_thai = 'hoat_dong').
     - Không có mã mời -> tự chọn trường trong dropdown -> vào hàng chờ (trang_thai = 'cho_duyet').
     - Cấp vốn khởi tạo mặc định: 2.0 giờ tín dụng.
+    - Trường bị vô hiệu hóa (vo_hieu_hoa) sẽ bị ẩn khỏi dropdown và từ chối đăng ký.
     """
     if "user_id" in session:
         return redirect(url_for("profile"))
 
     db = get_db()
     cur = db.cursor()
-    cur.execute("SELECT * FROM truong ORDER BY id ASC")
+    cur.execute("SELECT * FROM truong WHERE trang_thai != 'vo_hieu_hoa' ORDER BY id ASC")
     all_schools = cur.fetchall()
 
     if request.method == "POST":
@@ -1847,36 +1974,44 @@ def register():
         # Kiểm tra tính hợp lệ của dữ liệu đầu vào
         if not ma_hoc_sinh or not ho_ten or not mat_khau:
             flash("Vui lòng điền đầy đủ các thông tin bắt buộc (*).", "danger")
-            return render_template("register.html", all_schools=all_schools)
+            return render_template("register.html", all_schools=all_schools, schools=all_schools)
 
         if len(mat_khau) < 6:
             flash("Mật khẩu phải có độ dài tối thiểu từ 6 ký tự trở lên.", "danger")
-            return render_template("register.html", all_schools=all_schools)
+            return render_template("register.html", all_schools=all_schools, schools=all_schools)
 
         if mat_khau != mat_khau_xac_nhan:
             flash("Mật khẩu xác nhận không khớp với mật khẩu đã nhập.", "danger")
-            return render_template("register.html", all_schools=all_schools)
+            return render_template("register.html", all_schools=all_schools, schools=all_schools)
 
         # Kiểm tra xem mã học sinh đã tồn tại chưa
         cur.execute("SELECT id FROM users WHERE ma_hoc_sinh = ?", (ma_hoc_sinh,))
         if cur.fetchone():
             flash("Mã học sinh đã tồn tại trong hệ thống. Vui lòng kiểm tra lại!", "danger")
-            return render_template("register.html", all_schools=all_schools)
+            return render_template("register.html", all_schools=all_schools, schools=all_schools)
 
         assigned_truong_id = 1
         initial_status = "cho_duyet"
         matched_invite_code = None
 
         if ma_code:
-            # Xác thực mã mời
-            cur.execute("SELECT * FROM invite_codes WHERE ma_code = ?", (ma_code,))
+            # Xác thực mã mời kèm kiểm tra trường có bị vô hiệu hóa không
+            cur.execute("""
+                SELECT ic.*, t.trang_thai AS trang_thai_truong
+                FROM invite_codes ic
+                JOIN truong t ON ic.truong_id = t.id
+                WHERE ic.ma_code = ?
+            """, (ma_code,))
             code_row = cur.fetchone()
             if not code_row:
                 flash("Mã mời không tồn tại trên hệ thống. Vui lòng kiểm tra lại!", "danger")
-                return render_template("register.html", all_schools=all_schools)
+                return render_template("register.html", all_schools=all_schools, schools=all_schools)
+            if code_row["trang_thai_truong"] == "vo_hieu_hoa":
+                flash("Trường học gắn với mã mời này hiện đang tạm dừng hoạt động / vô hiệu hóa!", "danger")
+                return render_template("register.html", all_schools=all_schools, schools=all_schools)
             if code_row["da_dung"] >= code_row["so_luot_toi_da"]:
                 flash("Mã mời này đã hết số lượt sử dụng!", "danger")
-                return render_template("register.html", all_schools=all_schools)
+                return render_template("register.html", all_schools=all_schools, schools=all_schools)
 
             # Mã hợp lệ: tự gán đúng trường của mã mời, kích hoạt ngay
             assigned_truong_id = code_row["truong_id"]
@@ -1888,6 +2023,12 @@ def register():
                 assigned_truong_id = int(truong_id_form)
             else:
                 assigned_truong_id = 1
+
+            cur.execute("SELECT trang_thai FROM truong WHERE id = ?", (assigned_truong_id,))
+            target_school_row = cur.fetchone()
+            if target_school_row and target_school_row["trang_thai"] == "vo_hieu_hoa":
+                flash("Trường học bạn chọn hiện đang tạm dừng hoạt động / vô hiệu hóa!", "danger")
+                return render_template("register.html", all_schools=all_schools, schools=all_schools)
             initial_status = "cho_duyet"
 
         # Băm mật khẩu và tạo người dùng mới
@@ -1942,7 +2083,7 @@ def register():
 
         return redirect(url_for("profile"))
 
-    return render_template("register.html", all_schools=all_schools)
+    return render_template("register.html", all_schools=all_schools, schools=all_schools)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -2665,9 +2806,19 @@ def admin_dashboard():
     cur.execute(comm_approved_sql)
     community_approved_skills = cur.fetchall()
 
-    # Danh sách 4 trường
+    # Danh sách các trường học
     cur.execute("SELECT * FROM truong ORDER BY id ASC")
     all_schools = cur.fetchall()
+
+    all_schools_management = []
+    if is_super:
+        cur.execute("""
+            SELECT t.id, t.ten_truong, t.logo, t.trang_thai, t.ngay_tao,
+                   (SELECT COUNT(*) FROM users u WHERE u.truong_id = t.id) AS so_tai_khoan
+            FROM truong t
+            ORDER BY t.id ASC
+        """)
+        all_schools_management = cur.fetchall()
 
     return render_template(
         "admin.html",
@@ -2684,6 +2835,7 @@ def admin_dashboard():
         is_school_admin=is_school,
         current_school_name=current_school_name,
         all_schools=all_schools,
+        all_schools_management=all_schools_management,
         selected_truong_id=selected_truong_id,
         pending_students=pending_students,
         invite_codes_list=invite_codes_list,
@@ -3055,7 +3207,12 @@ def admin_update_school_logo(school_id):
     Quản trị viên tải logo thật lên cho trường học liên kết:
     - Nếu là school_admin thì chỉ được đổi logo trường mình.
     - super_admin được đổi logo của bất kỳ trường nào.
+    - Trường Demo (ID 99) không cho phép sửa logo.
     """
+    if school_id == DEMO_SCHOOL_ID:
+        flash("Trường Demo (ID 99) là dữ liệu mẫu của hệ thống, không được phép chỉnh sửa logo!", "warning")
+        return redirect(url_for("admin_dashboard", _anchor="tab-schools"))
+
     if not is_super_admin() and session.get("truong_id") != school_id:
         flash("Bạn không có quyền cập nhật logo cho trường này.", "danger")
         return redirect(url_for("admin_dashboard"))
@@ -3076,7 +3233,166 @@ def admin_update_school_logo(school_id):
             flash("Đã cập nhật logo trường thành công!", "success")
         else:
             flash("Vui lòng chọn file ảnh hợp lệ (PNG, JPG, WEBP).", "warning")
-    return redirect(url_for("admin_dashboard"))
+    return redirect(url_for("admin_dashboard", _anchor="tab-schools" if is_super_admin() else None))
+
+
+@app.route("/admin/schools/create", methods=["POST"])
+@super_admin_required
+def admin_create_school():
+    """
+    Thêm trường học mới vào hệ thống (Prompt Quản lý Trường học):
+    - Chỉ Super Admin được phép thực hiện
+    - Tự sinh truong_id tiếp theo (không đè ID 99 của Trường Demo)
+    - Validate: tên trường bắt buộc, không trùng (case-insensitive)
+    - Hỗ trợ tải logo ảnh thực tế hoặc dùng logo mặc định
+    - Trạng thái ban đầu: dang_thi_diem / chuan_bi_trien_khai / dang_su_dung
+    """
+    ten_truong = request.form.get("ten_truong", "").strip()
+    trang_thai = request.form.get("trang_thai", "dang_thi_diem").strip()
+
+    if not ten_truong:
+        flash("Tên trường học không được để trống!", "danger")
+        return redirect(url_for("admin_dashboard", _anchor="tab-schools"))
+
+    if trang_thai not in ("dang_thi_diem", "chuan_bi_trien_khai", "dang_su_dung"):
+        trang_thai = "dang_thi_diem"
+
+    db = get_db()
+    cur = db.cursor()
+
+    # Validate tên trường không trùng (case-insensitive)
+    cur.execute("SELECT id FROM truong WHERE LOWER(TRIM(ten_truong)) = LOWER(?)", (ten_truong,))
+    if cur.fetchone():
+        flash(f"Trường học '{ten_truong}' đã tồn tại trong hệ thống!", "danger")
+        return redirect(url_for("admin_dashboard", _anchor="tab-schools"))
+
+    # Xử lý logo trường học
+    logo_url = "/static/img/logo_timebank_edu.png"
+    if "logo" in request.files:
+        file = request.files["logo"]
+        if file and file.filename and allowed_image_file(file.filename):
+            filename = secure_filename(f"school_new_{int(time.time())}_{file.filename}")
+            upload_dir = BASE_DIR / "static" / "uploads" / "schools"
+            upload_dir.mkdir(parents=True, exist_ok=True)
+            file.save(str(upload_dir / filename))
+            logo_url = f"/static/uploads/schools/{filename}"
+
+    # Tự sinh truong_id tiếp theo (không đè DEMO_SCHOOL_ID = 99)
+    cur.execute("SELECT COALESCE(MAX(id), 0) FROM truong WHERE id < ?", (DEMO_SCHOOL_ID,))
+    max_regular = cur.fetchone()[0]
+    next_id = max(1, max_regular + 1)
+    while True:
+        cur.execute("SELECT id FROM truong WHERE id = ?", (next_id,))
+        if not cur.fetchone():
+            break
+        next_id += 1
+        if next_id == DEMO_SCHOOL_ID:
+            next_id = DEMO_SCHOOL_ID + 1
+
+    now_dt = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    cur.execute("""
+        INSERT INTO truong (id, ten_truong, logo, trang_thai, ngay_tao)
+        VALUES (?, ?, ?, ?, ?)
+    """, (next_id, ten_truong, logo_url, trang_thai, now_dt))
+
+    if is_postgres_configured():
+        try:
+            cur.execute("SELECT setval(pg_get_serial_sequence('truong', 'id'), (SELECT MAX(id) FROM truong))")
+        except Exception:
+            pass
+
+    db.commit()
+    flash(f"Đã thêm trường học mới '{ten_truong}' (Mã trường ID #{next_id}) thành công!", "success")
+    return redirect(url_for("admin_dashboard", _anchor="tab-schools"))
+
+
+@app.route("/admin/schools/<int:school_id>/edit", methods=["POST"])
+@super_admin_required
+def admin_edit_school(school_id):
+    """
+    Sửa tên, logo, trạng thái của trường học:
+    - Trường Demo (ID 99) không cho phép sửa
+    """
+    if school_id == DEMO_SCHOOL_ID:
+        flash("Trường Demo (ID 99) là trường mẫu của hệ thống, không được phép chỉnh sửa hoặc xóa!", "warning")
+        return redirect(url_for("admin_dashboard", _anchor="tab-schools"))
+
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("SELECT * FROM truong WHERE id = ?", (school_id,))
+    school = cur.fetchone()
+    if not school:
+        flash("Không tìm thấy trường học cần sửa!", "danger")
+        return redirect(url_for("admin_dashboard", _anchor="tab-schools"))
+
+    ten_truong = request.form.get("ten_truong", "").strip()
+    trang_thai = request.form.get("trang_thai", school["trang_thai"]).strip()
+
+    if not ten_truong:
+        flash("Tên trường học không được để trống!", "danger")
+        return redirect(url_for("admin_dashboard", _anchor="tab-schools"))
+
+    if trang_thai not in ("dang_thi_diem", "chuan_bi_trien_khai", "dang_su_dung", "vo_hieu_hoa"):
+        trang_thai = school["trang_thai"]
+
+    cur.execute("SELECT id FROM truong WHERE LOWER(TRIM(ten_truong)) = LOWER(?) AND id != ?", (ten_truong, school_id))
+    if cur.fetchone():
+        flash(f"Tên trường '{ten_truong}' trùng với một trường học khác đã có!", "danger")
+        return redirect(url_for("admin_dashboard", _anchor="tab-schools"))
+
+    logo_url = school["logo"]
+    if "logo" in request.files:
+        file = request.files["logo"]
+        if file and file.filename and allowed_image_file(file.filename):
+            filename = secure_filename(f"school_{school_id}_{int(time.time())}_{file.filename}")
+            upload_dir = BASE_DIR / "static" / "uploads" / "schools"
+            upload_dir.mkdir(parents=True, exist_ok=True)
+            file.save(str(upload_dir / filename))
+            logo_url = f"/static/uploads/schools/{filename}"
+
+    cur.execute("""
+        UPDATE truong 
+        SET ten_truong = ?, logo = ?, trang_thai = ?
+        WHERE id = ?
+    """, (ten_truong, logo_url, trang_thai, school_id))
+    db.commit()
+    flash(f"Đã cập nhật thông tin trường '{ten_truong}' thành công!", "success")
+    return redirect(url_for("admin_dashboard", _anchor="tab-schools"))
+
+
+@app.route("/admin/schools/<int:school_id>/toggle-status", methods=["POST"])
+@super_admin_required
+def admin_toggle_school_status(school_id):
+    """
+    Vô hiệu hóa hoặc kích hoạt lại trường học (không xóa cứng):
+    - Trường Demo (ID 99) không cho phép sửa/xóa/vô hiệu hóa
+    """
+    if school_id == DEMO_SCHOOL_ID:
+        flash("Trường Demo (ID 99) là trường mẫu của hệ thống, không được phép vô hiệu hóa!", "warning")
+        return redirect(url_for("admin_dashboard", _anchor="tab-schools"))
+
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("SELECT * FROM truong WHERE id = ?", (school_id,))
+    school = cur.fetchone()
+    if not school:
+        flash("Không tìm thấy trường học!", "danger")
+        return redirect(url_for("admin_dashboard", _anchor="tab-schools"))
+
+    curr_status = school["trang_thai"]
+    if curr_status == "vo_hieu_hoa":
+        new_status = "dang_su_dung"
+        msg = f"Đã kích hoạt lại trường '{school['ten_truong']}'! Trường đã sẵn sàng đón nhận đăng ký mới."
+        cat = "success"
+    else:
+        new_status = "vo_hieu_hoa"
+        msg = f"Đã vô hiệu hóa trường '{school['ten_truong']}'. Trường đã bị ẩn khỏi danh sách đăng ký học sinh."
+        cat = "warning"
+
+    cur.execute("UPDATE truong SET trang_thai = ? WHERE id = ?", (new_status, school_id))
+    db.commit()
+    flash(msg, cat)
+    return redirect(url_for("admin_dashboard", _anchor="tab-schools"))
 
 
 @app.route("/admin/export-csv")

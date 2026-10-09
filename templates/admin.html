@@ -47,7 +47,7 @@
       <form method="GET" action="{{ url_for('admin_dashboard') }}" class="d-flex align-items-center gap-2">
         <label for="filterTruong" class="small text-muted fw-semibold text-nowrap"><i class="bi bi-funnel-fill me-1"></i>Trường:</label>
         <select name="truong_id" id="filterTruong" class="form-select form-select-sm rounded-pill" onchange="this.form.submit()" style="min-width: 220px;">
-          <option value="" {% if not selected_truong_id %}selected{% endif %}>-- Tất cả các trường (4 trường) --</option>
+          <option value="" {% if not selected_truong_id %}selected{% endif %}>-- Tất cả các trường ({{ all_schools|length }} trường) --</option>
           {% for s in all_schools %}
             <option value="{{ s.id }}" {% if selected_truong_id|string == s.id|string %}selected{% endif %}>
               {{ s.ten_truong }}
@@ -130,6 +130,12 @@
       </button>
     </li>
     {% if is_super_admin %}
+    <li class="nav-item" role="presentation">
+      <button class="nav-link rounded-pill fw-semibold text-primary" id="tab-schools-btn" data-bs-toggle="pill" data-bs-target="#tab-schools" type="button" role="tab">
+        <i class="bi bi-buildings-fill me-1"></i> Quản lý Trường học
+        <span class="badge bg-primary rounded-pill ms-1">{{ all_schools_management|length }}</span>
+      </button>
+    </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link rounded-pill fw-semibold text-danger" id="tab-drive-btn" data-bs-toggle="pill" data-bs-target="#tab-drive" type="button" role="tab">
         <i class="bi bi-google me-1"></i> Kho Google Drive 5TB
@@ -892,6 +898,154 @@
 
     {% if is_super_admin %}
     <!-- =========================================================================
+         TAB: QUẢN LÝ TRƯỜNG HỌC (SUPER ADMIN ONLY)
+         ========================================================================= -->
+    <div class="tab-pane fade" id="tab-schools" role="tabpanel">
+      <!-- Card: Form Thêm Trường Mới -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+        <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+          <div>
+            <h5 class="fw-bold text-dark mb-1">
+              <i class="bi bi-building-add text-primary me-2"></i>Thêm Trường Học Mới Vào Hệ Thống
+            </h5>
+            <p class="text-muted small mb-0">Hệ thống sẽ tự động cấp phát ID mới, cho phép tạo mã mời riêng và cách ly dữ liệu học sinh theo trường.</p>
+          </div>
+          <span class="badge bg-primary-subtle text-primary border border-primary px-3 py-2 rounded-pill">
+            <i class="bi bi-shield-check me-1"></i> Super Admin
+          </span>
+        </div>
+
+        <form method="POST" action="{{ url_for('admin_create_school') }}" enctype="multipart/form-data">
+          <div class="row g-3 align-items-end">
+            <div class="col-md-5">
+              <label class="form-label small fw-semibold">Tên trường học <span class="text-danger">*</span></label>
+              <input type="text" name="ten_truong" class="form-control rounded-3" placeholder="Ví dụ: THPT Chuyên Hạ Long" required>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold">Trạng thái ban đầu <span class="text-danger">*</span></label>
+              <select name="trang_thai" class="form-select rounded-3" required>
+                <option value="dang_thi_diem" selected>Đang thí điểm</option>
+                <option value="chuan_bi_trien_khai">Chuẩn bị triển khai</option>
+                <option value="dang_su_dung">Đang sử dụng</option>
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">Logo trường (Tùy chọn tải lên)</label>
+              <input type="file" name="logo" class="form-control rounded-3" accept="image/*">
+            </div>
+
+            <div class="col-12 text-end">
+              <button type="submit" class="btn btn-primary rounded-pill px-4 fw-semibold shadow-sm">
+                <i class="bi bi-plus-circle me-1"></i> Thêm Trường Mới
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Card: Bảng Danh Sách Trường Học -->
+      <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden mb-4">
+        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+          <h5 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-buildings-fill me-2 text-primary"></i>Danh Sách Trường Học Đang Quản Trị
+          </h5>
+          <span class="badge bg-light text-dark border">Tổng cộng {{ all_schools_management|length }} trường</span>
+        </div>
+
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light small text-muted">
+                <tr>
+                  <th class="ps-3" style="width: 70px;">Mã ID</th>
+                  <th style="width: 70px;">Logo</th>
+                  <th>Tên trường học</th>
+                  <th class="text-center" style="width: 170px;">Trạng thái</th>
+                  <th class="text-center" style="width: 130px;">Số tài khoản</th>
+                  <th style="width: 160px;">Ngày tạo</th>
+                  <th class="text-end pe-3" style="width: 220px;">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for s in all_schools_management %}
+                <tr>
+                  <td class="ps-3">
+                    <span class="badge bg-secondary-subtle text-secondary font-monospace fw-bold">#{{ s.id }}</span>
+                  </td>
+                  <td>
+                    <img src="{{ s.logo or '/static/img/logo_timebank_edu.png' }}" alt="{{ s.ten_truong }}" class="rounded-circle border" style="width: 40px; height: 40px; object-fit: contain;">
+                  </td>
+                  <td>
+                    <div class="fw-bold text-dark">{{ s.ten_truong }}</div>
+                    {% if s.id == 99 %}
+                      <small class="text-muted fst-italic">Trường dữ liệu mẫu demo hệ thống</small>
+                    {% endif %}
+                  </td>
+                  <td class="text-center">
+                    {% if s.trang_thai == 'dang_su_dung' %}
+                      <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill">
+                        <i class="bi bi-check-circle-fill me-1"></i>Đang sử dụng
+                      </span>
+                    {% elif s.trang_thai == 'dang_thi_diem' %}
+                      <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1 rounded-pill">
+                        <i class="bi bi-flag-fill me-1"></i>Đang thí điểm
+                      </span>
+                    {% elif s.trang_thai == 'chuan_bi_trien_khai' %}
+                      <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1 rounded-pill">
+                        <i class="bi bi-hourglass-split me-1"></i>Chuẩn bị triển khai
+                      </span>
+                    {% elif s.trang_thai == 'vo_hieu_hoa' %}
+                      <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 rounded-pill">
+                        <i class="bi bi-slash-circle-fill me-1"></i>Đã vô hiệu hóa
+                      </span>
+                    {% else %}
+                      <span class="badge bg-secondary rounded-pill">{{ s.trang_thai }}</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-center">
+                    <span class="badge bg-light text-dark border px-2 py-1">
+                      <i class="bi bi-people-fill me-1 text-primary"></i>{{ s.so_tai_khoan }}
+                    </span>
+                  </td>
+                  <td>
+                    <small class="text-muted">{{ s.ngay_tao or '—' }}</small>
+                  </td>
+                  <td class="text-end pe-3">
+                    {% if s.id == 99 %}
+                      <span class="badge bg-secondary-subtle text-secondary border px-2 py-1">
+                        <i class="bi bi-shield-lock-fill me-1"></i>Cố định (Không sửa/xóa)
+                      </span>
+                    {% else %}
+                      <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editSchoolModal{{ s.id }}" title="Sửa tên / logo / trạng thái">
+                          <i class="bi bi-pencil-square me-1"></i>Sửa
+                        </button>
+                        <form method="POST" action="{{ url_for('admin_toggle_school_status', school_id=s.id) }}" class="d-inline" onsubmit="return confirm('{{ 'Bạn có chắc chắn muốn kích hoạt lại trường này? Học sinh sẽ có thể đăng ký bình thường.' if s.trang_thai == 'vo_hieu_hoa' else 'Bạn có chắc chắn muốn vô hiệu hóa trường này? Trường sẽ bị ẩn khỏi danh sách đăng ký học sinh.' }}');">
+                          {% if s.trang_thai == 'vo_hieu_hoa' %}
+                            <button type="submit" class="btn btn-outline-success border-start-0" title="Kích hoạt lại trường này">
+                              <i class="bi bi-check-circle me-1"></i>Kích hoạt
+                            </button>
+                          {% else %}
+                            <button type="submit" class="btn btn-outline-danger border-start-0" title="Vô hiệu hóa (không xóa dữ liệu)">
+                              <i class="bi bi-slash-circle me-1"></i>Vô hiệu hóa
+                            </button>
+                          {% endif %}
+                        </form>
+                      </div>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================================
          TAB 6: KHO GOOGLE DRIVE 5TB (SUPER ADMIN ONLY)
          ========================================================================= -->
     <div class="tab-pane fade" id="tab-drive" role="tabpanel">
@@ -1015,6 +1169,57 @@
     </div>
   </div>
 </div>
+
+<!-- Modal Chỉnh Sửa Thông Tin Trường Học (Super Admin) -->
+{% if is_super_admin %}
+{% for s in all_schools_management %}
+  {% if s.id != 99 %}
+  <div class="modal fade" id="editSchoolModal{{ s.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-4 border-0 shadow">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold text-dark">
+            <i class="bi bi-pencil-square me-2 text-primary"></i>Sửa Thông Tin Trường #{{ s.id }}
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form method="POST" enctype="multipart/form-data" action="{{ url_for('admin_edit_school', school_id=s.id) }}">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Tên trường học <span class="text-danger">*</span></label>
+              <input type="text" name="ten_truong" class="form-control rounded-3" value="{{ s.ten_truong }}" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Trạng thái hoạt động <span class="text-danger">*</span></label>
+              <select name="trang_thai" class="form-select rounded-3">
+                <option value="dang_thi_diem" {% if s.trang_thai == 'dang_thi_diem' %}selected{% endif %}>Đang thí điểm</option>
+                <option value="chuan_bi_trien_khai" {% if s.trang_thai == 'chuan_bi_trien_khai' %}selected{% endif %}>Chuẩn bị triển khai</option>
+                <option value="dang_su_dung" {% if s.trang_thai == 'dang_su_dung' %}selected{% endif %}>Đang sử dụng</option>
+                <option value="vo_hieu_hoa" {% if s.trang_thai == 'vo_hieu_hoa' %}selected{% endif %}>Vô hiệu hóa (Ẩn khỏi đăng ký)</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Logo trường học</label>
+              <div class="d-flex align-items-center gap-3 mb-2">
+                <img src="{{ s.logo or '/static/img/logo_timebank_edu.png' }}" alt="{{ s.ten_truong }}" class="rounded-circle border" style="width: 44px; height: 44px; object-fit: contain;">
+                <input type="file" name="logo" class="form-control rounded-3" accept="image/*">
+              </div>
+              <small class="text-muted">Để trống nếu không muốn đổi ảnh logo.</small>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
+            <button type="submit" class="btn btn-primary rounded-pill px-4 fw-semibold">
+              <i class="bi bi-save me-1"></i> Lưu thay đổi
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+{% endfor %}
+{% endif %}
 
 <script>
 function toggleSelectAll(source) {
