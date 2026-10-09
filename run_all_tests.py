@@ -19,14 +19,15 @@ test_files = [
     "test_prompt18_forum_drive.py",
     "test_prompt19_community_market.py",
     "test_prompt20_migration.py",
-    "test_prompt21_ui_polish.py"
+    "test_prompt21_ui_polish.py",
+    "test_prompt22_jitsi_jwt.py"
 ]
 
 results = {}
 all_passed = True
 
 print("=" * 70)
-print("CHẠY TOÀN BỘ REGRESSION TEST SUITE CHO TIMEBANK EDU (PROMPT 21)")
+print("CHẠY TOÀN BỘ REGRESSION TEST SUITE CHO TIMEBANK EDU (PROMPT 22)")
 print("=" * 70)
 
 for tf in test_files:

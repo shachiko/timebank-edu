@@ -51,20 +51,59 @@
   </div>
 
   <div class="row g-3">
-    <!-- Cột trái: Khung Video Jitsi Meet trực tiếp -->
+    <!-- Cột trái: Khung Video Jitsi Meet External API (8x8 JaaS) -->
     <div class="col-lg-9">
-      <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-dark position-relative" style="min-height: 620px;">
-        <!-- Iframe nhúng Jitsi Meet (meet.jit.si) -->
-        <iframe 
-          id="jitsiFrame"
-          src="https://meet.jit.si/{{ room_name }}#userInfo.displayName={{ current_user.ho_ten | urlencode }}&config.prejoinConfig.enabled=false" 
-          allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-write"
-          style="width: 100%; height: 650px; border: 0;"
-          title="Phòng học ảo TimeBank EDU">
-        </iframe>
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-dark position-relative" style="min-height: 650px;">
+        {% if not jaas_configured %}
+          <!-- Thông báo cấu hình JaaS thân thiện khi thiếu biến môi trường -->
+          <div class="p-4 p-lg-5 text-center bg-white h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 650px;">
+            <div class="mb-3">
+              <span class="p-3 bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center">
+                <i class="bi bi-shield-exclamation text-warning" style="font-size: 2.8rem;"></i>
+              </span>
+            </div>
+            <h4 class="fw-bold text-dark mb-2">Phòng Học Trực Tuyến JaaS (8x8) Chưa Được Cấu Hình</h4>
+            <p class="text-muted small mb-4" style="max-width: 600px;">
+              Hệ thống phòng học ảo ứng dụng giải pháp xác thực tập trung <strong>JaaS 8x8 RS256 JWT</strong> để học sinh và gia sư tham gia phòng học 1 chạm an toàn mà không cần tạo tài khoản Jitsi.
+            </p>
+            
+            <div class="bg-light p-3 rounded-4 border text-start mb-4 shadow-sm" style="max-width: 500px; width: 100%;">
+              <div class="small fw-bold text-danger mb-2">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i> Các biến môi trường cần thiết lập trong <code>.env</code>:
+              </div>
+              <ul class="mb-0 ps-3 small font-monospace">
+                {% for var_name in missing_jaas_vars %}
+                  <li class="text-danger fw-semibold">{{ var_name }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+
+            <div class="alert alert-info py-2 px-3 small border-0 bg-info bg-opacity-10 text-primary mb-0" style="max-width: 600px;">
+              <i class="bi bi-info-circle-fill me-1"></i>
+              <strong>Lưu ý:</strong> Dữ liệu buổi học, điểm danh tự động, tiêu chuẩn thời lượng (luật 80%), dàn ý AI và báo cáo vi phạm vẫn hoạt động bình thường trên hệ thống.
+            </div>
+          </div>
+        {% else %}
+          <!-- Vùng chứa Jitsi Meet External API 8x8 JaaS -->
+          <div id="jaas-loading-state" class="position-absolute top-50 start-50 translate-middle text-center text-white w-100 px-3" style="z-index: 10;">
+            <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <h5 class="fw-bold mb-1">Đang Kết Nối Phòng Học Ảo TimeBank EDU...</h5>
+            <p class="text-white-50 small mb-0">Đang khởi tạo mã định danh 1 chạm JaaS RS256 an toàn cho {{ current_user.ho_ten }}</p>
+          </div>
+          
+          <div id="jaas-error-state" class="p-4 p-lg-5 text-center bg-white h-100 d-none flex-column align-items-center justify-content-center" style="min-height: 650px;">
+            <div class="mb-3 text-danger"><i class="bi bi-x-circle-fill" style="font-size: 3rem;"></i></div>
+            <h5 class="fw-bold text-danger mb-2" id="jaas-error-title">Không Thể Khởi Tạo Phòng Học</h5>
+            <p class="text-muted small mb-0" id="jaas-error-desc"></p>
+          </div>
+
+          <div id="jaas-meet-container" style="width: 100%; height: 650px;"></div>
+        {% endif %}
       </div>
       <div class="mt-2 d-flex justify-content-between align-items-center small text-muted px-2">
-        <span><i class="bi bi-shield-check text-success me-1"></i> Phòng học bảo mật độc lập: <code>{{ room_name }}</code></span>
+        <span><i class="bi bi-shield-check text-success me-1"></i> Phòng học trực tuyến JaaS: <code>{{ room_name }}</code></span>
         <span><span class="badge-ai" style="font-size: 0.7rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Trí tuệ nhân tạo)</span> Giám sát thời lượng tự động</span>
       </div>
     </div>
@@ -175,6 +214,118 @@
     </div>
   </div>
 </div>
+
+{% if jaas_configured %}
+<!-- Tích hợp Jitsi Meet External API 8x8 JaaS với xác thực JWT 1 lần -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const loadingEl = document.getElementById("jaas-loading-state");
+  const errorEl = document.getElementById("jaas-error-state");
+  const errorTitle = document.getElementById("jaas-error-title");
+  const errorDesc = document.getElementById("jaas-error-desc");
+  const containerEl = document.getElementById("jaas-meet-container");
+
+  function showJaaSError(title, message) {
+    if (loadingEl) loadingEl.classList.add("d-none");
+    if (containerEl) containerEl.classList.add("d-none");
+    if (errorEl) {
+      errorEl.classList.remove("d-none");
+      errorEl.classList.add("d-flex");
+      if (errorTitle) errorTitle.textContent = title;
+      if (errorDesc) errorDesc.textContent = message;
+    }
+  }
+
+  // 1. Gửi request POST tới /phong-hoc/<id>/token để lấy JWT RS256
+  fetch("{{ url_for('get_virtual_room_token', session_id=session_data.id) }}", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Requested-With": "XMLHttpRequest"
+    }
+  })
+  .then(function(res) {
+    return res.json().then(function(data) {
+      return { ok: res.ok, status: res.status, data: data };
+    });
+  })
+  .then(function(result) {
+    if (!result.ok) {
+      showJaaSError("Lỗi Cấp Quyền Phòng Học", result.data.error || "Không thể cấp quyền truy cập phòng học.");
+      return;
+    }
+
+    const payload = result.data;
+    const jaasAppId = payload.jaas_app_id || "{{ jaas_app_id }}";
+    const roomName = payload.room_name || "{{ room_name }}";
+    const jwtToken = payload.token;
+
+    function mountJitsiAPI() {
+      try {
+        if (typeof JitsiMeetExternalAPI === "undefined") {
+          showJaaSError("Lỗi Tải JaaS SDK", "Không thể nạp đối tượng JitsiMeetExternalAPI từ 8x8 JaaS.");
+          return;
+        }
+
+        const domain = "8x8.vc";
+        const options = {
+          roomName: `${jaasAppId}/${roomName}`,
+          parentNode: containerEl,
+          jwt: jwtToken,
+          width: "100%",
+          height: 650,
+          configOverwrite: {
+            prejoinPageEnabled: false,
+            disableDeepLinking: true,
+            startWithAudioMuted: false,
+            startWithVideoMuted: false,
+            enableWelcomePage: false
+          },
+          interfaceConfigOverwrite: {
+            SHOW_JITSI_WATERMARK: false,
+            SHOW_WATERMARK_FOR_GUESTS: false,
+            DEFAULT_REMOTE_DISPLAY_NAME: "Thành viên TimeBank"
+          },
+          userInfo: {
+            displayName: payload.user ? payload.user.name : "{{ current_user.ho_ten }}",
+            email: payload.user ? payload.user.email : "{{ current_user.ma_hoc_sinh }}"
+          }
+        };
+
+        const api = new JitsiMeetExternalAPI(domain, options);
+        if (loadingEl) loadingEl.classList.add("d-none");
+      } catch (e) {
+        showJaaSError("Lỗi Kết Nối Phòng Học", "Không thể khởi tạo phòng học Jitsi: " + e.message);
+      }
+    }
+
+    // 2. Tải thư viện script từ 8x8 JaaS
+    if (typeof JitsiMeetExternalAPI !== "undefined") {
+      mountJitsiAPI();
+    } else {
+      const script = document.createElement("script");
+      script.src = `https://8x8.vc/${jaasAppId}/external_api.js`;
+      script.async = true;
+      script.onload = mountJitsiAPI;
+      script.onerror = function() {
+        const fallbackScript = document.createElement("script");
+        fallbackScript.src = "https://8x8.vc/external_api.js";
+        fallbackScript.async = true;
+        fallbackScript.onload = mountJitsiAPI;
+        fallbackScript.onerror = function() {
+          showJaaSError("Không Thể Tải Thư Viện 8x8", "Không thể tải thư viện external_api.js từ máy chủ 8x8 JaaS. Vui lòng kiểm tra kết nối internet.");
+        };
+        document.head.appendChild(fallbackScript);
+      };
+      document.head.appendChild(script);
+    }
+  })
+  .catch(function(err) {
+    showJaaSError("Lỗi Kết Nối Máy Chủ", "Không thể liên lạc với máy chủ để cấp mã phòng học ảo: " + err.message);
+  });
+});
+</script>
+{% endif %}
 
 <!-- Đồng hồ bấm giờ trực tiếp trên trình duyệt -->
 <script>

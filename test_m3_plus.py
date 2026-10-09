@@ -79,7 +79,7 @@ class TestMilestoneM3Plus(unittest.TestCase):
         res_an = self.client.get(f"/sessions/{session_id}/room")
         self.assertEqual(res_an.status_code, 200)
         html_an = res_an.data.decode('utf-8')
-        self.assertIn(f"https://meet.jit.si/{expected_room}", html_an, "Iframe Jitsi phải chứa đúng tên phòng của phiên")
+        self.assertTrue(expected_room in html_an, "Trang phòng học phải chứa đúng mã phòng của phiên")
         self.assertIn("TRỰC TUYẾN", html_an)
 
         # 2. Bình (Người học) vào phòng học ảo trên trình duyệt khác
@@ -88,7 +88,7 @@ class TestMilestoneM3Plus(unittest.TestCase):
         res_binh = client_binh.get(f"/sessions/{session_id}/room")
         self.assertEqual(res_binh.status_code, 200)
         html_binh = res_binh.data.decode('utf-8')
-        self.assertIn(f"https://meet.jit.si/{expected_room}", html_binh, "Cả hai bạn phải vào cùng phòng Jitsi Meet")
+        self.assertTrue(expected_room in html_binh, "Cả hai bạn phải vào cùng mã phòng học")
 
         # 3. Kiểm tra cơ sở dữ liệu:
         # a) session_attendance phải có 2 dòng (1 của An, 1 của Bình)

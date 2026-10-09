@@ -23,6 +23,7 @@ from datetime import datetime
 from pathlib import Path
 from functools import wraps
 from dotenv import load_dotenv
+import jwt
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask import (
@@ -3691,15 +3692,133 @@ def calculate_session_online_overlap(db, session_id, nguoi_day_id, nguoi_hoc_id)
     return total_overlap_sec
 
 
+def get_jaas_config():
+    """
+    Đọc 3 biến môi trường JaaS (8x8 Jitsi as a Service):
+    - JAAS_APP_ID: ID ứng dụng JaaS (ví dụ: vpaas-magic-cookie-xxx)
+    - JAAS_API_KEY: Key ID (kid) trong header JWT
+    - JAAS_PRIVATE_KEY: Khóa bí mật RSA Private Key (PEM)
+    Tự động chuyển literal '\\n' thành ký tự xuống dòng thật.
+    """
+    app_id = os.getenv("JAAS_APP_ID", "").strip()
+    api_key = os.getenv("JAAS_API_KEY", "").strip()
+    private_key_raw = os.getenv("JAAS_PRIVATE_KEY", "").strip()
+    
+    # Gỡ bỏ dấu nháy kép / nháy đơn bọc ngoài nếu có
+    if (private_key_raw.startswith('"') and private_key_raw.endswith('"')) or (private_key_raw.startswith("'") and private_key_raw.endswith("'")):
+        private_key_raw = private_key_raw[1:-1].strip()
+        
+    private_key = private_key_raw.replace("\\n", "\n").strip() if private_key_raw else ""
+    
+    missing = []
+    if not app_id:
+        missing.append("JAAS_APP_ID")
+    if not api_key:
+        missing.append("JAAS_API_KEY")
+    if not private_key:
+        missing.append("JAAS_PRIVATE_KEY")
+        
+    is_configured = (len(missing) == 0)
+    return {
+        "app_id": app_id,
+        "api_key": api_key,
+        "private_key": private_key,
+        "is_configured": is_configured,
+        "missing": missing
+    }
+
+
+def generate_jaas_jwt(session_id, user_id, user_name, user_email, is_moderator):
+    """
+    Sinh JWT RS256 cho phòng học ảo 8x8 JaaS theo chuẩn Jitsi Meet.
+    Header: kid=JAAS_API_KEY, alg=RS256, typ=JWT
+    Payload:
+      aud="jitsi", iss="chat", sub=JAAS_APP_ID, room="*",
+      exp=now + 2 giờ, nbf=now - 10, session_id=session_id
+      context.user = {name: họ tên thật từ DB, email: mã HS},
+      context.user.moderator = true (người dạy/giáo viên) / false (người học)
+    """
+    jaas_cfg = get_jaas_config()
+    if not jaas_cfg["is_configured"]:
+        return None, f"Chưa cấu hình đầy đủ biến môi trường JaaS: {', '.join(jaas_cfg['missing'])}"
+        
+    now_ts = int(time.time())
+    headers = {
+        "alg": "RS256",
+        "typ": "JWT",
+        "kid": jaas_cfg["api_key"]
+    }
+    payload = {
+        "aud": "jitsi",
+        "iss": "chat",
+        "sub": jaas_cfg["app_id"],
+        "room": "*",
+        "exp": now_ts + 7200,  # now + 2 giờ
+        "nbf": now_ts - 10,
+        "session_id": int(session_id),
+        "context": {
+            "user": {
+                "name": str(user_name),
+                "email": str(user_email),
+                "moderator": bool(is_moderator)
+            },
+            "features": {
+                "livestreaming": False,
+                "recording": False
+            }
+        }
+    }
+    
+    try:
+        token = jwt.encode(
+            payload,
+            jaas_cfg["private_key"],
+            algorithm="RS256",
+            headers=headers
+        )
+        if isinstance(token, bytes):
+            token = token.decode("utf-8")
+        return token, None
+    except Exception as e:
+        return None, f"Lỗi tạo chữ ký RSA token JaaS: {str(e)}"
+
+
+def verify_jaas_token(token, expected_session_id=None, public_key=None):
+    """
+    Xác thực token JaaS RS256:
+    - Kiểm tra thời hạn hiệu lực (hết hạn bị từ chối).
+    - Kiểm tra session_id (Token buổi A không dùng cho buổi B).
+    - Kiểm tra chữ ký (nếu có public_key).
+    """
+    try:
+        if public_key:
+            decoded = jwt.decode(token, public_key, algorithms=["RS256"], audience="jitsi")
+        else:
+            decoded = jwt.decode(token, options={"verify_signature": False, "verify_exp": True}, audience="jitsi")
+            
+        if expected_session_id is not None:
+            token_session_id = decoded.get("session_id")
+            if token_session_id is None or int(token_session_id) != int(expected_session_id):
+                return False, f"Token không khớp buổi học (Token session: {token_session_id}, Buổi yêu cầu: {expected_session_id})", None
+                
+        return True, "Token hợp lệ", decoded
+    except jwt.ExpiredSignatureError:
+        return False, "Token đã hết hạn", None
+    except Exception as e:
+        return False, f"Token không hợp lệ: {str(e)}", None
+
+
 @app.route("/sessions/<int:session_id>/room")
+@app.route("/phong-hoc/<int:session_id>")
 @login_required
 def virtual_room(session_id):
     """
-    Phòng học ảo trong ứng dụng (Milestone M3+):
-    - Nhúng Jitsi Meet (meet.jit.si) qua iframe, tên phòng = 'timebankedu-' + ma_qr.
-    - Không cần tài khoản Jitsi.
-    - Tự động ghi session_attendance (vào phòng) và cập nhật check-in cho 2 bên.
-    - Giáo viên / Admin có quyền ghé thăm bất kỳ phòng học nào để dự giờ sư phạm.
+    Phòng học ảo trong ứng dụng (Jitsi JaaS RS256 JWT):
+    - Tích hợp 8x8 JaaS External API từ https://8x8.vc/{JAAS_APP_ID}/{room_name}
+    - Đăng nhập 1 lần: lấy token JWT RS256 từ server, tên hiển thị = họ tên thật, người dạy là moderator.
+    - Điểm danh tự động (record_attendance_entry).
+    - Quản lý tiêu chuẩn 80% thời lượng cùng online.
+    - Thiếu biến môi trường JaaS -> Báo lỗi thân thiện, không crash 500.
     """
     db = get_db()
     cur = db.cursor()
@@ -3747,14 +3866,121 @@ def virtual_room(session_id):
     clean_ma_qr = re.sub(r'[^a-zA-Z0-9_-]', '', raw_ma_qr)
     room_name = f"timebankedu-{clean_ma_qr}"
     
+    jaas_cfg = get_jaas_config()
+    
     return render_template(
         "virtual_room.html",
         session_data=session_data,
         room_name=room_name,
         is_teacher=is_teacher,
         is_learner=is_learner,
-        is_supervisor=is_supervisor
+        is_supervisor=is_supervisor,
+        jaas_configured=jaas_cfg["is_configured"],
+        missing_jaas_vars=jaas_cfg["missing"],
+        jaas_app_id=jaas_cfg["app_id"]
     )
+
+
+@app.route("/sessions/<int:session_id>/token", methods=["POST"])
+@app.route("/phong-hoc/<int:session_id>/token", methods=["POST"])
+@login_required
+def get_virtual_room_token(session_id):
+    """
+    Route cấp JWT RS256 cho Jitsi Meet External API (8x8 JaaS):
+    - Kiểm tra user thuộc đúng buổi học (người dạy / người học / giáo viên / admin).
+    - Sinh JWT RS256 với header kid=JAAS_API_KEY, aud='jitsi', iss='chat', sub=JAAS_APP_ID.
+    - context.user = {name: họ tên thật từ DB, email: mã HS}, moderator = true nếu là người dạy/giáo viên.
+    - Ký bằng JAAS_PRIVATE_KEY.
+    """
+    db = get_db()
+    cur = db.cursor()
+    user_id = session["user_id"]
+    user_role = session.get("vai_tro", "")
+    
+    cur.execute(
+        """SELECT s.*, sk.tieu_de, ud.ho_ten AS ten_nguoi_day, uh.ho_ten AS ten_nguoi_hoc
+           FROM sessions s
+           JOIN skills sk ON s.skill_id = sk.id
+           JOIN users ud ON s.nguoi_day_id = ud.id
+           JOIN users uh ON s.nguoi_hoc_id = uh.id
+           WHERE s.id = ?""",
+        (session_id,)
+    )
+    session_data = cur.fetchone()
+    
+    if not session_data:
+        return jsonify({"error": "Phiên học không tồn tại"}), 404
+        
+    is_teacher = (session_data["nguoi_day_id"] == user_id)
+    is_learner = (session_data["nguoi_hoc_id"] == user_id)
+    is_supervisor = (user_role in ("admin", "giao_vien"))
+    
+    if not (is_teacher or is_learner or is_supervisor):
+        return jsonify({"error": "Bạn không có quyền tham gia phiên học này"}), 403
+        
+    jaas_cfg = get_jaas_config()
+    if not jaas_cfg["is_configured"]:
+        return jsonify({
+            "error": "Hệ thống chưa cấu hình đầy đủ biến môi trường JaaS (8x8)",
+            "missing": jaas_cfg["missing"]
+        }), 503
+        
+    # Lấy thông tin họ tên thật và mã HS từ DB
+    cur.execute("SELECT id, ho_ten, ma_hoc_sinh, vai_tro FROM users WHERE id = ?", (user_id,))
+    u_info = cur.fetchone()
+    user_name = u_info["ho_ten"] if u_info else session.get("ho_ten", "Thành viên")
+    user_email = u_info["ma_hoc_sinh"] if u_info else session.get("ma_hoc_sinh", f"user_{user_id}")
+    
+    is_mod = bool(is_teacher or is_supervisor)
+    
+    token, err = generate_jaas_jwt(
+        session_id=session_id,
+        user_id=user_id,
+        user_name=user_name,
+        user_email=user_email,
+        is_moderator=is_mod
+    )
+    if err:
+        return jsonify({"error": err}), 500
+        
+    raw_ma_qr = session_data["ma_qr"] or f"SES_{session_id}"
+    clean_ma_qr = re.sub(r'[^a-zA-Z0-9_-]', '', raw_ma_qr)
+    room_name = f"timebankedu-{clean_ma_qr}"
+    
+    return jsonify({
+        "success": True,
+        "token": token,
+        "room_name": room_name,
+        "jaas_app_id": jaas_cfg["app_id"],
+        "session_id": session_id,
+        "user": {
+            "name": user_name,
+            "email": user_email,
+            "moderator": is_mod
+        }
+    })
+
+
+@app.route("/phong-hoc/<int:session_id>/verify-token", methods=["POST"])
+@login_required
+def verify_virtual_room_token(session_id):
+    """
+    Endpoint xác thực token cho buổi học: kiểm tra token có đúng buổi học và còn hạn không.
+    """
+    data = request.get_json(silent=True) or request.form
+    token = data.get("token") if data else None
+    if not token:
+        return jsonify({"valid": False, "error": "Thiếu token để xác thực"}), 400
+        
+    valid, msg, payload = verify_jaas_token(token, expected_session_id=session_id)
+    if not valid:
+        return jsonify({"valid": False, "error": msg}), 400
+        
+    return jsonify({
+        "valid": True,
+        "message": msg,
+        "payload": payload
+    }), 200
 
 
 @app.route("/sessions/<int:session_id>/finish", methods=["POST"])
