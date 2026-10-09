@@ -24,7 +24,8 @@ test_files = [
     "test_prompt19_community_market.py",
     "test_prompt20_migration.py",
     "test_prompt21_ui_polish.py",
-    "test_prompt22_jitsi_jwt.py"
+    "test_prompt22_jitsi_jwt.py",
+    "test_prompt22_three_engines.py"
 ]
 
 results = {}

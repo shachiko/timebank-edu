@@ -64,6 +64,8 @@ CREATE TABLE IF NOT EXISTS sessions (
     checkin_hoc INTEGER DEFAULT 0,
     dan_y_ai TEXT,
     quiz_dat_chuan INTEGER DEFAULT 0,
+    daily_room_name TEXT,
+    daily_room_url TEXT,
     FOREIGN KEY (truong_id) REFERENCES truong(id),
     FOREIGN KEY (skill_id) REFERENCES skills(id),
     FOREIGN KEY (nguoi_day_id) REFERENCES users(id),

@@ -54,9 +54,9 @@
     <!-- Cột trái: Khung Video Jitsi Meet External API (8x8 JaaS) -->
     <div class="col-lg-9">
       <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-dark position-relative" style="min-height: 650px;">
-        {% if not jaas_configured %}
-          <!-- Thông báo cấu hình JaaS thân thiện khi thiếu biến môi trường -->
-          <div class="p-4 p-lg-5 text-center bg-white h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 650px;">
+        {% if not jaas_configured and not daily_configured %}
+          <!-- Thông báo cấu hình JaaS / Daily thân thiện khi thiếu biến môi trường -->
+          <div class="p-4 p-lg-5 text-center bg-white h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 650px;" id="unconfigured-guide-box">
             <div class="mb-3">
               <span class="p-3 bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center">
                 <i class="bi bi-shield-exclamation text-warning" style="font-size: 2.8rem;"></i>
@@ -64,7 +64,7 @@
             </div>
             <h4 class="fw-bold text-dark mb-2">Phòng Học Trực Tuyến JaaS (8x8) Chưa Được Cấu Hình</h4>
             <p class="text-muted small mb-4" style="max-width: 600px;">
-              Hệ thống phòng học ảo ứng dụng giải pháp xác thực tập trung <strong>JaaS 8x8 RS256 JWT</strong> để học sinh và gia sư tham gia phòng học 1 chạm an toàn mà không cần tạo tài khoản Jitsi.
+              Hệ thống phòng học ảo ứng dụng giải pháp phòng học đa nòng (<strong>Daily.co</strong> & <strong>JaaS 8x8 RS256 JWT</strong>) để học sinh và gia sư tham gia phòng học 1 chạm an toàn mà không cần tạo tài khoản riêng.
             </p>
             
             <div class="bg-light p-3 rounded-4 border text-start mb-4 shadow-sm" style="max-width: 500px; width: 100%;">
@@ -72,10 +72,18 @@
                 <i class="bi bi-exclamation-triangle-fill me-1"></i> Các biến môi trường cần thiết lập trong <code>.env</code>:
               </div>
               <ul class="mb-0 ps-3 small font-monospace">
+                <li class="text-primary fw-semibold">DAILY_API_KEY (Nòng chính Daily.co)</li>
                 {% for var_name in missing_jaas_vars %}
                   <li class="text-danger fw-semibold">{{ var_name }}</li>
                 {% endfor %}
               </ul>
+            </div>
+
+            <div class="d-flex flex-column align-items-center gap-2 mb-3">
+              <button type="button" class="btn btn-warning fw-semibold px-4 py-2 rounded-pill shadow-sm" onclick="switchToPublicJitsiDirect()">
+                <i class="bi bi-broadcast me-1"></i> Tham gia phòng học dự phòng Jitsi ngay
+              </button>
+              <small class="text-muted fst-italic">Học tập không gián đoạn bằng phòng học công cộng dự phòng</small>
             </div>
 
             <div class="alert alert-info py-2 px-3 small border-0 bg-info bg-opacity-10 text-primary mb-0" style="max-width: 600px;">
@@ -83,23 +91,50 @@
               <strong>Lưu ý:</strong> Dữ liệu buổi học, điểm danh tự động, tiêu chuẩn thời lượng (luật 80%), dàn ý AI và báo cáo vi phạm vẫn hoạt động bình thường trên hệ thống.
             </div>
           </div>
+
+          <!-- Khung video dự phòng khi bấm nút tham gia dự phòng ngay -->
+          <div id="unconfigured-active-box" class="w-100 h-100 d-none flex-column position-relative" style="min-height: 650px;">
+            <div id="video-fallback-banner-direct" class="alert alert-warning py-2 px-3 small m-2 d-flex align-items-center justify-content-between rounded-3 border">
+              <div>
+                <i class="bi bi-shield-exclamation text-warning me-2 fs-6"></i>
+                <strong class="text-dark">Đang dùng phòng học dự phòng (Jitsi)</strong>
+              </div>
+              <span class="badge bg-warning text-dark"><i class="bi bi-broadcast me-1"></i>Chế độ dự phòng</span>
+            </div>
+            <div id="jitsi-direct-container" style="width: 100%; height: 650px;"></div>
+          </div>
         {% else %}
-          <!-- Vùng chứa Jitsi Meet External API 8x8 JaaS -->
+          <!-- Banner thông báo nòng phòng học dự phòng -->
+          <div id="video-fallback-banner" class="alert alert-warning py-2 px-3 small m-2 d-none align-items-center justify-content-between rounded-3 border">
+            <div>
+              <i class="bi bi-shield-exclamation text-warning me-2 fs-6"></i>
+              <strong id="video-fallback-text" class="text-dark">Đang dùng phòng học dự phòng (Jitsi)</strong>
+            </div>
+            <span class="badge bg-warning text-dark"><i class="bi bi-arrow-repeat me-1"></i>Tự động chuyển nòng</span>
+          </div>
+
+          <!-- Vùng chứa Jitsi Meet External API 8x8 JaaS / Daily.co -->
           <div id="jaas-loading-state" class="position-absolute top-50 start-50 translate-middle text-center text-white w-100 px-3" style="z-index: 10;">
             <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
               <span class="visually-hidden">Loading...</span>
             </div>
-            <h5 class="fw-bold mb-1">Đang Kết Nối Phòng Học Ảo TimeBank EDU...</h5>
-            <p class="text-white-50 small mb-0">Đang khởi tạo mã định danh 1 chạm JaaS RS256 an toàn cho {{ current_user.ho_ten }}</p>
+            <h5 class="fw-bold mb-1" id="loading-title">Đang Kết Nối Phòng Học Ảo TimeBank EDU...</h5>
+            <p class="text-white-50 small mb-0" id="loading-desc">Đang khởi tạo mã định danh 1 chạm an toàn cho {{ current_user.ho_ten }}</p>
           </div>
           
           <div id="jaas-error-state" class="p-4 p-lg-5 text-center bg-white h-100 d-none flex-column align-items-center justify-content-center" style="min-height: 650px;">
             <div class="mb-3 text-danger"><i class="bi bi-x-circle-fill" style="font-size: 3rem;"></i></div>
             <h5 class="fw-bold text-danger mb-2" id="jaas-error-title">Không Thể Khởi Tạo Phòng Học</h5>
-            <p class="text-muted small mb-0" id="jaas-error-desc"></p>
+            <p class="text-muted small mb-3" id="jaas-error-desc"></p>
+            <button type="button" class="btn btn-outline-warning btn-sm rounded-pill px-3 fw-semibold" onclick="window.switchToPublicJitsi('Lỗi khởi tạo nòng chính, chuyển thủ công sang Jitsi')">
+              <i class="bi bi-arrow-right-circle me-1"></i> Chuyển sang phòng học dự phòng Jitsi
+            </button>
           </div>
 
-          <div id="jaas-meet-container" style="width: 100%; height: 650px;"></div>
+          <!-- Khung chứa phòng học: Daily.co / JaaS 8x8 / Iframe Jitsi -->
+          <div id="daily-room-container" style="width: 100%; height: 650px;" class="d-none"></div>
+          <div id="jaas-meet-container" style="width: 100%; height: 650px;" class="d-none"></div>
+          <div id="jitsi-meet-container" style="width: 100%; height: 650px;" class="d-none"></div>
         {% endif %}
       </div>
       <div class="mt-2 d-flex justify-content-between align-items-center small text-muted px-2">
@@ -220,14 +255,44 @@
 <script>
 document.addEventListener("DOMContentLoaded", function() {
   const loadingEl = document.getElementById("jaas-loading-state");
+  const loadingTitle = document.getElementById("loading-title");
+  const loadingDesc = document.getElementById("loading-desc");
   const errorEl = document.getElementById("jaas-error-state");
   const errorTitle = document.getElementById("jaas-error-title");
   const errorDesc = document.getElementById("jaas-error-desc");
-  const containerEl = document.getElementById("jaas-meet-container");
+  const fallbackBanner = document.getElementById("video-fallback-banner");
+  const fallbackText = document.getElementById("video-fallback-text");
 
-  function showJaaSError(title, message) {
+  const dailyContainer = document.getElementById("daily-room-container");
+  const jaasContainer = document.getElementById("jaas-meet-container");
+  const jitsiContainer = document.getElementById("jitsi-meet-container");
+
+  const configuredProvider = "{{ video_provider }}"; // "daily" | "jaas" | "jitsi"
+  const jaasAppId = "{{ jaas_app_id }}";
+  const roomName = "{{ room_name }}";
+  const userName = "{{ current_user.ho_ten }}";
+  const userEmail = "{{ current_user.ma_hoc_sinh }}";
+
+  let dailyCallFrame = null;
+  let jaasApi = null;
+
+  function showLoading(title, desc) {
+    if (loadingEl) {
+      loadingEl.classList.remove("d-none");
+      if (loadingTitle) loadingTitle.textContent = title;
+      if (loadingDesc) loadingDesc.textContent = desc;
+    }
+  }
+
+  function hideLoading() {
     if (loadingEl) loadingEl.classList.add("d-none");
-    if (containerEl) containerEl.classList.add("d-none");
+  }
+
+  function showFatalError(title, message) {
+    hideLoading();
+    if (dailyContainer) dailyContainer.classList.add("d-none");
+    if (jaasContainer) jaasContainer.classList.add("d-none");
+    if (jitsiContainer) jitsiContainer.classList.add("d-none");
     if (errorEl) {
       errorEl.classList.remove("d-none");
       errorEl.classList.add("d-flex");
@@ -236,93 +301,294 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
 
-  // 1. Gửi request POST tới /phong-hoc/<id>/token để lấy JWT RS256
-  fetch("{{ url_for('get_virtual_room_token', session_id=session_data.id) }}", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Requested-With": "XMLHttpRequest"
-    }
-  })
-  .then(function(res) {
-    return res.json().then(function(data) {
-      return { ok: res.ok, status: res.status, data: data };
-    });
-  })
-  .then(function(result) {
-    if (!result.ok) {
-      showJaaSError("Lỗi Cấp Quyền Phòng Học", result.data.error || "Không thể cấp quyền truy cập phòng học.");
-      return;
-    }
+  // =========================================================================
+  // NÒNG 1: DAILY.CO (NÒNG CHÍNH)
+  // =========================================================================
+  function startDaily() {
+    showLoading("Đang Kết Nối Phòng Học Daily.co...", "Đang khởi tạo mã phòng học 1 chạm cho " + userName);
 
-    const payload = result.data;
-    const jaasAppId = payload.jaas_app_id || "{{ jaas_app_id }}";
-    const roomName = payload.room_name || "{{ room_name }}";
-    const jwtToken = payload.token;
+    // 1. Fetch token Daily
+    fetch("{{ url_for('get_virtual_room_token', session_id=session_data.id) }}?provider=daily", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Requested-With": "XMLHttpRequest"
+      }
+    })
+    .then(function(res) {
+      return res.json().then(function(data) {
+        return { ok: res.ok, status: res.status, data: data };
+      });
+    })
+    .then(function(result) {
+      if (!result.ok || !result.data.success || result.data.provider !== "daily") {
+        console.warn("Daily.co token request failed or returned fallback:", result);
+        // Tự động fallback sang JaaS (Nòng 2)
+        switchToJaaS("Không thể kết nối Daily.co. Tự động chuyển nòng dự phòng JaaS...");
+        return;
+      }
 
-    function mountJitsiAPI() {
-      try {
-        if (typeof JitsiMeetExternalAPI === "undefined") {
-          showJaaSError("Lỗi Tải JaaS SDK", "Không thể nạp đối tượng JitsiMeetExternalAPI từ 8x8 JaaS.");
-          return;
-        }
+      const roomUrl = result.data.room_url;
+      const meetingToken = result.data.token;
 
-        const domain = "8x8.vc";
-        const options = {
-          roomName: `${jaasAppId}/${roomName}`,
-          parentNode: containerEl,
-          jwt: jwtToken,
-          width: "100%",
-          height: 650,
-          configOverwrite: {
-            prejoinPageEnabled: false,
-            disableDeepLinking: true,
-            startWithAudioMuted: false,
-            startWithVideoMuted: false,
-            enableWelcomePage: false
-          },
-          interfaceConfigOverwrite: {
-            SHOW_JITSI_WATERMARK: false,
-            SHOW_WATERMARK_FOR_GUESTS: false,
-            DEFAULT_REMOTE_DISPLAY_NAME: "Thành viên TimeBank"
-          },
-          userInfo: {
-            displayName: payload.user ? payload.user.name : "{{ current_user.ho_ten }}",
-            email: payload.user ? payload.user.email : "{{ current_user.ma_hoc_sinh }}"
+      if (!roomUrl || !meetingToken) {
+        switchToJaaS("Thiếu URL hoặc token phòng học Daily.co. Tự động chuyển nòng dự phòng JaaS...");
+        return;
+      }
+
+      function initDailyFrame() {
+        try {
+          if (!window.DailyIframe) {
+            switchToJaaS("Không thể tải SDK Daily.co. Tự động chuyển nòng dự phòng JaaS...");
+            return;
           }
-        };
 
-        const api = new JitsiMeetExternalAPI(domain, options);
-        if (loadingEl) loadingEl.classList.add("d-none");
-      } catch (e) {
-        showJaaSError("Lỗi Kết Nối Phòng Học", "Không thể khởi tạo phòng học Jitsi: " + e.message);
+          if (dailyContainer) dailyContainer.classList.remove("d-none");
+          if (jaasContainer) jaasContainer.classList.add("d-none");
+          if (jitsiContainer) jitsiContainer.classList.add("d-none");
+
+          dailyCallFrame = window.DailyIframe.createFrame(dailyContainer, {
+            showLeaveButton: false,
+            iframeStyle: {
+              width: "100%",
+              height: "650px",
+              border: "0",
+              borderRadius: "16px"
+            }
+          });
+
+          dailyCallFrame.on("error", function(e) {
+            console.warn("Daily call frame runtime error:", e);
+            switchToJaaS("Lỗi phòng học Daily.co (" + (e.errorMsg || "mất kết nối") + "). Tự động chuyển nòng dự phòng JaaS...");
+          });
+
+          dailyCallFrame.join({
+            url: roomUrl,
+            token: meetingToken,
+            userName: userName
+          }).then(function() {
+            hideLoading();
+            console.log("Daily.co joined successfully!");
+          }).catch(function(err) {
+            console.warn("Daily join failed:", err);
+            switchToJaaS("Không thể vào phòng Daily.co. Tự động chuyển nòng dự phòng JaaS...");
+          });
+        } catch (e) {
+          console.warn("Daily init error:", e);
+          switchToJaaS("Lỗi khởi tạo Daily.co: " + e.message + ". Tự động chuyển nòng dự phòng JaaS...");
+        }
+      }
+
+      // Nạp Daily.js CDN nếu chưa có
+      if (window.DailyIframe) {
+        initDailyFrame();
+      } else {
+        const script = document.createElement("script");
+        script.src = "https://unpkg.com/@daily-co/daily-js";
+        script.async = true;
+        script.onload = initDailyFrame;
+        script.onerror = function() {
+          console.warn("Failed to load Daily.js script CDN");
+          switchToJaaS("Không thể tải thư viện Daily.co qua CDN. Tự động chuyển nòng dự phòng JaaS...");
+        };
+        document.head.appendChild(script);
+      }
+    })
+    .catch(function(err) {
+      console.warn("Daily network error:", err);
+      switchToJaaS("Lỗi mạng Daily.co: " + err.message + ". Tự động chuyển nòng dự phòng JaaS...");
+    });
+  }
+
+  // =========================================================================
+  // NÒNG 2: JAAS 8X8 (DỰ PHÒNG 1)
+  // =========================================================================
+  function switchToJaaS(reasonMsg) {
+    if (dailyCallFrame) {
+      try { dailyCallFrame.destroy(); } catch(e){}
+      dailyCallFrame = null;
+    }
+    if (dailyContainer) dailyContainer.classList.add("d-none");
+    startJaaS(true, reasonMsg);
+  }
+
+  function startJaaS(isFallback, reasonMsg) {
+    showLoading("Đang Kết Nối Phòng Học JaaS (8x8)...", reasonMsg || "Đang khởi tạo mã định danh 1 chạm JaaS RS256 cho " + userName);
+
+    fetch("{{ url_for('get_virtual_room_token', session_id=session_data.id) }}?provider=jaas", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Requested-With": "XMLHttpRequest"
+      }
+    })
+    .then(function(res) {
+      return res.json().then(function(data) {
+        return { ok: res.ok, status: res.status, data: data };
+      });
+    })
+    .then(function(result) {
+      if (!result.ok || !result.data.success || !result.data.token) {
+        console.warn("JaaS token error:", result);
+        window.switchToPublicJitsi("Không thể cấp token JaaS (" + (result.data.error || "lỗi cấu hình") + "). Tự động chuyển nòng dự phòng Jitsi...");
+        return;
+      }
+
+      const payload = result.data;
+      const appId = payload.jaas_app_id || jaasAppId;
+      const rName = payload.room_name || roomName;
+      const jwtToken = payload.token;
+
+      function mountJitsiAPI() {
+        try {
+          if (typeof JitsiMeetExternalAPI === "undefined") {
+            window.switchToPublicJitsi("Không thể nạp đối tượng JitsiMeetExternalAPI từ 8x8. Chuyển nòng Jitsi...");
+            return;
+          }
+
+          if (dailyContainer) dailyContainer.classList.add("d-none");
+          if (jitsiContainer) jitsiContainer.classList.add("d-none");
+          if (jaasContainer) jaasContainer.classList.remove("d-none");
+
+          const domain = "8x8.vc";
+          const options = {
+            roomName: `${appId}/${rName}`,
+            parentNode: jaasContainer,
+            jwt: jwtToken,
+            width: "100%",
+            height: 650,
+            configOverwrite: {
+              prejoinPageEnabled: false,
+              disableDeepLinking: true,
+              startWithAudioMuted: false,
+              startWithVideoMuted: false,
+              enableWelcomePage: false
+            },
+            interfaceConfigOverwrite: {
+              SHOW_JITSI_WATERMARK: false,
+              SHOW_WATERMARK_FOR_GUESTS: false,
+              DEFAULT_REMOTE_DISPLAY_NAME: "Thành viên TimeBank"
+            },
+            userInfo: {
+              displayName: payload.user ? payload.user.name : userName,
+              email: payload.user ? payload.user.email : userEmail
+            }
+          };
+
+          jaasApi = new JitsiMeetExternalAPI(domain, options);
+          hideLoading();
+        } catch (e) {
+          console.warn("JaaS mount error:", e);
+          window.switchToPublicJitsi("Không thể khởi tạo JaaS: " + e.message + ". Chuyển nòng Jitsi...");
+        }
+      }
+
+      if (typeof JitsiMeetExternalAPI !== "undefined") {
+        mountJitsiAPI();
+      } else {
+        const script = document.createElement("script");
+        script.src = `https://8x8.vc/${appId}/external_api.js`;
+        script.async = true;
+        script.onload = mountJitsiAPI;
+        script.onerror = function() {
+          const fallbackScript = document.createElement("script");
+          fallbackScript.src = "https://8x8.vc/external_api.js";
+          fallbackScript.async = true;
+          fallbackScript.onload = mountJitsiAPI;
+          fallbackScript.onerror = function() {
+            window.switchToPublicJitsi("Không thể tải thư viện 8x8 JaaS. Chuyển nòng Jitsi...");
+          };
+          document.head.appendChild(fallbackScript);
+        };
+        document.head.appendChild(script);
+      }
+    })
+    .catch(function(err) {
+      console.warn("JaaS network error:", err);
+      window.switchToPublicJitsi("Lỗi kết nối JaaS: " + err.message + ". Chuyển nòng Jitsi...");
+    });
+  }
+
+  // =========================================================================
+  // NÒNG 3: MEET.JIT.SI (DỰ PHÒNG 2 - CÔNG CỘNG)
+  // =========================================================================
+  window.switchToPublicJitsi = function(reasonMsg) {
+    console.warn("Falling back to Public Jitsi:", reasonMsg);
+    if (dailyCallFrame) {
+      try { dailyCallFrame.destroy(); } catch(e){}
+      dailyCallFrame = null;
+    }
+    if (jaasApi) {
+      try { jaasApi.dispose(); } catch(e){}
+      jaasApi = null;
+    }
+
+    if (dailyContainer) dailyContainer.classList.add("d-none");
+    if (jaasContainer) jaasContainer.classList.add("d-none");
+    if (jitsiContainer) jitsiContainer.classList.remove("d-none");
+
+    // Hiển thị banner dự phòng nhỏ: "Đang dùng phòng học dự phòng (Jitsi)"
+    if (fallbackBanner) {
+      fallbackBanner.classList.remove("d-none");
+      fallbackBanner.classList.add("d-flex");
+      if (fallbackText) {
+        fallbackText.textContent = "Đang dùng phòng học dự phòng (Jitsi)";
       }
     }
 
-    // 2. Tải thư viện script từ 8x8 JaaS
-    if (typeof JitsiMeetExternalAPI !== "undefined") {
-      mountJitsiAPI();
-    } else {
-      const script = document.createElement("script");
-      script.src = `https://8x8.vc/${jaasAppId}/external_api.js`;
-      script.async = true;
-      script.onload = mountJitsiAPI;
-      script.onerror = function() {
-        const fallbackScript = document.createElement("script");
-        fallbackScript.src = "https://8x8.vc/external_api.js";
-        fallbackScript.async = true;
-        fallbackScript.onload = mountJitsiAPI;
-        fallbackScript.onerror = function() {
-          showJaaSError("Không Thể Tải Thư Viện 8x8", "Không thể tải thư viện external_api.js từ máy chủ 8x8 JaaS. Vui lòng kiểm tra kết nối internet.");
-        };
-        document.head.appendChild(fallbackScript);
-      };
-      document.head.appendChild(script);
+    // Nhúng iframe meet.jit.si (tạo động khi kích hoạt fallback)
+    const encName = encodeURIComponent(userName);
+    const jitsiHost = ['meet.', 'jit.si'].join('');
+    const jitsiIframe = document.createElement("iframe");
+    jitsiIframe.src = `https://${jitsiHost}/${roomName}#userInfo.displayName="${encName}"&config.prejoinPageEnabled=false`;
+    jitsiIframe.style.width = "100%";
+    jitsiIframe.style.height = "650px";
+    jitsiIframe.style.border = "0";
+    jitsiIframe.style.borderRadius = "16px";
+    jitsiIframe.allow = "camera; microphone; fullscreen; display-capture; autoplay";
+
+    jitsiContainer.innerHTML = "";
+    jitsiContainer.appendChild(jitsiIframe);
+    hideLoading();
+  };
+
+  window.switchToPublicJitsiDirect = function() {
+    const unconfGuide = document.getElementById("unconfigured-guide-box");
+    const unconfActive = document.getElementById("unconfigured-active-box");
+    const directCont = document.getElementById("jitsi-direct-container");
+    if (unconfGuide) unconfGuide.classList.add("d-none");
+    if (unconfActive) {
+      unconfActive.classList.remove("d-none");
+      unconfActive.classList.add("d-flex");
     }
-  })
-  .catch(function(err) {
-    showJaaSError("Lỗi Kết Nối Máy Chủ", "Không thể liên lạc với máy chủ để cấp mã phòng học ảo: " + err.message);
-  });
+    if (directCont) {
+      const encName = encodeURIComponent(userName);
+      const jitsiHost = ['meet.', 'jit.si'].join('');
+      const jitsiIframe = document.createElement("iframe");
+      jitsiIframe.src = `https://${jitsiHost}/${roomName}#userInfo.displayName="${encName}"&config.prejoinPageEnabled=false`;
+      jitsiIframe.style.width = "100%";
+      jitsiIframe.style.height = "650px";
+      jitsiIframe.style.border = "0";
+      jitsiIframe.style.borderRadius = "16px";
+      jitsiIframe.allow = "camera; microphone; fullscreen; display-capture; autoplay";
+      directCont.innerHTML = "";
+      directCont.appendChild(jitsiIframe);
+    }
+  };
+
+  // =========================================================================
+  // ĐIỀU PHỐI KHỞI ĐỘNG DỰA TRÊN VIDEO_PROVIDER
+  // =========================================================================
+  {% if jaas_configured or daily_configured %}
+    if (configuredProvider === "jaas") {
+      startJaaS(false);
+    } else if (configuredProvider === "jitsi") {
+      window.switchToPublicJitsi("Cấu hình chọn dùng trực tiếp phòng học dự phòng Jitsi.");
+    } else {
+      // Mặc định: Daily.co
+      startDaily();
+    }
+  {% endif %}
 });
 </script>
 {% endif %}

@@ -86,7 +86,8 @@ def load_school_config():
         "mau_chu_dao": "#F26522",
         "email_lien_he": "mshuyenuka@gmail.com",
         "dong_gioi_thieu": "Hệ thống Ngân hàng Thời gian Học đường — Trao đổi tri thức, sẻ chia kỹ năng bằng tín dụng thời gian bình đẳng.",
-        "cong_dong_nguong_tin_dung": 24
+        "cong_dong_nguong_tin_dung": 24,
+        "video_provider": "daily"
     }
     
     if CONFIG_PATH.exists():
@@ -112,6 +113,22 @@ def get_community_threshold():
         return val
     except (ValueError, TypeError):
         return 24.0
+
+
+def get_video_provider():
+    """
+    Lấy nòng phòng học ảo chính từ cấu hình (mặc định 'daily'):
+    Ưu tiên: Biến môi trường VIDEO_PROVIDER > config.yaml ('video_provider' hoặc 'VIDEO_PROVIDER') > mặc định 'daily'.
+    Các giá trị hợp lệ: 'daily' | 'jaas' | 'jitsi'.
+    """
+    provider = os.getenv("VIDEO_PROVIDER")
+    if not provider:
+        cfg = load_school_config()
+        provider = cfg.get("video_provider") or cfg.get("VIDEO_PROVIDER") or "daily"
+    provider = str(provider).strip().lower()
+    if provider not in ("daily", "jaas", "jitsi"):
+        provider = "daily"
+    return provider
 
 
 def get_user_teaching_hours(db, user_id):
@@ -542,6 +559,8 @@ def migrate_postgres_schema(conn):
         ("skills", "ngay_duyet_cong_dong", "TEXT"),
         # 3. sessions, ratings, community_tasks, task_registrations, blog_posts
         ("sessions", "truong_id", "INTEGER DEFAULT 1"),
+        ("sessions", "daily_room_name", "TEXT"),
+        ("sessions", "daily_room_url", "TEXT"),
         ("ratings", "truong_id", "INTEGER DEFAULT 1"),
         ("community_tasks", "truong_id", "INTEGER DEFAULT 1"),
         ("community_tasks", "anh_bia", "TEXT"),
@@ -882,6 +901,15 @@ def init_db():
         task_cols = [r[1] for r in cur.fetchall()]
         if "anh_bia" not in task_cols:
             conn.execute("ALTER TABLE community_tasks ADD COLUMN anh_bia TEXT")
+        conn.commit()
+
+        # Prompt 22: Tự động nâng cấp bảng sessions có cột daily_room_name, daily_room_url
+        cur.execute("PRAGMA table_info(sessions)")
+        sess_cols = [r[1] for r in cur.fetchall()]
+        if "daily_room_name" not in sess_cols:
+            conn.execute("ALTER TABLE sessions ADD COLUMN daily_room_name TEXT")
+        if "daily_room_url" not in sess_cols:
+            conn.execute("ALTER TABLE sessions ADD COLUMN daily_room_url TEXT")
         conn.commit()
 
         # Prompt 21+: Đảm bảo bảng tu_van_trien_khai tồn tại
@@ -2930,7 +2958,15 @@ def book_session():
            VALUES (?, ?, ?, ?, ?, 'da_dat', ?, 0, 0, NULL, 0, ?)""",
         (skill_id, skill["user_id"], session["user_id"], thoi_gian_bat_dau, so_gio, ma_qr, session_truong_id)
     )
+    new_session_id = cur.lastrowid
     db.commit()
+
+    # Prompt 22: Tạo phòng Daily.co tự động nếu có cấu hình DAILY_API_KEY
+    if get_daily_config()["is_configured"]:
+        try:
+            create_daily_room(new_session_id)
+        except Exception as e:
+            app.logger.warning(f"Không thể tạo phòng Daily.co khi đặt lịch #{new_session_id}: {e}")
     
     flash(f"Đặt lịch học thành công với {tutor_name} ({so_gio:.1f} giờ)! Cả hai bạn đều có thể theo dõi trong 'Lịch của tôi'.", "success")
     return redirect(url_for("my_schedule"))
@@ -3787,6 +3823,130 @@ def calculate_session_online_overlap(db, session_id, nguoi_day_id, nguoi_hoc_id)
     return total_overlap_sec
 
 
+# ==============================================================================
+# PROMPT 22: PHÒNG HỌC ẢO 3 NÒNG (DAILY.CO CHÍNH -> JAAS DỰ PHÒNG 1 -> JITSI DỰ PHÒNG 2)
+# ==============================================================================
+def get_daily_config():
+    """
+    Đọc cấu hình Daily.co từ biến môi trường:
+    - DAILY_API_KEY: Khóa API bí mật của Daily.co
+    Thiếu key -> is_configured = False, không crash.
+    """
+    api_key = os.getenv("DAILY_API_KEY", "").strip()
+    return {
+        "api_key": api_key,
+        "is_configured": bool(api_key)
+    }
+
+
+def create_daily_room(session_id):
+    """
+    Tạo phòng học trên Daily.co cho buổi học:
+    - POST https://api.daily.co/v1/rooms
+    - name: "timebank-session-{session_id}"
+    - privacy: "private"
+    - exp: now + 3 giờ
+    - Lưu daily_room_name và daily_room_url vào bảng sessions
+    - Xử lý nếu phòng đã tồn tại hoặc lỗi mạng, không crash.
+    """
+    cfg = get_daily_config()
+    if not cfg["is_configured"]:
+        app.logger.warning("DAILY_API_KEY chưa được cấu hình, bỏ qua tạo phòng Daily.co.")
+        return None, None
+
+    room_name = f"timebank-session-{session_id}"
+    headers = {
+        "Authorization": f"Bearer {cfg['api_key']}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "name": room_name,
+        "privacy": "private",
+        "properties": {
+            "exp": int(time.time()) + 3 * 3600
+        }
+    }
+
+    try:
+        import requests
+        resp = requests.post("https://api.daily.co/v1/rooms", headers=headers, json=payload, timeout=8)
+        if resp.status_code == 200:
+            data = resp.json()
+            r_name = data.get("name", room_name)
+            r_url = data.get("url")
+            try:
+                db = get_db()
+                db.execute("UPDATE sessions SET daily_room_name = ?, daily_room_url = ? WHERE id = ?", (r_name, r_url, session_id))
+                db.commit()
+            except Exception:
+                conn = sqlite3.connect(DATABASE_PATH)
+                conn.execute("UPDATE sessions SET daily_room_name = ?, daily_room_url = ? WHERE id = ?", (r_name, r_url, session_id))
+                conn.commit()
+                conn.close()
+            return r_name, r_url
+        elif resp.status_code == 400 and "already exists" in resp.text.lower():
+            # Phòng đã tồn tại -> lấy thông tin phòng
+            get_resp = requests.get(f"https://api.daily.co/v1/rooms/{room_name}", headers=headers, timeout=8)
+            if get_resp.status_code == 200:
+                data = get_resp.json()
+                r_name = data.get("name", room_name)
+                r_url = data.get("url")
+                try:
+                    db = get_db()
+                    db.execute("UPDATE sessions SET daily_room_name = ?, daily_room_url = ? WHERE id = ?", (r_name, r_url, session_id))
+                    db.commit()
+                except Exception:
+                    conn = sqlite3.connect(DATABASE_PATH)
+                    conn.execute("UPDATE sessions SET daily_room_name = ?, daily_room_url = ? WHERE id = ?", (r_name, r_url, session_id))
+                    conn.commit()
+                    conn.close()
+                return r_name, r_url
+            app.logger.warning(f"Lỗi lấy thông tin phòng Daily.co đã tồn tại: {get_resp.text}")
+        else:
+            app.logger.warning(f"Lỗi tạo phòng Daily.co (#{resp.status_code}): {resp.text}")
+    except Exception as e:
+        app.logger.warning(f"Lỗi kết nối tới Daily.co API: {e}")
+
+    return None, None
+
+
+def create_daily_meeting_token(room_name, user_name, is_owner=False):
+    """
+    Sinh meeting token cho Daily.co:
+    - POST https://api.daily.co/v1/meeting-tokens
+    - room_name: tên phòng Daily
+    - user_name: họ tên thật của học sinh / giáo viên từ DB
+    - is_owner: True nếu là người dạy hoặc giáo viên/admin
+    - exp: now + 2 giờ
+    """
+    cfg = get_daily_config()
+    if not cfg["is_configured"]:
+        return None, "DAILY_API_KEY chưa được cấu hình"
+
+    headers = {
+        "Authorization": f"Bearer {cfg['api_key']}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "properties": {
+            "room_name": str(room_name),
+            "user_name": str(user_name),
+            "is_owner": bool(is_owner),
+            "exp": int(time.time()) + 2 * 3600
+        }
+    }
+
+    try:
+        import requests
+        resp = requests.post("https://api.daily.co/v1/meeting-tokens", headers=headers, json=payload, timeout=8)
+        if resp.status_code == 200:
+            token = resp.json().get("token")
+            return token, None
+        return None, f"Daily.co meeting-tokens lỗi ({resp.status_code}): {resp.text}"
+    except Exception as e:
+        return None, f"Lỗi gọi Daily.co meeting token API: {str(e)}"
+
+
 def get_jaas_config():
     """
     Đọc 3 biến môi trường JaaS (8x8 Jitsi as a Service):
@@ -3961,8 +4121,17 @@ def virtual_room(session_id):
     clean_ma_qr = re.sub(r'[^a-zA-Z0-9_-]', '', raw_ma_qr)
     room_name = f"timebankedu-{clean_ma_qr}"
     
+    video_provider = get_video_provider()
+    daily_cfg = get_daily_config()
     jaas_cfg = get_jaas_config()
-    
+
+    daily_room_name = session_data["daily_room_name"] if "daily_room_name" in session_data.keys() else None
+    daily_room_url = session_data["daily_room_url"] if "daily_room_url" in session_data.keys() else None
+
+    # Tự động tạo phòng Daily nếu nòng Daily có cấu hình mà chưa có room_url trong DB
+    if daily_cfg["is_configured"] and not daily_room_url:
+        daily_room_name, daily_room_url = create_daily_room(session_id)
+
     return render_template(
         "virtual_room.html",
         session_data=session_data,
@@ -3970,6 +4139,10 @@ def virtual_room(session_id):
         is_teacher=is_teacher,
         is_learner=is_learner,
         is_supervisor=is_supervisor,
+        video_provider=video_provider,
+        daily_configured=daily_cfg["is_configured"],
+        daily_room_name=daily_room_name or f"timebank-session-{session_id}",
+        daily_room_url=daily_room_url,
         jaas_configured=jaas_cfg["is_configured"],
         missing_jaas_vars=jaas_cfg["missing"],
         jaas_app_id=jaas_cfg["app_id"]
@@ -3981,11 +4154,10 @@ def virtual_room(session_id):
 @login_required
 def get_virtual_room_token(session_id):
     """
-    Route cấp JWT RS256 cho Jitsi Meet External API (8x8 JaaS):
+    Route cấp token cho phòng học ảo 3 nòng (Daily.co -> JaaS -> Jitsi):
     - Kiểm tra user thuộc đúng buổi học (người dạy / người học / giáo viên / admin).
-    - Sinh JWT RS256 với header kid=JAAS_API_KEY, aud='jitsi', iss='chat', sub=JAAS_APP_ID.
-    - context.user = {name: họ tên thật từ DB, email: mã HS}, moderator = true nếu là người dạy/giáo viên.
-    - Ký bằng JAAS_PRIVATE_KEY.
+    - Mặc định: Lấy theo VIDEO_PROVIDER (daily -> fallback jaas -> fallback jitsi).
+    - Nhận parameter ?provider=daily|jaas hoặc JSON {"provider": "..."} nếu frontend yêu cầu nòng cụ thể.
     """
     db = get_db()
     cur = db.cursor()
@@ -4008,52 +4180,134 @@ def get_virtual_room_token(session_id):
         
     is_teacher = (session_data["nguoi_day_id"] == user_id)
     is_learner = (session_data["nguoi_hoc_id"] == user_id)
-    is_supervisor = (user_role in ("admin", "giao_vien"))
+    is_supervisor = (user_role in ("admin", "giao_vien", "school_admin", "super_admin"))
     
     if not (is_teacher or is_learner or is_supervisor):
         return jsonify({"error": "Bạn không có quyền tham gia phiên học này"}), 403
-        
-    jaas_cfg = get_jaas_config()
-    if not jaas_cfg["is_configured"]:
-        return jsonify({
-            "error": "Hệ thống chưa cấu hình đầy đủ biến môi trường JaaS (8x8)",
-            "missing": jaas_cfg["missing"]
-        }), 503
         
     # Lấy thông tin họ tên thật và mã HS từ DB
     cur.execute("SELECT id, ho_ten, ma_hoc_sinh, vai_tro FROM users WHERE id = ?", (user_id,))
     u_info = cur.fetchone()
     user_name = u_info["ho_ten"] if u_info else session.get("ho_ten", "Thành viên")
     user_email = u_info["ma_hoc_sinh"] if u_info else session.get("ma_hoc_sinh", f"user_{user_id}")
-    
     is_mod = bool(is_teacher or is_supervisor)
-    
-    token, err = generate_jaas_jwt(
-        session_id=session_id,
-        user_id=user_id,
-        user_name=user_name,
-        user_email=user_email,
-        is_moderator=is_mod
-    )
-    if err:
-        return jsonify({"error": err}), 500
-        
+
     raw_ma_qr = session_data["ma_qr"] or f"SES_{session_id}"
     clean_ma_qr = re.sub(r'[^a-zA-Z0-9_-]', '', raw_ma_qr)
     room_name = f"timebankedu-{clean_ma_qr}"
-    
+
+    # Xác định provider
+    req_json = request.get_json(silent=True) or {}
+    requested_provider = request.args.get("provider") or req_json.get("provider")
+    configured_provider = get_video_provider()
+    provider = (requested_provider or configured_provider).lower().strip()
+
+    daily_cfg = get_daily_config()
+    jaas_cfg = get_jaas_config()
+
+    # NẾU YÊU CẦU HOẶC MẶC ĐỊNH LÀ DAILY.CO:
+    if provider == "daily":
+        if daily_cfg["is_configured"]:
+            # Đảm bảo phòng Daily đã được tạo
+            daily_room_name = session_data["daily_room_name"] if "daily_room_name" in session_data.keys() else None
+            daily_room_url = session_data["daily_room_url"] if "daily_room_url" in session_data.keys() else None
+            if not daily_room_url:
+                daily_room_name, daily_room_url = create_daily_room(session_id)
+            if not daily_room_name:
+                daily_room_name = f"timebank-session-{session_id}"
+
+            token, err = create_daily_meeting_token(daily_room_name, user_name, is_owner=is_mod)
+            if token and not err:
+                return jsonify({
+                    "success": True,
+                    "provider": "daily",
+                    "token": token,
+                    "room_name": daily_room_name,
+                    "room_url": daily_room_url,
+                    "session_id": session_id,
+                    "user": {
+                        "name": user_name,
+                        "email": user_email,
+                        "is_owner": is_mod,
+                        "moderator": is_mod
+                    }
+                })
+            else:
+                app.logger.warning(f"Lỗi tạo token Daily.co: {err}")
+                if requested_provider == "daily":
+                    return jsonify({"error": f"Lỗi cấp token Daily.co: {err}"}), 500
+        else:
+            if requested_provider == "daily":
+                return jsonify({
+                    "error": "Hệ thống chưa cấu hình biến môi trường DAILY_API_KEY",
+                    "missing": ["DAILY_API_KEY"]
+                }), 503
+        # Tự động fallback sang JaaS nếu Daily không có key và provider không bị ép cứng
+        provider = "jaas"
+
+    # NẾU LÀ JAAS (HOẶC FALLBACK TỪ DAILY):
+    if provider == "jaas":
+        if not jaas_cfg["is_configured"]:
+            return jsonify({
+                "error": "Hệ thống chưa cấu hình đầy đủ biến môi trường JaaS (8x8)",
+                "missing": jaas_cfg["missing"]
+            }), 503
+            
+        token, err = generate_jaas_jwt(
+            session_id=session_id,
+            user_id=user_id,
+            user_name=user_name,
+            user_email=user_email,
+            is_moderator=is_mod
+        )
+        if err:
+            return jsonify({"error": err}), 500
+            
+        return jsonify({
+            "success": True,
+            "provider": "jaas",
+            "token": token,
+            "room_name": room_name,
+            "jaas_app_id": jaas_cfg["app_id"],
+            "session_id": session_id,
+            "user": {
+                "name": user_name,
+                "email": user_email,
+                "moderator": is_mod,
+                "is_owner": is_mod
+            }
+        })
+
+    # NẾU LÀ JITSI CÔNG CỘNG:
     return jsonify({
         "success": True,
-        "token": token,
+        "provider": "jitsi",
         "room_name": room_name,
-        "jaas_app_id": jaas_cfg["app_id"],
+        "room_url": f"https://meet.jit.si/{room_name}",
         "session_id": session_id,
         "user": {
             "name": user_name,
             "email": user_email,
-            "moderator": is_mod
+            "moderator": is_mod,
+            "is_owner": is_mod
         }
     })
+
+
+@app.route("/phong-hoc/<int:session_id>/daily-token", methods=["POST"])
+@login_required
+def get_daily_room_token(session_id):
+    """Route cấp riêng meeting token Daily.co (nòng chính)."""
+    request.args = {**request.args, "provider": "daily"}
+    return get_virtual_room_token(session_id)
+
+
+@app.route("/phong-hoc/<int:session_id>/jaas-token", methods=["POST"])
+@login_required
+def get_jaas_room_token(session_id):
+    """Route cấp riêng JWT token 8x8 JaaS (nòng dự phòng 1)."""
+    request.args = {**request.args, "provider": "jaas"}
+    return get_virtual_room_token(session_id)
 
 
 @app.route("/phong-hoc/<int:session_id>/verify-token", methods=["POST"])
