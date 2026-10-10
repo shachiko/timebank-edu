@@ -32,6 +32,7 @@
                 <span class="badge bg-warning text-dark"><i class="bi bi-award-fill me-1"></i>{{ _('Thành viên Cộng đồng') }}</span>
               {% endif %}
             </div>
+            <small class="text-muted d-block fw-normal mb-1" style="font-size: 0.85em;">🏫 {{ user.ten_truong if user.ten_truong else _('Chưa phân trường') }}</small>
             
             <p class="text-muted small mb-2">
               <i class="bi bi-person-vcard me-1"></i>{{ _('Mã định danh:') }}<code>{{ user.ma_hoc_sinh }}</code>
@@ -242,6 +243,7 @@
               <h6 class="fw-bold text-dark mb-1">{{ match.tieu_de }}</h6>
               <div class="small text-muted mb-2">
                 <i class="bi bi-person-circle me-1 text-primary"></i><strong>{{ match.ho_ten }}</strong> ({{ _('Lớp') }} {{ match.lop }})
+                <small class="text-muted d-block fw-normal" style="font-size: 0.8em;">🏫 {{ match.ten_truong if match.ten_truong else _('Chưa phân trường') }}</small>
               </div>
               <div class="small text-secondary mb-2">
                 <i class="bi bi-clock me-1 text-info"></i>{{ _('Rảnh:') }}<strong>{{ match.gio_ranh if match.gio_ranh else _('Linh hoạt') }}</strong>

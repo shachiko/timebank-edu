@@ -113,6 +113,7 @@
                 </div>
                 <div class="overflow-hidden">
                   <div class="fw-bold text-dark small text-truncate">{{ skill.ho_ten }}</div>
+                  <small class="text-muted d-block fw-normal" style="font-size: 0.8em;">🏫 {{ skill.ten_truong if skill.ten_truong else _('Chưa phân trường') }}</small>
                   <div class="text-muted" style="font-size: 0.75rem;">{{ _('Lớp:') }} {{ skill.lop }} • {{ _('Mã:') }} <code>{{ skill.ma_hoc_sinh }}</code></div>
                 </div>
               </div>

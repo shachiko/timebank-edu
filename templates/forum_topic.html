@@ -25,6 +25,7 @@
           </div>
           <div>
             <h6 class="fw-bold text-dark mb-0 fs-6">{{ topic.ho_ten }}</h6>
+            <small class="text-muted d-block fw-normal" style="font-size: 0.8em;">🏫 {{ topic.ten_truong if topic.ten_truong else _('Chưa phân trường') }}</small>
             <div class="small text-muted">
               <code>{{ topic.ma_hoc_sinh }}</code> · {{ topic.lop if topic.lop else topic.vai_tro }} · <i class="bi bi-clock ms-1 me-1"></i>{{ topic.ngay_tao }}
             </div>
@@ -103,7 +104,8 @@
               <div>
                 <span class="fw-bold text-dark small">{{ r.ho_ten }}</span>
                 <span class="text-muted small">({{ r.lop if r.lop else r.vai_tro }})</span>
-                <span class="text-muted small ms-2"><i class="bi bi-clock me-1"></i>{{ r.ngay_tao }}</span>
+                <small class="text-muted d-block fw-normal" style="font-size: 0.8em;">🏫 {{ r.ten_truong if r.ten_truong else _('Chưa phân trường') }}</small>
+                <span class="text-muted small"><i class="bi bi-clock me-1"></i>{{ r.ngay_tao }}</span>
               </div>
             </div>
 

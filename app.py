@@ -20,7 +20,10 @@ import json
 import yaml
 import csv
 import unicodedata
+import gc
+import threading
 import openpyxl
+import xlrd
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 import qrcode
@@ -231,6 +234,21 @@ def inject_template_globals():
         is_super = is_super_admin()
         is_school = is_school_admin()
         is_demo = is_demo_user(mhs)
+        user_ten_truong = session.get("ten_truong", "")
+        if not user_ten_truong and tid:
+            try:
+                db_t = get_db()
+                c_t = db_t.cursor()
+                c_t.execute("SELECT ten_truong FROM truong WHERE id = ?", (tid,))
+                r_t = c_t.fetchone()
+                if r_t and r_t["ten_truong"]:
+                    user_ten_truong = r_t["ten_truong"]
+                    session["ten_truong"] = user_ten_truong
+            except Exception:
+                pass
+        if not user_ten_truong:
+            user_ten_truong = "Chưa phân trường"
+
         current_user = {
             "id": session.get("user_id"),
             "ma_hoc_sinh": mhs,
@@ -239,7 +257,7 @@ def inject_template_globals():
             "lop": session.get("lop"),
             "so_du_gio": session.get("so_du_gio", 2.0),
             "truong_id": tid,
-            "ten_truong": session.get("ten_truong", ""),
+            "ten_truong": user_ten_truong,
             "trang_thai": session.get("trang_thai", "hoat_dong"),
             "is_super_admin": is_super,
             "is_school_admin": is_school,
@@ -681,6 +699,29 @@ def close_db(error=None):
     db = g.pop("db", None)
     if db is not None:
         db.close()
+
+
+def create_standalone_db_connection():
+    """
+    Mở kết nối cơ sở dữ liệu độc lập cho background worker thread (không phụ thuộc vào request g).
+    """
+    if is_postgres_configured():
+        try:
+            import psycopg2
+            pg_url = get_postgres_url()
+            raw_conn = psycopg2.connect(pg_url)
+            return PostgresConnectionWrapper(raw_conn)
+        except Exception as e:
+            app.logger.warning(f"Lỗi kết nối PostgreSQL độc lập ({e}), chuyển về SQLite dự phòng.")
+    raw_sqlite = sqlite3.connect(
+        DATABASE_PATH,
+        detect_types=sqlite3.PARSE_DECLTYPES,
+        timeout=60.0
+    )
+    raw_sqlite.row_factory = sqlite3.Row
+    raw_sqlite.execute("PRAGMA foreign_keys = ON")
+    raw_sqlite.execute("PRAGMA journal_mode = WAL")
+    return SqliteConnectionWrapper(raw_sqlite)
 
 
 def migrate_postgres_schema(conn):
@@ -2135,14 +2176,16 @@ def get_top_tutors(db, limit=3, truong_id=None):
             u.ma_hoc_sinh, 
             u.ho_ten, 
             u.lop, 
+            COALESCE(t.ten_truong, 'Chưa phân trường') AS ten_truong,
             COALESCE(SUM(s.so_gio), 0.0) AS so_gio_day,
             COUNT(s.id) AS so_phien_day,
             ROUND(COALESCE(AVG(r.so_sao), 5.0)::numeric, 1) AS sao_tb
         FROM users u
+        LEFT JOIN truong t ON u.truong_id = t.id
         LEFT JOIN sessions s ON u.id = s.nguoi_day_id AND s.trang_thai = 'hoan_thanh'
         LEFT JOIN ratings r ON s.id = r.session_id AND r.nguoi_duoc_danh_gia_id = u.id
         {where_filter}
-        GROUP BY u.id, u.ma_hoc_sinh, u.ho_ten, u.lop
+        GROUP BY u.id, u.ma_hoc_sinh, u.ho_ten, u.lop, t.ten_truong
         ORDER BY so_gio_day DESC, sao_tb DESC
         LIMIT ?
     """
@@ -2841,7 +2884,12 @@ def profile():
     cur = db.cursor()
     
     # Lấy thông tin mới nhất từ cơ sở dữ liệu
-    cur.execute("SELECT * FROM users WHERE id = ?", (session["user_id"],))
+    cur.execute("""
+        SELECT u.*, COALESCE(t.ten_truong, 'Chưa phân trường') AS ten_truong
+        FROM users u
+        LEFT JOIN truong t ON u.truong_id = t.id
+        WHERE u.id = ?
+    """, (session["user_id"],))
     user = cur.fetchone()
     
     if not user:
@@ -2925,15 +2973,17 @@ def profile():
         search_kw = "Toán" if "toán" in target_subject.lower() else target_subject
         cur.execute("""
             SELECT s.*, u.ho_ten, u.lop, u.gio_ranh,
+                   COALESCE(t.ten_truong, 'Chưa phân trường') AS ten_truong,
                    ROUND(COALESCE(AVG(r.so_sao), 5.0)::numeric, 1) AS sao_tb
             FROM skills s
             JOIN users u ON s.user_id = u.id
+            LEFT JOIN truong t ON u.truong_id = t.id
             LEFT JOIN sessions ses ON s.id = ses.skill_id AND ses.trang_thai = 'hoan_thanh'
             LEFT JOIN ratings r ON ses.id = r.session_id AND r.nguoi_duoc_danh_gia_id = u.id
             WHERE s.trang_thai_duyet = 'da_duyet'
               AND s.user_id != ?
               AND (s.linh_vuc LIKE ? OR s.tieu_de LIKE ?)
-            GROUP BY s.id, u.id, u.ho_ten, u.lop, u.gio_ranh
+            GROUP BY s.id, u.id, u.ho_ten, u.lop, u.gio_ranh, t.ten_truong
             ORDER BY s.id DESC
         """, (user["id"], f"%{search_kw}%", f"%{search_kw}%"))
         subject_candidates = cur.fetchall()
@@ -3062,9 +3112,20 @@ def admin_dashboard():
 
     # 1. Lấy danh sách người dùng
     if filter_school_id:
-        cur.execute("SELECT * FROM users WHERE truong_id = ? ORDER BY id ASC", (filter_school_id,))
+        cur.execute("""
+            SELECT u.*, COALESCE(t.ten_truong, 'Chưa phân trường') AS ten_truong 
+            FROM users u
+            LEFT JOIN truong t ON u.truong_id = t.id
+            WHERE u.truong_id = ? 
+            ORDER BY u.id ASC
+        """, (filter_school_id,))
     else:
-        cur.execute("SELECT * FROM users ORDER BY id ASC")
+        cur.execute("""
+            SELECT u.*, COALESCE(t.ten_truong, 'Chưa phân trường') AS ten_truong 
+            FROM users u
+            LEFT JOIN truong t ON u.truong_id = t.id
+            ORDER BY u.id ASC
+        """)
     all_users = cur.fetchall()
 
     student_count = sum(1 for u in all_users if u["vai_tro"] == "hoc_sinh")
@@ -3172,18 +3233,20 @@ def admin_dashboard():
     top_sql = """
         SELECT 
             u.id, u.ma_hoc_sinh, u.ho_ten, u.lop, u.so_du_gio,
+            COALESCE(t.ten_truong, 'Chưa phân trường') AS ten_truong,
             COALESCE(SUM(CASE WHEN s.nguoi_day_id = u.id AND s.trang_thai = 'hoan_thanh' THEN s.so_gio ELSE 0 END), 0.0) AS gio_day,
             COALESCE(SUM(CASE WHEN s.nguoi_hoc_id = u.id AND s.trang_thai = 'hoan_thanh' THEN s.so_gio ELSE 0 END), 0.0) AS gio_hoc,
             COUNT(DISTINCT CASE WHEN s.trang_thai = 'hoan_thanh' THEN s.id END) AS so_phien,
             ROUND(COALESCE((SELECT AVG(so_sao) FROM ratings WHERE nguoi_duoc_danh_gia_id = u.id), 5.0)::numeric, 1) AS sao_tb
         FROM users u
+        LEFT JOIN truong t ON u.truong_id = t.id
         LEFT JOIN sessions s ON (s.nguoi_day_id = u.id OR s.nguoi_hoc_id = u.id)
         WHERE u.vai_tro = 'hoc_sinh'
     """
     if filter_school_id:
         top_sql += f" AND u.truong_id = {filter_school_id}"
     top_sql += """
-        GROUP BY u.id, u.ma_hoc_sinh, u.ho_ten, u.lop, u.so_du_gio
+        GROUP BY u.id, u.ma_hoc_sinh, u.ho_ten, u.lop, u.so_du_gio, t.ten_truong
         ORDER BY gio_day DESC, u.so_du_gio DESC
         LIMIT 5
     """
@@ -3480,6 +3543,75 @@ def remove_vietnamese_accents(text):
     return "".join(c for c in nfkd if not unicodedata.combining(c))
 
 
+def hash_password_safe(password: str) -> str:
+    """
+    Băm mật khẩu an toàn sử dụng thuật toán pbkdf2 tiêu thụ RAM thấp,
+    tránh lỗi SIGKILL 500 trên Render free tier (512MB RAM).
+    """
+    try:
+        return generate_password_hash(password, method="pbkdf2:sha256:600000")
+    except Exception:
+        try:
+            return generate_password_hash(password, method="pbkdf2:600000")
+        except Exception:
+            return generate_password_hash(password, method="pbkdf2")
+
+
+def get_school_code(school_name, school_id=None):
+    """
+    Trích xuất mã trường chuẩn hóa từ tên trường (VD: UK Academy -> UKA, Nguyễn Văn Thuộc -> NVT).
+    """
+    if not school_name:
+        return f"SCH{school_id}" if school_id else "EDU"
+    s_clean = remove_vietnamese_accents(school_name).upper()
+    if "UK ACADEMY" in s_clean or "UKA" in s_clean:
+        return "UKA"
+    if "NGUYEN VAN THUOC" in s_clean or "NVT" in s_clean:
+        return "NVT"
+    if "LE VAN TAM" in s_clean or "LVT" in s_clean:
+        return "LVT"
+    if "HAI DAO" in s_clean:
+        return "HDO"
+    words = [w for w in re.sub(r'[^A-Z0-9\s]', ' ', s_clean).split() if w]
+    meaningful = [w for w in words if w not in ("TRUONG", "THCS", "THPT", "TIEU", "HOC", "CAP", "1", "2", "3", "QUOC", "TE", "SONG", "NGU")]
+    if meaningful:
+        code = "".join(w[0] for w in meaningful)
+        if len(code) >= 2:
+            return code[:5]
+    if words:
+        code = "".join(w[0] for w in words if len(w) > 0)
+        return code[:4] if len(code) >= 2 else f"S{school_id}"
+    return f"S{school_id}" if school_id else "EDU"
+
+
+def generate_standard_school_username(school_code, lop, ho_ten, stt, db, seen_usernames):
+    """
+    Sinh username theo quy ước chuẩn: [MÃ TRƯỜNG]-<lớp>-<tên>-<STT> (VD: UKA-4.1-An-01).
+    STT theo thứ tự dòng trong file để chạy lại không đổi.
+    """
+    sc = re.sub(r"[^A-Za-z0-9]", "", school_code).upper() if school_code else "EDU"
+    lop_clean = re.sub(r"[^A-Za-z0-9.]", "", lop) if lop else ""
+    if not lop_clean:
+        lop_clean = "ALL"
+    clean_name = remove_vietnamese_accents(ho_ten).strip()
+    words = [re.sub(r"[^A-Za-z0-9]", "", w) for w in clean_name.split() if w]
+    first_name = words[-1].capitalize() if words else "User"
+    stt_str = f"{stt:02d}"
+    candidate = f"{sc}-{lop_clean}-{first_name}-{stt_str}"
+    
+    cur = db.cursor()
+    counter = 1
+    orig_candidate = candidate
+    while True:
+        if candidate not in seen_usernames:
+            cur.execute("SELECT id FROM users WHERE ma_hoc_sinh = ?", (candidate,))
+            if not cur.fetchone():
+                seen_usernames.add(candidate)
+                return candidate
+        candidate = f"{orig_candidate}-{counter}"
+        counter += 1
+
+
 def generate_unique_username(ho_ten, db, seen_usernames):
     """
     Tự sinh tên đăng nhập (Mã định danh) duy nhất từ họ tên + số thứ tự nếu trùng.
@@ -3534,6 +3666,369 @@ def generate_secure_random_password(length=8):
     rnd = secrets.SystemRandom()
     rnd.shuffle(pwd)
     return "".join(pwd)
+
+
+# Quản lý Background Import Jobs trong bộ nhớ máy chủ (Thread-safe)
+IMPORT_JOBS = {}
+IMPORT_JOBS_LOCK = threading.Lock()
+
+
+def parse_uploaded_users_file(file_bytes, filename):
+    """
+    Đọc dữ liệu từ file upload (.xlsx, .xls, .csv UTF-8).
+    Trả về danh sách các dòng (mỗi dòng là list các chuỗi đã chuẩn hóa).
+    """
+    filename_lower = filename.lower()
+    raw_rows = []
+    if filename_lower.endswith(".xlsx"):
+        wb = openpyxl.load_workbook(io.BytesIO(file_bytes), read_only=True, data_only=True)
+        ws = wb.active
+        for row in ws.iter_rows(values_only=True):
+            raw_rows.append(list(row))
+        wb.close()
+    elif filename_lower.endswith(".xls"):
+        wb = xlrd.open_workbook(file_contents=file_bytes)
+        ws = wb.sheet_by_index(0)
+        for r in range(ws.nrows):
+            raw_rows.append(ws.row_values(r))
+    elif filename_lower.endswith(".csv"):
+        decoded_text = None
+        for enc in ("utf-8-sig", "utf-8", "cp1258", "latin-1"):
+            try:
+                decoded_text = file_bytes.decode(enc)
+                break
+            except Exception:
+                continue
+        if not decoded_text:
+            raise ValueError("Không thể giải mã file CSV. Vui lòng lưu file với định dạng UTF-8!")
+        reader = csv.reader(io.StringIO(decoded_text))
+        raw_rows = list(reader)
+    else:
+        raise ValueError("Định dạng file không được hỗ trợ. Vui lòng tải lên file .xlsx, .xls hoặc .csv!")
+
+    # Format cell values cleanly: convert float 10.0 to "10", strip whitespace
+    formatted_rows = []
+    for r in raw_rows:
+        row_cells = []
+        for c in r:
+            if c is None:
+                row_cells.append("")
+            elif isinstance(c, float) and c.is_integer():
+                row_cells.append(str(int(c)).strip())
+            else:
+                row_cells.append(str(c).strip())
+        formatted_rows.append(row_cells)
+    return formatted_rows
+
+
+def validate_users_rows(rows_data, target_school_id, cur):
+    """
+    GIAI ĐOẠN 1: Validate nhanh toàn bộ các dòng (<10s, CHƯA băm mật khẩu, CHƯA tạo tài khoản).
+    Kiểm tra:
+    - Họ tên không được để trống.
+    - Vai trò: quantruong / giaovien / hocsinh.
+    - Username (nếu có) không trùng CSDL.
+    - Email (nếu có) đúng định dạng và chưa tồn tại.
+    - Số điện thoại (nếu có) đúng định dạng VN (8-15 chữ số).
+    - Chống trùng lặp (Idempotency) nếu không có email & SĐT.
+    """
+    if not rows_data or len(rows_data) < 2:
+        raise ValueError("File tải lên không có dữ liệu để nhập!")
+
+    header_row = [str(cell or "").strip() for cell in rows_data[0]]
+
+    def find_col_idx(headers, keywords):
+        for idx, h in enumerate(headers):
+            if not h:
+                continue
+            norm_h = remove_vietnamese_accents(str(h)).lower().replace("_", " ").strip()
+            for kw in keywords:
+                if kw in norm_h:
+                    return idx
+        return None
+
+    idx_ho_ten = find_col_idx(header_row, ["ho ten", "ho va ten", "hoten", "fullname", "name"])
+    idx_vai_tro = find_col_idx(header_row, ["vai tro", "vaitro", "role", "chuc vu"])
+    idx_lop = find_col_idx(header_row, ["lop", "class", "don vi", "bo mon"])
+    idx_email = find_col_idx(header_row, ["email", "mail"])
+    idx_sdt = find_col_idx(header_row, ["so dien thoai", "dien thoai", "sdt", "phone", "tel"])
+    idx_ghi_chu = find_col_idx(header_row, ["ghi chu", "ghichu", "note", "mo ta"])
+    idx_username = find_col_idx(header_row, ["ma hoc sinh", "ten dang nhap", "username", "ma dinh danh"])
+
+    if idx_ho_ten is None or idx_vai_tro is None:
+        raise ValueError("File thiếu cột bắt buộc 'họ_tên' hoặc 'vai_trò'. Vui lòng tải file mẫu để kiểm tra đúng cấu trúc!")
+
+    valid_rows = []
+    error_list = []
+    seen_emails = set()
+    seen_phones = set()
+    seen_usernames = set()
+    total_processed_rows = 0
+
+    # Lấy danh sách email và sdt đã có trong DB
+    cur.execute("SELECT LOWER(email) FROM users WHERE email IS NOT NULL")
+    existing_emails = {r[0] for r in cur.fetchall() if r[0]}
+    cur.execute("SELECT so_dien_thoai FROM users WHERE so_dien_thoai IS NOT NULL")
+    existing_phones = {r[0] for r in cur.fetchall() if r[0]}
+    cur.execute("SELECT ma_hoc_sinh FROM users WHERE ma_hoc_sinh IS NOT NULL")
+    existing_usernames = {r[0] for r in cur.fetchall() if r[0]}
+
+    cur.execute("""
+        SELECT ho_ten, COALESCE(lop, ''), vai_tro 
+        FROM users 
+        WHERE truong_id = ?
+    """, (target_school_id,))
+    existing_students = {(r[0], r[1], r[2]) for r in cur.fetchall()}
+
+    stt_counter = 0
+    for i, row in enumerate(rows_data[1:]):
+        row_number = i + 2
+        if not row or all(cell == "" for cell in row):
+            continue  # Bỏ qua dòng trống
+
+        total_processed_rows += 1
+        stt_counter += 1
+
+        def get_val(idx):
+            if idx is not None and idx < len(row) and row[idx] is not None:
+                return str(row[idx]).strip()
+            return ""
+
+        ho_ten = get_val(idx_ho_ten)
+        vai_tro_raw = get_val(idx_vai_tro)
+        lop = get_val(idx_lop)
+        email = get_val(idx_email)
+        sdt = get_val(idx_sdt)
+        ghi_chu = get_val(idx_ghi_chu)
+        user_specified_username = get_val(idx_username)
+
+        # 1. Validate họ tên
+        if not ho_ten:
+            error_list.append({
+                "row": row_number,
+                "ho_ten": "(Để trống)",
+                "ly_do": "Họ và tên không được để trống"
+            })
+            continue
+
+        # 2. Validate vai trò
+        vt_norm = remove_vietnamese_accents(vai_tro_raw).lower().replace(" ", "").replace("_", "").replace("-", "")
+        if vt_norm in ("quantruong", "quan_truong", "school_admin", "schooladmin", "quantri", "quantritruong", "admin"):
+            role = "school_admin"
+        elif vt_norm in ("giaovien", "giao_vien", "teacher", "gv", "giangvien"):
+            role = "giao_vien"
+        elif vt_norm in ("hocsinh", "hoc_sinh", "student", "hs"):
+            role = "hoc_sinh"
+        else:
+            error_list.append({
+                "row": row_number,
+                "ho_ten": ho_ten,
+                "ly_do": f"Vai trò '{vai_tro_raw}' không hợp lệ (hỗ trợ: quantruong, giaovien, hocsinh)"
+            })
+            continue
+
+        # 3. Validate Username nếu có trong file
+        if user_specified_username:
+            if user_specified_username in existing_usernames or user_specified_username in seen_usernames:
+                error_list.append({
+                    "row": row_number,
+                    "ho_ten": ho_ten,
+                    "ly_do": f"Tên đăng nhập '{user_specified_username}' đã tồn tại trong hệ thống"
+                })
+                continue
+            seen_usernames.add(user_specified_username)
+
+        # 4. Validate Email
+        if email:
+            if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
+                error_list.append({
+                    "row": row_number,
+                    "ho_ten": ho_ten,
+                    "ly_do": f"Email '{email}' không đúng định dạng"
+                })
+                continue
+            email_lower = email.lower()
+            if email_lower in seen_emails:
+                error_list.append({
+                    "row": row_number,
+                    "ho_ten": ho_ten,
+                    "ly_do": f"Email '{email}' bị trùng lặp với dòng trước trong file"
+                })
+                continue
+            if email_lower in existing_emails:
+                error_list.append({
+                    "row": row_number,
+                    "ho_ten": ho_ten,
+                    "ly_do": f"Email '{email}' đã tồn tại trong hệ thống (tài khoản đã có)"
+                })
+                continue
+
+        # 5. Validate Số điện thoại
+        clean_sdt = ""
+        if sdt:
+            clean_sdt = re.sub(r"[^\d+]", "", sdt)
+            if len(clean_sdt) < 8 or len(clean_sdt) > 15:
+                error_list.append({
+                    "row": row_number,
+                    "ho_ten": ho_ten,
+                    "ly_do": f"Số điện thoại '{sdt}' không hợp lệ"
+                })
+                continue
+            if clean_sdt in seen_phones:
+                error_list.append({
+                    "row": row_number,
+                    "ho_ten": ho_ten,
+                    "ly_do": f"Số điện thoại '{sdt}' bị trùng lặp với dòng trước trong file"
+                })
+                continue
+            if clean_sdt in existing_phones:
+                error_list.append({
+                    "row": row_number,
+                    "ho_ten": ho_ten,
+                    "ly_do": f"Số điện thoại '{sdt}' đã tồn tại trong hệ thống"
+                })
+                continue
+
+        # 6. Chống trùng lặp (Idempotency): Nếu không có email và SĐT, kiểm tra họ tên + lớp + vai trò trong trường
+        if not email and not clean_sdt:
+            if (ho_ten, lop or "", role) in existing_students:
+                error_list.append({
+                    "row": row_number,
+                    "ho_ten": ho_ten,
+                    "ly_do": f"Tài khoản '{ho_ten}' (Lớp: {lop or '—'}) đã tồn tại trong trường (chống tạo trùng lặp)"
+                })
+                continue
+
+        if email:
+            seen_emails.add(email.lower())
+        if clean_sdt:
+            seen_phones.add(clean_sdt)
+
+        valid_rows.append({
+            "stt": stt_counter,
+            "row_number": row_number,
+            "ho_ten": ho_ten,
+            "vai_tro": role,
+            "lop": lop,
+            "email": email,
+            "sdt": clean_sdt or sdt,
+            "ghi_chu": ghi_chu,
+            "username": user_specified_username
+        })
+
+    return valid_rows, error_list, total_processed_rows
+
+
+def execute_import_job(flask_app, job_id):
+    """
+    GIAI ĐOẠN 2: Worker thread chạy ngầm tạo tài khoản theo từng batch 50:
+    - Băm mật khẩu bằng pbkdf2:sha256:600000 (tiết kiệm RAM tối đa).
+    - Sinh username chuẩn: [MÃ TRƯỜNG]-<lớp>-<tên>-<STT>.
+    - Cấp +2.0 giờ ban đầu cho học sinh.
+    - Commit CSDL và gọi gc.collect() sau mỗi batch 50 tài khoản.
+    - Cập nhật tiến trình shared realtime cho giao diện polling.
+    """
+    with flask_app.app_context():
+        with IMPORT_JOBS_LOCK:
+            job = IMPORT_JOBS.get(job_id)
+        if not job:
+            return
+
+        db = create_standalone_db_connection()
+        cur = db.cursor()
+        try:
+            valid_rows = job.get("valid_rows", [])
+            total = len(valid_rows)
+            batch_size = 50
+            seen_usernames = set()
+            seen_emails = set()
+            seen_phones = set()
+
+            for batch_start in range(0, total, batch_size):
+                batch = valid_rows[batch_start : batch_start + batch_size]
+                for item in batch:
+                    try:
+                        ho_ten = item["ho_ten"]
+                        role = item["vai_tro"]
+                        lop = item.get("lop", "")
+                        email = item.get("email") or None
+                        sdt = item.get("sdt") or None
+                        ghi_chu = item.get("ghi_chu") or None
+                        stt = item.get("stt", 1)
+
+                        username = item.get("username")
+                        if not username:
+                            username = generate_standard_school_username(
+                                job["school_code"], lop, ho_ten, stt, db, seen_usernames
+                            )
+                        else:
+                            seen_usernames.add(username)
+
+                        plain_pwd = generate_secure_random_password(8)
+                        hashed_pwd = hash_password_safe(plain_pwd)
+
+                        so_du = 2.0 if role == "hoc_sinh" else (10.0 if role == "giao_vien" else 100.0)
+                        unit_lop = lop if lop else ("Ban Giám Hiệu" if role == "school_admin" else ("Tổ Giáo Viên" if role == "giao_vien" else ""))
+
+                        cur.execute("""
+                            INSERT INTO users (truong_id, ma_hoc_sinh, ho_ten, lop, vai_tro, so_du_gio, gio_ranh, mat_khau, email, so_dien_thoai, ghi_chu, trang_thai)
+                            VALUES (?, ?, ?, ?, ?, ?, 'Toàn thời gian', ?, ?, ?, ?, 'hoat_dong')
+                        """, (job["truong_id"], username, ho_ten, unit_lop, role, so_du, hashed_pwd, email, sdt, ghi_chu))
+
+                        if email:
+                            seen_emails.add(email.lower())
+                        if sdt:
+                            seen_phones.add(sdt)
+
+                        role_display = "Quản trị trường" if role == "school_admin" else ("Giáo viên" if role == "giao_vien" else "Học sinh")
+                        with IMPORT_JOBS_LOCK:
+                            job["success_list"].append({
+                                "ho_ten": ho_ten,
+                                "vai_tro": role,
+                                "vai_tro_hien_thi": role_display,
+                                "lop": unit_lop,
+                                "ma_hoc_sinh": username,
+                                "mat_khau": plain_pwd,
+                                "so_du_gio": so_du,
+                                "email": email or "",
+                                "so_dien_thoai": sdt or "",
+                                "ghi_chu": ghi_chu or "",
+                                "ten_truong": job["school_name"]
+                            })
+                            job["success"] += 1
+                    except Exception as row_err:
+                        with IMPORT_JOBS_LOCK:
+                            job["failed"] += 1
+                            job["errors"].append({
+                                "row": item.get("row_number", "?"),
+                                "ho_ten": item.get("ho_ten", "Lỗi"),
+                                "ly_do": f"Lỗi tạo tài khoản: {str(row_err)}"
+                            })
+                    finally:
+                        with IMPORT_JOBS_LOCK:
+                            job["done"] += 1
+                            job["percent"] = min(100, int((job["done"] / total) * 100)) if total > 0 else 100
+                            job["updated_at"] = time.time()
+
+                # Commit DB & giải phóng RAM sau mỗi batch 50 tài khoản
+                db.commit()
+                gc.collect()
+
+            with IMPORT_JOBS_LOCK:
+                job["status"] = "done"
+                job["percent"] = 100
+                job["updated_at"] = time.time()
+        except Exception as job_err:
+            app.logger.error(f"Lỗi thực thi import job {job_id}: {job_err}", exc_info=True)
+            with IMPORT_JOBS_LOCK:
+                job["status"] = "error"
+                job["error_message"] = str(job_err)
+        finally:
+            try:
+                db.close()
+            except Exception:
+                pass
+            gc.collect()
 
 
 @app.route("/admin/import-users/template")
@@ -3612,284 +4107,402 @@ def admin_download_import_template():
     )
 
 
+@app.route("/admin/import-users/validate", methods=["POST"])
+@admin_required
+def admin_import_users_validate():
+    """
+    GIAI ĐOẠN 1 (Đồng bộ, <10 giây): Đọc file, kiểm tra giới hạn và validate từng dòng mà CHƯA tạo tài khoản.
+    - Giới hạn: tối đa 2000 dòng, dung lượng tối đa 10MB, định dạng .xlsx, .xls, .csv UTF-8.
+    - Trả về JSON: số dòng đúng, số dòng lỗi, danh sách chi tiết lỗi theo số dòng.
+    """
+    try:
+        db = get_db()
+        cur = db.cursor()
+
+        is_super = is_super_admin()
+        current_school_id = session.get("truong_id", 1)
+        form_truong_id = request.form.get("truong_id", "").strip()
+
+        if is_super:
+            if form_truong_id and form_truong_id.isdigit():
+                target_school_id = int(form_truong_id)
+            else:
+                target_school_id = current_school_id
+        else:
+            if form_truong_id and str(form_truong_id) != str(current_school_id):
+                return jsonify({
+                    "success": False,
+                    "error": "Quản trị trường chỉ có quyền nhập danh sách cho trường của mình!"
+                }), 403
+            target_school_id = current_school_id
+
+        cur.execute("SELECT ten_truong FROM truong WHERE id = ?", (target_school_id,))
+        s_row = cur.fetchone()
+        school_name = s_row["ten_truong"] if s_row else f"Trường #{target_school_id}"
+        school_code = get_school_code(school_name, target_school_id)
+
+        file = request.files.get("file")
+        if not file or not file.filename:
+            return jsonify({
+                "success": False,
+                "error": "Vui lòng chọn file Excel (.xlsx, .xls) hoặc CSV (.csv) để nhập danh sách!"
+            }), 400
+
+        filename_lower = file.filename.lower()
+        if not (filename_lower.endswith(".xlsx") or filename_lower.endswith(".xls") or filename_lower.endswith(".csv")):
+            return jsonify({
+                "success": False,
+                "error": "Định dạng file không được hỗ trợ. Vui lòng tải lên file .xlsx, .xls hoặc .csv (UTF-8)!"
+            }), 400
+
+        file_bytes = file.read()
+        if len(file_bytes) > 10 * 1024 * 1024:
+            return jsonify({
+                "success": False,
+                "error": "Dung lượng file vượt quá giới hạn 10MB. Vui lòng kiểm tra lại file!"
+            }), 400
+
+        try:
+            rows_data = parse_uploaded_users_file(file_bytes, file.filename)
+        except Exception as e:
+            return jsonify({
+                "success": False,
+                "error": f"Lỗi đọc file: {str(e)}"
+            }), 400
+
+        non_empty_rows = [r for r in rows_data[1:] if any(c != "" for c in r)]
+        if len(non_empty_rows) > 2000:
+            return jsonify({
+                "success": False,
+                "error": "File vượt quá 2000 dòng. Vui lòng chia thành nhiều file nhỏ hơn."
+            }), 400
+
+        if not non_empty_rows:
+            return jsonify({
+                "success": False,
+                "error": "File tải lên không có dữ liệu để nhập!"
+            }), 400
+
+        valid_rows, error_list, total_processed_rows = validate_users_rows(rows_data, target_school_id, cur)
+
+        job_id = secrets.token_hex(12)
+        new_job = {
+            "job_id": job_id,
+            "user_id": session.get("user_id"),
+            "truong_id": target_school_id,
+            "school_name": school_name,
+            "school_code": school_code,
+            "status": "validated",
+            "total": len(valid_rows),
+            "done": 0,
+            "success": 0,
+            "failed": 0,
+            "percent": 0,
+            "validation_errors": error_list,
+            "errors": list(error_list),
+            "valid_rows": valid_rows,
+            "success_list": [],
+            "error_message": "",
+            "created_at": time.time(),
+            "updated_at": time.time()
+        }
+
+        with IMPORT_JOBS_LOCK:
+            IMPORT_JOBS[job_id] = new_job
+
+        session["current_import_job_id"] = job_id
+
+        return jsonify({
+            "success": True,
+            "job_id": job_id,
+            "total_rows": total_processed_rows,
+            "valid_count": len(valid_rows),
+            "error_count": len(error_list),
+            "errors": error_list,
+            "school_name": school_name,
+            "can_confirm": len(valid_rows) > 0
+        })
+    except Exception as e:
+        app.logger.error(f"Lỗi validate import users: {e}", exc_info=True)
+        return jsonify({
+            "success": False,
+            "error": f"Có lỗi xảy ra trong quá trình kiểm tra file: {str(e)}"
+        }), 200
+
+
+@app.route("/admin/import-users/confirm", methods=["POST"])
+@admin_required
+def admin_import_users_confirm():
+    """
+    GIAI ĐOẠN 2: Người dùng bấm 'Xác nhận tạo X tài khoản' -> Khởi động background thread xử lý ngầm.
+    """
+    try:
+        req_data = request.get_json(silent=True) or {}
+        job_id = req_data.get("job_id") or request.form.get("job_id") or session.get("current_import_job_id")
+
+        if not job_id:
+            return jsonify({"success": False, "error": "Không tìm thấy phiên nhập dữ liệu!"}), 400
+
+        with IMPORT_JOBS_LOCK:
+            job = IMPORT_JOBS.get(job_id)
+
+        if not job:
+            return jsonify({"success": False, "error": "Phiên làm việc đã hết hạn hoặc không tồn tại!"}), 404
+
+        if job["status"] == "validated":
+            with IMPORT_JOBS_LOCK:
+                job["status"] = "running"
+            worker_thread = threading.Thread(
+                target=execute_import_job,
+                args=(app, job_id),
+                daemon=True
+            )
+            worker_thread.start()
+
+        return jsonify({
+            "success": True,
+            "status": job["status"],
+            "job_id": job_id,
+            "total": job["total"]
+        })
+    except Exception as e:
+        app.logger.error(f"Lỗi xác nhận import job: {e}", exc_info=True)
+        return jsonify({
+            "success": False,
+            "error": f"Không thể bắt đầu tạo tài khoản: {str(e)}"
+        }), 200
+
+
+@app.route("/admin/import-users/progress", methods=["GET"])
+@admin_required
+def admin_import_users_progress():
+    """
+    Polling tiến trình tạo tài khoản realtime (gọi mỗi 2 giây):
+    Trả về {total, done, success, failed, status: 'running'/'done'/'error'/'validated'}.
+    Hỗ trợ phục hồi khi reload trang hoặc mất kết nối mạng.
+    """
+    try:
+        job_id = request.args.get("job_id") or session.get("current_import_job_id")
+        user_id = session.get("user_id")
+
+        with IMPORT_JOBS_LOCK:
+            job = IMPORT_JOBS.get(job_id) if job_id else None
+            if not job and user_id:
+                # Tìm job gần nhất của user này còn lưu trong bộ nhớ
+                recent_jobs = [j for j in IMPORT_JOBS.values() if j.get("user_id") == user_id and j.get("status") != "dismissed"]
+                if recent_jobs:
+                    recent_jobs.sort(key=lambda x: x.get("created_at", 0), reverse=True)
+                    job = recent_jobs[0]
+                    job_id = job["job_id"]
+                    session["current_import_job_id"] = job_id
+
+        if not job:
+            return jsonify({
+                "has_job": False,
+                "status": "idle"
+            })
+
+        # Đồng bộ session kết quả khi job xong
+        if job["status"] == "done":
+            session["last_import_result"] = {
+                "success_count": job["success"],
+                "error_count": len(job["errors"]),
+                "total_rows": job["total"] + len(job.get("validation_errors", [])),
+                "school_name": job["school_name"],
+                "school_id": job["truong_id"],
+                "errors": job["errors"],
+                "success_list": job["success_list"],
+                "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+            }
+
+        return jsonify({
+            "has_job": True,
+            "job_id": job["job_id"],
+            "status": job["status"],
+            "total": job["total"],
+            "done": job["done"],
+            "success": job["success"],
+            "failed": job["failed"],
+            "percent": job["percent"],
+            "school_name": job["school_name"],
+            "error_count": len(job["errors"]),
+            "errors": job["errors"][-30:],
+            "error_message": job.get("error_message", "")
+        })
+    except Exception as e:
+        app.logger.error(f"Lỗi polling progress: {e}", exc_info=True)
+        return jsonify({
+            "has_job": False,
+            "status": "error",
+            "error": str(e)
+        }), 200
+
+
+@app.route("/admin/import-users/dismiss", methods=["POST"])
+@admin_required
+def admin_import_users_dismiss():
+    """
+    Xóa trạng thái job sau khi người dùng bấm 'Đóng' hoặc hoàn tất xem kết quả.
+    """
+    req_data = request.get_json(silent=True) or {}
+    job_id = req_data.get("job_id") or request.form.get("job_id") or session.get("current_import_job_id")
+    if job_id:
+        with IMPORT_JOBS_LOCK:
+            if job_id in IMPORT_JOBS:
+                IMPORT_JOBS[job_id]["status"] = "dismissed"
+                IMPORT_JOBS.pop(job_id, None)
+    session.pop("current_import_job_id", None)
+    return jsonify({"success": True})
+
+
 @app.route("/admin/import-users", methods=["POST"])
 @admin_required
 def admin_import_users():
     """
-    Xử lý tải lên file Excel (.xlsx) hoặc CSV để nhập danh sách tài khoản hàng loạt:
-    - Validate từng dòng: họ tên không trống, vai trò hợp lệ, email/SĐT không trùng.
-    - Dòng lỗi -> ghi lại lý do, không chặn các dòng đúng.
-    - Tự sinh tên đăng nhập + mật khẩu ngẫu nhiên riêng cho từng người.
-    - Mật khẩu băm bằng werkzeug.security.generate_password_hash.
-    - Gán đúng truong_id: Quản trị trường chỉ nhập cho trường mình; Super Admin chọn trường.
-    - Tài khoản hoạt động ngay, học sinh cấp +2.0 giờ ban đầu.
-    - Chống trùng lặp (Idempotency): chạy lại file cũ không tạo tài khoản trùng.
-    - Lưu kết quả vào session để xuất file Excel kết quả.
+    Tương thích ngược: Xử lý nhập trực tiếp đồng bộ (chia batch 30 tài khoản + gc.collect()):
+    - Băm mật khẩu pbkdf2:sha256:600000 tiêu thụ RAM thấp.
+    - Commit CSDL và gọi gc.collect() sau mỗi batch 30 tài khoản.
+    - Bọc toàn bộ trong try/except để tuyệt đối không sập 500.
     """
-    db = get_db()
-    cur = db.cursor()
+    try:
+        db = get_db()
+        cur = db.cursor()
 
-    is_super = is_super_admin()
-    current_school_id = session.get("truong_id", 1)
-    form_truong_id = request.form.get("truong_id", "").strip()
+        is_super = is_super_admin()
+        current_school_id = session.get("truong_id", 1)
+        form_truong_id = request.form.get("truong_id", "").strip()
 
-    if is_super:
-        if form_truong_id and form_truong_id.isdigit():
-            target_school_id = int(form_truong_id)
+        if is_super:
+            if form_truong_id and form_truong_id.isdigit():
+                target_school_id = int(form_truong_id)
+            else:
+                target_school_id = current_school_id
         else:
-            target_school_id = current_school_id
-    else:
-        # Quản trị trường chỉ được nhập cho trường của mình
-        if form_truong_id and str(form_truong_id) != str(current_school_id):
-            flash(_("Quản trị trường chỉ có quyền nhập danh sách cho trường của mình!"), "danger")
-            return redirect(url_for("admin_dashboard") + "#tab-users")
-        target_school_id = current_school_id
-
-    # Lấy thông tin trường đích
-    cur.execute("SELECT ten_truong FROM truong WHERE id = ?", (target_school_id,))
-    s_row = cur.fetchone()
-    school_name = s_row["ten_truong"] if s_row else f"Trường #{target_school_id}"
-
-    # Kiểm tra file upload
-    file = request.files.get("file")
-    if not file or not file.filename:
-        flash(_("Vui lòng chọn file Excel (.xlsx) hoặc CSV (.csv) để nhập danh sách!"), "warning")
-        return redirect(url_for("admin_dashboard") + "#tab-users")
-
-    filename_lower = file.filename.lower()
-    rows_data = []
-
-    if filename_lower.endswith(".xlsx") or filename_lower.endswith(".xls"):
-        try:
-            wb = openpyxl.load_workbook(io.BytesIO(file.read()), data_only=True)
-            ws = wb.active
-            rows_data = list(ws.iter_rows(values_only=True))
-        except Exception as e:
-            flash(_("Lỗi khi đọc file Excel: %(err)s", err=str(e)), "danger")
-            return redirect(url_for("admin_dashboard") + "#tab-users")
-    elif filename_lower.endswith(".csv"):
-        try:
-            raw_bytes = file.read()
-            decoded_text = None
-            for enc in ("utf-8-sig", "utf-8", "cp1258", "latin-1"):
-                try:
-                    decoded_text = raw_bytes.decode(enc)
-                    break
-                except Exception:
-                    continue
-            if not decoded_text:
-                flash(_("Không thể giải mã file CSV. Vui lòng lưu file với định dạng UTF-8!"), "danger")
+            if form_truong_id and str(form_truong_id) != str(current_school_id):
+                flash(_("Quản trị trường chỉ có quyền nhập danh sách cho trường của mình!"), "danger")
                 return redirect(url_for("admin_dashboard") + "#tab-users")
-            reader = csv.reader(io.StringIO(decoded_text))
-            rows_data = list(reader)
-        except Exception as e:
-            flash(_("Lỗi khi đọc file CSV: %(err)s", err=str(e)), "danger")
+            target_school_id = current_school_id
+
+        cur.execute("SELECT ten_truong FROM truong WHERE id = ?", (target_school_id,))
+        s_row = cur.fetchone()
+        school_name = s_row["ten_truong"] if s_row else f"Trường #{target_school_id}"
+        school_code = get_school_code(school_name, target_school_id)
+
+        file = request.files.get("file")
+        if not file or not file.filename:
+            flash(_("Vui lòng chọn file Excel (.xlsx, .xls) hoặc CSV (.csv) để nhập danh sách!"), "warning")
             return redirect(url_for("admin_dashboard") + "#tab-users")
-    else:
-        flash(_("Định dạng file không được hỗ trợ. Vui lòng tải lên file .xlsx hoặc .csv!"), "danger")
-        return redirect(url_for("admin_dashboard") + "#tab-users")
 
-    if not rows_data or len(rows_data) < 2:
-        flash(_("File tải lên không có dữ liệu để nhập!"), "warning")
-        return redirect(url_for("admin_dashboard") + "#tab-users")
+        filename_lower = file.filename.lower()
+        if not (filename_lower.endswith(".xlsx") or filename_lower.endswith(".xls") or filename_lower.endswith(".csv")):
+            flash(_("Định dạng file không được hỗ trợ. Vui lòng tải lên file .xlsx, .xls hoặc .csv (UTF-8)!"), "danger")
+            return redirect(url_for("admin_dashboard") + "#tab-users")
 
-    header_row = [str(cell or "").strip() for cell in rows_data[0]]
+        file_bytes = file.read()
+        if len(file_bytes) > 10 * 1024 * 1024:
+            flash(_("Dung lượng file vượt quá giới hạn 10MB. Vui lòng kiểm tra lại file!"), "danger")
+            return redirect(url_for("admin_dashboard") + "#tab-users")
 
-    def find_col_idx(headers, keywords):
-        for idx, h in enumerate(headers):
-            if not h:
-                continue
-            norm_h = remove_vietnamese_accents(str(h)).lower().replace("_", " ").strip()
-            for kw in keywords:
-                if kw in norm_h:
-                    return idx
-        return None
+        try:
+            rows_data = parse_uploaded_users_file(file_bytes, file.filename)
+        except Exception as e:
+            flash(_("Lỗi khi đọc file: %(err)s", err=str(e)), "danger")
+            return redirect(url_for("admin_dashboard") + "#tab-users")
 
-    idx_ho_ten = find_col_idx(header_row, ["ho ten", "ho va ten", "hoten", "fullname", "name"])
-    idx_vai_tro = find_col_idx(header_row, ["vai tro", "vaitro", "role", "chuc vu"])
-    idx_lop = find_col_idx(header_row, ["lop", "class", "don vi", "bo mon"])
-    idx_email = find_col_idx(header_row, ["email", "mail"])
-    idx_sdt = find_col_idx(header_row, ["so dien thoai", "dien thoai", "sdt", "phone", "tel"])
-    idx_ghi_chu = find_col_idx(header_row, ["ghi chu", "ghichu", "note", "mo ta"])
+        non_empty_rows = [r for r in rows_data[1:] if any(c != "" for c in r)]
+        if len(non_empty_rows) > 2000:
+            flash(_("File vượt quá 2000 dòng. Vui lòng chia thành nhiều file nhỏ hơn."), "danger")
+            return redirect(url_for("admin_dashboard") + "#tab-users")
 
-    if idx_ho_ten is None or idx_vai_tro is None:
-        flash(_("File thiếu cột bắt buộc 'họ_tên' hoặc 'vai_trò'. Vui lòng tải file mẫu để kiểm tra đúng cấu trúc!"), "danger")
-        return redirect(url_for("admin_dashboard") + "#tab-users")
+        if not non_empty_rows:
+            flash(_("File tải lên không có dữ liệu để nhập!"), "warning")
+            return redirect(url_for("admin_dashboard") + "#tab-users")
 
-    success_list = []
-    error_list = []
-    seen_emails = set()
-    seen_phones = set()
-    seen_usernames = set()
-    total_processed_rows = 0
+        valid_rows, error_list, total_processed_rows = validate_users_rows(rows_data, target_school_id, cur)
 
-    for i, row in enumerate(rows_data[1:]):
-        row_number = i + 2
-        if not row or all(cell is None or str(cell).strip() == "" for cell in row):
-            continue  # Bỏ qua dòng hoàn toàn trống
+        success_list = []
+        batch_size = 30
+        seen_usernames = set()
 
-        total_processed_rows += 1
+        for batch_start in range(0, len(valid_rows), batch_size):
+            batch = valid_rows[batch_start : batch_start + batch_size]
+            for item in batch:
+                try:
+                    ho_ten = item["ho_ten"]
+                    role = item["vai_tro"]
+                    lop = item.get("lop", "")
+                    email = item.get("email") or None
+                    sdt = item.get("sdt") or None
+                    ghi_chu = item.get("ghi_chu") or None
+                    stt = item.get("stt", 1)
 
-        def get_val(idx):
-            if idx is not None and idx < len(row) and row[idx] is not None:
-                return str(row[idx]).strip()
-            return ""
+                    username = item.get("username")
+                    if not username:
+                        username = generate_standard_school_username(
+                            school_code, lop, ho_ten, stt, db, seen_usernames
+                        )
+                    else:
+                        seen_usernames.add(username)
 
-        ho_ten = get_val(idx_ho_ten)
-        vai_tro_raw = get_val(idx_vai_tro)
-        lop = get_val(idx_lop)
-        email = get_val(idx_email)
-        sdt = get_val(idx_sdt)
-        ghi_chu = get_val(idx_ghi_chu)
+                    plain_pwd = generate_secure_random_password(8)
+                    hashed_pwd = hash_password_safe(plain_pwd)
 
-        # 1. Validate họ tên
-        if not ho_ten:
-            error_list.append({
-                "row": row_number,
-                "ho_ten": "(Để trống)",
-                "ly_do": "Họ và tên không được để trống"
-            })
-            continue
+                    so_du = 2.0 if role == "hoc_sinh" else (10.0 if role == "giao_vien" else 100.0)
+                    unit_lop = lop if lop else ("Ban Giám Hiệu" if role == "school_admin" else ("Tổ Giáo Viên" if role == "giao_vien" else ""))
 
-        # 2. Validate vai trò
-        vt_norm = remove_vietnamese_accents(vai_tro_raw).lower().replace(" ", "").replace("_", "").replace("-", "")
-        if vt_norm in ("quantruong", "quan_truong", "school_admin", "schooladmin", "quantri", "quantritruong", "admin"):
-            role = "school_admin"
-        elif vt_norm in ("giaovien", "giao_vien", "teacher", "gv", "giangvien"):
-            role = "giao_vien"
-        elif vt_norm in ("hocsinh", "hoc_sinh", "student", "hs"):
-            role = "hoc_sinh"
+                    cur.execute("""
+                        INSERT INTO users (truong_id, ma_hoc_sinh, ho_ten, lop, vai_tro, so_du_gio, gio_ranh, mat_khau, email, so_dien_thoai, ghi_chu, trang_thai)
+                        VALUES (?, ?, ?, ?, ?, ?, 'Toàn thời gian', ?, ?, ?, ?, 'hoat_dong')
+                    """, (target_school_id, username, ho_ten, unit_lop, role, so_du, hashed_pwd, email, sdt, ghi_chu))
+
+                    role_display = "Quản trị trường" if role == "school_admin" else ("Giáo viên" if role == "giao_vien" else "Học sinh")
+                    success_list.append({
+                        "ho_ten": ho_ten,
+                        "vai_tro": role,
+                        "vai_tro_hien_thi": role_display,
+                        "lop": unit_lop,
+                        "ma_hoc_sinh": username,
+                        "mat_khau": plain_pwd,
+                        "so_du_gio": so_du,
+                        "email": email or "",
+                        "so_dien_thoai": sdt or "",
+                        "ghi_chu": ghi_chu or "",
+                        "ten_truong": school_name
+                    })
+                except Exception as row_err:
+                    error_list.append({
+                        "row": item.get("row_number", "?"),
+                        "ho_ten": item.get("ho_ten", "Lỗi"),
+                        "ly_do": f"Lỗi tạo tài khoản: {str(row_err)}"
+                    })
+
+            # Commit DB và giải phóng RAM sau mỗi batch 30 tài khoản
+            db.commit()
+            gc.collect()
+
+        session["last_import_result"] = {
+            "success_count": len(success_list),
+            "error_count": len(error_list),
+            "total_rows": total_processed_rows,
+            "school_name": school_name,
+            "school_id": target_school_id,
+            "errors": error_list,
+            "success_list": success_list,
+            "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        }
+
+        if len(success_list) > 0 and len(error_list) == 0:
+            flash(_("Nhập danh sách thành công! Đã tạo %(count)s tài khoản cho trường '%(school)s'. Vui lòng tải file Excel kết quả để phát thông tin đăng nhập cho từng người.", count=len(success_list), school=school_name), "success")
+        elif len(success_list) > 0 and len(error_list) > 0:
+            flash(_("Đã tạo thành công %(sc)s tài khoản; %(ec)s dòng bị lỗi/bỏ qua. Xem bảng tổng kết chi tiết bên dưới.", sc=len(success_list), ec=len(error_list)), "warning")
         else:
-            error_list.append({
-                "row": row_number,
-                "ho_ten": ho_ten,
-                "ly_do": f"Vai trò '{vai_tro_raw}' không hợp lệ (hỗ trợ: quantruong, giaovien, hocsinh)"
-            })
-            continue
+            flash(_("Không có tài khoản nào được tạo. Toàn bộ %(ec)s dòng trong danh sách đều có lỗi.", ec=len(error_list)), "danger")
 
-        # 3. Validate Email
-        if email:
-            if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
-                error_list.append({
-                    "row": row_number,
-                    "ho_ten": ho_ten,
-                    "ly_do": f"Email '{email}' không đúng định dạng"
-                })
-                continue
-            email_lower = email.lower()
-            if email_lower in seen_emails:
-                error_list.append({
-                    "row": row_number,
-                    "ho_ten": ho_ten,
-                    "ly_do": f"Email '{email}' bị trùng lặp với dòng trước trong file"
-                })
-                continue
-            cur.execute("SELECT id FROM users WHERE LOWER(email) = ?", (email_lower,))
-            if cur.fetchone():
-                error_list.append({
-                    "row": row_number,
-                    "ho_ten": ho_ten,
-                    "ly_do": f"Email '{email}' đã tồn tại trong hệ thống (tài khoản đã có)"
-                })
-                continue
-
-        # 4. Validate Số điện thoại
-        if sdt:
-            clean_sdt = re.sub(r"[^\d+]", "", sdt)
-            if len(clean_sdt) < 8 or len(clean_sdt) > 15:
-                error_list.append({
-                    "row": row_number,
-                    "ho_ten": ho_ten,
-                    "ly_do": f"Số điện thoại '{sdt}' không hợp lệ"
-                })
-                continue
-            if clean_sdt in seen_phones:
-                error_list.append({
-                    "row": row_number,
-                    "ho_ten": ho_ten,
-                    "ly_do": f"Số điện thoại '{sdt}' bị trùng lặp với dòng trước trong file"
-                })
-                continue
-            cur.execute("SELECT id FROM users WHERE so_dien_thoai = ?", (clean_sdt,))
-            if cur.fetchone():
-                error_list.append({
-                    "row": row_number,
-                    "ho_ten": ho_ten,
-                    "ly_do": f"Số điện thoại '{sdt}' đã tồn tại trong hệ thống"
-                })
-                continue
-            sdt = clean_sdt
-
-        # 5. Chống trùng lặp (Idempotency): Nếu không có email và SĐT, kiểm tra họ tên + lớp + vai trò trong trường
-        if not email and not sdt:
-            cur.execute("""
-                SELECT id FROM users 
-                WHERE truong_id = ? AND ho_ten = ? AND (lop = ? OR (lop IS NULL AND ? = '')) AND vai_tro = ?
-            """, (target_school_id, ho_ten, lop, lop, role))
-            if cur.fetchone():
-                error_list.append({
-                    "row": row_number,
-                    "ho_ten": ho_ten,
-                    "ly_do": f"Tài khoản '{ho_ten}' (Lớp: {lop or '—'}) đã tồn tại trong trường (chống tạo trùng lặp)"
-                })
-                continue
-
-        # 6. Dòng hợp lệ -> Tạo tài khoản tự động
-        username = generate_unique_username(ho_ten, db, seen_usernames)
-        plain_pwd = generate_secure_random_password(8)
-        hashed_pwd = generate_password_hash(plain_pwd)
-
-        # Cấp số dư giờ theo quy chuẩn: Học sinh được cấp +2.0 giờ ban đầu
-        so_du = 2.0 if role == "hoc_sinh" else (10.0 if role == "giao_vien" else 100.0)
-        unit_lop = lop if lop else ("Ban Giám Hiệu" if role == "school_admin" else ("Tổ Giáo Viên" if role == "giao_vien" else ""))
-
-        cur.execute("""
-            INSERT INTO users (truong_id, ma_hoc_sinh, ho_ten, lop, vai_tro, so_du_gio, gio_ranh, mat_khau, email, so_dien_thoai, ghi_chu, trang_thai)
-            VALUES (?, ?, ?, ?, ?, ?, 'Toàn thời gian', ?, ?, ?, ?, 'hoat_dong')
-        """, (target_school_id, username, ho_ten, unit_lop, role, so_du, hashed_pwd, email or None, sdt or None, ghi_chu or None))
-
-        if email:
-            seen_emails.add(email.lower())
-        if sdt:
-            seen_phones.add(sdt)
-
-        role_display = "Quản trị trường" if role == "school_admin" else ("Giáo viên" if role == "giao_vien" else "Học sinh")
-        success_list.append({
-            "ho_ten": ho_ten,
-            "vai_tro": role,
-            "vai_tro_hien_thi": role_display,
-            "lop": unit_lop,
-            "ma_hoc_sinh": username,
-            "mat_khau": plain_pwd,
-            "so_du_gio": so_du,
-            "email": email,
-            "so_dien_thoai": sdt,
-            "ghi_chu": ghi_chu,
-            "ten_truong": school_name
-        })
-
-    db.commit()
-
-    # Lưu kết quả vào session để người dùng tải file Excel kết quả
-    session["last_import_result"] = {
-        "success_count": len(success_list),
-        "error_count": len(error_list),
-        "total_rows": total_processed_rows,
-        "school_name": school_name,
-        "school_id": target_school_id,
-        "errors": error_list,
-        "success_list": success_list,
-        "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    }
-
-    if len(success_list) > 0 and len(error_list) == 0:
-        flash(_("Nhập danh sách thành công! Đã tạo %(count)s tài khoản cho trường '%(school)s'. Vui lòng tải file Excel kết quả để phát thông tin đăng nhập cho từng người.", count=len(success_list), school=school_name), "success")
-    elif len(success_list) > 0 and len(error_list) > 0:
-        flash(_("Đã tạo thành công %(sc)s tài khoản; %(ec)s dòng bị lỗi/bỏ qua. Xem bảng tổng kết chi tiết bên dưới.", sc=len(success_list), ec=len(error_list)), "warning")
-    else:
-        flash(_("Không có tài khoản nào được tạo. Toàn bộ %(ec)s dòng trong danh sách đều có lỗi.", ec=len(error_list)), "danger")
-
-    return redirect(url_for("admin_dashboard") + "#tab-users")
+        return redirect(url_for("admin_dashboard") + "#tab-users")
+    except Exception as e:
+        app.logger.error(f"Lỗi nghiêm trọng khi nhập tài khoản: {e}", exc_info=True)
+        flash(_("Có lỗi xảy ra trong quá trình nhập danh sách: %(err)s. Vui lòng kiểm tra lại file của bạn.", err=str(e)), "danger")
+        return redirect(url_for("admin_dashboard") + "#tab-users")
 
 
 @app.route("/admin/import-users/download-result")
@@ -3898,14 +4511,28 @@ def admin_download_import_result():
     """
     Xuất file Excel (.xlsx) kết quả nhập tài khoản gồm họ tên, tên đăng nhập, mật khẩu ban đầu
     để nhà trường in hoặc phát gửi riêng cho từng cá nhân (học sinh/giáo viên).
+    Hỗ trợ đọc từ job_id hoặc từ session.
     """
-    last_import = session.get("last_import_result")
-    if not last_import or not last_import.get("success_list"):
+    job_id = request.args.get("job_id")
+    success_list = None
+    school_name = "Truong_Hoc"
+
+    if job_id:
+        with IMPORT_JOBS_LOCK:
+            job = IMPORT_JOBS.get(job_id)
+            if job and job.get("success_list"):
+                success_list = job["success_list"]
+                school_name = job.get("school_name", "Truong_Hoc")
+
+    if not success_list:
+        last_import = session.get("last_import_result")
+        if last_import and last_import.get("success_list"):
+            success_list = last_import["success_list"]
+            school_name = last_import.get("school_name", "Truong_Hoc")
+
+    if not success_list:
         flash(_("Chưa có kết quả nhập tài khoản nào trong phiên làm việc hiện tại để tải về!"), "warning")
         return redirect(url_for("admin_dashboard") + "#tab-users")
-
-    success_list = last_import["success_list"]
-    school_name = last_import.get("school_name", "Truong_Hoc")
 
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -5222,9 +5849,11 @@ def skills_market():
             u.ho_ten, 
             u.ma_hoc_sinh, 
             u.lop,
+            COALESCE(t.ten_truong, 'Chưa phân trường') AS ten_truong,
             ROUND(COALESCE(AVG(r.so_sao), 5.0)::numeric, 1) AS sao_tb
         FROM skills s
         JOIN users u ON s.user_id = u.id
+        LEFT JOIN truong t ON u.truong_id = t.id
         LEFT JOIN sessions ses ON s.id = ses.skill_id AND ses.trang_thai = 'hoan_thanh'
         LEFT JOIN ratings r ON ses.id = r.session_id AND r.nguoi_duoc_danh_gia_id = u.id
         WHERE s.trang_thai_duyet = 'da_duyet'
@@ -5251,7 +5880,7 @@ def skills_market():
         like_term = f"%{search_query}%"
         params.extend([like_term, like_term, like_term])
         
-    sql += " GROUP BY s.id, u.id, u.ho_ten, u.ma_hoc_sinh, u.lop ORDER BY s.id DESC"
+    sql += " GROUP BY s.id, u.id, u.ho_ten, u.ma_hoc_sinh, u.lop, t.ten_truong ORDER BY s.id DESC"
     cur.execute(sql, params)
     skills = cur.fetchall()
     
@@ -5583,13 +6212,15 @@ def book_skill_page(skill_id):
     cur = db.cursor()
     cur.execute("""
         SELECT s.*, u.ho_ten, u.lop, u.gio_ranh, u.ma_hoc_sinh,
+               COALESCE(t.ten_truong, 'Chưa phân trường') AS ten_truong,
                ROUND(COALESCE(AVG(r.so_sao), 5.0)::numeric, 1) AS sao_tb
         FROM skills s
         JOIN users u ON s.user_id = u.id
+        LEFT JOIN truong t ON u.truong_id = t.id
         LEFT JOIN sessions ses ON s.id = ses.skill_id AND ses.trang_thai = 'hoan_thanh'
         LEFT JOIN ratings r ON ses.id = r.session_id AND r.nguoi_duoc_danh_gia_id = u.id
         WHERE s.id = ?
-        GROUP BY s.id, u.id, u.ho_ten, u.lop, u.gio_ranh, u.ma_hoc_sinh
+        GROUP BY s.id, u.id, u.ho_ten, u.lop, u.gio_ranh, u.ma_hoc_sinh, t.ten_truong
     """, (skill_id,))
     skill = cur.fetchone()
     if not skill or (skill["trang_thai_duyet"] != "da_duyet" and skill.get("hien_thi_cong_dong") != 1):
@@ -7338,11 +7969,15 @@ def virtual_rooms_dashboard():
     cur.execute(
         f"""SELECT s.*, sk.tieu_de, sk.linh_vuc,
                   ud.ho_ten AS ten_nguoi_day, ud.lop AS lop_nguoi_day,
-                  uh.ho_ten AS ten_nguoi_hoc, uh.lop AS lop_nguoi_hoc
+                  uh.ho_ten AS ten_nguoi_hoc, uh.lop AS lop_nguoi_hoc,
+                  COALESCE(td.ten_truong, 'Chưa phân trường') AS truong_nguoi_day,
+                  COALESCE(th.ten_truong, 'Chưa phân trường') AS truong_nguoi_hoc
            FROM sessions s
            JOIN skills sk ON s.skill_id = sk.id
            JOIN users ud ON s.nguoi_day_id = ud.id
            JOIN users uh ON s.nguoi_hoc_id = uh.id
+           LEFT JOIN truong td ON ud.truong_id = td.id
+           LEFT JOIN truong th ON uh.truong_id = th.id
            WHERE s.trang_thai = 'da_dat' {where_filter}
            ORDER BY s.id DESC""",
         params
@@ -7353,11 +7988,15 @@ def virtual_rooms_dashboard():
     cur.execute(
         f"""SELECT s.*, sk.tieu_de, sk.linh_vuc,
                   ud.ho_ten AS ten_nguoi_day, ud.lop AS lop_nguoi_day,
-                  uh.ho_ten AS ten_nguoi_hoc, uh.lop AS lop_nguoi_hoc
+                  uh.ho_ten AS ten_nguoi_hoc, uh.lop AS lop_nguoi_hoc,
+                  COALESCE(td.ten_truong, 'Chưa phân trường') AS truong_nguoi_day,
+                  COALESCE(th.ten_truong, 'Chưa phân trường') AS truong_nguoi_hoc
            FROM sessions s
            JOIN skills sk ON s.skill_id = sk.id
            JOIN users ud ON s.nguoi_day_id = ud.id
            JOIN users uh ON s.nguoi_hoc_id = uh.id
+           LEFT JOIN truong td ON ud.truong_id = td.id
+           LEFT JOIN truong th ON uh.truong_id = th.id
            WHERE s.trang_thai = 'can_xac_minh' {where_filter}
            ORDER BY s.id DESC""",
         params
@@ -7368,11 +8007,15 @@ def virtual_rooms_dashboard():
     cur.execute(
         f"""SELECT s.*, sk.tieu_de, sk.linh_vuc,
                   ud.ho_ten AS ten_nguoi_day, ud.lop AS lop_nguoi_day,
-                  uh.ho_ten AS ten_nguoi_hoc, uh.lop AS lop_nguoi_hoc
+                  uh.ho_ten AS ten_nguoi_hoc, uh.lop AS lop_nguoi_hoc,
+                  COALESCE(td.ten_truong, 'Chưa phân trường') AS truong_nguoi_day,
+                  COALESCE(th.ten_truong, 'Chưa phân trường') AS truong_nguoi_hoc
            FROM sessions s
            JOIN skills sk ON s.skill_id = sk.id
            JOIN users ud ON s.nguoi_day_id = ud.id
            JOIN users uh ON s.nguoi_hoc_id = uh.id
+           LEFT JOIN truong td ON ud.truong_id = td.id
+           LEFT JOIN truong th ON uh.truong_id = th.id
            WHERE s.trang_thai = 'hoan_thanh' {where_filter}
            ORDER BY s.id DESC LIMIT 10""",
         params
@@ -7701,9 +8344,11 @@ def task_attendance(task_id):
 
     # Lấy danh sách học sinh đăng ký
     cur.execute("""
-        SELECT r.*, u.ma_hoc_sinh, u.ho_ten, u.lop, u.so_du_gio
+        SELECT r.*, u.ma_hoc_sinh, u.ho_ten, u.lop, u.so_du_gio,
+               COALESCE(t.ten_truong, 'Chưa phân trường') AS ten_truong
         FROM task_registrations r
         JOIN users u ON r.user_id = u.id
+        LEFT JOIN truong t ON u.truong_id = t.id
         WHERE r.task_id = ?
         ORDER BY r.id ASC
     """, (task_id,))
@@ -8234,9 +8879,11 @@ def forum_index():
 
     sql = """
         SELECT ft.*, u.ho_ten, u.lop, u.vai_tro,
+               COALESCE(t.ten_truong, 'Chưa phân trường') AS ten_truong,
                (SELECT COUNT(*) FROM forum_replies fr WHERE fr.topic_id = ft.id) AS reply_count
         FROM forum_topics ft
         JOIN users u ON ft.user_id = u.id
+        LEFT JOIN truong t ON u.truong_id = t.id
         WHERE ft.truong_id = ?
     """
     params = [target_school_id]
@@ -8367,9 +9014,11 @@ def forum_topic(topic_id):
 
     # Lấy danh sách bình luận
     cur.execute("""
-        SELECT fr.*, u.ho_ten, u.lop, u.vai_tro, u.ma_hoc_sinh
+        SELECT fr.*, u.ho_ten, u.lop, u.vai_tro, u.ma_hoc_sinh,
+               COALESCE(t.ten_truong, 'Chưa phân trường') AS ten_truong
         FROM forum_replies fr
         JOIN users u ON fr.user_id = u.id
+        LEFT JOIN truong t ON u.truong_id = t.id
         WHERE fr.topic_id = ?
         ORDER BY fr.id ASC
     """, (topic_id,))

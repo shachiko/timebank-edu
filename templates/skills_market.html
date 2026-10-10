@@ -92,6 +92,7 @@
                 </div>
                 <div>
                   <div class="fw-bold text-dark small">{{ skill.ho_ten }}</div>
+                  <small class="text-muted d-block fw-normal" style="font-size: 0.8em;">🏫 {{ skill.ten_truong if skill.ten_truong else _('Chưa phân trường') }}</small>
                   <div class="text-muted" style="font-size: 0.75rem;">{{ _('Lớp:') }} {{ skill.lop }} • {{ _('Mã:') }} <code>{{ skill.ma_hoc_sinh }}</code></div>
                 </div>
               </div>
@@ -146,7 +147,7 @@
               <div class="modal-body p-4 pt-2">
                 <div class="p-3 bg-light rounded-3 mb-3 small">
                   <div class="fw-bold text-dark mb-1">{{ skill.tieu_de }}</div>
-                  <div class="text-muted"><i class="bi bi-person-badge me-1"></i>{{ _('Gia sư bạn học:') }} <strong>{{ skill.ho_ten }}</strong> ({{ _('Lớp') }} {{ skill.lop }})</div>
+                  <div class="text-muted"><i class="bi bi-person-badge me-1"></i>{{ _('Gia sư bạn học:') }} <strong>{{ skill.ho_ten }}</strong> ({{ _('Lớp') }} {{ skill.lop }}) • 🏫 {{ skill.ten_truong if skill.ten_truong else _('Chưa phân trường') }}</div>
                   <div class="text-muted"><i class="bi bi-wallet2 me-1"></i>{{ _('Số dư hiện có của bạn:') }} <strong>{{ "%.1f"|format(current_user.so_du_gio) }} {{ _('giờ') }}</strong></div>
                 </div>
 

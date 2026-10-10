@@ -41,6 +41,7 @@
               <td class="ps-3 small text-muted">#{{ item.id }}</td>
               <td>
                 <span class="fw-semibold text-dark d-block">{{ item.ho_ten }}</span>
+                <small class="text-muted d-block fw-normal" style="font-size: 0.8em;">🏫 {{ item.ten_truong if item.ten_truong else _('Chưa phân trường') }}</small>
                 <small class="text-muted">{{ _('Mã:') }}<code>{{ item.ma_hoc_sinh }}</code> • {{ _('Lớp:') }} {{ item.lop }}</small>
               </td>
               <td>

@@ -75,7 +75,10 @@
             <tr>
               <td class="ps-4 fw-medium text-muted">{{ loop.index }}</td>
               <td><code>{{ reg.ma_hoc_sinh }}</code></td>
-              <td class="fw-bold text-dark">{{ reg.ho_ten }}</td>
+              <td class="fw-bold text-dark">
+                {{ reg.ho_ten }}
+                <small class="text-muted d-block fw-normal" style="font-size: 0.8em;">🏫 {{ reg.ten_truong if reg.ten_truong else _('Chưa phân trường') }}</small>
+              </td>
               <td><span class="badge bg-light text-dark border">{{ reg.lop }}</span></td>
               <td><span class="badge bg-success bg-opacity-10 text-success fw-bold">{{ "%.1f"|format(reg.so_du_gio) }}h</span></td>
               <td>

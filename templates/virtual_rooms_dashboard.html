@@ -86,10 +86,12 @@
               </td>
               <td>
                 <div class="fw-semibold text-dark">{{ s.ten_nguoi_day }}</div>
+                <small class="text-muted d-block fw-normal" style="font-size: 0.8em;">🏫 {{ s.truong_nguoi_day if s.truong_nguoi_day else _('Chưa phân trường') }}</small>
                 <small class="text-muted">{{ _('Lớp') }} {{ s.lop_nguoi_day }}</small>
               </td>
               <td>
                 <div class="fw-semibold text-dark">{{ s.ten_nguoi_hoc }}</div>
+                <small class="text-muted d-block fw-normal" style="font-size: 0.8em;">🏫 {{ s.truong_nguoi_hoc if s.truong_nguoi_hoc else _('Chưa phân trường') }}</small>
                 <small class="text-muted">{{ _('Lớp') }} {{ s.lop_nguoi_hoc }}</small>
               </td>
               <td>{{ "%.1f"|format(s.so_gio) }}h</td>
@@ -159,8 +161,8 @@
               </td>
               <td>
                 <div class="small">
-                  <span class="text-primary fw-semibold">{{ _('Dạy:') }}</span> {{ s.ten_nguoi_day }} • 
-                  <span class="text-success fw-semibold">{{ _('Học:') }}</span> {{ s.ten_nguoi_hoc }}
+                  <span class="text-primary fw-semibold">{{ _('Dạy:') }}</span> {{ s.ten_nguoi_day }} <small class="text-muted">(🏫 {{ s.truong_nguoi_day if s.truong_nguoi_day else _('Chưa phân trường') }})</small> • 
+                  <span class="text-success fw-semibold">{{ _('Học:') }}</span> {{ s.ten_nguoi_hoc }} <small class="text-muted">(🏫 {{ s.truong_nguoi_hoc if s.truong_nguoi_hoc else _('Chưa phân trường') }})</small>
                 </div>
               </td>
               <td>{{ "%.1f"|format(s.so_gio) }}h</td>
@@ -230,8 +232,14 @@
             <tr>
               <td class="ps-3"><code>#{{ s.id }}</code></td>
               <td><strong class="text-dark">{{ s.tieu_de }}</strong></td>
-              <td>{{ s.ten_nguoi_day }}</td>
-              <td>{{ s.ten_nguoi_hoc }}</td>
+              <td>
+                <div>{{ s.ten_nguoi_day }}</div>
+                <small class="text-muted d-block fw-normal" style="font-size: 0.8em;">🏫 {{ s.truong_nguoi_day if s.truong_nguoi_day else _('Chưa phân trường') }}</small>
+              </td>
+              <td>
+                <div>{{ s.ten_nguoi_hoc }}</div>
+                <small class="text-muted d-block fw-normal" style="font-size: 0.8em;">🏫 {{ s.truong_nguoi_hoc if s.truong_nguoi_hoc else _('Chưa phân trường') }}</small>
+              </td>
               <td><span class="text-success fw-bold">+{{ "%.1f"|format(s.so_gio) }}h</span></td>
               <td><span class="badge bg-success"><i class="bi bi-patch-check-fill me-1"></i>{{ _('Hoàn thành') }}</span></td>
               <td class="text-end pe-3">

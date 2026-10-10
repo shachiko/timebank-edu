@@ -37,6 +37,7 @@
               </div>
               <div class="flex-grow-1">
                 <div class="fw-bold text-dark fs-5">{{ skill.ho_ten }}</div>
+                <small class="text-muted d-block fw-normal" style="font-size: 0.8em;">🏫 {{ skill.ten_truong if skill.ten_truong else _('Chưa phân trường') }}</small>
                 <div class="text-muted small">
                   <i class="bi bi-mortarboard me-1"></i>{{ _('Lớp:') }}<strong>{{ skill.lop }}</strong> •
                   <i class="bi bi-person-badge me-1"></i>{{ _('Mã HS:') }}<code>{{ skill.ma_hoc_sinh }}</code>

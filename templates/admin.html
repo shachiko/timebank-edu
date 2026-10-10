@@ -226,7 +226,10 @@
                   {% for s in ai_warnings.inactive_students[:5] %}
                   <div class="list-group-item py-2 px-3">
                     <div class="d-flex justify-content-between align-items-center">
-                      <span class="fw-semibold text-dark">{{ s.ho_ten }}</span>
+                      <div>
+                        <span class="fw-semibold text-dark">{{ s.ho_ten }}</span>
+                        <small class="text-muted d-block fw-normal" style="font-size: 0.8em;">🏫 {{ s.ten_truong if s.ten_truong else _('Chưa phân trường') }}</small>
+                      </div>
                       <span class="badge bg-light text-secondary border">{{ _('Lớp') }} {{ s.lop }}</span>
                     </div>
                     <small class="text-danger d-block">{{ _(s.ly_do) }}</small>
@@ -374,7 +377,10 @@
                     {% endif %}
                   </td>
                   <td><code>{{ st.ma_hoc_sinh }}</code></td>
-                  <td class="fw-bold text-dark">{{ st.ho_ten }}</td>
+                  <td>
+                    <div class="fw-bold text-dark">{{ st.ho_ten }}</div>
+                    <small class="text-muted d-block fw-normal" style="font-size: 0.8em;">🏫 {{ st.ten_truong if st.ten_truong else _('Chưa phân trường') }}</small>
+                  </td>
                   <td class="small">{{ st.lop if st.lop else '—' }}</td>
                   <td class="text-center fw-bold text-primary">{{ "%.1f"|format(st.gio_day) }}h</td>
                   <td class="text-center text-success fw-semibold">{{ "%.1f"|format(st.gio_hoc) }}h</td>
@@ -445,7 +451,10 @@
                       <input type="checkbox" name="student_ids" value="{{ st.id }}" class="form-check-input student-chk">
                     </td>
                     <td><code>{{ st.ma_hoc_sinh }}</code></td>
-                    <td class="fw-bold text-dark">{{ st.ho_ten }}</td>
+                    <td>
+                      <div class="fw-bold text-dark">{{ st.ho_ten }}</div>
+                      <small class="text-muted d-block fw-normal" style="font-size: 0.8em;">🏫 {{ st.ten_truong if st.ten_truong else _('Chưa phân trường') }}</small>
+                    </td>
                     <td>{{ st.lop if st.lop else '—' }}</td>
                     <td>
                       <span class="badge bg-light text-primary border">{{ st.ten_truong }}</span>
@@ -654,6 +663,7 @@
                 <tr class="{% if v.muc_do == 3 and v.user_trang_thai == 'de_xuat_khoa' %}table-warning{% endif %}">
                   <td class="ps-3">
                     <div class="fw-bold text-dark">{{ v.ho_ten }}</div>
+                    <small class="text-muted d-block fw-normal" style="font-size: 0.8em;">🏫 {{ v.ten_truong if v.ten_truong else _('Chưa phân trường') }}</small>
                     <small class="text-muted"><code>{{ v.ma_hoc_sinh }}</code> • {{ _('Lớp') }} {{ v.lop }}</small>
                   </td>
                   <td><span class="badge bg-light text-dark border">{{ v.ten_truong }}</span></td>
@@ -732,7 +742,21 @@
             <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-people-fill me-2 text-primary"></i>{{ _('Danh sách Tài khoản Người dùng') }}</h5>
             <span class="badge bg-light text-dark border">{{ _('Cập nhật theo CSDL') }}</span>
           </div>
-          <div class="d-flex align-items-center gap-2">
+          <div class="d-flex flex-wrap align-items-center gap-2">
+            {% if is_super_admin %}
+            <div class="d-flex align-items-center gap-1">
+              <label for="filterSchoolSelect" class="small fw-semibold text-muted text-nowrap mb-0"><i class="bi bi-building me-1"></i>{{ _('Lọc trường:') }}</label>
+              <select id="filterSchoolSelect" class="form-select form-select-sm rounded-pill shadow-sm" style="min-width: 190px;">
+                <option value="">{{ _('Tất cả trường') }}</option>
+                {% for sc in all_schools %}
+                <option value="{{ sc.id }}">{{ sc.ten_truong }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            {% endif %}
+            <div class="position-relative" style="min-width: 200px;">
+              <input type="text" id="searchUserTableInput" class="form-control form-control-sm rounded-pill shadow-sm" placeholder="{{ _('Tìm kiếm tên, mã, lớp...') }}">
+            </div>
             <button type="button" class="btn btn-primary rounded-pill px-3 shadow-sm fw-semibold btn-sm" data-bs-toggle="modal" data-bs-target="#modalImportUsers" id="btnImportUsers">
               <i class="bi bi-file-earmark-arrow-up-fill me-1"></i>{{ _('Nhập danh sách (Excel/CSV)') }}
             </button>
@@ -807,7 +831,7 @@
 
         <div class="card-body p-0">
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0" id="usersTable">
               <thead class="table-light small text-muted">
                 <tr>
                   <th scope="col" class="ps-3">ID</th>
@@ -821,14 +845,17 @@
                   <th scope="col">{{ _('Khung giờ rảnh') }}</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody id="usersTableBody">
                 {% for u in users %}
-                <tr>
+                <tr class="user-row" data-school-id="{{ u.truong_id }}" data-school-name="{{ u.ten_truong|lower }}">
                   <td class="ps-3 small text-muted">#{{ u.id }}</td>
                   <td><code>{{ u.ma_hoc_sinh }}</code></td>
-                  <td class="fw-semibold text-dark">{{ u.ho_ten }}</td>
-                  <td class="small">{{ u.lop if u.lop else '—' }}</td>
-                  <td><span class="badge bg-light text-primary border">{{ u.ten_truong }}</span></td>
+                  <td>
+                    <div class="fw-semibold text-dark user-name-cell">{{ u.ho_ten }}</div>
+                    <small class="text-muted d-block fw-normal" style="font-size: 0.8em;">🏫 {{ u.ten_truong if u.ten_truong else _('Chưa phân trường') }}</small>
+                  </td>
+                  <td class="small user-class-cell">{{ u.lop if u.lop else '—' }}</td>
+                  <td><span class="badge bg-light text-primary border">{{ u.ten_truong if u.ten_truong else _('Chưa phân trường') }}</span></td>
                   <td>
                     {% if u.vai_tro in ('super_admin', 'admin') %}
                       <span class="badge bg-danger">{{ _('Tổng Quản trị') }}</span>
@@ -906,6 +933,7 @@
                   </td>
                   <td>
                     <div class="fw-semibold text-dark">{{ sk.ho_ten }}</div>
+                    <small class="text-muted d-block fw-normal" style="font-size: 0.8em;">🏫 {{ sk.ten_truong if sk.ten_truong else _('Chưa phân trường') }}</small>
                     <small class="text-muted">{{ _('Mã:') }} <code>{{ sk.ma_hoc_sinh }}</code> • {{ _('Lớp:') }} {{ sk.lop }}</small>
                   </td>
                   <td>
@@ -972,7 +1000,10 @@
                 {% for sk in community_approved_skills %}
                 <tr>
                   <td class="fw-semibold text-dark">{{ sk.tieu_de }}</td>
-                  <td>{{ sk.ho_ten }} ({{ sk.lop }})</td>
+                  <td>
+                    <div class="fw-semibold text-dark">{{ sk.ho_ten }} ({{ sk.lop }})</div>
+                    <small class="text-muted d-block fw-normal" style="font-size: 0.8em;">🏫 {{ sk.ten_truong if sk.ten_truong else _('Chưa phân trường') }}</small>
+                  </td>
                   <td><span class="badge bg-light text-dark border">{{ sk.ten_truong }}</span></td>
                   <td>
                     <span class="badge bg-info-subtle text-info-emphasis">
@@ -1573,11 +1604,12 @@
 {% endif %}
 
 <!-- =========================================================================
-     MODAL: NHẬP DANH SÁCH TÀI KHOẢN HÀNG LOẠT (EXCEL/CSV)
+     MODAL: NHẬP DANH SÁCH TÀI KHOẢN HÀNG LOẠT (EXCEL/CSV - 2 GIAI ĐOẠN)
      ========================================================================= -->
-<div class="modal fade" id="modalImportUsers" tabindex="-1" aria-labelledby="modalImportUsersLabel" aria-hidden="true">
+<div class="modal fade" id="modalImportUsers" tabindex="-1" aria-labelledby="modalImportUsersLabel" aria-hidden="true" data-bs-backdrop="static">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content rounded-4 border-0 shadow">
+      <!-- Modal Header -->
       <div class="modal-header border-0 pb-0 pt-4 px-4">
         <div class="d-flex align-items-center gap-2">
           <div class="bg-primary bg-opacity-10 text-primary p-2 rounded-3">
@@ -1585,79 +1617,192 @@
           </div>
           <div>
             <h5 class="modal-title fw-bold text-dark mb-0" id="modalImportUsersLabel">{{ _('Nhập Danh Sách Tài Khoản Hàng Loạt') }}</h5>
-            <small class="text-muted">{{ _('Tạo nhanh tài khoản Quản trị trường, Giáo viên và Học sinh từ file Excel/CSV') }}</small>
+            <small class="text-muted">{{ _('Quy trình 2 giai đoạn: Kiểm tra file chuẩn xác &amp; Tạo tài khoản nền chịu tải cao') }}</small>
           </div>
         </div>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="btnModalCloseHeader"></button>
       </div>
 
-      <form action="{{ url_for('admin_import_users') }}" method="POST" enctype="multipart/form-data">
+      <!-- GIAI ĐOẠN 1: FORM CHỌN FILE VÀ TRƯỜNG -->
+      <div id="importStepUploadContainer">
+        <form id="formImportUsersSync" action="{{ url_for('admin_import_users') }}" method="POST" enctype="multipart/form-data">
+          <div class="modal-body p-4">
+            <!-- Khung tải file mẫu -->
+            <div class="p-3 rounded-3 mb-4 border" style="background-color: #FFF8F1; border-color: #FED7AA !important;">
+              <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div>
+                  <span class="fw-bold text-dark d-block mb-1"><i class="bi bi-file-earmark-excel me-1 text-warning"></i>{{ _('Tải file mẫu chuẩn định dạng') }}</span>
+                  <small class="text-muted">{{ _('Cột mẫu: họ_tên | vai_trò (quantruong/giaovien/hocsinh) | lớp | email | số_điện_thoại | ghi_chú') }}</small>
+                </div>
+                <a href="{{ url_for('admin_download_import_template') }}" id="btnDownloadTemplate" class="btn btn-outline-primary rounded-pill btn-sm px-3 fw-semibold">
+                  <i class="bi bi-download me-1"></i>{{ _('Tải file Excel mẫu') }}
+                </a>
+              </div>
+            </div>
+
+            <!-- Đơn vị trường áp dụng -->
+            {% if is_super_admin %}
+            <div class="mb-3">
+              <label class="form-label fw-semibold small text-dark">{{ _('Chọn trường học áp dụng') }} <span class="text-danger">*</span></label>
+              <select name="truong_id" id="importSchoolSelect" class="form-select rounded-3" required>
+                {% for sc in all_schools %}
+                <option value="{{ sc.id }}" {% if selected_truong_id and selected_truong_id|int == sc.id %}selected{% endif %}>
+                  {{ sc.ten_truong }} (ID: {{ sc.id }})
+                </option>
+                {% endfor %}
+              </select>
+              <small class="text-muted">{{ _('Tổng quản trị (Super Admin) có quyền chỉ định trường nhận danh sách tài khoản.') }}</small>
+            </div>
+            {% else %}
+            <div class="mb-3">
+              <label class="form-label fw-semibold small text-dark">{{ _('Đơn vị trường học') }}</label>
+              <div class="form-control bg-light rounded-3 d-flex align-items-center gap-2">
+                <i class="bi bi-building text-primary"></i>
+                <span class="fw-semibold text-dark">{{ current_school_name }}</span>
+                <span class="badge bg-primary-subtle text-primary ms-auto">{{ _('Trường của bạn') }}</span>
+              </div>
+              <input type="hidden" name="truong_id" id="importSchoolSelect" value="{{ session.get('truong_id') }}">
+            </div>
+            {% endif %}
+
+            <!-- Chọn file upload -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold small text-dark">{{ _('Chọn file Excel (.xlsx, .xls) hoặc CSV (.csv)') }} <span class="text-danger">*</span></label>
+              <input type="file" name="file" id="importFileInput" class="form-control rounded-3" accept=".xlsx,.xls,.csv" required>
+              <small class="text-muted">{{ _('Hỗ trợ .xlsx, .xls, .csv (UTF-8). Tối đa 2.000 dòng, dung lượng <= 10MB.') }}</small>
+            </div>
+
+            <!-- Cảnh báo lỗi client-side nếu có -->
+            <div id="importClientAlert" class="alert alert-danger d-none border-0 rounded-3 mb-3 small py-2"></div>
+
+            <!-- Lưu ý bảo mật & cơ chế xử lý -->
+            <div class="alert alert-info border-0 rounded-3 mb-0 small">
+              <div class="fw-bold mb-1"><i class="bi bi-shield-check me-1"></i>{{ _('Cơ chế bảo mật &amp; Tự động hóa hệ thống:') }}</div>
+              <ul class="mb-0 ps-3">
+                <li><strong>{{ _('Tên đăng nhập chuẩn hóa:') }}</strong> {{ _('Định dạng [MÃ TRƯỜNG]-<lớp>-<tên>-<STT> (VD: UKA-4.1-An-01) duy nhất.') }}</li>
+                <li><strong>{{ _('Mật khẩu ngẫu nhiên riêng:') }}</strong> {{ _('Mỗi tài khoản có mật khẩu riêng 8 ký tự, băm an toàn pbkdf2:sha256 tối ưu RAM.') }}</li>
+                <li><strong>{{ _('Kích hoạt ngay:') }}</strong> {{ _('Học sinh tự động nhận +2.0 giờ hoạt động ban đầu.') }}</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="modal-footer border-0 pt-0 px-4 pb-4 d-flex justify-content-between align-items-center">
+            <button type="submit" class="btn btn-link text-muted btn-sm text-decoration-none" id="btnSyncSubmit" title="{{ _('Dùng khi trình duyệt không hỗ trợ JavaScript') }}">
+              <i class="bi bi-arrow-repeat me-1"></i> {{ _('Nhập đồng bộ truyền thống') }}
+            </button>
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">{{ _('Hủy') }}</button>
+              <button type="button" class="btn btn-primary rounded-pill px-4 fw-semibold shadow-sm" id="btnValidateImport">
+                <i class="bi bi-search me-1"></i> <span id="btnValidateText">{{ _('Kiểm tra file') }}</span>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- GIAI ĐOẠN 1: BẢNG KẾT QUẢ KIỂM TRA (PREVIEW X ĐÚNG, Y LỖI) -->
+      <div id="importStepPreviewContainer" class="d-none">
         <div class="modal-body p-4">
-          <!-- Khung tải file mẫu -->
-          <div class="p-3 rounded-3 mb-4 border" style="background-color: #FFF8F1; border-color: #FED7AA !important;">
+          <div class="p-3 bg-light rounded-3 mb-3 border">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
               <div>
-                <span class="fw-bold text-dark d-block mb-1"><i class="bi bi-file-earmark-excel me-1 text-warning"></i>{{ _('Tải file mẫu chuẩn định dạng') }}</span>
-                <small class="text-muted">{{ _('Cột mẫu: họ_tên | vai_trò (quantruong/giaovien/hocsinh) | lớp | email | số_điện_thoại | ghi_chú') }}</small>
+                <h6 class="fw-bold text-dark mb-1"><i class="bi bi-clipboard-data me-1 text-primary"></i>{{ _('Kết quả kiểm tra dữ liệu') }}</h6>
+                <small class="text-muted">{{ _('Đơn vị:') }} <strong id="previewSchoolName">...</strong> • {{ _('Tổng số dòng xử lý:') }} <strong id="previewTotalRows">0</strong></small>
               </div>
-              <a href="{{ url_for('admin_download_import_template') }}" id="btnDownloadTemplate" class="btn btn-outline-primary rounded-pill btn-sm px-3 fw-semibold">
-                <i class="bi bi-download me-1"></i>{{ _('Tải file Excel mẫu') }}
-              </a>
+              <div class="d-flex gap-2">
+                <span class="badge bg-success px-3 py-2 fw-semibold fs-6"><i class="bi bi-check-circle-fill me-1"></i><span id="previewValidCount">0</span> {{ _('hợp lệ') }}</span>
+                <span class="badge bg-danger px-3 py-2 fw-semibold fs-6"><i class="bi bi-exclamation-triangle-fill me-1"></i><span id="previewErrorCount">0</span> {{ _('lỗi / bỏ qua') }}</span>
+              </div>
             </div>
           </div>
 
-          <!-- Đơn vị trường áp dụng -->
-          {% if is_super_admin %}
-          <div class="mb-3">
-            <label class="form-label fw-semibold small text-dark">{{ _('Chọn trường học áp dụng') }} <span class="text-danger">*</span></label>
-            <select name="truong_id" class="form-select rounded-3" required>
-              {% for sc in all_schools %}
-              <option value="{{ sc.id }}" {% if selected_truong_id and selected_truong_id|int == sc.id %}selected{% endif %}>
-                {{ sc.ten_truong }} (ID: {{ sc.id }})
-              </option>
-              {% endfor %}
-            </select>
-            <small class="text-muted">{{ _('Tổng quản trị (Super Admin) có quyền chỉ định trường nhận danh sách tài khoản.') }}</small>
-          </div>
-          {% else %}
-          <div class="mb-3">
-            <label class="form-label fw-semibold small text-dark">{{ _('Đơn vị trường học') }}</label>
-            <div class="form-control bg-light rounded-3 d-flex align-items-center gap-2">
-              <i class="bi bi-building text-primary"></i>
-              <span class="fw-semibold text-dark">{{ current_school_name }}</span>
-              <span class="badge bg-primary-subtle text-primary ms-auto">{{ _('Trường của bạn') }}</span>
+          <!-- Bảng các dòng bị lỗi / cảnh báo nếu có -->
+          <div id="previewErrorWrapper" class="d-none">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="fw-bold text-danger small"><i class="bi bi-exclamation-octagon me-1"></i>{{ _('Chi tiết các dòng bị lỗi / trùng lặp (sẽ được bỏ qua):') }}</span>
+              <span class="badge bg-danger-subtle text-danger small" id="previewErrorBadgeCount">0 dòng</span>
             </div>
-            <input type="hidden" name="truong_id" value="{{ session.get('truong_id') }}">
+            <div class="table-responsive rounded-3 border bg-white mb-3" style="max-height: 220px; overflow-y: auto;">
+              <table class="table table-sm table-bordered table-hover mb-0 small">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width: 70px;" class="text-center">{{ _('Dòng') }}</th>
+                    <th style="width: 200px;">{{ _('Họ và tên') }}</th>
+                    <th>{{ _('Lý do lỗi / Bỏ qua') }}</th>
+                  </tr>
+                </thead>
+                <tbody id="previewErrorTableBody"></tbody>
+              </table>
+            </div>
           </div>
-          {% endif %}
 
-          <!-- Chọn file upload -->
-          <div class="mb-3">
-            <label class="form-label fw-semibold small text-dark">{{ _('Chọn file Excel (.xlsx) hoặc CSV (.csv)') }} <span class="text-danger">*</span></label>
-            <input type="file" name="file" id="importFileInput" class="form-control rounded-3" accept=".xlsx,.xls,.csv" required>
-            <small class="text-muted">{{ _('Hỗ trợ các định dạng bảng tính thông dụng (.xlsx, .csv định dạng UTF-8).') }}</small>
-          </div>
-
-          <!-- Lưu ý bảo mật & cơ chế xử lý -->
-          <div class="alert alert-info border-0 rounded-3 mb-0 small">
-            <div class="fw-bold mb-1"><i class="bi bi-shield-check me-1"></i>{{ _('Cơ chế bảo mật & Tự động hóa hệ thống:') }}</div>
-            <ul class="mb-0 ps-3">
-              <li><strong>{{ _('Tên đăng nhập & Mật khẩu riêng:') }}</strong> {{ _('Hệ thống tự sinh mã đăng nhập duy nhất và mật khẩu ngẫu nhiên riêng cho từng người (không dùng chung mật khẩu mặc định).') }}</li>
-              <li><strong>{{ _('Mật khẩu băm an toàn:') }}</strong> {{ _('Mật khẩu được mã hóa một chiều bằng Werkzeug trước khi lưu CSDL.') }}</li>
-              <li><strong>{{ _('Trạng thái hoạt động:') }}</strong> {{ _('Tài khoản được kích hoạt ngay, học sinh tự động nhận +2.0 giờ ban đầu.') }}</li>
-              <li><strong>{{ _('Bỏ qua dòng lỗi:') }}</strong> {{ _('Dòng sai sót sẽ được bỏ qua và ghi rõ lý do, không chặn các dòng đúng.') }}</li>
-              <li><strong>{{ _('Xuất file kết quả:') }}</strong> {{ _('Ngay sau khi nhập, bạn có thể tải file Excel kết quả chứa thông tin đăng nhập để bàn giao cho từng cá nhân.') }}</li>
-            </ul>
+          <div id="previewSuccessNotice" class="alert alert-success border-0 rounded-3 mb-0 small">
+            <i class="bi bi-info-circle-fill me-1"></i>
+            {{ _('Dữ liệu hợp lệ đã sẵn sàng để tạo tài khoản. Vui lòng bấm xác nhận bên dưới để hệ thống xử lý ngầm.') }}
           </div>
         </div>
 
-        <div class="modal-footer border-0 pt-0 px-4 pb-4">
-          <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">{{ _('Hủy') }}</button>
-          <button type="submit" class="btn btn-primary rounded-pill px-4 fw-semibold shadow-sm" id="btnSubmitImport">
-            <i class="bi bi-upload me-1"></i> {{ _('Bắt đầu Nhập danh sách') }}
+        <div class="modal-footer border-0 pt-0 px-4 pb-4 d-flex justify-content-between align-items-center">
+          <button type="button" class="btn btn-outline-secondary rounded-pill px-4" id="btnBackToUpload">
+            <i class="bi bi-arrow-left me-1"></i> {{ _('Chọn lại file') }}
+          </button>
+          <button type="button" class="btn btn-success rounded-pill px-4 fw-bold shadow-sm" id="btnConfirmImportAsync">
+            <i class="bi bi-check2-circle me-1"></i> <span id="btnConfirmText">{{ _('Xác nhận tạo tài khoản') }}</span>
           </button>
         </div>
-      </form>
+      </div>
+
+      <!-- GIAI ĐOẠN 2: TIẾN TRÌNH TẠO TÀI KHOẢN NGẦM (POLLING REALTIME) -->
+      <div id="importStepProgressContainer" class="d-none">
+        <div class="modal-body p-4 text-center">
+          <div class="py-3">
+            <div class="spinner-border text-primary mb-3" style="width: 3.5rem; height: 3.5rem;" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <h5 class="fw-bold text-dark mb-1" id="progressTitle">{{ _('Đang xử lý tạo tài khoản...') }}</h5>
+            <p class="text-muted small mb-4" id="progressSubtitle">{{ _('Hệ thống đang xử lý từng batch 50 tài khoản, băm mật khẩu an toàn và ghi dữ liệu ngầm.') }}</p>
+
+            <div class="progress mb-3 shadow-sm" style="height: 24px; border-radius: 12px; background-color: #f1f3f5;">
+              <div id="importProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary fw-bold" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center px-2 small text-muted">
+              <span>{{ _('Tiến độ:') }} <strong class="text-dark" id="progressStatsText">0 / 0</strong></span>
+              <span>
+                {{ _('Thành công:') }} <strong class="text-success" id="progressSuccessText">0</strong> •
+                {{ _('Lỗi:') }} <strong class="text-danger" id="progressFailedText">0</strong>
+              </span>
+            </div>
+
+            <div class="mt-4 p-3 bg-light rounded-3 text-start small border">
+              <i class="bi bi-shield-lock-fill text-primary me-1"></i>
+              <strong>{{ _('Cơ chế chịu tải ngầm:') }}</strong> {{ _('Bạn có thể tải lại trang hoặc đóng tab, worker thread trên máy chủ vẫn tiếp tục xử lý an toàn và tự động cập nhật khi bạn mở lại.') }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GIAI ĐOẠN 3: HOÀN TẤT & TẢI FILE EXCEL KẾT QUẢ -->
+      <div id="importStepDoneContainer" class="d-none">
+        <div class="modal-body p-4 text-center">
+          <div class="py-3">
+            <div class="text-success mb-3">
+              <i class="bi bi-check-circle-fill display-3"></i>
+            </div>
+            <h4 class="fw-bold text-dark mb-1">{{ _('Nhập Danh Sách Hoàn Tất!') }}</h4>
+            <p class="text-muted mb-4">{{ _('Đã tạo thành công') }} <strong class="text-success fs-5" id="doneSuccessCount">0</strong> {{ _('tài khoản cho trường') }} <strong id="doneSchoolName">...</strong></p>
+
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+              <a href="#" id="btnDownloadResultExcel" class="btn btn-success rounded-pill px-4 py-2 fw-bold shadow-sm">
+                <i class="bi bi-file-earmark-excel-fill me-1"></i> {{ _('Tải file Excel kết quả (Tên đăng nhập & Mật khẩu)') }}
+              </a>
+              <button type="button" class="btn btn-outline-secondary rounded-pill px-4 py-2" id="btnCloseImportModal">
+                <i class="bi bi-check2 me-1"></i> {{ _('Đóng & Xem danh sách') }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1795,6 +1940,116 @@ function activateAdminTab(targetId) {
   });
 }
 
+// =========================================================================
+// BỘ LỌC DANH SÁCH TÀI KHOẢN THEO TRƯỜNG & TỪ KHÓA TÌM KIẾM
+// =========================================================================
+function filterUsersTable() {
+  const schoolSelect = document.getElementById('filterSchoolSelect');
+  const schoolFilter = schoolSelect ? schoolSelect.value.trim() : '';
+  const searchInput = document.getElementById('searchUserTableInput');
+  const searchFilter = searchInput ? searchInput.value.trim().toLowerCase() : '';
+  const rows = document.querySelectorAll('#usersTableBody tr.user-row');
+
+  rows.forEach(row => {
+    const rowSchoolId = row.getAttribute('data-school-id') || '';
+    const rowText = row.innerText.toLowerCase();
+
+    const matchSchool = (!schoolFilter) || (rowSchoolId === schoolFilter);
+    const matchSearch = (!searchFilter) || (rowText.includes(searchFilter));
+
+    if (matchSchool && matchSearch) {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
+  });
+}
+
+// =========================================================================
+// QUY TRÌNH IMPORT TÀI KHOẢN 2 GIAI ĐOẠN (ASYNC WORKER + POLLING REALTIME)
+// =========================================================================
+let currentActiveImportJobId = null;
+let importPollIntervalTimer = null;
+
+function showImportStep(stepName) {
+  const uploadBox = document.getElementById('importStepUploadContainer');
+  const previewBox = document.getElementById('importStepPreviewContainer');
+  const progressBox = document.getElementById('importStepProgressContainer');
+  const doneBox = document.getElementById('importStepDoneContainer');
+
+  if (uploadBox) uploadBox.classList.add('d-none');
+  if (previewBox) previewBox.classList.add('d-none');
+  if (progressBox) progressBox.classList.add('d-none');
+  if (doneBox) doneBox.classList.add('d-none');
+
+  if (stepName === 'upload' && uploadBox) uploadBox.classList.remove('d-none');
+  if (stepName === 'preview' && previewBox) previewBox.classList.remove('d-none');
+  if (stepName === 'progress' && progressBox) progressBox.classList.remove('d-none');
+  if (stepName === 'done' && doneBox) doneBox.classList.remove('d-none');
+}
+
+function startImportPolling(jobId) {
+  if (importPollIntervalTimer) {
+    clearInterval(importPollIntervalTimer);
+  }
+  currentActiveImportJobId = jobId;
+  showImportStep('progress');
+
+  const checkProgress = () => {
+    fetch('/admin/import-users/progress?job_id=' + encodeURIComponent(jobId))
+      .then(res => res.json())
+      .then(data => {
+        if (!data || !data.has_job) {
+          clearInterval(importPollIntervalTimer);
+          return;
+        }
+
+        const percent = Math.min(100, Math.max(0, data.percent || 0));
+        const progressBar = document.getElementById('importProgressBar');
+        if (progressBar) {
+          progressBar.style.width = percent + '%';
+          progressBar.setAttribute('aria-valuenow', percent);
+          progressBar.textContent = percent + '%';
+        }
+
+        const statsText = document.getElementById('progressStatsText');
+        if (statsText) statsText.textContent = (data.done || 0) + ' / ' + (data.total || 0);
+
+        const succText = document.getElementById('progressSuccessText');
+        if (succText) succText.textContent = data.success || 0;
+
+        const failText = document.getElementById('progressFailedText');
+        if (failText) failText.textContent = data.failed || 0;
+
+        if (data.status === 'done') {
+          clearInterval(importPollIntervalTimer);
+          showImportStep('done');
+
+          const doneCount = document.getElementById('doneSuccessCount');
+          if (doneCount) doneCount.textContent = data.success || 0;
+
+          const doneSchool = document.getElementById('doneSchoolName');
+          if (doneSchool) doneSchool.textContent = data.school_name || '...';
+
+          const btnDownload = document.getElementById('btnDownloadResultExcel');
+          if (btnDownload) {
+            btnDownload.href = '/admin/import-users/download-result?job_id=' + encodeURIComponent(jobId);
+          }
+        } else if (data.status === 'error') {
+          clearInterval(importPollIntervalTimer);
+          alert('Lỗi trong quá trình tạo tài khoản: ' + (data.error_message || 'Có lỗi xảy ra'));
+          showImportStep('upload');
+        }
+      })
+      .catch(err => {
+        console.error('Lỗi kiểm tra tiến trình import:', err);
+      });
+  };
+
+  checkProgress();
+  importPollIntervalTimer = setInterval(checkProgress, 2000);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   // Gán sự kiện click cho các tab
   const tabButtons = document.querySelectorAll('#adminTabs .nav-link');
@@ -1820,6 +2075,225 @@ document.addEventListener('DOMContentLoaded', function() {
   } else {
     activateAdminTab('#tab-overview');
   }
+
+  // Khởi tạo bộ lọc bảng tài khoản
+  const filterSchool = document.getElementById('filterSchoolSelect');
+  if (filterSchool) {
+    filterSchool.addEventListener('change', filterUsersTable);
+  }
+  const searchInput = document.getElementById('searchUserTableInput');
+  if (searchInput) {
+    searchInput.addEventListener('input', filterUsersTable);
+  }
+
+  // Khởi tạo sự kiện nút 'Kiểm tra file' (Giai đoạn 1 Validate)
+  const btnValidate = document.getElementById('btnValidateImport');
+  if (btnValidate) {
+    btnValidate.addEventListener('click', function() {
+      const fileInput = document.getElementById('importFileInput');
+      const alertBox = document.getElementById('importClientAlert');
+      const schoolSelect = document.getElementById('importSchoolSelect');
+
+      if (alertBox) alertBox.classList.add('d-none');
+
+      if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        if (alertBox) {
+          alertBox.textContent = "{{ _('Vui lòng chọn file Excel (.xlsx, .xls) hoặc CSV (.csv) trước khi kiểm tra!') }}";
+          alertBox.classList.remove('d-none');
+        }
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const fname = file.name.toLowerCase();
+      if (!fname.endsWith('.xlsx') && !fname.endsWith('.xls') && !fname.endsWith('.csv')) {
+        if (alertBox) {
+          alertBox.textContent = "{{ _('Định dạng file không được hỗ trợ. Vui lòng chọn file .xlsx, .xls hoặc .csv!') }}";
+          alertBox.classList.remove('d-none');
+        }
+        return;
+      }
+
+      if (file.size > 10 * 1024 * 1024) {
+        if (alertBox) {
+          alertBox.textContent = "{{ _('Dung lượng file vượt quá giới hạn 10MB!') }}";
+          alertBox.classList.remove('d-none');
+        }
+        return;
+      }
+
+      const oldHtml = btnValidate.innerHTML;
+      btnValidate.disabled = true;
+      btnValidate.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> {{ _("Đang kiểm tra...") }}';
+
+      const formData = new FormData();
+      formData.append('file', file);
+      if (schoolSelect) {
+        formData.append('truong_id', schoolSelect.value);
+      }
+
+      fetch('/admin/import-users/validate', {
+        method: 'POST',
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        btnValidate.disabled = false;
+        btnValidate.innerHTML = oldHtml;
+
+        if (!data || !data.success) {
+          if (alertBox) {
+            alertBox.textContent = data.error || "{{ _('Có lỗi xảy ra khi kiểm tra file.') }}";
+            alertBox.classList.remove('d-none');
+          }
+          return;
+        }
+
+        currentActiveImportJobId = data.job_id;
+
+        // Điền thông tin vào bảng Preview
+        const previewSchool = document.getElementById('previewSchoolName');
+        if (previewSchool) previewSchool.textContent = data.school_name || '...';
+
+        const previewTotal = document.getElementById('previewTotalRows');
+        if (previewTotal) previewTotal.textContent = data.total_rows || 0;
+
+        const previewValid = document.getElementById('previewValidCount');
+        if (previewValid) previewValid.textContent = data.valid_count || 0;
+
+        const previewErr = document.getElementById('previewErrorCount');
+        if (previewErr) previewErr.textContent = data.error_count || 0;
+
+        const errWrapper = document.getElementById('previewErrorWrapper');
+        const errTableBody = document.getElementById('previewErrorTableBody');
+        const errBadgeCount = document.getElementById('previewErrorBadgeCount');
+
+        if (data.errors && data.errors.length > 0) {
+          if (errWrapper) errWrapper.classList.remove('d-none');
+          if (errBadgeCount) errBadgeCount.textContent = data.errors.length + " {{ _('dòng') }}";
+          if (errTableBody) {
+            errTableBody.innerHTML = '';
+            data.errors.forEach(err => {
+              const tr = document.createElement('tr');
+              tr.innerHTML = `<td class="text-center fw-bold text-muted">${err.row}</td>
+                              <td class="fw-semibold text-dark">${err.ho_ten || '—'}</td>
+                              <td class="text-danger">${err.ly_do}</td>`;
+              errTableBody.appendChild(tr);
+            });
+          }
+        } else {
+          if (errWrapper) errWrapper.classList.add('d-none');
+        }
+
+        const confirmBtn = document.getElementById('btnConfirmImportAsync');
+        const confirmText = document.getElementById('btnConfirmText');
+        if (confirmBtn) {
+          if (data.valid_count > 0) {
+            confirmBtn.disabled = false;
+            if (confirmText) confirmText.textContent = `{{ _('Xác nhận tạo') }} ${data.valid_count} {{ _('tài khoản') }}`;
+          } else {
+            confirmBtn.disabled = true;
+            if (confirmText) confirmText.textContent = "{{ _('Không có dòng hợp lệ để tạo') }}";
+          }
+        }
+
+        showImportStep('preview');
+      })
+      .catch(err => {
+        btnValidate.disabled = false;
+        btnValidate.innerHTML = oldHtml;
+        if (alertBox) {
+          alertBox.textContent = "{{ _('Lỗi kết nối máy chủ: ') }}" + err;
+          alertBox.classList.remove('d-none');
+        }
+      });
+    });
+  }
+
+  // Nút quay lại bước chọn file
+  const btnBack = document.getElementById('btnBackToUpload');
+  if (btnBack) {
+    btnBack.addEventListener('click', function() {
+      showImportStep('upload');
+    });
+  }
+
+  // Nút xác nhận tạo tài khoản (Giai đoạn 2 Confirm & Worker Thread)
+  const btnConfirm = document.getElementById('btnConfirmImportAsync');
+  if (btnConfirm) {
+    btnConfirm.addEventListener('click', function() {
+      if (!currentActiveImportJobId) return;
+
+      btnConfirm.disabled = true;
+      fetch('/admin/import-users/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ job_id: currentActiveImportJobId })
+      })
+      .then(res => res.json())
+      .then(data => {
+        btnConfirm.disabled = false;
+        if (!data || !data.success) {
+          alert(data.error || "{{ _('Không thể kích hoạt tiến trình tạo tài khoản.') }}");
+          return;
+        }
+        startImportPolling(currentActiveImportJobId);
+      })
+      .catch(err => {
+        btnConfirm.disabled = false;
+        alert("{{ _('Lỗi kết nối khi xác nhận: ') }}" + err);
+      });
+    });
+  }
+
+  // Nút Đóng & Làm mới danh sách khi hoàn tất
+  const btnCloseModal = document.getElementById('btnCloseImportModal');
+  if (btnCloseModal) {
+    btnCloseModal.addEventListener('click', function() {
+      if (currentActiveImportJobId) {
+        fetch('/admin/import-users/dismiss', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ job_id: currentActiveImportJobId })
+        }).finally(() => {
+          window.location.hash = '#tab-users';
+          window.location.reload();
+        });
+      } else {
+        window.location.hash = '#tab-users';
+        window.location.reload();
+      }
+    });
+  }
+
+  // Tự động kiểm tra trạng thái job nếu có khi tải trang hoặc mở modal
+  fetch('/admin/import-users/progress')
+    .then(res => res.json())
+    .then(data => {
+      if (data && data.has_job) {
+        if (data.status === 'running') {
+          currentActiveImportJobId = data.job_id;
+          const modalEl = document.getElementById('modalImportUsers');
+          if (modalEl && typeof bootstrap !== 'undefined') {
+            const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modalInstance.show();
+          }
+          startImportPolling(data.job_id);
+        } else if (data.status === 'done') {
+          currentActiveImportJobId = data.job_id;
+          showImportStep('done');
+          const doneCount = document.getElementById('doneSuccessCount');
+          if (doneCount) doneCount.textContent = data.success || 0;
+          const doneSchool = document.getElementById('doneSchoolName');
+          if (doneSchool) doneSchool.textContent = data.school_name || '...';
+          const btnDownload = document.getElementById('btnDownloadResultExcel');
+          if (btnDownload) {
+            btnDownload.href = '/admin/import-users/download-result?job_id=' + encodeURIComponent(data.job_id);
+          }
+        }
+      }
+    })
+    .catch(() => {});
 });
 </script>
 {% endblock %}

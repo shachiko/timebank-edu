@@ -1141,7 +1141,38 @@ Hệ thống được nâng cấp bộ tính năng thông minh hỗ trợ ghép 
   3. `test_03_school_admin_menu`: Kiểm thử quản trị trường `demo_quantruong`.
   4. `test_04_super_admin_menu`: Kiểm thử tổng quản trị `super_admin`.
 - **Kiểm thử giao diện trực quan:** Đã xác minh thực tế trên desktop (1280x800) và mobile (390x844 responsive).
-- **Kết quả Regression:** **37/37 Test Suites ĐẠT 100% PASS**.
+- **Kết quả Regression:** **38/38 Test Suites ĐẠT 100% PASS**.
 
+---
 
+## 23. HOTFIX TỔNG HỢP: IMPORT HÀNG LOẠT (EXCEL/CSV) & HIỂN THỊ TÊN TRƯỜNG
 
+### 1. Sửa Lỗi Sập Trang 500 & Kiến Trúc Chịu Tải Cao (File 1000+ dòng):
+- **Thuật toán băm mật khẩu:** Chuyển đổi sang `pbkdf2:sha256:600000` (Werkzeug tiêu chuẩn) thay vì scrypt/argon2 nhằm tối ưu hóa bộ nhớ RAM, chống tràn RAM/SIGKILL trên môi trường Render Free 512MB.
+- **Xử lý theo từng Batch & Thu gom rác:** Xử lý chia khối 30-50 tài khoản/batch, commit database nguyên tử và gọi `gc.collect()` giải phóng RAM ngay sau mỗi batch.
+- **Quy trình 2 giai đoạn bất đồng bộ (Async Worker Thread):**
+  - **Giai đoạn 1 (Validate nhanh đồng bộ <10s):** Kiểm tra cấu trúc file (`.xlsx`, `.xls`, `.csv` UTF-8), giới hạn tối đa 2.000 dòng và dung lượng <= 10MB. Kiểm tra tính hợp lệ của từng dòng (họ tên, vai trò quantruong/giaovien/hocsinh, lớp, email, số điện thoại, trùng lặp). Hiển thị bảng tóm tắt: **X dòng hợp lệ, Y dòng lỗi / bỏ qua**.
+  - **Giai đoạn 2 (Tạo tài khoản nền):** Người dùng bấm "Xác nhận tạo X tài khoản", hệ thống khởi tạo worker thread chạy ngầm, tạo tài khoản độc lập, sinh tên đăng nhập chuẩn hóa `[MÃ TRƯỜNG]-<lớp>-<tên>-<STT>` (VD: `UKA-4.1-An-01`), mật khẩu ngẫu nhiên riêng 8 ký tự, tự động kích hoạt tài khoản `hoat_dong` và cộng +2.0 giờ khởi tạo cho học sinh.
+  - **Thanh tiến trình Realtime:** Endpoint `GET /admin/import-users/progress` polling mỗi 2 giây trả về tiến độ `{total, done, success, failed, percent, status}`. Tự động phục hồi trạng thái khi người dùng tải lại trang hoặc mất kết nối mạng.
+  - **Hoàn tất & Xuất Excel:** Sau khi hoàn thành, hệ thống hiển thị bảng kết quả và nút **"Tải file Excel kết quả"** chứa thông tin đăng nhập ban đầu để bàn giao cho từng cá nhân; nút "Đóng" gọi `/admin/import-users/dismiss` dọn dẹp bộ nhớ.
+
+### 2. Hiển Thị Tên Trường Dưới Tên Người Dùng:
+- Mọi vị trí hiển thị họ tên người dùng trên toàn hệ thống đều có dòng định danh trường học: `🏫 [Tên trường]` (hoặc `🏫 Chưa phân trường` nếu chưa phân bổ).
+- **Quy chuẩn giao diện:** `font-size: 0.8em; color: #6c757d; font-weight: normal;`.
+- **Các màn hình đã áp dụng đồng bộ:**
+  1. Trang chủ `index.html` (Bảng vinh danh gia sư tích cực).
+  2. Bảng điều khiển Quản trị `/admin` (Tab tài khoản, Cảnh báo sớm AI, Hàng chờ duyệt, Vi phạm nội quy, Kỹ năng chờ duyệt & đã duyệt).
+  3. Quản lý tài khoản liên trường `/admin/accounts`.
+  4. Sàn / Chợ kỹ năng nội bộ `/skills/market` và liên trường `/community/market`.
+  5. Trang chi tiết & đặt lịch kỹ năng `/book-skill/<id>`.
+  6. Trang duyệt kỹ năng giáo viên `/skills/approval`.
+  7. Điểm danh hoạt động vì cộng đồng `/community/attendance/<id>`.
+  8. Giám sát phòng học ảo `/virtual-rooms/dashboard` (Phòng đang diễn ra, Cần xác minh, Đã hoàn thành).
+  9. Diễn đàn thảo luận `/forum` và bài viết chi tiết `/forum/topic/<id>` (Tác giả bài viết & người bình luận).
+  10. Trang hồ sơ cá nhân `/profile` (Tiêu đề hồ sơ & Thẻ bạn gia sư gợi ý từ AI).
+  11. Menu Dropdown người dùng trên thanh điều hướng `base.html`.
+- **Bộ lọc theo trường:** Dropdown chọn trường `#filterSchoolSelect` kết hợp ô tìm kiếm từ khóa `#searchUserTableInput` ở đầu bảng tài khoản `/admin` (Dropdown chỉ hiển thị với Super Admin).
+
+### 3. Nghiệm Thu & Kiểm Thử:
+- **Test suite:** `test_hotfix_import_and_school_display.py` đạt **10/10 tests PASS (100%)**.
+- **Toàn bộ hệ thống:** **38/38 Test Suites ĐẠT 100% PASS** qua `run_all_tests.py`.

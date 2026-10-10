@@ -297,6 +297,7 @@
                 <li>
                   <div class="px-3 py-2 border-bottom mb-1">
                     <div class="fw-bold text-dark">{{ current_user.ho_ten }}</div>
+                    <small class="text-muted d-block fw-normal" style="font-size: 0.8em;">🏫 {{ current_user.ten_truong if current_user.ten_truong else _('Chưa phân trường') }}</small>
                     <small class="text-muted">
                       {% if current_user.vai_tro == 'hoc_sinh' %}
                         {{ _('Mã') }}: <code>{{ current_user.ma_hoc_sinh }}</code> ({{ _('Học sinh') }})

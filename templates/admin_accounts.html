@@ -150,6 +150,7 @@
                   </td>
                   <td>
                     <div class="fw-semibold text-dark">{{ acc.ho_ten }}</div>
+                    <small class="text-muted d-block fw-normal" style="font-size: 0.8em;">🏫 {{ acc.ten_truong if acc.ten_truong else _('Chưa phân trường') }}</small>
                     {% if acc.email %}
                       <div class="text-muted small"><i class="bi bi-envelope me-1"></i>{{ acc.email }}</div>
                     {% else %}

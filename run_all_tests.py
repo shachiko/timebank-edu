@@ -43,7 +43,8 @@ test_files = [
     "test_prompt_import_users.py",
     "test_prompt_export_invite_codes.py",
     "test_prompt_smart_features.py",
-    "test_prompt_role_menus.py"
+    "test_prompt_role_menus.py",
+    "test_hotfix_import_and_school_display.py"
 ]
 
 results = {}

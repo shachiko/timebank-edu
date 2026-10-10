@@ -412,6 +412,7 @@
               </div>
               <div>
                 <h5 class="fw-bold mb-0 text-dark">{{ tutor.ho_ten }}</h5>
+                <small class="text-muted d-block fw-normal" style="font-size: 0.8em;">🏫 {{ tutor.ten_truong if tutor.ten_truong else _('Chưa phân trường') }}</small>
                 <div class="text-muted small">
                   <i class="bi bi-mortarboard me-1"></i>{{ _('Lớp:') }} <strong>{{ tutor.lop }}</strong> • {{ _('Mã:') }} <code>{{ tutor.ma_hoc_sinh }}</code>
                 </div>
