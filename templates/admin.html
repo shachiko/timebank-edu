@@ -534,9 +534,19 @@
 
       <!-- Bảng Theo Dõi Mã Mời -->
       <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
-        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-          <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-table me-2 text-primary"></i>{{ _('Danh Sách Mã Mời Đã Phát Hành') }}</h5>
-          <span class="badge bg-light text-dark border">{{ _('Cập nhật tự động') }}</span>
+        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <div class="d-flex align-items-center gap-2">
+            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-table me-2 text-primary"></i>{{ _('Danh Sách Mã Mời Đã Phát Hành') }}</h5>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill fw-semibold">{{ invite_codes_list|length }} {{ _('mã') }}</span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-semibold shadow-sm" id="btnCopyAllInviteCodes" onclick="copyAllInviteCodes()">
+              <i class="bi bi-clipboard-check me-1 text-primary"></i> {{ _('Sao chép tất cả') }}
+            </button>
+            <a href="{{ url_for('admin_export_invite_codes_excel', truong_id=selected_truong_id) }}" class="btn btn-success btn-sm rounded-pill px-3 fw-semibold shadow-sm text-white" id="btnExportInviteCodesExcel">
+              <i class="bi bi-file-earmark-excel me-1"></i> {{ _('Xuất Excel') }}
+            </a>
+          </div>
         </div>
 
         <div class="card-body p-0">
@@ -559,7 +569,12 @@
                 {% for c in invite_codes_list %}
                 <tr>
                   <td class="ps-3">
-                    <span class="font-monospace fw-bold text-primary">{{ c.ma_code }}</span>
+                    <div class="d-flex align-items-center gap-1">
+                      <span class="font-monospace fw-bold text-primary invite-code-val">{{ c.ma_code }}</span>
+                      <button type="button" class="btn btn-sm btn-link text-muted p-0 text-decoration-none copy-single-btn" onclick="copySingleInviteCode('{{ c.ma_code }}', this)" title="{{ _('Sao chép mã này') }}">
+                        <i class="bi bi-copy"></i>
+                      </button>
+                    </div>
                   </td>
                   <td><span class="badge bg-light text-dark border">{{ c.ten_truong }}</span></td>
                   <td>
@@ -1666,6 +1681,82 @@ function handleInviteTypeChange(val) {
     inputSoLuong.value = 5;
     boxMax.style.display = 'none';
   }
+}
+
+// Sao chép toàn bộ mã mời vào Clipboard (mỗi mã 1 dòng)
+function copyAllInviteCodes() {
+  const codeElements = document.querySelectorAll('.invite-code-val');
+  const codes = [];
+  codeElements.forEach(el => {
+    const txt = el.innerText.trim();
+    if (txt) codes.push(txt);
+  });
+
+  if (codes.length === 0) {
+    alert("{{ _('Chưa có mã mời nào trong danh sách để sao chép!') }}");
+    return;
+  }
+
+  const textToCopy = codes.join('\n');
+  const btn = document.getElementById('btnCopyAllInviteCodes');
+  const oldHtml = btn ? btn.innerHTML : '';
+
+  const onSuccess = () => {
+    if (btn) {
+      btn.classList.remove('btn-outline-secondary');
+      btn.classList.add('btn-success', 'text-white');
+      btn.innerHTML = `<i class="bi bi-check2-circle me-1"></i> {{ _('Đã sao chép') }} (${codes.length} {{ _('mã') }})`;
+      setTimeout(() => {
+        btn.innerHTML = oldHtml;
+        btn.classList.remove('btn-success', 'text-white');
+        btn.classList.add('btn-outline-secondary');
+      }, 2500);
+    }
+  };
+
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(textToCopy).then(onSuccess).catch(() => {
+      fallbackCopyText(textToCopy, onSuccess);
+    });
+  } else {
+    fallbackCopyText(textToCopy, onSuccess);
+  }
+}
+
+// Sao chép từng mã mời đơn lẻ
+function copySingleInviteCode(code, el) {
+  if (!code) return;
+  const onSuccess = () => {
+    if (el) {
+      const orig = el.innerHTML;
+      el.innerHTML = '<i class="bi bi-check2 text-success"></i>';
+      setTimeout(() => el.innerHTML = orig, 1800);
+    }
+  };
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(code).then(onSuccess).catch(() => fallbackCopyText(code, onSuccess));
+  } else {
+    fallbackCopyText(code, onSuccess);
+  }
+}
+
+// Fallback hàm sao chép clipboard cho trình duyệt cũ
+function fallbackCopyText(text, cb) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.left = '-9999px';
+  ta.style.top = '-9999px';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try {
+    document.execCommand('copy');
+    if (cb) cb();
+  } catch (err) {
+    alert("Không thể sao chép: " + err);
+  }
+  document.body.removeChild(ta);
 }
 
 // =========================================================================

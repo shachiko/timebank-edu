@@ -993,3 +993,39 @@ Phát triển tính năng quản trị quy mô lớn phục vụ các trường 
   7. `test_07_import_csv_format`: Hỗ trợ file CSV định dạng UTF-8.
 - **Kết quả Regression:** **34/34 Test Suites ĐẠT 100% PASS**.
 
+---
+
+## 🎟️ TÍNH NĂNG XUẤT EXCEL & SAO CHÉP TOÀN BỘ MÃ MỜI TRƯỜNG HỌC (/admin)
+
+Sau khi sinh mã mời hàng loạt (dạng chuẩn `TBEDU-XXXX-XXXX`), quản trị viên cần chia sẻ mã cho giáo viên chủ nhiệm, học sinh hoặc gửi nhanh qua Zalo/Email. Hệ thống đã bổ sung bộ công cụ thao tác nhanh ngay trên Bảng mã mời đã phát hành:
+
+### 1. Nút "Xuất Excel" (`GET /admin/invite-codes/export-excel`):
+- **Vị trí:** Đặt trang trọng trên thanh tiêu đề của thẻ *Danh Sách Mã Mời Đã Phát Hành* (Tab Quản lý mã mời `#tab-invite`).
+- **Định dạng:** File `.xlsx` chuẩn với nhận diện thương hiệu Royal Blue, căn lề và định dạng ô chuyên nghiệp.
+- **Dữ liệu xuất chuẩn hóa 7 cột:**
+  1. `STT`: Số thứ tự tăng dần.
+  2. `Mã mời`: Định dạng chuẩn in đậm (ví dụ: `TBEDU-ABCD-1234`).
+  3. `Loại mã`: Phân loại rõ ràng (*Mã lớp* hoặc *Cá nhân*).
+  4. `Trường`: Tên trường học được cấp phát mã.
+  5. `Số lượt còn lại`: Số lượt sử dụng khả dụng còn lại.
+  6. `Ngày tạo`: Thời điểm phát hành mã định dạng `DD/MM/YYYY HH:MM`.
+  7. `Trạng thái`: Trạng thái trực quan (*Khả dụng* - màu xanh hoặc *Đã hết lượt* - màu đỏ).
+- **Phân quyền & Cách ly Đa trường (Multi-Tenant Isolation):**
+  - Quản trị viên trường (`school_admin`): Chỉ xuất được danh sách mã thuộc trường của mình.
+  - Quản trị viên cấp cao (`super_admin`): Hỗ trợ xuất toàn bộ hệ thống hoặc lọc linh hoạt theo từng trường.
+
+### 2. Nút "Sao chép tất cả" (1-Click Copy to Clipboard):
+- **Công dụng:** 1 click sao chép toàn bộ danh sách mã mời (mỗi mã 1 dòng) vào clipboard hệ thống.
+- **Tiện ích:** Dán nhanh trực tiếp vào tin nhắn Zalo, nhóm lớp hoặc email thông báo mà không cần bôi đen thủ công từng mã.
+- **Trải nghiệm tương tác (UX):** Nút tự động chuyển trạng thái màu xanh *"Đã sao chép (X mã)"* trong 2.5 giây; tích hợp cơ chế fallback an toàn cho mọi trình duyệt.
+- **Sao chép nhanh từng mã:** Bổ sung icon sao chép nhanh 1 chạm bên cạnh từng mã mời trong bảng dữ liệu.
+
+### 3. Nghiệm Thu & Kiểm Thử Tự Động:
+- Bộ kiểm thử tự động `test_prompt_export_invite_codes.py` (5/5 tests PASS):
+  1. `test_01_ui_has_export_and_copy_buttons`: Kiểm tra sự hiện diện của 2 nút `#btnExportInviteCodesExcel` và `#btnCopyAllInviteCodes`.
+  2. `test_02_export_excel_endpoint_returns_valid_xlsx`: Kiểm tra tính toàn vẹn của file Excel tải về (6 cột nghiệp vụ + STT, tính đúng đắn của số lượt còn lại và trạng thái).
+  3. `test_03_copy_all_logic_and_format`: Kiểm tra định dạng sao chép clipboard mỗi mã 1 dòng.
+  4. `test_04_tenant_isolation_school_admin`: Bảo vệ phân quyền dữ liệu giữa các trường.
+  5. `test_05_unauthorized_access_blocked`: Chặn người dùng chưa đăng nhập.
+- **Kết quả Regression:** **35/35 Test Suites ĐẠT 100% PASS**.
+

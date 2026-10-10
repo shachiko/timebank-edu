@@ -3867,6 +3867,169 @@ def admin_generate_invite_codes():
     return redirect(url_for("admin_dashboard", _anchor="tab-invite"))
 
 
+@app.route("/admin/invite-codes/export-excel")
+@admin_required
+def admin_export_invite_codes_excel():
+    """
+    Xuất danh sách mã mời ra file Excel (.xlsx) gồm:
+    Mã mời | Loại mã | Trường | Số lượt còn lại | Ngày tạo | Trạng thái
+    """
+    db = get_db()
+    cur = db.cursor()
+    current_user_school_id = session.get("truong_id", 1)
+    is_super = is_super_admin()
+
+    selected_truong_id = request.args.get("truong_id", "").strip()
+    if not is_super:
+        filter_school_id = current_user_school_id
+    else:
+        if selected_truong_id and selected_truong_id.isdigit():
+            filter_school_id = int(selected_truong_id)
+        else:
+            filter_school_id = None
+
+    school_name = "Toan_He_Thong"
+    if filter_school_id:
+        cur.execute("SELECT ten_truong FROM truong WHERE id = ?", (filter_school_id,))
+        s_row = cur.fetchone()
+        if s_row and s_row["ten_truong"]:
+            school_name = s_row["ten_truong"]
+
+    invite_sql = """
+        SELECT ic.*, t.ten_truong
+        FROM invite_codes ic
+        JOIN truong t ON ic.truong_id = t.id
+    """
+    if filter_school_id:
+        invite_sql += f" WHERE ic.truong_id = {filter_school_id}"
+    invite_sql += " ORDER BY ic.id DESC"
+    cur.execute(invite_sql)
+    invite_codes = cur.fetchall()
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Danh_Sach_Ma_Moi"
+
+    headers = [
+        "STT",
+        "Mã mời",
+        "Loại mã",
+        "Trường",
+        "Số lượt còn lại",
+        "Ngày tạo",
+        "Trạng thái"
+    ]
+    ws.append(headers)
+
+    for idx, c in enumerate(invite_codes, 1):
+        so_luot_toi_da = c["so_luot_toi_da"] if c["so_luot_toi_da"] is not None else 1
+        da_dung = c["da_dung"] if c["da_dung"] is not None else 0
+        con_lai = max(0, so_luot_toi_da - da_dung)
+        loai_str = "Mã lớp" if c["loai"] == "lop" else "Cá nhân"
+        trang_thai_str = "Khả dụng" if con_lai > 0 else "Đã hết lượt"
+
+        ngay_tao_val = c["ngay_tao"]
+        if isinstance(ngay_tao_val, datetime):
+            ngay_tao_str = ngay_tao_val.strftime("%d/%m/%Y %H:%M")
+        elif isinstance(ngay_tao_val, str) and len(ngay_tao_val) >= 10:
+            try:
+                dt_obj = datetime.strptime(ngay_tao_val[:19], "%Y-%m-%d %H:%M:%S")
+                ngay_tao_str = dt_obj.strftime("%d/%m/%Y %H:%M")
+            except Exception:
+                ngay_tao_str = ngay_tao_val
+        else:
+            ngay_tao_str = str(ngay_tao_val or "")
+
+        ws.append([
+            idx,
+            c["ma_code"],
+            loai_str,
+            c["ten_truong"],
+            con_lai,
+            ngay_tao_str,
+            trang_thai_str
+        ])
+
+    # Định dạng Header TimeBank EDU Royal Blue
+    header_fill = PatternFill(start_color="1E40AF", end_color="1E40AF", fill_type="solid")
+    header_font = Font(name="Segoe UI", size=11, bold=True, color="FFFFFF")
+    thin_border = Border(
+        left=Side(style="thin", color="D1D5DB"),
+        right=Side(style="thin", color="D1D5DB"),
+        top=Side(style="thin", color="D1D5DB"),
+        bottom=Side(style="thin", color="D1D5DB")
+    )
+    center_align = Alignment(horizontal="center", vertical="center")
+    left_align = Alignment(horizontal="left", vertical="center")
+
+    for col_idx in range(1, len(headers) + 1):
+        cell = ws.cell(row=1, column=col_idx)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = center_align
+        cell.border = thin_border
+
+    # Định dạng các dòng dữ liệu
+    data_font = Font(name="Segoe UI", size=10)
+    code_font = Font(name="Consolas", size=10, bold=True, color="1E3A8A")
+    code_fill = PatternFill(start_color="EFF6FF", end_color="EFF6FF", fill_type="solid")
+    status_active_font = Font(name="Segoe UI", size=10, bold=True, color="16A34A")
+    status_expired_font = Font(name="Segoe UI", size=10, bold=True, color="DC2626")
+
+    for r_idx in range(2, len(invite_codes) + 2):
+        for c_idx in range(1, len(headers) + 1):
+            cell = ws.cell(row=r_idx, column=c_idx)
+            cell.font = data_font
+            cell.border = thin_border
+
+            if c_idx == 1:
+                cell.alignment = center_align
+            elif c_idx == 2:
+                cell.font = code_font
+                cell.fill = code_fill
+                cell.alignment = center_align
+            elif c_idx == 3:
+                cell.alignment = center_align
+            elif c_idx == 4:
+                cell.alignment = left_align
+            elif c_idx == 5:
+                cell.alignment = center_align
+                cell.font = Font(name="Segoe UI", size=10, bold=True)
+            elif c_idx == 6:
+                cell.alignment = center_align
+            elif c_idx == 7:
+                cell.alignment = center_align
+                if cell.value == "Khả dụng":
+                    cell.font = status_active_font
+                else:
+                    cell.font = status_expired_font
+
+    # Tự động điều chỉnh độ rộng cột
+    for col in ws.columns:
+        max_len = 0
+        col_letter = get_column_letter(col[0].column)
+        for cell in col:
+            val_str = str(cell.value or "")
+            if len(val_str) > max_len:
+                max_len = len(val_str)
+        ws.column_dimensions[col_letter].width = max(max_len + 4, 12)
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    clean_school_tag = remove_vietnamese_accents(school_name).replace(" ", "_")
+    timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+    download_filename = f"danh_sach_ma_moi_{clean_school_tag}_{timestamp_str}.xlsx"
+
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name=download_filename,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+
 @app.route("/admin/approve-student/<int:user_id>", methods=["POST"])
 @admin_required
 def admin_approve_student(user_id):

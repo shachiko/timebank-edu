@@ -40,7 +40,8 @@ test_files = [
     "test_prompt32_school_hide_management.py",
     "test_prompt16_multilingual.py",
     "test_prompt_community_management.py",
-    "test_prompt_import_users.py"
+    "test_prompt_import_users.py",
+    "test_prompt_export_invite_codes.py"
 ]
 
 results = {}
