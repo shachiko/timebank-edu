@@ -365,12 +365,12 @@
         {% endif %}
 
         <div class="mt-3 pt-2 border-top">
-          {% if user.vai_tro in ('giao_vien', 'admin') %}
+          {% if user.vai_tro in ('giao_vien', 'admin', 'school_admin', 'super_admin') %}
             <a href="{{ url_for('skills_approval') }}" class="btn btn-outline-primary btn-sm w-100 mb-2">
               <i class="bi bi-check2-circle me-1"></i> {{ _('Khu vực Duyệt Kỹ Năng') }}
             </a>
           {% endif %}
-          {% if user.vai_tro == 'admin' %}
+          {% if user.vai_tro in ('admin', 'school_admin', 'super_admin') %}
             <a href="{{ url_for('admin_dashboard') }}" class="btn btn-danger btn-sm w-100">
               <i class="bi bi-gear-fill me-1"></i> {{ _('Bảng điều khiển Quản trị (Admin)') }}
             </a>

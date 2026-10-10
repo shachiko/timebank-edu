@@ -42,7 +42,8 @@ test_files = [
     "test_prompt_community_management.py",
     "test_prompt_import_users.py",
     "test_prompt_export_invite_codes.py",
-    "test_prompt_smart_features.py"
+    "test_prompt_smart_features.py",
+    "test_prompt_role_menus.py"
 ]
 
 results = {}

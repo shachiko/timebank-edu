@@ -255,90 +255,215 @@
                   {% endif %}
                 </div>
                 <div class="p-2 text-center bg-light border-top rounded-bottom-4">
+                  {% if current_user.vai_tro == 'hoc_sinh' %}
                   <a href="{{ url_for('my_schedule') }}" class="small fw-semibold text-primary text-decoration-none">
                     {{ _('Xem toàn bộ lịch học') }} <i class="bi bi-arrow-right"></i>
                   </a>
+                  {% else %}
+                  <span class="small text-muted">
+                    <i class="bi bi-bell me-1"></i>{{ _('Thông báo hệ thống học đường') }}
+                  </span>
+                  {% endif %}
                 </div>
               </div>
             </div>
 
-            <!-- Menu người dùng đã đăng nhập: thu gọn tên + số dư, không tràn mép -->
+            <!-- Menu người dùng đã đăng nhập: Phân quyền menu dropdown theo đúng 4 vai trò -->
             <div class="dropdown">
-              <a class="nav-link dropdown-toggle d-flex align-items-center gap-1 gap-sm-2 p-1 px-2 rounded-pill user-pill text-dark fw-semibold" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="{{ current_user.ho_ten }} ({{ "%.1f"|format(current_user.so_du_gio) }}h)">
+              <a class="nav-link dropdown-toggle d-flex align-items-center gap-1 gap-sm-2 p-1 px-2 rounded-pill user-pill text-dark fw-semibold" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="{{ current_user.ho_ten }}{% if current_user.vai_tro == 'hoc_sinh' %} ({{ "%.1f"|format(current_user.so_du_gio) }}h){% endif %}">
                 <span class="badge rounded-circle text-white user-avatar-badge flex-shrink-0" style="background-color: #1B2A6B; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem;">
                   {{ current_user.ho_ten[0] | upper }}
                 </span>
                 <span class="user-display-name text-truncate d-none d-sm-inline-block">{{ current_user.ho_ten }}</span>
+                {% if current_user.vai_tro == 'hoc_sinh' %}
                 <span class="badge bg-success text-white py-1 px-2 flex-shrink-0 user-balance-badge" style="font-size: 0.75rem;">
                   <i class="bi bi-clock-history me-1"></i>{{ "%.1f"|format(current_user.so_du_gio) }}h
                 </span>
+                {% elif current_user.vai_tro == 'giao_vien' %}
+                <span class="badge bg-info text-white py-1 px-2 flex-shrink-0 user-role-badge" style="font-size: 0.75rem;">
+                  {{ _('Giáo viên') }}
+                </span>
+                {% elif current_user.is_super_admin %}
+                <span class="badge bg-danger text-white py-1 px-2 flex-shrink-0 user-role-badge" style="font-size: 0.75rem;">
+                  {{ _('Tổng quản trị') }}
+                </span>
+                {% else %}
+                <span class="badge bg-warning text-dark py-1 px-2 flex-shrink-0 user-role-badge" style="font-size: 0.75rem;">
+                  {{ _('Quản trị trường') }}
+                </span>
+                {% endif %}
               </a>
               <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 mt-2 py-2" style="min-width: 260px;">
                 <li>
                   <div class="px-3 py-2 border-bottom mb-1">
                     <div class="fw-bold text-dark">{{ current_user.ho_ten }}</div>
-                    <small class="text-muted">{{ _('Mã') }}: <code>{{ current_user.ma_hoc_sinh }}</code> ({{ current_user.vai_tro }})</small>
+                    <small class="text-muted">
+                      {% if current_user.vai_tro == 'hoc_sinh' %}
+                        {{ _('Mã') }}: <code>{{ current_user.ma_hoc_sinh }}</code> ({{ _('Học sinh') }})
+                      {% elif current_user.vai_tro == 'giao_vien' %}
+                        {{ _('Mã') }}: <code>{{ current_user.ma_hoc_sinh }}</code> ({{ _('Giáo viên') }})
+                      {% elif current_user.is_super_admin %}
+                        {{ _('Mã') }}: <code>{{ current_user.ma_hoc_sinh }}</code> ({{ _('Tổng quản trị') }})
+                      {% else %}
+                        {{ _('Mã') }}: <code>{{ current_user.ma_hoc_sinh }}</code> ({{ _('Quản trị trường') }})
+                      {% endif %}
+                    </small>
                   </div>
                 </li>
-                <!-- 3 Mục cá nhân trong dropdown avatar: Lịch của tôi, Ví của tôi, Hồ sơ -->
-                <li>
-                  <a class="dropdown-item py-2 fw-semibold" href="{{ url_for('my_schedule') }}">
-                    <i class="bi bi-calendar-check text-info me-2 fs-6"></i>{{ _('Lịch của tôi (Dạy & Học)') }}
-                  </a>
-                </li>
-                <li>
-                  <a class="dropdown-item py-2 fw-semibold" href="{{ url_for('wallet') }}">
-                    <i class="bi bi-wallet2 text-success me-2 fs-6"></i>{{ _('Ví của tôi') }} ({{ "%.1f"|format(current_user.so_du_gio) }}h)
-                  </a>
-                </li>
-                <li>
-                  <a class="dropdown-item py-2 fw-semibold" href="{{ url_for('profile') }}">
-                    <i class="bi bi-person-circle text-primary me-2 fs-6"></i>{{ _('Hồ sơ cá nhân & Cài đặt') }}
-                  </a>
-                </li>
-                <li><hr class="dropdown-divider my-1"></li>
-                <li>
-                  <a class="dropdown-item py-2" href="{{ url_for('new_skill') }}">
-                    <i class="bi bi-plus-circle text-warning me-2"></i>{{ _('Đăng kỹ năng mới') }}
-                  </a>
-                </li>
-                <li>
-                  <a class="dropdown-item py-2" href="{{ url_for('community_tasks_view') }}">
-                    <i class="bi bi-heart-fill text-danger me-2"></i>{{ _('Hoạt động Vì cộng đồng') }}
-                  </a>
-                </li>
-                {% if current_user.vai_tro in ('giao_vien', 'school_admin', 'super_admin', 'admin') %}
-                <li><hr class="dropdown-divider my-1"></li>
-                <li>
-                  <a class="dropdown-item py-2" href="{{ url_for('blog_manage') }}">
-                    <i class="bi bi-journal-text text-warning me-2"></i>{{ _('Quản lý Bảng tin') }}
-                  </a>
-                </li>
-                <li>
-                  <a class="dropdown-item py-2" href="{{ url_for('virtual_rooms_dashboard') }}">
-                    <i class="bi bi-camera-video text-primary me-2"></i>{{ _('Giám sát phòng học ảo') }}
-                  </a>
-                </li>
-                <li>
-                  <a class="dropdown-item py-2" href="{{ url_for('skills_approval') }}">
-                    <i class="bi bi-check2-square text-success me-2"></i>{{ _('Duyệt kỹ năng học sinh') }}
-                  </a>
-                </li>
+
+                {% if current_user.vai_tro == 'hoc_sinh' %}
+                  {# 1. HỌC SINH (người học + người dạy): Lịch của tôi, Ví của tôi, Hồ sơ & Cài đặt, Đăng kỹ năng mới, Hoạt động Vì cộng đồng, AI gợi ý bạn học, Đăng xuất #}
+                  <li>
+                    <a class="dropdown-item py-2 fw-semibold" href="{{ url_for('my_schedule') }}">
+                      <i class="bi bi-calendar-check text-info me-2 fs-6"></i>{{ _('Lịch của tôi') }}
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item py-2 fw-semibold" href="{{ url_for('wallet') }}">
+                      <i class="bi bi-wallet2 text-success me-2 fs-6"></i>{{ _('Ví của tôi') }} ({{ "%.1f"|format(current_user.so_du_gio) }}h)
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item py-2 fw-semibold" href="{{ url_for('profile') }}">
+                      <i class="bi bi-person-circle text-primary me-2 fs-6"></i>{{ _('Hồ sơ & Cài đặt') }}
+                    </a>
+                  </li>
+                  <li><hr class="dropdown-divider my-1"></li>
+                  <li>
+                    <a class="dropdown-item py-2" href="{{ url_for('new_skill') }}">
+                      <i class="bi bi-plus-circle text-warning me-2"></i>{{ _('Đăng kỹ năng mới') }}
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item py-2" href="{{ url_for('community_tasks_view') }}">
+                      <i class="bi bi-heart-fill text-danger me-2"></i>{{ _('Hoạt động Vì cộng đồng') }}
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item py-2 text-primary fw-semibold" href="#" onclick="openAiBuddySuggestions(); return false;">
+                      <i class="bi bi-stars text-primary me-2"></i>{{ _('AI gợi ý bạn học') }}
+                    </a>
+                  </li>
+
+                {% elif current_user.vai_tro == 'giao_vien' %}
+                  {# 2. GIÁO VIÊN: Hồ sơ & Cài đặt, Đăng kỹ năng mới, Duyệt kỹ năng học sinh, Giám sát phòng học ảo, Quản lý Bảng tin, Hoạt động Vì cộng đồng, Đăng xuất #}
+                  <li>
+                    <a class="dropdown-item py-2 fw-semibold" href="{{ url_for('profile') }}">
+                      <i class="bi bi-person-circle text-primary me-2 fs-6"></i>{{ _('Hồ sơ & Cài đặt') }}
+                    </a>
+                  </li>
+                  <li><hr class="dropdown-divider my-1"></li>
+                  <li>
+                    <a class="dropdown-item py-2" href="{{ url_for('new_skill') }}">
+                      <i class="bi bi-plus-circle text-warning me-2"></i>{{ _('Đăng kỹ năng mới') }}
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item py-2" href="{{ url_for('skills_approval') }}">
+                      <i class="bi bi-check2-square text-success me-2"></i>{{ _('Duyệt kỹ năng học sinh') }}
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item py-2" href="{{ url_for('virtual_rooms_dashboard') }}">
+                      <i class="bi bi-camera-video text-primary me-2"></i>{{ _('Giám sát phòng học ảo') }}
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item py-2" href="{{ url_for('blog_manage') }}">
+                      <i class="bi bi-journal-text text-warning me-2"></i>{{ _('Quản lý Bảng tin') }}
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item py-2" href="{{ url_for('community_tasks_view') }}">
+                      <i class="bi bi-heart-fill text-danger me-2"></i>{{ _('Hoạt động Vì cộng đồng') }}
+                    </a>
+                  </li>
+
+                {% elif not current_user.is_super_admin %}
+                  {# 3. QUẢN TRỊ TRƯỜNG: Hồ sơ & Cài đặt, Quản lý Tài khoản, Quản lý Mã mời, Duyệt kỹ năng, Quản lý Bảng tin, Chương trình Cộng đồng, Báo cáo trường, Đăng xuất #}
+                  <li>
+                    <a class="dropdown-item py-2 fw-semibold" href="{{ url_for('profile') }}">
+                      <i class="bi bi-person-circle text-primary me-2 fs-6"></i>{{ _('Hồ sơ & Cài đặt') }}
+                    </a>
+                  </li>
+                  <li><hr class="dropdown-divider my-1"></li>
+                  <li>
+                    <a class="dropdown-item py-2 fw-semibold text-primary" href="{{ url_for('admin_dashboard', _anchor='tab-users') }}">
+                      <i class="bi bi-people-fill text-primary me-2"></i>{{ _('Quản lý Tài khoản') }}
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item py-2" href="{{ url_for('admin_dashboard', _anchor='tab-invite') }}">
+                      <i class="bi bi-ticket-perforated text-info me-2"></i>{{ _('Quản lý Mã mời') }}
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item py-2" href="{{ url_for('skills_approval') }}">
+                      <i class="bi bi-check2-square text-success me-2"></i>{{ _('Duyệt kỹ năng') }}
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item py-2" href="{{ url_for('blog_manage') }}">
+                      <i class="bi bi-journal-text text-warning me-2"></i>{{ _('Quản lý Bảng tin') }}
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item py-2 text-danger" href="{{ url_for('admin_dashboard', _anchor='tab-community-tasks') }}">
+                      <i class="bi bi-heart-fill text-danger me-2"></i>{{ _('Chương trình Cộng đồng') }}
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item py-2" href="{{ url_for('admin_dashboard', _anchor='tab-overview') }}">
+                      <i class="bi bi-speedometer2 text-danger me-2"></i>{{ _('Báo cáo trường') }}
+                    </a>
+                  </li>
+
+                {% else %}
+                  {# 4. TỔNG QUẢN TRỊ: Tất cả của Quản trị trường + Quản lý Trường học, Báo cáo toàn hệ thống #}
+                  <li>
+                    <a class="dropdown-item py-2 fw-semibold" href="{{ url_for('profile') }}">
+                      <i class="bi bi-person-circle text-primary me-2 fs-6"></i>{{ _('Hồ sơ & Cài đặt') }}
+                    </a>
+                  </li>
+                  <li><hr class="dropdown-divider my-1"></li>
+                  <li>
+                    <a class="dropdown-item py-2 fw-semibold text-primary" href="{{ url_for('admin_accounts') }}">
+                      <i class="bi bi-people-fill text-primary me-2"></i>{{ _('Quản lý Tài khoản') }}
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item py-2" href="{{ url_for('admin_dashboard', _anchor='tab-invite') }}">
+                      <i class="bi bi-ticket-perforated text-info me-2"></i>{{ _('Quản lý Mã mời') }}
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item py-2" href="{{ url_for('skills_approval') }}">
+                      <i class="bi bi-check2-square text-success me-2"></i>{{ _('Duyệt kỹ năng') }}
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item py-2" href="{{ url_for('blog_manage') }}">
+                      <i class="bi bi-journal-text text-warning me-2"></i>{{ _('Quản lý Bảng tin') }}
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item py-2 text-danger" href="{{ url_for('admin_dashboard', _anchor='tab-community-tasks') }}">
+                      <i class="bi bi-heart-fill text-danger me-2"></i>{{ _('Chương trình Cộng đồng') }}
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item py-2 text-primary" href="{{ url_for('admin_dashboard', _anchor='tab-schools') }}">
+                      <i class="bi bi-buildings-fill text-primary me-2"></i>{{ _('Quản lý Trường học') }}
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item py-2" href="{{ url_for('admin_dashboard', _anchor='tab-overview') }}">
+                      <i class="bi bi-speedometer2 text-danger me-2"></i>{{ _('Báo cáo toàn hệ thống') }}
+                    </a>
+                  </li>
+
                 {% endif %}
-                {% if current_user.vai_tro in ('school_admin', 'super_admin', 'admin') %}
-                <li>
-                  <a class="dropdown-item py-2" href="{{ url_for('admin_dashboard') }}">
-                    <i class="bi bi-speedometer2 text-danger me-2"></i>{{ _('Bảng điều khiển Admin') }}
-                  </a>
-                </li>
-                {% endif %}
-                {% if current_user.vai_tro == 'super_admin' %}
-                <li>
-                  <a class="dropdown-item py-2 fw-semibold text-primary" href="{{ url_for('admin_accounts') }}">
-                    <i class="bi bi-people-fill text-primary me-2"></i>{{ _('Quản lý Tài khoản') }}
-                  </a>
-                </li>
-                {% endif %}
+
                 <li><hr class="dropdown-divider my-1"></li>
                 <li>
                   <a class="dropdown-item py-2 text-danger fw-semibold" href="{{ url_for('logout') }}">

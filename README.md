@@ -1066,6 +1066,82 @@ Hệ thống được nâng cấp bộ tính năng thông minh hỗ trợ ghép 
   4. `test_04_session_rating_and_tutor_average`: Đánh giá 1-5 sao, chống lặp lại, cập nhật điểm trung bình ở hồ sơ và vinh danh.
   5. `test_05_booking_notification_email_and_confirmation`: Chuông thông báo đặt lịch cho người dạy, xác nhận buổi học gửi thông báo cho người học.
   6. `test_06_send_booking_email_safety`: Hàm gửi email chạy an toàn không crash khi thiếu SMTP.
-- **Kết quả Regression:** **36/36 Test Suites ĐẠT 100% PASS**.
+- **Kết quả Regression:** **37/37 Test Suites ĐẠT 100% PASS**.
+
+---
+
+## CHUẨN HÓA MENU DROPDOWN THEO ĐÚNG VAI TRÒ (ROLE-BASED NAVIGATION)
+
+### Nguyên Tắc Cốt Lõi:
+> "Mỗi vai trò CHỈ thấy những mục mình thực sự dùng."
+- Học sinh là chủ thể trao đổi tín chỉ học tập (tích lũy & giao dịch giờ).
+- Giáo viên & Quản trị viên đóng vai trò sư phạm và vận hành hệ thống, không tham gia lưu thông số dư giờ học sinh $\rightarrow$ Ẩn hoàn toàn "Lịch của tôi", "Ví của tôi" và badge số dư giờ trên thanh điều hướng.
+
+---
+
+### Phân Định Chi Tiết 4 Vai Trò:
+
+#### 1. HỌC SINH (`hoc_sinh` — người học + người dạy):
+- **User Pill Badge:** Hiển thị số dư giờ `user-balance-badge` (ví dụ: `3.0h`).
+- **Mục Dropdown Giữ lại (7 mục):**
+  1. `Lịch của tôi` (`/my-schedule`)
+  2. `Ví của tôi` (`/wallet`) kèm số dư giờ
+  3. `Hồ sơ & Cài đặt` (`/profile`)
+  4. `Đăng kỹ năng mới` (`/skills/new`)
+  5. `Hoạt động Vì cộng đồng` (`/community-tasks`)
+  6. `AI gợi ý bạn học` (Kích hoạt trực tiếp modal AI thông minh)
+  7. `Đăng xuất` (`/logout`)
+- **Mục BỎ:** Không hiển thị bất kỳ mục quản trị, duyệt kỹ năng hay giám sát phòng học ảo.
+
+#### 2. GIÁO VIÊN (`giao_vien`):
+- **User Pill Badge:** Hiển thị huy hiệu `Giáo viên` (nền xanh dương). Ẩn badge số dư giờ.
+- **Mục Dropdown Giữ lại (7 mục):**
+  1. `Hồ sơ & Cài đặt` (`/profile`)
+  2. `Đăng kỹ năng mới` (`/skills/new`)
+  3. `Duyệt kỹ năng học sinh` (`/skills/approve`)
+  4. `Giám sát phòng học ảo` (`/virtual-rooms`)
+  5. `Quản lý Bảng tin` (`/blog/manage`)
+  6. `Hoạt động Vì cộng đồng` (`/community-tasks`)
+  7. `Đăng xuất` (`/logout`)
+- **Mục BỎ:** BỎ "Lịch của tôi", BỎ "Ví của tôi", BỎ "AI gợi ý bạn học".
+
+#### 3. QUẢN TRỊ TRƯỜNG (`school_admin`):
+- **User Pill Badge:** Hiển thị huy hiệu `Quản trị trường` (nền vàng cam). Ẩn badge số dư giờ.
+- **Mục Dropdown Giữ lại (8 mục):**
+  1. `Hồ sơ & Cài đặt` (`/profile`)
+  2. `Quản lý Tài khoản` (`/admin#tab-users`)
+  3. `Quản lý Mã mời` (`/admin#tab-invite`)
+  4. `Duyệt kỹ năng` (`/skills/approve`)
+  5. `Quản lý Bảng tin` (`/blog/manage`)
+  6. `Chương trình Cộng đồng` (`/admin#tab-community-tasks`)
+  7. `Báo cáo trường` (`/admin#tab-overview`)
+  8. `Đăng xuất` (`/logout`)
+- **Mục BỎ:** BỎ "Lịch của tôi", BỎ "Ví của tôi", BỎ "Đăng kỹ năng mới".
+
+#### 4. TỔNG QUẢN TRỊ (`super_admin`):
+- **User Pill Badge:** Hiển thị huy hiệu `Tổng quản trị` (nền đỏ quyền lực). Ẩn badge số dư giờ.
+- **Mục Dropdown Giữ lại (9 mục):**
+  1. `Hồ sơ & Cài đặt` (`/profile`)
+  2. `Quản lý Tài khoản` (`/admin/accounts`)
+  3. `Quản lý Mã mời` (`/admin#tab-invite`)
+  4. `Duyệt kỹ năng` (`/skills/approve`)
+  5. `Quản lý Bảng tin` (`/blog/manage`)
+  6. `Chương trình Cộng đồng` (`/admin#tab-community-tasks`)
+  7. `Quản lý Trường học` (`/admin#tab-schools`)
+  8. `Báo cáo toàn hệ thống` (`/admin#tab-overview`)
+  9. `Đăng xuất` (`/logout`)
+- **Mục BỎ:** BỎ "Lịch của tôi", BỎ "Ví của tôi", BỎ "Đăng kỹ năng mới".
+
+---
+
+### Nghiệm Thu & Kiểm Thử Tự Động:
+- **Bộ kiểm thử tự động:** `test_prompt_role_menus.py` (4/4 tests PASS):
+  1. `test_01_student_menu`: Kiểm thử người dùng học sinh `demo_hocsinh`.
+  2. `test_02_teacher_menu`: Kiểm thử người dùng giáo viên `demo_giaovien`.
+  3. `test_03_school_admin_menu`: Kiểm thử quản trị trường `demo_quantruong`.
+  4. `test_04_super_admin_menu`: Kiểm thử tổng quản trị `super_admin`.
+- **Kiểm thử giao diện trực quan:** Đã xác minh thực tế trên desktop (1280x800) và mobile (390x844 responsive).
+- **Kết quả Regression:** **37/37 Test Suites ĐẠT 100% PASS**.
+
 
 
