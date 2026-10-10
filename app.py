@@ -6127,11 +6127,20 @@ def get_ai_buddy_suggestions(db, user_id, limit=5):
 def api_smart_suggestions():
     """VIỆC 3: API phân tích AI trả về 3-5 gợi ý bạn học kèm lý do và nút đặt lịch."""
     db = get_db()
+    cur = db.cursor()
     user_id = session["user_id"]
     suggestions = get_ai_buddy_suggestions(db, user_id, limit=5)
 
     res_list = []
     for s in suggestions:
+        # Kiểm tra người học đã có yêu cầu đặt lịch đang chờ/đã đặt với kỹ năng này chưa
+        cur.execute("""
+            SELECT id FROM sessions 
+            WHERE skill_id = ? AND nguoi_hoc_id = ? AND trang_thai IN ('cho_duyet', 'da_dat')
+            LIMIT 1
+        """, (s["id"], user_id))
+        has_pending = cur.fetchone() is not None
+
         res_list.append({
             "id": s["id"],
             "tieu_de": s["tieu_de"],
@@ -6142,7 +6151,8 @@ def api_smart_suggestions():
             "khung_gio_chung": s["khung_gio_chung"],
             "sao_tb": s["sao_tb"],
             "ai_ly_do": s["ai_ly_do"],
-            "book_url": url_for("book_skill_page", skill_id=s["id"])
+            "book_url": url_for("book_skill_page", skill_id=s["id"]),
+            "da_gui_yeu_cau": has_pending
         })
     return jsonify({
         "success": True,
@@ -6309,21 +6319,24 @@ def book_session():
     db = get_db()
     cur = db.cursor()
 
+    def respond_error(msg, category="danger"):
+        flash(msg, category)
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
+            return jsonify({"success": False, "message": msg}), 400
+        return redirect(url_for("skills_market"))
+
     # Kiểm tra trạng thái người học: chặn ngay nếu đang chờ duyệt
     cur.execute("SELECT * FROM users WHERE id = ?", (session["user_id"],))
     learner = cur.fetchone()
     if not learner:
-        flash(_("Không tìm thấy thông tin tài khoản người học."), "danger")
-        return redirect(url_for("skills_market"))
+        return respond_error(_("Không tìm thấy thông tin tài khoản người học."))
     if learner["trang_thai"] == "cho_duyet":
-        flash(_("Tài khoản của bạn đang trong hàng chờ duyệt bởi Quản trị viên nhà trường. Bạn chưa thể đặt lịch học cho đến khi tài khoản được kích hoạt."), "warning")
-        return redirect(url_for("skills_market"))
+        return respond_error(_("Tài khoản của bạn đang trong hàng chờ duyệt bởi Quản trị viên nhà trường. Bạn chưa thể đặt lịch học cho đến khi tài khoản được kích hoạt."), "warning")
 
     try:
         skill_id = int(request.form.get("skill_id", 0))
     except (ValueError, TypeError):
-        flash(_("Kỹ năng không hợp lệ."), "danger")
-        return redirect(url_for("skills_market"))
+        return respond_error(_("Kỹ năng không hợp lệ."))
         
     thoi_gian_bat_dau = request.form.get("thoi_gian_bat_dau", "").strip()
     try:
@@ -6332,30 +6345,25 @@ def book_session():
         so_gio = 1.0
         
     if not thoi_gian_bat_dau:
-        flash(_("Vui lòng chọn thời gian hẹn học."), "danger")
-        return redirect(url_for("skills_market"))
+        return respond_error(_("Vui lòng chọn thời gian hẹn học."))
         
     # Giới hạn tối đa 2 giờ / phiên
     if so_gio <= 0 or so_gio > 2.0:
-        flash(_("Thời lượng mỗi buổi học tối đa là 2.0 giờ (và tối thiểu 0.5 giờ)!"), "danger")
-        return redirect(url_for("skills_market"))
+        return respond_error(_("Thời lượng mỗi buổi học tối đa là 2.0 giờ (và tối thiểu 0.5 giờ)!"))
     
     # 1. Kiểm tra kỹ năng có tồn tại và đã duyệt chưa
     cur.execute("SELECT * FROM skills WHERE id = ?", (skill_id,))
     skill = cur.fetchone()
     if not skill or (skill["trang_thai_duyet"] != "da_duyet" and skill.get("hien_thi_cong_dong") != 1):
-        flash(_("Kỹ năng này chưa sẵn sàng hoặc chưa được phê duyệt sư phạm!"), "danger")
-        return redirect(url_for("skills_market"))
+        return respond_error(_("Kỹ năng này chưa sẵn sàng hoặc chưa được phê duyệt sư phạm!"))
         
     # 2. Không được tự đặt lịch kỹ năng của chính mình
     if skill["user_id"] == session["user_id"]:
-        flash(_("Bạn không thể tự đặt lịch kỹ năng của chính mình!"), "warning")
-        return redirect(url_for("skills_market"))
+        return respond_error(_("Bạn không thể tự đặt lịch kỹ năng của chính mình!"), "warning")
         
     # 3. Kiểm tra số dư người học
     if learner["so_du_gio"] < so_gio:
-        flash(_("Số dư tín dụng của bạn không đủ để đặt lịch buổi học này! (Hiện có: %(cur).1fh, Cần: %(need).1fh). Hãy dạy kèm bạn bè để tích thêm giờ nhé!", cur=learner['so_du_gio'], need=so_gio), "danger")
-        return redirect(url_for("skills_market"))
+        return respond_error(_("Số dư tín dụng của bạn không đủ để đặt lịch buổi học này! (Hiện có: %(cur).1fh, Cần: %(need).1fh). Hãy dạy kèm bạn bè để tích thêm giờ nhé!", cur=learner['so_du_gio'], need=so_gio))
         
     # 4. Lấy thông tin gia sư
     cur.execute("SELECT ho_ten, email FROM users WHERE id = ?", (skill["user_id"],))
@@ -6408,7 +6416,16 @@ def book_session():
         except Exception as e:
             app.logger.warning(f"Không thể tạo phòng Daily.co khi đặt lịch #{new_session_id}: {e}")
     
-    flash(_("Đặt lịch học thành công với %(tutor)s (%(hrs).1f giờ)! Cả hai bạn đều có thể theo dõi trong 'Lịch của tôi'.", tutor=tutor_name, hrs=so_gio), "success")
+    success_msg = _("Đặt lịch học thành công với %(tutor)s (%(hrs).1f giờ)! Cả hai bạn đều có thể theo dõi trong 'Lịch của tôi'.", tutor=tutor_name, hrs=so_gio)
+    flash(success_msg, "success")
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
+        return jsonify({
+            "success": True,
+            "message": _("Đã gửi yêu cầu học với %(tutor)s!", tutor=tutor_name),
+            "tutor_name": tutor_name,
+            "session_id": new_session_id,
+            "redirect_url": url_for("my_schedule")
+        })
     return redirect(url_for("my_schedule"))
 
 
@@ -7658,14 +7675,27 @@ def virtual_room(session_id):
         
     is_teacher = (session_data["nguoi_day_id"] == user_id)
     is_learner = (session_data["nguoi_hoc_id"] == user_id)
-    is_supervisor = (user_role in ("admin", "giao_vien"))
+    
+    session_truong_id = session_data["truong_id"] if "truong_id" in session_data.keys() else None
+    user_truong_id = session.get("truong_id")
+    
+    # Phân quyền giám sát:
+    # 1. super_admin: Giám sát MỌI phòng học trên toàn hệ thống
+    # 2. school_admin & admin: Giám sát phòng học của TRƯỜNG MÌNH
+    # 3. giao_vien: Giám sát phòng học của TRƯỜNG MÌNH
+    is_super = is_super_admin() or (user_role == "super_admin")
+    is_same_school = (session_truong_id is None or user_truong_id is None or session_truong_id == user_truong_id)
+    is_school_adm = (user_role in ("school_admin", "admin"))
+    is_teacher_role = (user_role == "giao_vien")
+    is_supervisor = (is_super or (is_same_school and (is_school_adm or is_teacher_role))) and not (is_teacher or is_learner)
     
     if not (is_teacher or is_learner or is_supervisor):
         flash(_("Bạn không có quyền tham gia phòng học ảo của phiên này!"), "danger")
         return redirect(url_for("my_schedule"))
         
-    # Ghi nhận lượt tham gia vào session_attendance và tự động check-in
-    record_attendance_entry(db, session_id, user_id)
+    # Ghi nhận lượt tham gia vào session_attendance và tự động check-in (CHỈ tính giờ cho gia sư và học sinh)
+    if is_teacher or is_learner:
+        record_attendance_entry(db, session_id, user_id)
     
     # Sinh tên phòng chuẩn hóa cho Jitsi Meet
     raw_ma_qr = session_data["ma_qr"] or f"SES_{session_id}"
@@ -7731,7 +7761,14 @@ def get_virtual_room_token(session_id):
         
     is_teacher = (session_data["nguoi_day_id"] == user_id)
     is_learner = (session_data["nguoi_hoc_id"] == user_id)
-    is_supervisor = (user_role in ("admin", "giao_vien", "school_admin", "super_admin"))
+    
+    session_truong_id = session_data["truong_id"] if "truong_id" in session_data.keys() else None
+    user_truong_id = session.get("truong_id")
+    is_super = is_super_admin() or (user_role == "super_admin")
+    is_same_school = (session_truong_id is None or user_truong_id is None or session_truong_id == user_truong_id)
+    is_school_adm = (user_role in ("school_admin", "admin"))
+    is_teacher_role = (user_role == "giao_vien")
+    is_supervisor = (is_super or (is_same_school and (is_school_adm or is_teacher_role))) and not (is_teacher or is_learner)
     
     if not (is_teacher or is_learner or is_supervisor):
         return jsonify({"error": "Bạn không có quyền tham gia phiên học này"}), 403

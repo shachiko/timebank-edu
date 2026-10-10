@@ -959,6 +959,77 @@
     </div>
   </div>
 
+  <!-- Modal Đặt Lịch Nhanh Từ Gợi Ý AI -->
+  <div class="modal fade" id="modalQuickBookAiSession" tabindex="-1" aria-labelledby="modalQuickBookAiLabel" aria-hidden="true" style="z-index: 1065;">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-4 border-0 shadow-lg overflow-hidden">
+        <div class="modal-header text-white border-0 py-3" style="background: linear-gradient(135deg, #FF6B00 0%, #E05300 100%);">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-calendar2-check-fill fs-5"></i>
+            <div>
+              <h5 class="modal-title fw-bold mb-0" id="modalQuickBookAiLabel">{{ _('Đăng Ký Buổi Học Kèm') }}</h5>
+              <small class="text-white-50">{{ _('Khớp lịch tự động theo gợi ý AI') }}</small>
+            </div>
+          </div>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form id="formQuickBookAi" onsubmit="handleQuickBookAiSubmit(event)">
+          <input type="hidden" id="quickBookSkillId" name="skill_id">
+          <input type="hidden" id="quickBookTutorName" name="tutor_name">
+          <div class="modal-body p-4 bg-light">
+            <div id="quickBookAlert" class="alert alert-danger d-none py-2 px-3 small rounded-3 mb-3"></div>
+
+            <div class="card border-0 shadow-sm rounded-3 p-3 bg-white mb-3">
+              <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle text-white d-flex align-items-center justify-content-center fw-bold fs-5 flex-shrink-0" id="quickBookAvatar" style="width: 44px; height: 44px; background: linear-gradient(135deg, #1B2A6B, #3b82f6);">
+                  T
+                </div>
+                <div class="flex-grow-1 min-w-0">
+                  <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <strong class="text-dark" id="quickBookTutorNameDisplay">...</strong>
+                    <span class="badge bg-primary bg-opacity-10 text-primary small" id="quickBookSubject">...</span>
+                  </div>
+                  <div class="text-muted small text-truncate" id="quickBookSkillTitle">...</div>
+                </div>
+              </div>
+              <div class="mt-2 pt-2 border-top small text-secondary d-flex align-items-center gap-1">
+                <i class="bi bi-clock-history text-primary"></i>
+                <span>{{ _('Khung giờ chung gợi ý:') }}</span>
+                <strong class="text-success" id="quickBookCommonSlot">...</strong>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="quickBookStartTime" class="form-label fw-semibold text-dark small mb-1">
+                <i class="bi bi-calendar-event text-primary me-1"></i>{{ _('Thời gian hẹn học') }} <span class="text-danger">*</span>
+              </label>
+              <input type="datetime-local" class="form-control" id="quickBookStartTime" name="thoi_gian_bat_dau" required>
+              <div class="form-text small text-muted">{{ _('Vui lòng chọn ngày và giờ hẹn học phù hợp.') }}</div>
+            </div>
+
+            <div class="mb-2">
+              <label for="quickBookDuration" class="form-label fw-semibold text-dark small mb-1">
+                <i class="bi bi-clock text-primary me-1"></i>{{ _('Thời lượng buổi học') }} <span class="text-danger">*</span>
+              </label>
+              <select class="form-select" id="quickBookDuration" name="so_gio" required>
+                <option value="1.0" selected>{{ _('1.0 giờ (1 tín dụng - Chuẩn)') }}</option>
+                <option value="0.5">{{ _('0.5 giờ (30 phút - 0.5 tín dụng)') }}</option>
+                <option value="1.5">{{ _('1.5 giờ (90 phút - 1.5 tín dụng)') }}</option>
+                <option value="2.0">{{ _('2.0 giờ (Tối đa 2h / phiên - 2.0 tín dụng)') }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer bg-white border-top p-3 d-flex justify-content-between align-items-center">
+            <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">{{ _('Hủy bỏ') }}</button>
+            <button type="submit" class="btn btn-warning text-dark fw-bold rounded-pill px-4 shadow-sm" id="btnSubmitQuickBook">
+              <i class="bi bi-check2-circle me-1"></i> {{ _('Xác nhận đăng ký') }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <script>
     // Hàm mở Modal AI Gợi Ý Bạn Học
     function openAiBuddySuggestions() {
@@ -1015,8 +1086,15 @@
         `;
 
         data.suggestions.forEach((sug, idx) => {
+          const isSent = Boolean(sug.da_gui_yeu_cau);
+          const safeTutorName = (sug.ho_ten || 'Bạn học').replace(/"/g, '&quot;');
+          const safeTitle = (sug.tieu_de || '').replace(/"/g, '&quot;');
+          const safeSubject = (sug.linh_vuc || '').replace(/"/g, '&quot;');
+          const safeSlot = (sug.khung_gio_chung || '').replace(/"/g, '&quot;');
+          const cardId = `ai_sug_card_${sug.id}`;
+
           html += `
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white" id="${cardId}">
               <div class="card-body p-3 p-md-4">
                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
                   <div class="d-flex align-items-start gap-3 flex-grow-1">
@@ -1040,11 +1118,19 @@
                       </div>
                     </div>
                   </div>
-                  <div class="flex-shrink-0 w-100 w-md-auto text-md-end mt-2 mt-md-0">
-                    <a href="${sug.book_url}" class="btn btn-brand btn-sm fw-bold rounded-pill px-4 py-2 shadow-sm d-inline-flex align-items-center gap-1">
-                      <i class="bi bi-calendar-check-fill"></i>
-                      <span>{{ _('Đặt lịch ngay') }}</span>
-                    </a>
+                  <div class="flex-shrink-0 w-100 w-md-auto text-md-end mt-2 mt-md-0" id="btnWrapper_${sug.id}">
+                    ${isSent ? `
+                      <button type="button" class="btn btn-secondary btn-sm fw-bold rounded-pill px-4 py-2 shadow-sm d-inline-flex align-items-center gap-1 disabled" disabled>
+                        <i class="bi bi-check2-circle"></i>
+                        <span>{{ _('Đã gửi yêu cầu') }}</span>
+                      </button>
+                    ` : `
+                      <button type="button" class="btn btn-warning text-dark btn-sm fw-bold rounded-pill px-4 py-2 shadow-sm d-inline-flex align-items-center gap-1"
+                              onclick="openQuickBookAiModal('${sug.id}', '${safeTutorName}', '${safeTitle}', '${safeSubject}', '${safeSlot}')">
+                        <i class="bi bi-pencil-square"></i>
+                        <span>{{ _('📝 Đăng ký học') }}</span>
+                      </button>
+                    `}
                   </div>
                 </div>
 
@@ -1073,6 +1159,96 @@
             {{ _('Có lỗi xảy ra khi phân tích gợi ý. Vui lòng thử lại sau.') }}
           </div>
         `;
+      }
+    }
+
+    // Mở popup đặt lịch nhanh từ đề xuất AI
+    function openQuickBookAiModal(skillId, tutorName, skillTitle, subject, commonSlot) {
+      document.getElementById('quickBookSkillId').value = skillId;
+      document.getElementById('quickBookTutorName').value = tutorName;
+      document.getElementById('quickBookTutorNameDisplay').textContent = tutorName;
+      document.getElementById('quickBookAvatar').textContent = (tutorName || 'A')[0].toUpperCase();
+      document.getElementById('quickBookSubject').textContent = subject;
+      document.getElementById('quickBookSkillTitle').textContent = skillTitle;
+      document.getElementById('quickBookCommonSlot').textContent = commonSlot || 'Linh hoạt';
+
+      // Mặc định đặt hẹn ngày mai vào lúc 14:00
+      const now = new Date();
+      now.setDate(now.getDate() + 1);
+      now.setHours(14, 0, 0, 0);
+      const isoLocal = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+      document.getElementById('quickBookStartTime').value = isoLocal;
+
+      const alertEl = document.getElementById('quickBookAlert');
+      alertEl.classList.add('d-none');
+      alertEl.textContent = '';
+
+      const bookModalEl = document.getElementById('modalQuickBookAiSession');
+      const bookModal = bootstrap.Modal.getOrCreateInstance(bookModalEl);
+      bookModal.show();
+    }
+
+    // Gửi form đặt lịch nhanh qua AJAX
+    async function handleQuickBookAiSubmit(e) {
+      e.preventDefault();
+      const form = document.getElementById('formQuickBookAi');
+      const submitBtn = document.getElementById('btnSubmitQuickBook');
+      const alertEl = document.getElementById('quickBookAlert');
+      const skillId = document.getElementById('quickBookSkillId').value;
+      const tutorName = document.getElementById('quickBookTutorName').value;
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> {{ _("Đang xử lý...") }}';
+      alertEl.classList.add('d-none');
+
+      try {
+        const formData = new FormData(form);
+        const res = await fetch('/sessions/book', {
+          method: 'POST',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: formData
+        });
+
+        const data = await res.json().catch(() => null);
+
+        if (res.ok && (!data || data.success)) {
+          // 1. Cập nhật nút trong gợi ý thành "Đã gửi yêu cầu"
+          const btnWrapper = document.getElementById(`btnWrapper_${skillId}`);
+          if (btnWrapper) {
+            btnWrapper.innerHTML = `
+              <button type="button" class="btn btn-secondary btn-sm fw-bold rounded-pill px-4 py-2 shadow-sm d-inline-flex align-items-center gap-1 disabled" disabled>
+                <i class="bi bi-check2-circle"></i>
+                <span>{{ _('Đã gửi yêu cầu') }}</span>
+              </button>
+            `;
+          }
+
+          // 2. Đóng cả 2 modal
+          const bookModalEl = document.getElementById('modalQuickBookAiSession');
+          const bookModal = bootstrap.Modal.getInstance(bookModalEl);
+          if (bookModal) bookModal.hide();
+
+          const aiModalEl = document.getElementById('modalAiBuddySuggestions');
+          const aiModal = bootstrap.Modal.getInstance(aiModalEl);
+          if (aiModal) aiModal.hide();
+
+          // 3. Hiện thông báo và chuyển hướng đến trang /my-schedule
+          alert(`{{ _('Đã gửi yêu cầu học với') }} ${tutorName}!`);
+          window.location.href = (data && data.redirect_url) ? data.redirect_url : '/my-schedule';
+        } else {
+          alertEl.textContent = (data && data.message) ? data.message : '{{ _("Có lỗi xảy ra khi đặt lịch. Vui lòng kiểm tra lại số dư hoặc thời gian hẹn.") }}';
+          alertEl.classList.remove('d-none');
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="bi bi-check2-circle me-1"></i> {{ _("Xác nhận đăng ký") }}';
+        }
+      } catch (err) {
+        console.error('Lỗi đặt lịch nhanh:', err);
+        alertEl.textContent = '{{ _("Lỗi kết nối máy chủ. Vui lòng thử lại!") }}';
+        alertEl.classList.remove('d-none');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bi bi-check2-circle me-1"></i> {{ _("Xác nhận đăng ký") }}';
       }
     }
   </script>
