@@ -556,12 +556,29 @@
         {% if schools %}
           {% for s in schools %}
           <div class="col-md-6 col-lg-3">
-            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100 border-top border-4 {{ 'border-success' if s.trang_thai == 'dang_thi_diem' else 'border-warning' }}">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100 border-top border-4 {{ 'border-success' if s.trang_thai in ('dang_su_dung', 'dang_hoat_dong') else ('border-warning' if s.trang_thai == 'dang_thi_diem' else ('border-info' if s.trang_thai == 'chuan_bi_trien_khai' else 'border-secondary')) }}">
               <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="badge {{ 'bg-success bg-opacity-10 text-success' if s.trang_thai == 'dang_thi_diem' else 'bg-warning bg-opacity-10 text-warning-emphasis' }} fw-bold">
-                  <i class="bi {{ 'bi-broadcast' if s.trang_thai == 'dang_thi_diem' else 'bi-clock-history' }} me-1"></i>
-                  {{ _('Đang thí điểm') if s.trang_thai == 'dang_thi_diem' else _('Chuẩn bị triển khai') }}
-                </span>
+                {% if s.trang_thai in ('dang_su_dung', 'dang_hoat_dong') %}
+                  <span class="badge bg-success bg-opacity-10 text-success fw-bold">
+                    <i class="bi bi-check-circle-fill me-1"></i>{{ _('Đang hoạt động') }}
+                  </span>
+                {% elif s.trang_thai == 'dang_thi_diem' %}
+                  <span class="badge bg-warning bg-opacity-10 text-warning-emphasis fw-bold">
+                    <i class="bi bi-flag-fill me-1"></i>{{ _('Đang thí điểm') }}
+                  </span>
+                {% elif s.trang_thai == 'chuan_bi_trien_khai' %}
+                  <span class="badge bg-info bg-opacity-10 text-info fw-bold">
+                    <i class="bi bi-clock-history me-1"></i>{{ _('Chuẩn bị triển khai') }}
+                  </span>
+                {% elif s.trang_thai in ('vo_hieu_hoa', 'tam_ngung') %}
+                  <span class="badge bg-secondary bg-opacity-10 text-secondary fw-bold">
+                    <i class="bi bi-pause-circle-fill me-1"></i>{{ _('Tạm ngưng') }}
+                  </span>
+                {% else %}
+                  <span class="badge bg-secondary bg-opacity-10 text-secondary fw-bold">
+                    <i class="bi bi-info-circle me-1"></i>{{ s.trang_thai }}
+                  </span>
+                {% endif %}
                 <small class="text-muted">{{ _('Trường') }} #{{ s.id }}</small>
               </div>
 
@@ -595,7 +612,7 @@
           <div class="col-md-6 col-lg-3">
             <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100 border-top border-4 border-success">
               <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="badge bg-success bg-opacity-10 text-success fw-bold"><i class="bi bi-broadcast me-1"></i>{{ _('Đang thí điểm') }}</span>
+                <span class="badge bg-success bg-opacity-10 text-success fw-bold"><i class="bi bi-check-circle-fill me-1"></i>{{ _('Đang hoạt động') }}</span>
                 <small class="text-muted">{{ _('Trường') }} #1</small>
               </div>
               <div class="school-logo-frame mb-3 text-center">

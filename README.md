@@ -1254,4 +1254,40 @@ Hệ thống được nâng cấp bộ tính năng thông minh hỗ trợ ghép 
   - `admin_community_tasks_1280x800_*.png`: Bảng hiển thị xuất sắc ở 1280x800, không bị tràn ngang, nút thao tác cố định hoàn hảo.
 - **Kiểm thử hồi quy:** **40/40 Test Suites ĐẠT 100% PASS** qua `python run_all_tests.py`.
 
+---
+
+## 26. KHẮC PHỤC ĐỒNG BỘ TRẠNG THÁI TRƯỜNG HỌC TRÊN TRANG CHỦ
+
+### 1. Vấn Đề (Phát Hiện Từ Thực Tế Sử Dụng):
+- Trong trang quản trị (`/admin`), khi quản trị viên chỉnh sửa trạng thái trường học sang **"Đang hoạt động"**, trên trang chủ (`index.html`) khối "Các Trường Học Tham Gia Thí Điểm & Triển Khai" vẫn hiển thị nhãn **"Chuẩn bị triển khai"** kèm icon đồng hồ và viền màu vàng.
+
+### 2. Nguyên Nhân Gốc Rễ:
+- Tại [templates/index.html](file:///e:/Tool%20GD/timebankEDU/templates/index.html) (dòng 559-564), logic Jinja2 trước đây chỉ kiểm tra cứng:
+  `{{ _('Đang thí điểm') if s.trang_thai == 'dang_thi_diem' else _('Chuẩn bị triển khai') }}`
+  và `border-top border-4 {{ 'border-success' if s.trang_thai == 'dang_thi_diem' else 'border-warning' }}`.
+- Do đó, khi trường học ở trạng thái `dang_su_dung` (Đang hoạt động), điều kiện `s.trang_thai == 'dang_thi_diem'` trả về `False`, khiến thẻ trường học tự động rơi vào nhánh `else` và hiển thị sai thành **"Chuẩn bị triển khai"**.
+
+### 3. Giải Pháp Triển Khai:
+- Cập nhật toàn diện logic hiển thị thẻ trường học trên [templates/index.html](file:///e:/Tool%20GD/timebankEDU/templates/index.html) đồng bộ 100% với CSDL và bảng quản trị:
+  - **`dang_su_dung` / `dang_hoat_dong` (Đang hoạt động):**
+    - Huy hiệu: `<span class="badge bg-success bg-opacity-10 text-success fw-bold"><i class="bi bi-check-circle-fill me-1"></i>{{ _('Đang hoạt động') }}</span>`
+    - Viền trên thẻ: `border-top border-4 border-success` (Xanh lá cây nổi bật).
+  - **`dang_thi_diem` (Đang thí điểm):**
+    - Huy hiệu: `<span class="badge bg-warning bg-opacity-10 text-warning-emphasis fw-bold"><i class="bi bi-flag-fill me-1"></i>{{ _('Đang thí điểm') }}</span>`
+    - Viền trên thẻ: `border-top border-4 border-warning` (Màu vàng cam).
+  - **`chuan_bi_trien_khai` (Chuẩn bị triển khai):**
+    - Huy hiệu: `<span class="badge bg-info bg-opacity-10 text-info fw-bold"><i class="bi bi-clock-history me-1"></i>{{ _('Chuẩn bị triển khai') }}</span>`
+    - Viền trên thẻ: `border-top border-4 border-info` (Xanh ngọc).
+  - **`vo_hieu_hoa` / `tam_ngung` (Tạm ngưng):**
+    - Huy hiệu: `<span class="badge bg-secondary bg-opacity-10 text-secondary fw-bold"><i class="bi bi-pause-circle-fill me-1"></i>{{ _('Tạm ngưng') }}</span>`
+    - Viền trên thẻ: `border-top border-4 border-secondary` (Xám).
+
+### 4. Nghiệm Thu & Kiểm Thử:
+- **Kiểm thử trực quan Playwright:** Ảnh chụp minh chứng `homepage_schools_status_*.png` ghi nhận:
+  - Trường #1 (UK Academy) & Trường #2 (THCS Nguyễn Văn Thuộc): Hiển thị đúng **[✔ Đang hoạt động]** viền xanh lá.
+  - Trường #3 (THCS Lê Văn Tám) & Trường #4 (THPT Hải Đảo): Hiển thị đúng **[🕒 Chuẩn bị triển khai]** viền xanh ngọc.
+- **Kiểm thử tự động:** Bổ sung `TEST 11` trong `test_hotfix_import_and_school_display.py` kiểm tra tự động trang chủ.
+- **Kiểm thử hồi quy:** **40/40 Test Suites ĐẠT 100% PASS** qua `run_all_tests.py`.
+
+
 

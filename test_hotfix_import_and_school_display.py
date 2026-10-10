@@ -362,6 +362,29 @@ class TestHotfixImportAndSchoolDisplay(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         html = res.data.decode("utf-8")
         self.assertIn("Thành công", html)
+    # -------------------------------------------------------------------------
+    # TEST 11: Hiển thị đúng trạng thái trường học trên trang chủ index.html
+    # (Đang hoạt động, Đang thí điểm, Chuẩn bị triển khai, Tạm ngưng)
+    # -------------------------------------------------------------------------
+    def test_school_status_display_on_homepage(self):
+        with app.app_context():
+            db = get_db()
+            cur = db.cursor()
+            # Cập nhật trường 1 và 2 thành dang_su_dung (Đang hoạt động)
+            cur.execute("UPDATE truong SET trang_thai = 'dang_su_dung' WHERE id = 1")
+            cur.execute("UPDATE truong SET trang_thai = 'dang_su_dung' WHERE id = 2")
+            cur.execute("UPDATE truong SET trang_thai = 'chuan_bi_trien_khai' WHERE id = 3")
+            db.commit()
+
+        res = self.client.get("/")
+        self.assertEqual(res.status_code, 200)
+        html = res.data.decode("utf-8")
+
+        # Phải hiển thị đúng huy hiệu "Đang hoạt động" và "Chuẩn bị triển khai"
+        self.assertIn("Đang hoạt động", html)
+        self.assertIn("Chuẩn bị triển khai", html)
+        self.assertIn("border-success", html)
+        self.assertIn("bi-check-circle-fill", html)
 
 
 if __name__ == "__main__":
