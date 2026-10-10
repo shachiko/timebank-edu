@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Bảng điều khiển Quản trị - School Time Bank{% endblock %}
+{% block title %}{{ _('Bảng điều khiển Quản trị - School Time Bank') }}{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -30,27 +30,27 @@
     <div>
       <div class="d-flex align-items-center gap-2 mb-1">
         {% if is_super_admin %}
-          <span class="badge bg-danger px-3 py-2 rounded-pill"><i class="bi bi-shield-lock-fill me-1"></i> TỔNG QUẢN TRỊ (SUPER ADMIN)</span>
+          <span class="badge bg-danger px-3 py-2 rounded-pill"><i class="bi bi-shield-lock-fill me-1"></i> {{ _('TỔNG QUẢN TRỊ (SUPER ADMIN)') }}</span>
           <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold">Cô Nguyễn Thị Huyền</span>
         {% else %}
-          <span class="badge bg-primary px-3 py-2 rounded-pill"><i class="bi bi-building-fill me-1"></i> QUẢN TRỊ VIÊN TRƯỜNG (SCHOOL ADMIN)</span>
+          <span class="badge bg-primary px-3 py-2 rounded-pill"><i class="bi bi-building-fill me-1"></i> {{ _('QUẢN TRỊ VIÊN TRƯỜNG (SCHOOL ADMIN)') }}</span>
           <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">{{ current_school_name }}</span>
         {% endif %}
       </div>
-      <h2 class="fw-bold mb-0 text-dark">Hệ thống Quản trị Đa trường học</h2>
-      <p class="text-muted small mb-0">School Time Bank — Phân quyền & Giám sát Giáo dục Toàn diện</p>
+      <h2 class="fw-bold mb-0 text-dark">{{ _('Hệ thống Quản trị Đa trường học') }}</h2>
+      <p class="text-muted small mb-0">{{ _('School Time Bank — Phân quyền & Giám sát Giáo dục Toàn diện') }}</p>
     </div>
 
     <!-- Bộ lọc trường dành cho Super Admin & Nút thao tác nhanh -->
     <div class="d-flex flex-wrap align-items-center gap-2">
       {% if is_super_admin %}
       <form method="GET" action="{{ url_for('admin_dashboard') }}" class="d-flex align-items-center gap-2">
-        <label for="filterTruong" class="small text-muted fw-semibold text-nowrap"><i class="bi bi-funnel-fill me-1"></i>Trường:</label>
+        <label for="filterTruong" class="small text-muted fw-semibold text-nowrap"><i class="bi bi-funnel-fill me-1"></i>{{ _('Trường:') }}</label>
         <select name="truong_id" id="filterTruong" class="form-select form-select-sm rounded-pill" onchange="this.form.submit()" style="min-width: 220px;">
-          <option value="" {% if not selected_truong_id %}selected{% endif %}>-- Tất cả các trường ({{ all_schools|length }} trường) --</option>
+          <option value="" {% if not selected_truong_id %}selected{% endif %}>-- {{ _('Tất cả các trường') }} ({{ all_schools|length }} {{ _('trường') }}) --</option>
           {% for s in all_schools %}
             <option value="{{ s.id }}" {% if selected_truong_id|string == s.id|string %}selected{% endif %}>
-              {{ s.ten_truong }}{% if s.an_truong == 1 %} (Đã ẩn){% endif %}
+              {{ s.ten_truong }}{% if s.an_truong == 1 %} ({{ _('Đã ẩn') }}){% endif %}
             </option>
           {% endfor %}
         </select>
@@ -59,12 +59,12 @@
 
       {% if is_super_admin %}
       <a href="{{ url_for('admin_accounts') }}" class="btn btn-danger btn-sm rounded-pill fw-semibold">
-        <i class="bi bi-people-fill me-1"></i> Quản lý Tài khoản
+        <i class="bi bi-people-fill me-1"></i> {{ _('Quản lý Tài khoản') }}
       </a>
       {% endif %}
 
       {% if session.get('truong_id') == 99 or is_super_admin %}
-      <form action="{{ url_for('reset_demo_data_route') }}" method="POST" class="d-inline" onsubmit="return confirm('Khôi phục dữ liệu Trường Demo về trạng thái ban đầu?');">
+      <form action="{{ url_for('reset_demo_data_route') }}" method="POST" class="d-inline" onsubmit="return confirm('{{ _('Khôi phục dữ liệu Trường Demo về trạng thái ban đầu?') }}');">
         <button type="submit" class="btn btn-warning btn-sm rounded-pill fw-semibold">
           <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Demo
         </button>
@@ -72,16 +72,16 @@
       {% endif %}
 
       <a href="{{ url_for('export_data_csv') }}" class="btn btn-success btn-sm shadow-sm rounded-pill">
-        <i class="bi bi-file-earmark-spreadsheet me-1"></i> Xuất CSV
+        <i class="bi bi-file-earmark-spreadsheet me-1"></i> {{ _('Xuất CSV') }}
       </a>
       <a href="{{ url_for('virtual_rooms_dashboard') }}" class="btn btn-primary btn-sm rounded-pill">
-        <i class="bi bi-camera-video me-1"></i> Giám sát Phòng học ảo
+        <i class="bi bi-camera-video me-1"></i> {{ _('Giám sát Phòng học ảo') }}
       </a>
       <a href="{{ url_for('skills_approval') }}" class="btn btn-outline-primary btn-sm rounded-pill">
-        <i class="bi bi-patch-check me-1"></i> Duyệt Kỹ Năng
+        <i class="bi bi-patch-check me-1"></i> {{ _('Duyệt Kỹ Năng') }}
       </a>
       <button class="btn btn-outline-warning btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#uploadSchoolLogoModal">
-        <i class="bi bi-image me-1"></i> Tải Logo Trường
+        <i class="bi bi-image me-1"></i> {{ _('Tải Logo Trường') }}
       </button>
     </div>
   </div>
@@ -90,12 +90,12 @@
   <ul class="nav nav-pills mb-4 gap-2 bg-white p-2 rounded-4 shadow-sm border" id="adminTabs" role="tablist">
     <li class="nav-item" role="presentation">
       <button class="nav-link active rounded-pill fw-semibold" id="tab-overview-btn" data-bs-toggle="pill" data-bs-target="#tab-overview" type="button" role="tab">
-        <i class="bi bi-speedometer2 me-1"></i> Tổng quan & Báo cáo
+        <i class="bi bi-speedometer2 me-1"></i> {{ _('Tổng quan & Báo cáo') }}
       </button>
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link rounded-pill fw-semibold position-relative" id="tab-queue-btn" data-bs-toggle="pill" data-bs-target="#tab-queue" type="button" role="tab">
-        <i class="bi bi-hourglass-split me-1"></i> Hàng chờ duyệt học sinh
+        <i class="bi bi-hourglass-split me-1"></i> {{ _('Hàng chờ duyệt học sinh') }}
         {% if pending_students %}
           <span class="badge bg-danger rounded-pill ms-1">{{ pending_students|length }}</span>
         {% endif %}
@@ -103,13 +103,13 @@
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link rounded-pill fw-semibold" id="tab-invite-btn" data-bs-toggle="pill" data-bs-target="#tab-invite" type="button" role="tab">
-        <i class="bi bi-ticket-perforated me-1"></i> Quản lý Mã mời
+        <i class="bi bi-ticket-perforated me-1"></i> {{ _('Quản lý Mã mời') }}
         <span class="badge bg-primary rounded-pill ms-1">{{ invite_codes_list|length }}</span>
       </button>
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link rounded-pill fw-semibold position-relative" id="tab-violations-btn" data-bs-toggle="pill" data-bs-target="#tab-violations" type="button" role="tab">
-        <i class="bi bi-shield-exclamation me-1"></i> Xử lý Vi phạm & Báo cáo
+        <i class="bi bi-shield-exclamation me-1"></i> {{ _('Xử lý Vi phạm & Báo cáo') }}
         {% if violations_list %}
           <span class="badge bg-warning text-dark rounded-pill ms-1">{{ violations_list|length }}</span>
         {% endif %}
@@ -117,13 +117,13 @@
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link rounded-pill fw-semibold" id="tab-users-btn" data-bs-toggle="pill" data-bs-target="#tab-users" type="button" role="tab">
-        <i class="bi bi-people me-1"></i> Danh sách Tài khoản
+        <i class="bi bi-people me-1"></i> {{ _('Danh sách Tài khoản') }}
         <span class="badge bg-secondary rounded-pill ms-1">{{ users|length }}</span>
       </button>
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link rounded-pill fw-semibold position-relative text-dark" id="tab-community-btn" data-bs-toggle="pill" data-bs-target="#tab-community" type="button" role="tab">
-        <i class="bi bi-globe2 text-warning me-1"></i> Duyệt Liên Trường
+        <i class="bi bi-globe2 text-warning me-1"></i> {{ _('Duyệt Liên Trường') }}
         {% if community_pending_skills %}
           <span class="badge bg-warning text-dark rounded-pill ms-1">{{ community_pending_skills|length }}</span>
         {% endif %}
@@ -131,14 +131,14 @@
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link rounded-pill fw-semibold position-relative text-danger" id="tab-community-tasks-btn" data-bs-toggle="pill" data-bs-target="#tab-community-tasks" type="button" role="tab">
-        <i class="bi bi-heart-fill me-1"></i> Chương trình Cộng đồng
+        <i class="bi bi-heart-fill me-1"></i> {{ _('Chương trình Cộng đồng') }}
         <span class="badge bg-danger rounded-pill ms-1">{{ admin_community_tasks|length }}</span>
       </button>
     </li>
     {% if is_super_admin %}
     <li class="nav-item" role="presentation">
       <button class="nav-link rounded-pill fw-semibold text-primary" id="tab-schools-btn" data-bs-toggle="pill" data-bs-target="#tab-schools" type="button" role="tab">
-        <i class="bi bi-buildings-fill me-1"></i> Quản lý Trường học
+        <i class="bi bi-buildings-fill me-1"></i> {{ _('Quản lý Trường học') }}
         <span class="badge bg-primary rounded-pill ms-1">{{ all_schools_management|length }}</span>
       </button>
     </li>
@@ -159,44 +159,44 @@
       <div class="row g-3 mb-4">
         <div class="col-sm-6 col-lg-2">
           <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
-            <span class="text-muted small">Tổng phiên học</span>
+            <span class="text-muted small">{{ _('Tổng phiên học') }}</span>
             <h3 class="fw-bold mb-0 text-primary">{{ total_sessions_count }}</h3>
-            <small class="text-muted">Đang quản trị</small>
+            <small class="text-muted">{{ _('Đang quản trị') }}</small>
           </div>
         </div>
         <div class="col-sm-6 col-lg-2">
           <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
-            <span class="text-muted small">Tổng giờ lưu thông</span>
+            <span class="text-muted small">{{ _('Tổng giờ lưu thông') }}</span>
             <h3 class="fw-bold mb-0 text-success">{{ "%.1f"|format(total_hours_circulated) }}h</h3>
-            <small class="text-muted">Hoàn thành</small>
+            <small class="text-muted">{{ _('Hoàn thành') }}</small>
           </div>
         </div>
         <div class="col-sm-6 col-lg-2">
           <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
-            <span class="text-muted small">Học sinh thành viên</span>
+            <span class="text-muted small">{{ _('Học sinh thành viên') }}</span>
             <h3 class="fw-bold mb-0 text-info">{{ student_count }}</h3>
-            <small class="text-muted">Đã mở sổ tín dụng</small>
+            <small class="text-muted">{{ _('Đã mở sổ tín dụng') }}</small>
           </div>
         </div>
         <div class="col-sm-6 col-lg-2">
           <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
-            <span class="text-muted small">Tổng tài khoản</span>
+            <span class="text-muted small">{{ _('Tổng tài khoản') }}</span>
             <h3 class="fw-bold mb-0 text-dark">{{ users|length }}</h3>
-            <small class="text-muted">HS + GV + Quản trị</small>
+            <small class="text-muted">{{ _('HS + GV + Quản trị') }}</small>
           </div>
         </div>
         <div class="col-sm-6 col-lg-2">
           <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
-            <span class="text-muted small">Giờ trong ví</span>
+            <span class="text-muted small">{{ _('Giờ trong ví') }}</span>
             <h3 class="fw-bold mb-0 text-warning">{{ "%.1f"|format(total_credits) }}h</h3>
-            <small class="text-muted">Vốn khả dụng</small>
+            <small class="text-muted">{{ _('Vốn khả dụng') }}</small>
           </div>
         </div>
         <div class="col-sm-6 col-lg-2">
           <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
-            <span class="text-muted small">Kỹ năng chờ duyệt</span>
+            <span class="text-muted small">{{ _('Kỹ năng chờ duyệt') }}</span>
             <h3 class="fw-bold mb-0 text-danger">{{ pending_skills_count }}</h3>
-            <small class="text-muted">Cần GV duyệt tay</small>
+            <small class="text-muted">{{ _('Cần GV duyệt tay') }}</small>
           </div>
         </div>
       </div>
@@ -207,19 +207,19 @@
         <div class="card-header bg-white border-bottom py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
           <div>
             <div class="d-flex align-items-center gap-2">
-              <span class="badge bg-danger rounded-pill px-2 py-1"><i class="bi bi-shield-exclamation me-1"></i> CẢNH BÁO SỚM SƯ PHẠM</span>
-              <span class="badge-ai" style="font-size: 0.75rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Trí tuệ nhân tạo)</span>
+              <span class="badge bg-danger rounded-pill px-2 py-1"><i class="bi bi-shield-exclamation me-1"></i> {{ _('CẢNH BÁO SỚM SƯ PHẠM') }}</span>
+              <span class="badge-ai" style="font-size: 0.75rem;"><i class="bi bi-stars"></i> {{ _('Hỗ trợ bởi AI (Trí tuệ nhân tạo)') }}</span>
             </div>
-            <h5 class="fw-bold mb-0 text-dark mt-1">Phát Hiện Nguy Cơ Học Đường Cần Can Thiệp</h5>
+            <h5 class="fw-bold mb-0 text-dark mt-1">{{ _('Phát Hiện Nguy Cơ Học Đường Cần Can Thiệp') }}</h5>
           </div>
-          <small class="text-muted">Quét học sinh ngưng hoạt động (>7 ngày) và cặp đôi xung đột (≤2★)</small>
+          <small class="text-muted">{{ _('Quét học sinh ngưng hoạt động (>7 ngày) và cặp đôi xung đột (≤2★)') }}</small>
         </div>
 
         <div class="card-body p-4">
           <div class="row g-4">
             <div class="col-md-6">
               <h6 class="fw-bold text-dark mb-2">
-                <i class="bi bi-person-x-fill text-danger me-1"></i>Học sinh > 7 ngày không tham gia phiên ({{ ai_warnings.inactive_students|length }})
+                <i class="bi bi-person-x-fill text-danger me-1"></i>{{ _('Học sinh > 7 ngày không tham gia phiên') }} ({{ ai_warnings.inactive_students|length }})
               </h6>
               {% if ai_warnings.inactive_students %}
                 <div class="list-group list-group-flush border rounded-3 overflow-hidden">
@@ -227,22 +227,22 @@
                   <div class="list-group-item py-2 px-3">
                     <div class="d-flex justify-content-between align-items-center">
                       <span class="fw-semibold text-dark">{{ s.ho_ten }}</span>
-                      <span class="badge bg-light text-secondary border">Lớp {{ s.lop }}</span>
+                      <span class="badge bg-light text-secondary border">{{ _('Lớp') }} {{ s.lop }}</span>
                     </div>
-                    <small class="text-danger d-block">{{ s.ly_do }}</small>
+                    <small class="text-danger d-block">{{ _(s.ly_do) }}</small>
                   </div>
                   {% endfor %}
                 </div>
               {% else %}
                 <div class="p-3 bg-light rounded-3 text-muted small text-center">
-                  <i class="bi bi-check-circle-fill text-success me-1"></i> Mọi học sinh đều duy trì hoạt động đều đặn.
+                  <i class="bi bi-check-circle-fill text-success me-1"></i> {{ _('Mọi học sinh đều duy trì hoạt động đều đặn.') }}
                 </div>
               {% endif %}
             </div>
 
             <div class="col-md-6">
               <h6 class="fw-bold text-dark mb-2">
-                <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>Cặp đôi đánh giá ≤ 2★ từ 2 lần trở lên ({{ ai_warnings.low_rated_pairs|length }})
+                <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>{{ _('Cặp đôi đánh giá ≤ 2★ từ 2 lần trở lên') }} ({{ ai_warnings.low_rated_pairs|length }})
               </h6>
               {% if ai_warnings.low_rated_pairs %}
                 <div class="list-group list-group-flush border rounded-3 overflow-hidden">
@@ -255,7 +255,7 @@
                 </div>
               {% else %}
                 <div class="p-3 bg-light rounded-3 text-muted small text-center">
-                  <i class="bi bi-check-circle-fill text-success me-1"></i> Không ghi nhận cặp đôi nào có xung đột đánh giá thấp lặp lại.
+                  <i class="bi bi-check-circle-fill text-success me-1"></i> {{ _('Không ghi nhận cặp đôi nào có xung đột đánh giá thấp lặp lại.') }}
                 </div>
               {% endif %}
             </div>
@@ -264,9 +264,9 @@
           {% if ai_warnings.ai_recommendations %}
           <div class="mt-4 p-3 rounded-4 bg-light border">
             <div class="fw-bold text-primary small mb-1">
-              <i class="bi bi-magic me-1"></i> Đề xuất can thiệp sư phạm nhân văn từ AI:
+              <i class="bi bi-magic me-1"></i> {{ _('Đề xuất can thiệp sư phạm nhân văn từ AI:') }}
             </div>
-            <div class="small text-secondary" style="white-space: pre-line;">{{ ai_warnings.ai_recommendations }}</div>
+            <div class="small text-secondary" style="white-space: pre-line;">{{ _(ai_warnings.ai_recommendations) }}</div>
           </div>
           {% endif %}
         </div>
@@ -279,14 +279,14 @@
           <div>
             <div class="d-flex align-items-center gap-2">
               <span class="badge bg-purple-subtle text-indigo fw-bold" style="background-color: #ede9fe; color: #6d28d9;">
-                <i class="bi bi-mortarboard-fill me-1"></i> KẾT QUẢ HỌC TẬP
+                <i class="bi bi-mortarboard-fill me-1"></i> {{ _('KẾT QUẢ HỌC TẬP') }}
               </span>
-              <span class="badge-ai" style="font-size: 0.75rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Trí tuệ nhân tạo)</span>
+              <span class="badge-ai" style="font-size: 0.75rem;"><i class="bi bi-stars"></i> {{ _('Hỗ trợ bởi AI (Trí tuệ nhân tạo)') }}</span>
             </div>
-            <h5 class="fw-bold mb-0 text-dark mt-1">Đo Lường Chất Lượng & Tiến Bộ Năng Lực Học Sinh</h5>
+            <h5 class="fw-bold mb-0 text-dark mt-1">{{ _('Đo Lường Chất Lượng & Tiến Bộ Năng Lực Học Sinh') }}</h5>
           </div>
           <div class="text-muted small">
-            Quiz xác nhận kết quả cho giáo viên, <strong>không chặn</strong> chuyển giờ.
+            {{ _('Quiz xác nhận kết quả cho giáo viên, không chặn chuyển giờ.') }}
           </div>
         </div>
 
@@ -294,34 +294,34 @@
           <div class="row g-3 mb-4">
             <div class="col-sm-6 col-lg-3">
               <div class="p-3 bg-light rounded-4 border h-100">
-                <span class="text-muted small d-block mb-1">Phiên đạt chuẩn Quiz (≥60%)</span>
+                <span class="text-muted small d-block mb-1">{{ _('Phiên đạt chuẩn Quiz (≥60%)') }}</span>
                 <span class="display-6 fw-bold text-success">{{ "%.1f"|format(learning_stats.pct_dat_chuan) }}%</span>
-                <div class="small text-muted mt-1">{{ learning_stats.passed_quiz_sessions_count }}/{{ learning_stats.completed_sessions_count }} phiên</div>
+                <div class="small text-muted mt-1">{{ learning_stats.passed_quiz_sessions_count }}/{{ learning_stats.completed_sessions_count }} {{ _('phiên') }}</div>
               </div>
             </div>
             <div class="col-sm-6 col-lg-3">
               <div class="p-3 bg-light rounded-4 border h-100">
-                <span class="text-muted small d-block mb-1">Tỷ lệ xuất sắc (≥4/5)</span>
+                <span class="text-muted small d-block mb-1">{{ _('Tỷ lệ xuất sắc (≥4/5)') }}</span>
                 <span class="display-6 fw-bold text-primary">{{ "%.1f"|format(learning_stats.pct_ge_4) }}%</span>
-                <div class="small text-muted mt-1">{{ learning_stats.total_ge_4 }}/{{ learning_stats.total_quizzes }} bài làm</div>
+                <div class="small text-muted mt-1">{{ learning_stats.total_ge_4 }}/{{ learning_stats.total_quizzes }} {{ _('bài làm') }}</div>
               </div>
             </div>
             <div class="col-sm-6 col-lg-3">
               <div class="p-3 bg-light rounded-4 border h-100">
-                <span class="text-muted small d-block mb-1">So sánh Trước vs Sau</span>
+                <span class="text-muted small d-block mb-1">{{ _('So sánh Trước vs Sau') }}</span>
                 <div class="d-flex align-items-baseline gap-2">
                   <span class="display-6 fw-bold text-warning">{{ "%.1f"|format(learning_stats.avg_before) }}★</span>
                   <i class="bi bi-arrow-right text-muted"></i>
                   <span class="display-6 fw-bold text-success">{{ "%.1f"|format(learning_stats.avg_after) }}</span>
                 </div>
-                <div class="small text-muted mt-1">Tiến bộ: +{{ "%.2f"|format(learning_stats.growth_diff) }} điểm</div>
+                <div class="small text-muted mt-1">{{ _('Tiến bộ:') }} +{{ "%.2f"|format(learning_stats.growth_diff) }} {{ _('điểm') }}</div>
               </div>
             </div>
             <div class="col-sm-6 col-lg-3">
               <div class="p-3 bg-light rounded-4 border h-100">
-                <span class="text-muted small d-block mb-1">Tổng lượt hoàn thành</span>
+                <span class="text-muted small d-block mb-1">{{ _('Tổng lượt hoàn thành') }}</span>
                 <span class="display-6 fw-bold text-dark">{{ learning_stats.total_quizzes }}</span>
-                <div class="small text-muted mt-1">Lượt làm trắc nghiệm</div>
+                <div class="small text-muted mt-1">{{ _('Lượt làm trắc nghiệm') }}</div>
               </div>
             </div>
           </div>
@@ -335,12 +335,12 @@
           <div>
             <div class="d-flex align-items-center gap-2">
               <span class="badge bg-warning text-dark fw-bold">
-                <i class="bi bi-trophy-fill me-1"></i> BẢNG VINH DANH SƯ PHẠM
+                <i class="bi bi-trophy-fill me-1"></i> {{ _('BẢNG VINH DANH SƯ PHẠM') }}
               </span>
             </div>
-            <h5 class="fw-bold mb-0 text-dark mt-1">Top Học Sinh Tích Cực Trao Đổi Tri Thức Nhất</h5>
+            <h5 class="fw-bold mb-0 text-dark mt-1">{{ _('Top Học Sinh Tích Cực Trao Đổi Tri Thức Nhất') }}</h5>
           </div>
-          <small class="text-muted"><i class="bi bi-award me-1 text-warning"></i>Vinh danh gương sáng học tập & chia sẻ kỹ năng</small>
+          <small class="text-muted"><i class="bi bi-award me-1 text-warning"></i>{{ _('Vinh danh gương sáng học tập & chia sẻ kỹ năng') }}</small>
         </div>
 
         <div class="card-body p-0">
@@ -348,15 +348,15 @@
             <table class="table table-hover align-middle mb-0">
               <thead class="table-light small text-muted">
                 <tr>
-                  <th class="ps-3" style="width: 80px;">Xếp hạng</th>
-                  <th>Mã HS</th>
-                  <th>Họ và tên</th>
-                  <th>Lớp</th>
-                  <th class="text-center">Giờ đã dạy</th>
-                  <th class="text-center">Giờ đã học</th>
-                  <th class="text-center">Phiên hoàn thành</th>
+                  <th class="ps-3" style="width: 80px;">{{ _('Xếp hạng') }}</th>
+                  <th>{{ _('Mã HS') }}</th>
+                  <th>{{ _('Họ và tên') }}</th>
+                  <th>{{ _('Lớp') }}</th>
+                  <th class="text-center">{{ _('Giờ đã dạy') }}</th>
+                  <th class="text-center">{{ _('Giờ đã học') }}</th>
+                  <th class="text-center">{{ _('Phiên hoàn thành') }}</th>
                   <th class="text-center">Sao TB</th>
-                  <th class="text-end pe-3">Số dư hiện tại</th>
+                  <th class="text-end pe-3">{{ _('Số dư hiện tại') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -378,7 +378,7 @@
                   <td class="small">{{ st.lop if st.lop else '—' }}</td>
                   <td class="text-center fw-bold text-primary">{{ "%.1f"|format(st.gio_day) }}h</td>
                   <td class="text-center text-success fw-semibold">{{ "%.1f"|format(st.gio_hoc) }}h</td>
-                  <td class="text-center">{{ st.so_phien }} phiên</td>
+                  <td class="text-center">{{ st.so_phien }} {{ _('phiên') }}</td>
                   <td class="text-center text-warning fw-bold">{{ "%.1f"|format(st.sao_tb) }}★</td>
                   <td class="text-end pe-3 fw-bold text-success">{{ "%.1f"|format(st.so_du_gio) }}h</td>
                 </tr>
@@ -398,23 +398,23 @@
       <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
         <div class="card-header bg-white border-bottom py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
           <div>
-            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-person-check-fill text-warning me-2"></i>Hàng Chờ Duyệt Mở Sổ Học Sinh</h5>
+            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-person-check-fill text-warning me-2"></i>{{ _('Hàng Chờ Duyệt Mở Sổ Học Sinh') }}</h5>
             <small class="text-muted">
               {% if is_super_admin %}
-                Tổng quản trị thấy toàn bộ hàng chờ các trường. Quản trị trường chỉ duyệt học sinh trường mình.
+                {{ _('Tổng quản trị thấy toàn bộ hàng chờ các trường. Quản trị trường chỉ duyệt học sinh trường mình.') }}
               {% else %}
-                Danh sách học sinh trường {{ current_school_name }} chưa có mã mời đang chờ duyệt.
+                {{ _('Danh sách học sinh trường') }} {{ current_school_name }} {{ _('chưa có mã mời đang chờ duyệt.') }}
               {% endif %}
             </small>
           </div>
 
           <!-- Nút Duyệt tất cả -->
-          <form method="POST" action="{{ url_for('admin_approve_all_students') }}" onsubmit="return confirm('Bạn có chắc chắn muốn DUYỆT TẤT CẢ học sinh đang chờ trong danh sách này?');">
+          <form method="POST" action="{{ url_for('admin_approve_all_students') }}" onsubmit="return confirm('{{ _('Bạn có chắc chắn muốn DUYỆT TẤT CẢ học sinh đang chờ trong danh sách này?') }}');">
             {% if is_super_admin and selected_truong_id %}
               <input type="hidden" name="truong_id" value="{{ selected_truong_id }}">
             {% endif %}
             <button type="submit" class="btn btn-success fw-bold shadow-sm" {% if not pending_students %}disabled{% endif %}>
-              <i class="bi bi-check-all me-1"></i> Duyệt tất cả ({{ pending_students|length }})
+              <i class="bi bi-check-all me-1"></i> {{ _('Duyệt tất cả') }} ({{ pending_students|length }})
             </button>
           </form>
         </div>
@@ -429,13 +429,13 @@
                     <th class="ps-3" style="width: 40px;">
                       <input type="checkbox" class="form-check-input" id="checkAllStudents" onclick="toggleSelectAll(this)">
                     </th>
-                    <th>Mã HS</th>
-                    <th>Họ và tên</th>
-                    <th>Lớp</th>
-                    <th>Trường học</th>
-                    <th>Khung giờ rảnh</th>
-                    <th>Trạng thái</th>
-                    <th class="text-end pe-3">Thao tác</th>
+                    <th>{{ _('Mã HS') }}</th>
+                    <th>{{ _('Họ và tên') }}</th>
+                    <th>{{ _('Lớp') }}</th>
+                    <th>{{ _('Trường học') }}</th>
+                    <th>{{ _('Khung giờ rảnh') }}</th>
+                    <th>{{ _('Trạng thái') }}</th>
+                    <th class="text-end pe-3">{{ _('Thao tác') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -450,15 +450,15 @@
                     <td>
                       <span class="badge bg-light text-primary border">{{ st.ten_truong }}</span>
                     </td>
-                    <td class="small text-muted">{{ st.gio_ranh if st.gio_ranh else '—' }}</td>
+                    <td class="small text-muted">{{ _(st.gio_ranh) if st.gio_ranh in ['Toàn thời gian', 'Linh hoạt'] else (st.gio_ranh if st.gio_ranh else '—') }}</td>
                     <td>
-                      <span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i>Chờ duyệt</span>
+                      <span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i>{{ _('Chờ duyệt') }}</span>
                     </td>
                     <td class="text-end pe-3">
                       <button type="submit" formaction="{{ url_for('admin_approve_student', user_id=st.id) }}" class="btn btn-sm btn-success me-1">
-                        <i class="bi bi-check-lg me-1"></i>Duyệt
+                        <i class="bi bi-check-lg me-1"></i>{{ _('Duyệt') }}
                       </button>
-                      <button type="submit" formaction="{{ url_for('admin_reject_student', user_id=st.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn có chắc muốn từ chối đăng ký này?');">
+                      <button type="submit" formaction="{{ url_for('admin_reject_student', user_id=st.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('{{ _('Bạn có chắc muốn từ chối đăng ký này?') }}');">
                         <i class="bi bi-x-lg"></i>
                       </button>
                     </td>
@@ -471,8 +471,8 @@
           {% else %}
           <div class="p-5 text-center text-muted">
             <i class="bi bi-check-circle-fill text-success fs-1 d-block mb-2"></i>
-            <h6 class="fw-bold">Hàng chờ trống!</h6>
-            <p class="small mb-0">Tất cả tài khoản học sinh đã được duyệt hoặc đăng ký hợp lệ qua mã mời.</p>
+            <h6 class="fw-bold">{{ _('Hàng chờ trống!') }}</h6>
+            <p class="small mb-0">{{ _('Tất cả tài khoản học sinh đã được duyệt hoặc đăng ký hợp lệ qua mã mời.') }}</p>
           </div>
           {% endif %}
         </div>
@@ -485,18 +485,18 @@
     <div class="tab-pane fade" id="tab-invite" role="tabpanel">
       <!-- Form Tạo Mã Mời Mới -->
       <div class="card border-0 shadow-sm rounded-4 bg-white mb-4 p-4">
-        <h5 class="fw-bold text-dark mb-2"><i class="bi bi-plus-circle-fill text-primary me-2"></i>Sinh Mã Mời Trường Học Ngẫu Nhiên</h5>
-        <p class="text-muted small mb-4">Hệ thống tạo mã định dạng chuẩn <code>TBEDU-XXXX-XXXX</code> chống mạo danh học sinh trường khác.</p>
+        <h5 class="fw-bold text-dark mb-2"><i class="bi bi-plus-circle-fill text-primary me-2"></i>{{ _('Sinh Mã Mời Trường Học Ngẫu Nhiên') }}</h5>
+        <p class="text-muted small mb-4">{{ _('Hệ thống tạo mã định dạng chuẩn TBEDU-XXXX-XXXX chống mạo danh học sinh trường khác.') }}</p>
 
         <form method="POST" action="{{ url_for('admin_generate_invite_codes') }}">
           <div class="row g-3 align-items-end">
             {% if is_super_admin %}
             <div class="col-md-3">
-              <label class="form-label small fw-semibold">Áp dụng cho trường <span class="text-danger">*</span></label>
+              <label class="form-label small fw-semibold">{{ _('Áp dụng cho trường') }} <span class="text-danger">*</span></label>
               <select name="truong_id" class="form-select" required>
                 {% for s in all_schools %}
                   <option value="{{ s.id }}" {% if selected_truong_id|string == s.id|string %}selected{% endif %}>
-                    {{ s.ten_truong }}{% if s.an_truong == 1 %} (Đã ẩn){% endif %}
+                    {{ s.ten_truong }}{% if s.an_truong == 1 %} ({{ _('Đã ẩn') }}){% endif %}
                   </option>
                 {% endfor %}
               </select>
@@ -506,26 +506,26 @@
             {% endif %}
 
             <div class="col-md-3">
-              <label class="form-label small fw-semibold">Loại mã mời <span class="text-danger">*</span></label>
+              <label class="form-label small fw-semibold">{{ _('Loại mã mời') }} <span class="text-danger">*</span></label>
               <select name="loai" id="inviteTypeSelect" class="form-select" onchange="handleInviteTypeChange(this.value)" required>
-                <option value="ca_nhan">Mã cá nhân (Nhiều mã, mỗi mã 1 lượt)</option>
-                <option value="lop">Mã lớp (1 mã, dùng chung cho cả lớp)</option>
+                <option value="ca_nhan">{{ _('Mã cá nhân (Nhiều mã, mỗi mã 1 lượt)') }}</option>
+                <option value="lop">{{ _('Mã lớp (1 mã, dùng chung cho cả lớp)') }}</option>
               </select>
             </div>
 
             <div class="col-md-2">
-              <label class="form-label small fw-semibold" id="lblSoLuong">Số lượng mã cần tạo</label>
+              <label class="form-label small fw-semibold" id="lblSoLuong">{{ _('Số lượng mã cần tạo') }}</label>
               <input type="number" name="so_luong" id="inputSoLuong" class="form-control" value="5" min="1" max="100" required>
             </div>
 
             <div class="col-md-2" id="boxMaxUses" style="display: none;">
-              <label class="form-label small fw-semibold">Số lượt dùng tối đa / mã</label>
+              <label class="form-label small fw-semibold">{{ _('Số lượt dùng tối đa / mã') }}</label>
               <input type="number" name="so_luot_moi_ma" class="form-control" value="35" min="1" max="200">
             </div>
 
             <div class="col-md-2">
               <button type="submit" class="btn btn-primary w-100 fw-semibold">
-                <i class="bi bi-magic me-1"></i> Sinh mã ngay
+                <i class="bi bi-magic me-1"></i> {{ _('Sinh mã ngay') }}
               </button>
             </div>
           </div>
@@ -535,8 +535,8 @@
       <!-- Bảng Theo Dõi Mã Mời -->
       <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
         <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-          <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-table me-2 text-primary"></i>Danh Sách Mã Mời Đã Phát Hành</h5>
-          <span class="badge bg-light text-dark border">Cập nhật tự động</span>
+          <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-table me-2 text-primary"></i>{{ _('Danh Sách Mã Mời Đã Phát Hành') }}</h5>
+          <span class="badge bg-light text-dark border">{{ _('Cập nhật tự động') }}</span>
         </div>
 
         <div class="card-body p-0">
@@ -545,14 +545,14 @@
             <table class="table table-hover align-middle mb-0">
               <thead class="table-light small text-muted">
                 <tr>
-                  <th class="ps-3">Mã mời</th>
-                  <th>Trường áp dụng</th>
-                  <th>Loại mã</th>
-                  <th class="text-center">Tối đa</th>
-                  <th class="text-center">Đã dùng</th>
-                  <th class="text-center">Còn lại</th>
-                  <th>Học sinh đã dùng</th>
-                  <th>Ngày tạo</th>
+                  <th class="ps-3">{{ _('Mã mời') }}</th>
+                  <th>{{ _('Trường áp dụng') }}</th>
+                  <th>{{ _('Loại mã') }}</th>
+                  <th class="text-center">{{ _('Tối đa') }}</th>
+                  <th class="text-center">{{ _('Đã dùng') }}</th>
+                  <th class="text-center">{{ _('Còn lại') }}</th>
+                  <th>{{ _('Học sinh đã dùng') }}</th>
+                  <th>{{ _('Ngày tạo') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -564,9 +564,9 @@
                   <td><span class="badge bg-light text-dark border">{{ c.ten_truong }}</span></td>
                   <td>
                     {% if c.loai == 'lop' %}
-                      <span class="badge bg-info-subtle text-info fw-bold">Mã lớp</span>
+                      <span class="badge bg-info-subtle text-info fw-bold">{{ _('Mã lớp') }}</span>
                     {% else %}
-                      <span class="badge bg-secondary-subtle text-secondary">Cá nhân</span>
+                      <span class="badge bg-secondary-subtle text-secondary">{{ _('Cá nhân') }}</span>
                     {% endif %}
                   </td>
                   <td class="text-center fw-semibold">{{ c.so_luot_toi_da }}</td>
@@ -589,7 +589,7 @@
                         {% endfor %}
                       </div>
                     {% else %}
-                      <span class="text-muted small">Chưa có ai dùng</span>
+                      <span class="text-muted small">{{ _('Chưa có ai dùng') }}</span>
                     {% endif %}
                   </td>
                   <td class="small text-muted">{{ c.ngay_tao | format_date }}</td>
@@ -599,7 +599,7 @@
             </table>
           </div>
           {% else %}
-          <div class="p-4 text-center text-muted small">Chưa có mã mời nào được tạo. Hãy tạo mã mời ở form phía trên.</div>
+          <div class="p-4 text-center text-muted small">{{ _('Chưa có mã mời nào được tạo. Hãy tạo mã mời ở form phía trên.') }}</div>
           {% endif %}
         </div>
       </div>
@@ -612,10 +612,10 @@
       <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden mb-4">
         <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
           <div>
-            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-shield-slash-fill text-danger me-2"></i>Sổ Theo Dõi & Xử Lý Vi Phạm Nội Quy</h5>
-            <small class="text-muted">Ghi nhận vi phạm từ AI lọc chat realtime và báo cáo trực tiếp từ phòng học ảo.</small>
+            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-shield-slash-fill text-danger me-2"></i>{{ _('Sổ Theo Dõi & Xử Lý Vi Phạm Nội Quy') }}</h5>
+            <small class="text-muted">{{ _('Ghi nhận vi phạm từ AI lọc chat realtime và báo cáo trực tiếp từ phòng học ảo.') }}</small>
           </div>
-          <span class="badge bg-danger rounded-pill">{{ violations_list|length }} vụ việc</span>
+          <span class="badge bg-danger rounded-pill">{{ violations_list|length }} {{ _('vụ việc') }}</span>
         </div>
 
         <div class="card-body p-0">
@@ -624,14 +624,14 @@
             <table class="table table-hover align-middle mb-0">
               <thead class="table-light small text-muted">
                 <tr>
-                  <th class="ps-3">Học sinh</th>
-                  <th>Trường</th>
-                  <th>Loại vi phạm</th>
-                  <th>Mô tả chi tiết</th>
-                  <th class="text-center">Mức độ</th>
-                  <th>Thời gian</th>
-                  <th>Tình trạng TK</th>
-                  <th class="text-end pe-3">Xử lý kỷ luật</th>
+                  <th class="ps-3">{{ _('Học sinh') }}</th>
+                  <th>{{ _('Trường') }}</th>
+                  <th>{{ _('Loại vi phạm') }}</th>
+                  <th>{{ _('Mô tả chi tiết') }}</th>
+                  <th class="text-center">{{ _('Mức độ') }}</th>
+                  <th>{{ _('Thời gian') }}</th>
+                  <th>{{ _('Tình trạng TK') }}</th>
+                  <th class="text-end pe-3">{{ _('Xử lý kỷ luật') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -639,54 +639,54 @@
                 <tr class="{% if v.muc_do == 3 and v.user_trang_thai == 'de_xuat_khoa' %}table-warning{% endif %}">
                   <td class="ps-3">
                     <div class="fw-bold text-dark">{{ v.ho_ten }}</div>
-                    <small class="text-muted"><code>{{ v.ma_hoc_sinh }}</code> • Lớp {{ v.lop }}</small>
+                    <small class="text-muted"><code>{{ v.ma_hoc_sinh }}</code> • {{ _('Lớp') }} {{ v.lop }}</small>
                   </td>
                   <td><span class="badge bg-light text-dark border">{{ v.ten_truong }}</span></td>
                   <td>
                     <span class="badge bg-danger-subtle text-danger fw-semibold">{{ v.loai_vi_pham }}</span>
                     {% if v.session_id %}
-                      <span class="badge bg-info-subtle text-info d-block mt-1">Phòng học #{{ v.session_id }}</span>
+                      <span class="badge bg-info-subtle text-info d-block mt-1">{{ _('Phòng học') }} #{{ v.session_id }}</span>
                     {% endif %}
                   </td>
                   <td class="small text-secondary" style="max-width: 280px;">{{ v.mo_ta }}</td>
                   <td class="text-center">
                     {% if v.muc_do == 1 %}
-                      <span class="badge bg-warning text-dark"><i class="bi bi-bell me-1"></i>Mức 1: Nhắc nhở</span>
+                      <span class="badge bg-warning text-dark"><i class="bi bi-bell me-1"></i>{{ _('Mức 1: Nhắc nhở') }}</span>
                     {% elif v.muc_do == 2 %}
-                      <span class="badge bg-danger"><i class="bi bi-exclamation-triangle me-1"></i>Mức 2: Cảnh cáo</span>
+                      <span class="badge bg-danger"><i class="bi bi-exclamation-triangle me-1"></i>{{ _('Mức 2: Cảnh cáo') }}</span>
                     {% else %}
-                      <span class="badge bg-dark text-white"><i class="bi bi-slash-circle me-1"></i>Mức 3: Đề xuất khóa</span>
+                      <span class="badge bg-dark text-white"><i class="bi bi-slash-circle me-1"></i>{{ _('Mức 3: Đề xuất khóa') }}</span>
                     {% endif %}
                   </td>
                   <td class="small text-muted">{{ v.thoi_gian }}</td>
                   <td>
                     {% if v.user_trang_thai == 'da_khoa' %}
-                      <span class="badge bg-danger">ĐÃ KHÓA</span>
+                      <span class="badge bg-danger">{{ _('ĐÃ KHÓA') }}</span>
                     {% elif v.user_trang_thai == 'de_xuat_khoa' %}
-                      <span class="badge bg-warning text-dark">CHỜ QUẢN TRỊ XÁC NHẬN</span>
+                      <span class="badge bg-warning text-dark">{{ _('CHỜ QUẢN TRỊ XÁC NHẬN') }}</span>
                     {% else %}
-                      <span class="badge bg-success">Hoạt động</span>
+                      <span class="badge bg-success">{{ _('Hoạt động') }}</span>
                     {% endif %}
                   </td>
                   <td class="text-end pe-3">
                     {% if v.user_trang_thai == 'de_xuat_khoa' or (v.muc_do == 3 and v.user_trang_thai != 'da_khoa') %}
                       <!-- Nút xác nhận khóa vĩnh viễn (CHỜ quản trị bấm xác nhận mới khóa thật) -->
-                      <form method="POST" action="{{ url_for('admin_confirm_lock_user', user_id=v.user_id) }}" class="d-inline" onsubmit="return confirm('CẢNH BÁO: Bạn có chắc chắn muốn XÁC NHẬN KHÓA VĨNH VIỄN tài khoản của học sinh này không?');">
+                      <form method="POST" action="{{ url_for('admin_confirm_lock_user', user_id=v.user_id) }}" class="d-inline" onsubmit="return confirm('{{ _('CẢNH BÁO: Bạn có chắc chắn muốn XÁC NHẬN KHÓA VĨNH VIỄN tài khoản của học sinh này không?') }}');">
                         <button type="submit" class="btn btn-sm btn-danger fw-bold shadow-sm">
-                          <i class="bi bi-lock-fill me-1"></i>Xác nhận khóa thật
+                          <i class="bi bi-lock-fill me-1"></i>{{ _('Xác nhận khóa thật') }}
                         </button>
                       </form>
                       <form method="POST" action="{{ url_for('admin_dismiss_violation', violation_id=v.id) }}" class="d-inline">
                         <button type="submit" class="btn btn-sm btn-outline-secondary ms-1">
-                          Hủy đề xuất
+                          {{ _('Hủy đề xuất') }}
                         </button>
                       </form>
                     {% elif v.user_trang_thai == 'da_khoa' %}
-                      <span class="text-muted small"><i class="bi bi-check2-circle text-success me-1"></i>Đã xử lý khóa</span>
+                      <span class="text-muted small"><i class="bi bi-check2-circle text-success me-1"></i>{{ _('Đã xử lý khóa') }}</span>
                     {% else %}
                       <form method="POST" action="{{ url_for('admin_dismiss_violation', violation_id=v.id) }}" class="d-inline">
                         <button type="submit" class="btn btn-sm btn-light border">
-                          <i class="bi bi-check2 me-1"></i>Đã nhắc nhở
+                          <i class="bi bi-check2 me-1"></i>{{ _('Đã nhắc nhở') }}
                         </button>
                       </form>
                     {% endif %}
@@ -699,8 +699,8 @@
           {% else %}
           <div class="p-5 text-center text-muted">
             <i class="bi bi-shield-check text-success fs-1 d-block mb-2"></i>
-            <h6 class="fw-bold">Không có vi phạm nào!</h6>
-            <p class="small mb-0">Môi trường học tập và phòng học ảo đang duy trì văn minh, an toàn tuyệt đối.</p>
+            <h6 class="fw-bold">{{ _('Không có vi phạm nào!') }}</h6>
+            <p class="small mb-0">{{ _('Môi trường học tập và phòng học ảo đang duy trì văn minh, an toàn tuyệt đối.') }}</p>
           </div>
           {% endif %}
         </div>
@@ -714,12 +714,12 @@
       <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
         <div class="card-header bg-white border-bottom py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
           <div class="d-flex align-items-center gap-2">
-            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-people-fill me-2 text-primary"></i>Danh sách Tài khoản Người dùng</h5>
-            <span class="badge bg-light text-dark border">Cập nhật theo CSDL</span>
+            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-people-fill me-2 text-primary"></i>{{ _('Danh sách Tài khoản Người dùng') }}</h5>
+            <span class="badge bg-light text-dark border">{{ _('Cập nhật theo CSDL') }}</span>
           </div>
           <div class="d-flex align-items-center gap-2">
             <button type="button" class="btn btn-primary rounded-pill px-3 shadow-sm fw-semibold btn-sm" data-bs-toggle="modal" data-bs-target="#modalImportUsers" id="btnImportUsers">
-              <i class="bi bi-file-earmark-arrow-up-fill me-1"></i>Nhập danh sách (Excel/CSV)
+              <i class="bi bi-file-earmark-arrow-up-fill me-1"></i>{{ _('Nhập danh sách (Excel/CSV)') }}
             </button>
           </div>
         </div>
@@ -737,40 +737,40 @@
                   <i class="bi bi-x-circle-fill text-danger fs-4"></i>
                 {% endif %}
                 <div>
-                  <h6 class="fw-bold mb-0">Kết quả nhập danh sách gần nhất ({{ last_import_result.timestamp }})</h6>
-                  <small class="text-muted">Đơn vị trường: <strong>{{ last_import_result.school_name }}</strong> • Đã xử lý: <strong>{{ last_import_result.total_rows }}</strong> dòng</small>
+                  <h6 class="fw-bold mb-0">{{ _('Kết quả nhập danh sách gần nhất') }} ({{ last_import_result.timestamp }})</h6>
+                  <small class="text-muted">{{ _('Đơn vị trường:') }} <strong>{{ last_import_result.school_name }}</strong> • {{ _('Đã xử lý:') }} <strong>{{ last_import_result.total_rows }}</strong> {{ _('dòng') }}</small>
                 </div>
               </div>
               <div class="d-flex align-items-center gap-2">
                 {% if last_import_result.success_count > 0 %}
                 <a href="{{ url_for('admin_download_import_result') }}" id="btnDownloadResult" class="btn btn-sm btn-success fw-bold rounded-pill px-3 shadow-sm">
-                  <i class="bi bi-file-earmark-excel-fill me-1"></i>Tải file Excel kết quả (Tên đăng nhập & Mật khẩu)
+                  <i class="bi bi-file-earmark-excel-fill me-1"></i>{{ _('Tải file Excel kết quả (Tên đăng nhập & Mật khẩu)') }}
                 </a>
                 {% endif %}
-                <a href="{{ url_for('admin_clear_import_result') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-2" title="Đóng bảng kết quả">
+                <a href="{{ url_for('admin_clear_import_result') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-2" title="{{ _('Đóng bảng kết quả') }}">
                   <i class="bi bi-x-lg"></i>
                 </a>
               </div>
             </div>
 
             <div class="d-flex gap-2 mb-2">
-              <span class="badge bg-success px-3 py-2 fw-semibold"><i class="bi bi-person-check-fill me-1"></i>Thành công: {{ last_import_result.success_count }}</span>
-              <span class="badge bg-danger px-3 py-2 fw-semibold"><i class="bi bi-person-x-fill me-1"></i>Lỗi / Bỏ qua: {{ last_import_result.error_count }}</span>
+              <span class="badge bg-success px-3 py-2 fw-semibold"><i class="bi bi-person-check-fill me-1"></i>{{ _('Thành công:') }} {{ last_import_result.success_count }}</span>
+              <span class="badge bg-danger px-3 py-2 fw-semibold"><i class="bi bi-person-x-fill me-1"></i>{{ _('Lỗi / Bỏ qua:') }} {{ last_import_result.error_count }}</span>
             </div>
 
             {% if last_import_result.errors %}
             <div class="mt-3 bg-white p-3 rounded-3 border">
               <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="fw-bold text-danger small"><i class="bi bi-exclamation-octagon me-1"></i>Chi tiết các dòng bị lỗi / bỏ qua:</span>
-                <span class="badge bg-danger-subtle text-danger small">{{ last_import_result.errors|length }} dòng</span>
+                <span class="fw-bold text-danger small"><i class="bi bi-exclamation-octagon me-1"></i>{{ _('Chi tiết các dòng bị lỗi / bỏ qua:') }}</span>
+                <span class="badge bg-danger-subtle text-danger small">{{ last_import_result.errors|length }} {{ _('dòng') }}</span>
               </div>
               <div class="table-responsive" style="max-height: 220px; overflow-y: auto;">
                 <table class="table table-sm table-bordered table-hover mb-0 small">
                   <thead class="table-light">
                     <tr>
-                      <th style="width: 70px;" class="text-center">Dòng</th>
-                      <th style="width: 220px;">Họ và tên</th>
-                      <th>Lý do lỗi / Bỏ qua</th>
+                      <th style="width: 70px;" class="text-center">{{ _('Dòng') }}</th>
+                      <th style="width: 220px;">{{ _('Họ và tên') }}</th>
+                      <th>{{ _('Lý do lỗi / Bỏ qua') }}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -778,7 +778,7 @@
                     <tr>
                       <td class="text-center fw-bold text-muted">{{ err.row }}</td>
                       <td class="fw-semibold text-dark">{{ err.ho_ten }}</td>
-                      <td class="text-danger">{{ err.ly_do }}</td>
+                      <td class="text-danger">{{ _(err.ly_do) }}</td>
                     </tr>
                     {% endfor %}
                   </tbody>
@@ -796,14 +796,14 @@
               <thead class="table-light small text-muted">
                 <tr>
                   <th scope="col" class="ps-3">ID</th>
-                  <th scope="col">Mã định danh</th>
-                  <th scope="col">Họ và tên</th>
-                  <th scope="col">Lớp / Bộ môn</th>
-                  <th scope="col">Trường học</th>
-                  <th scope="col">Vai trò</th>
-                  <th scope="col">Trạng thái</th>
-                  <th scope="col" class="text-end">Số dư giờ</th>
-                  <th scope="col">Khung giờ rảnh</th>
+                  <th scope="col">{{ _('Mã định danh') }}</th>
+                  <th scope="col">{{ _('Họ và tên') }}</th>
+                  <th scope="col">{{ _('Lớp / Bộ môn') }}</th>
+                  <th scope="col">{{ _('Trường học') }}</th>
+                  <th scope="col">{{ _('Vai trò') }}</th>
+                  <th scope="col">{{ _('Trạng thái') }}</th>
+                  <th scope="col" class="text-end">{{ _('Số dư giờ') }}</th>
+                  <th scope="col">{{ _('Khung giờ rảnh') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -816,30 +816,30 @@
                   <td><span class="badge bg-light text-primary border">{{ u.ten_truong }}</span></td>
                   <td>
                     {% if u.vai_tro in ('super_admin', 'admin') %}
-                      <span class="badge bg-danger">Tổng Quản trị</span>
+                      <span class="badge bg-danger">{{ _('Tổng Quản trị') }}</span>
                     {% elif u.vai_tro == 'school_admin' %}
-                      <span class="badge bg-warning text-dark">Quản trị trường</span>
+                      <span class="badge bg-warning text-dark">{{ _('Quản trị trường') }}</span>
                     {% elif u.vai_tro == 'giao_vien' %}
-                      <span class="badge bg-primary">Giáo viên</span>
+                      <span class="badge bg-primary">{{ _('Giáo viên') }}</span>
                     {% else %}
-                      <span class="badge bg-success">Học sinh</span>
+                      <span class="badge bg-success">{{ _('Học sinh') }}</span>
                     {% endif %}
                   </td>
                   <td>
                     {% if u.trang_thai == 'da_khoa' %}
-                      <span class="badge bg-danger">Đã khóa</span>
+                      <span class="badge bg-danger">{{ _('Đã khóa') }}</span>
                     {% elif u.trang_thai == 'de_xuat_khoa' %}
-                      <span class="badge bg-warning text-dark">Đề xuất khóa</span>
+                      <span class="badge bg-warning text-dark">{{ _('Đề xuất khóa') }}</span>
                     {% elif u.trang_thai == 'cho_duyet' %}
-                      <span class="badge bg-secondary">Chờ duyệt</span>
+                      <span class="badge bg-secondary">{{ _('Chờ duyệt') }}</span>
                     {% else %}
-                      <span class="badge bg-success-subtle text-success">Hoạt động</span>
+                      <span class="badge bg-success-subtle text-success">{{ _('Hoạt động') }}</span>
                     {% endif %}
                   </td>
                   <td class="text-end fw-bold text-nowrap">
                     <span class="text-success">{{ "%.1f"|format(u.so_du_gio) }}h</span>
                   </td>
-                  <td class="small text-muted">{{ u.gio_ranh if u.gio_ranh else '—' }}</td>
+                  <td class="small text-muted">{{ _(u.gio_ranh) if u.gio_ranh in ['Toàn thời gian', 'Linh hoạt'] else (u.gio_ranh if u.gio_ranh else '—') }}</td>
                 </tr>
                 {% endfor %}
               </tbody>
@@ -858,14 +858,14 @@
         <div class="card-header bg-white border-0 pt-4 px-4 pb-2 d-flex justify-content-between align-items-center">
           <div>
             <h5 class="fw-bold text-dark mb-1">
-              <i class="bi bi-globe2 text-warning me-2"></i>Kỹ Năng Chờ Duyệt Lên Cộng Đồng Liên Trường
+              <i class="bi bi-globe2 text-warning me-2"></i>{{ _('Kỹ Năng Chờ Duyệt Lên Cộng Đồng Liên Trường') }}
             </h5>
             <p class="text-muted small mb-0">
-              Tổng quản trị hoặc Quản trị viên bất kỳ trường nào đều có quyền duyệt. Một người duyệt là đủ; hệ thống tự động ghi nhận nhật ký người duyệt.
+              {{ _('Tổng quản trị hoặc Quản trị viên bất kỳ trường nào đều có quyền duyệt. Một người duyệt là đủ; hệ thống tự động ghi nhận nhật ký người duyệt.') }}
             </p>
           </div>
           <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold">
-            {{ community_pending_skills|length }} yêu cầu chờ duyệt
+            {{ community_pending_skills|length }} {{ _('yêu cầu chờ duyệt') }}
           </span>
         </div>
         <div class="card-body p-4">
@@ -874,11 +874,11 @@
             <table class="table table-hover align-middle mb-0">
               <thead class="table-light small text-uppercase text-secondary">
                 <tr>
-                  <th>Kỹ năng đề xuất</th>
-                  <th>Học sinh đăng ký</th>
-                  <th>Trường học</th>
-                  <th class="text-center">Giờ dạy thật</th>
-                  <th class="text-end">Hành động duyệt</th>
+                  <th>{{ _('Kỹ năng đề xuất') }}</th>
+                  <th>{{ _('Học sinh đăng ký') }}</th>
+                  <th>{{ _('Trường học') }}</th>
+                  <th class="text-center">{{ _('Giờ dạy thật') }}</th>
+                  <th class="text-end">{{ _('Hành động duyệt') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -891,7 +891,7 @@
                   </td>
                   <td>
                     <div class="fw-semibold text-dark">{{ sk.ho_ten }}</div>
-                    <small class="text-muted">Mã: <code>{{ sk.ma_hoc_sinh }}</code> • Lớp: {{ sk.lop }}</small>
+                    <small class="text-muted">{{ _('Mã:') }} <code>{{ sk.ma_hoc_sinh }}</code> • {{ _('Lớp:') }} {{ sk.lop }}</small>
                   </td>
                   <td>
                     <span class="badge bg-light text-primary border p-2">
@@ -907,12 +907,12 @@
                     <div class="d-inline-flex gap-2">
                       <form action="{{ url_for('admin_approve_community_skill', skill_id=sk.id) }}" method="POST">
                         <button type="submit" class="btn btn-sm btn-success rounded-pill px-3 shadow-sm">
-                          <i class="bi bi-check-lg me-1"></i>Duyệt lên Liên trường
+                          <i class="bi bi-check-lg me-1"></i>{{ _('Duyệt lên Liên trường') }}
                         </button>
                       </form>
                       <form action="{{ url_for('admin_reject_community_skill', skill_id=sk.id) }}" method="POST">
                         <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3">
-                          <i class="bi bi-x-lg me-1"></i>Từ chối
+                          <i class="bi bi-x-lg me-1"></i>{{ _('Từ chối') }}
                         </button>
                       </form>
                     </div>
@@ -925,8 +925,8 @@
           {% else %}
           <div class="text-center py-5 text-muted">
             <i class="bi bi-check2-circle display-4 text-success mb-2 d-block"></i>
-            <h6 class="fw-bold text-dark">Hiện không có kỹ năng nào chờ duyệt lên Cộng đồng liên trường</h6>
-            <p class="small mb-0">Tất cả yêu cầu đăng kỹ năng liên trường đã được xử lý hoàn tất.</p>
+            <h6 class="fw-bold text-dark">{{ _('Hiện không có kỹ năng nào chờ duyệt lên Cộng đồng liên trường') }}</h6>
+            <p class="small mb-0">{{ _('Tất cả yêu cầu đăng kỹ năng liên trường đã được xử lý hoàn tất.') }}</p>
           </div>
           {% endif %}
         </div>
@@ -937,20 +937,20 @@
       <div class="card border-0 shadow-sm rounded-4 bg-white">
         <div class="card-header bg-white border-0 pt-4 px-4 pb-2">
           <h6 class="fw-bold text-dark mb-1">
-            <i class="bi bi-clock-history text-primary me-2"></i>Kỹ Năng Đang Hoạt Động Trên Cộng Đồng Liên Trường
+            <i class="bi bi-clock-history text-primary me-2"></i>{{ _('Kỹ Năng Đang Hoạt Động Trên Cộng Đồng Liên Trường') }}
           </h6>
-          <small class="text-muted">Nhật ký các kỹ năng đã được quản trị viên phê duyệt</small>
+          <small class="text-muted">{{ _('Nhật ký các kỹ năng đã được quản trị viên phê duyệt') }}</small>
         </div>
         <div class="card-body p-4">
           <div class="table-responsive">
             <table class="table table-sm table-hover align-middle mb-0">
               <thead class="table-light small text-secondary">
                 <tr>
-                  <th>Kỹ năng</th>
-                  <th>Chủ kỹ năng</th>
-                  <th>Trường học</th>
-                  <th>Người phê duyệt</th>
-                  <th>Thời gian duyệt</th>
+                  <th>{{ _('Kỹ năng') }}</th>
+                  <th>{{ _('Chủ kỹ năng') }}</th>
+                  <th>{{ _('Trường học') }}</th>
+                  <th>{{ _('Người phê duyệt') }}</th>
+                  <th>{{ _('Thời gian duyệt') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -961,7 +961,7 @@
                   <td><span class="badge bg-light text-dark border">{{ sk.ten_truong }}</span></td>
                   <td>
                     <span class="badge bg-info-subtle text-info-emphasis">
-                      <i class="bi bi-person-check me-1"></i>{{ sk.nguoi_duyet_ten if sk.nguoi_duyet_ten else 'Quản trị viên' }}
+                      <i class="bi bi-person-check me-1"></i>{{ sk.nguoi_duyet_ten if sk.nguoi_duyet_ten else _('Quản trị viên') }}
                     </span>
                   </td>
                   <td class="small text-muted">{{ sk.ngay_duyet_cong_dong }}</td>
@@ -984,51 +984,51 @@
         <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
           <div>
             <h5 class="fw-bold text-dark mb-1">
-              <i class="bi bi-heart-fill text-danger me-2"></i>Thêm Chương Trình Giờ Công Ích Mới
+              <i class="bi bi-heart-fill text-danger me-2"></i>{{ _('Thêm Chương Trình Giờ Công Ích Mới') }}
             </h5>
-            <p class="text-muted small mb-0">Quản trị viên chủ động phát động các chương trình thiện nguyện, lao động công ích, hỗ trợ thư viện để học sinh cống hiến và nhận giờ tín dụng.</p>
+            <p class="text-muted small mb-0">{{ _('Quản trị viên chủ động phát động các chương trình thiện nguyện, lao động công ích, hỗ trợ thư viện để học sinh cống hiến và nhận giờ tín dụng.') }}</p>
           </div>
           <span class="badge bg-danger-subtle text-danger border border-danger px-3 py-2 rounded-pill">
-            <i class="bi bi-people-fill me-1"></i> Giờ Công Ích Học Đường
+            <i class="bi bi-people-fill me-1"></i> {{ _('Giờ Công Ích Học Đường') }}
           </span>
         </div>
 
         <form method="POST" action="{{ url_for('admin_create_community_task') }}">
           <div class="row g-3">
             <div class="col-md-6">
-              <label class="form-label small fw-semibold">Tên chương trình cộng đồng <span class="text-danger">*</span></label>
-              <input type="text" name="tieu_de" class="form-control rounded-3" placeholder="Ví dụ: Trồng cây xanh khuôn viên trường, Thăm mái ấm..." required>
+              <label class="form-label small fw-semibold">{{ _('Tên chương trình cộng đồng') }} <span class="text-danger">*</span></label>
+              <input type="text" name="tieu_de" class="form-control rounded-3" placeholder="{{ _('Ví dụ: Trồng cây xanh khuôn viên trường, Thăm mái ấm...') }}" required>
             </div>
 
             <div class="col-md-3">
-              <label class="form-label small fw-semibold">Số giờ thưởng (*) <span class="text-danger">*</span></label>
+              <label class="form-label small fw-semibold">{{ _('Số giờ thưởng (*)') }} <span class="text-danger">*</span></label>
               <div class="input-group">
                 <input type="number" step="0.5" min="0.5" name="so_gio_thuong" class="form-control rounded-start-3" value="1.0" required>
-                <span class="input-group-text bg-light">giờ (h)</span>
+                <span class="input-group-text bg-light">{{ _('giờ (h)') }}</span>
               </div>
             </div>
 
             <div class="col-md-3">
-              <label class="form-label small fw-semibold">Trạng thái <span class="text-danger">*</span></label>
+              <label class="form-label small fw-semibold">{{ _('Trạng thái') }} <span class="text-danger">*</span></label>
               <select name="trang_thai" class="form-select rounded-3" required>
-                <option value="sap_dien_ra">Sắp diễn ra</option>
-                <option value="dang_dien_ra" selected>Đang diễn ra</option>
-                <option value="da_ket_thuc">Đã kết thúc</option>
+                <option value="sap_dien_ra">{{ _('Sắp diễn ra') }}</option>
+                <option value="dang_dien_ra" selected>{{ _('Đang diễn ra') }}</option>
+                <option value="da_ket_thuc">{{ _('Đã kết thúc') }}</option>
               </select>
             </div>
 
             <div class="col-md-4">
-              <label class="form-label small fw-semibold">Ngày bắt đầu</label>
+              <label class="form-label small fw-semibold">{{ _('Ngày bắt đầu') }}</label>
               <input type="date" name="ngay_bat_dau" class="form-control rounded-3">
             </div>
 
             <div class="col-md-4">
-              <label class="form-label small fw-semibold">Ngày kết thúc</label>
+              <label class="form-label small fw-semibold">{{ _('Ngày kết thúc') }}</label>
               <input type="date" name="ngay_ket_thuc" class="form-control rounded-3">
             </div>
 
             <div class="col-md-4">
-              <label class="form-label small fw-semibold">Trường áp dụng</label>
+              <label class="form-label small fw-semibold">{{ _('Trường áp dụng') }}</label>
               {% if is_super_admin %}
                 <select name="truong_id" class="form-select rounded-3">
                   {% for s in all_schools %}
@@ -1042,13 +1042,13 @@
             </div>
 
             <div class="col-md-8">
-              <label class="form-label small fw-semibold">Mô tả chi tiết chương trình</label>
-              <textarea name="mo_ta" class="form-control rounded-3" rows="2" placeholder="Nội dung công việc, kế hoạch tổ chức, ý nghĩa cộng đồng..."></textarea>
+              <label class="form-label small fw-semibold">{{ _('Mô tả chi tiết chương trình') }}</label>
+              <textarea name="mo_ta" class="form-control rounded-3" rows="2" placeholder="{{ _('Nội dung công việc, kế hoạch tổ chức, ý nghĩa cộng đồng...') }}"></textarea>
             </div>
 
             <div class="col-md-4 d-flex align-items-end">
               <button type="submit" class="btn btn-brand w-100 py-2 rounded-3 fw-bold shadow-sm">
-                <i class="bi bi-plus-circle me-1"></i> Lưu & Phát động chương trình
+                <i class="bi bi-plus-circle me-1"></i> {{ _('Lưu & Phát động chương trình') }}
               </button>
             </div>
           </div>
@@ -1060,11 +1060,11 @@
         <div class="card-header bg-white border-0 pt-4 px-4 pb-2 d-flex justify-content-between align-items-center">
           <div>
             <h5 class="fw-bold text-dark mb-1">
-              <i class="bi bi-card-checklist text-primary me-2"></i>Danh Sách Chương Trình Giờ Công Ích Học Đường
+              <i class="bi bi-card-checklist text-primary me-2"></i>{{ _('Danh Sách Chương Trình Giờ Công Ích Học Đường') }}
             </h5>
-            <small class="text-muted">Quản trị viên có thể theo dõi số lượng đăng ký, chỉnh sửa thông tin hoặc kết thúc chương trình.</small>
+            <small class="text-muted">{{ _('Quản trị viên có thể theo dõi số lượng đăng ký, chỉnh sửa thông tin hoặc kết thúc chương trình.') }}</small>
           </div>
-          <span class="badge bg-secondary rounded-pill px-3 py-2">{{ admin_community_tasks|length }} chương trình</span>
+          <span class="badge bg-secondary rounded-pill px-3 py-2">{{ admin_community_tasks|length }} {{ _('chương trình') }}</span>
         </div>
 
         <div class="card-body p-4">
@@ -1074,15 +1074,15 @@
               <thead class="table-light small text-secondary">
                 <tr>
                   <th style="width: 60px;">#ID</th>
-                  <th>Tên chương trình & Mô tả</th>
-                  <th style="width: 120px;">Số giờ thưởng</th>
-                  <th>Thời gian bắt đầu / kết thúc</th>
+                  <th>{{ _('Tên chương trình & Mô tả') }}</th>
+                  <th style="width: 120px;">{{ _('Số giờ thưởng') }}</th>
+                  <th>{{ _('Thời gian bắt đầu / kết thúc') }}</th>
                   {% if is_super_admin %}
-                  <th>Trường áp dụng</th>
+                  <th>{{ _('Trường áp dụng') }}</th>
                   {% endif %}
-                  <th style="width: 130px;">Trạng thái</th>
-                  <th style="width: 120px;">Học sinh đăng ký</th>
-                  <th style="width: 160px;" class="text-end">Hành động</th>
+                  <th style="width: 130px;">{{ _('Trạng thái') }}</th>
+                  <th style="width: 120px;">{{ _('Học sinh đăng ký') }}</th>
+                  <th style="width: 160px;" class="text-end">{{ _('Hành động') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -1106,36 +1106,36 @@
                       {% if task.ngay_bat_dau or task.ngay_ket_thuc %}
                         {{ task.ngay_bat_dau or '---' }} &rarr; {{ task.ngay_ket_thuc or '---' }}
                       {% else %}
-                        Hạn: {{ task.han_dang_ky or 'Không giới hạn' }}
+                        {{ _('Hạn:') }} {{ task.han_dang_ky or _('Không giới hạn') }}
                       {% endif %}
                     </div>
                   </td>
                   {% if is_super_admin %}
                   <td>
-                    <span class="badge bg-light text-dark border">{{ task.ten_truong or 'Toàn hệ thống' }}</span>
+                    <span class="badge bg-light text-dark border">{{ task.ten_truong or _('Toàn hệ thống') }}</span>
                   </td>
                   {% endif %}
                   <td>
                     {% if task.trang_thai == 'sap_dien_ra' %}
-                      <span class="badge bg-info text-dark rounded-pill px-2 py-1"><i class="bi bi-hourglass-split me-1"></i>Sắp diễn ra</span>
+                      <span class="badge bg-info text-dark rounded-pill px-2 py-1"><i class="bi bi-hourglass-split me-1"></i>{{ _('Sắp diễn ra') }}</span>
                     {% elif task.trang_thai in ('dang_dien_ra', 'mo_dang_ky', 'mo') %}
-                      <span class="badge bg-success rounded-pill px-2 py-1"><i class="bi bi-play-circle me-1"></i>Đang diễn ra</span>
+                      <span class="badge bg-success rounded-pill px-2 py-1"><i class="bi bi-play-circle me-1"></i>{{ _('Đang diễn ra') }}</span>
                     {% else %}
-                      <span class="badge bg-secondary rounded-pill px-2 py-1"><i class="bi bi-check2-circle me-1"></i>Đã kết thúc</span>
+                      <span class="badge bg-secondary rounded-pill px-2 py-1"><i class="bi bi-check2-circle me-1"></i>{{ _('Đã kết thúc') }}</span>
                     {% endif %}
                   </td>
                   <td>
                     <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 fw-bold">
-                      <i class="bi bi-people me-1"></i>{{ task.so_luong_da_dang_ky }} bạn
+                      <i class="bi bi-people me-1"></i>{{ task.so_luong_da_dang_ky }} {{ _('bạn') }}
                     </span>
                   </td>
                   <td class="text-end">
                     <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2 py-1 me-1" data-bs-toggle="modal" data-bs-target="#modalEditTask{{ task.id }}">
-                      <i class="bi bi-pencil-square me-1"></i>Sửa
+                      <i class="bi bi-pencil-square me-1"></i>{{ _('Sửa') }}
                     </button>
-                    <form method="POST" action="{{ url_for('admin_delete_community_task', task_id=task.id) }}" class="d-inline" onsubmit="return confirm('{{ 'Chương trình này đã có học sinh đăng ký tham gia. Hệ thống sẽ chuyển trạng thái sang Đã kết thúc thay vì xóa vĩnh viễn để bảo toàn lịch sử học tập. Bạn có đồng ý không?' if task.so_luong_da_dang_ky > 0 else 'Bạn có chắc chắn muốn xóa vĩnh viễn chương trình cộng đồng này không?' }}');">
-                      <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-2 py-1" title="{{ 'Chuyển sang Đã kết thúc' if task.so_luong_da_dang_ky > 0 else 'Xóa vĩnh viễn' }}">
-                        <i class="bi bi-trash me-1"></i>Xóa
+                    <form method="POST" action="{{ url_for('admin_delete_community_task', task_id=task.id) }}" class="d-inline" onsubmit="return confirm('{{ _('Chương trình này đã có học sinh đăng ký tham gia. Hệ thống sẽ chuyển trạng thái sang Đã kết thúc thay vì xóa vĩnh viễn để bảo toàn lịch sử học tập. Bạn có đồng ý không?') if task.so_luong_da_dang_ky > 0 else _('Bạn có chắc chắn muốn xóa vĩnh viễn chương trình cộng đồng này không?') }}');">
+                      <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-2 py-1" title="{{ _('Chuyển sang Đã kết thúc') if task.so_luong_da_dang_ky > 0 else _('Xóa vĩnh viễn') }}">
+                        <i class="bi bi-trash me-1"></i>{{ _('Xóa') }}
                       </button>
                     </form>
                   </td>
@@ -1147,7 +1147,7 @@
                     <div class="modal-content rounded-4 shadow border-0">
                       <div class="modal-header border-bottom pb-3">
                         <h5 class="modal-title fw-bold text-dark" id="modalEditTaskLabel{{ task.id }}">
-                          <i class="bi bi-pencil-square text-primary me-2"></i>Chỉnh Sửa Chương Trình Cộng Đồng #{{ task.id }}
+                          <i class="bi bi-pencil-square text-primary me-2"></i>{{ _('Chỉnh Sửa Chương Trình Cộng Đồng') }} #{{ task.id }}
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                       </div>
@@ -1155,35 +1155,35 @@
                         <div class="modal-body p-4">
                           <div class="row g-3">
                             <div class="col-md-8">
-                              <label class="form-label small fw-semibold">Tên chương trình <span class="text-danger">*</span></label>
+                              <label class="form-label small fw-semibold">{{ _('Tên chương trình') }} <span class="text-danger">*</span></label>
                               <input type="text" name="tieu_de" class="form-control rounded-3" value="{{ task.tieu_de }}" required>
                             </div>
                             <div class="col-md-4">
-                              <label class="form-label small fw-semibold">Số giờ thưởng (*) <span class="text-danger">*</span></label>
+                              <label class="form-label small fw-semibold">{{ _('Số giờ thưởng (*)') }} <span class="text-danger">*</span></label>
                               <div class="input-group">
                                 <input type="number" step="0.5" min="0.5" name="so_gio_thuong" class="form-control rounded-start-3" value="{{ task.so_gio_thuong }}" required>
-                                <span class="input-group-text bg-light">giờ (h)</span>
+                                <span class="input-group-text bg-light">{{ _('giờ (h)') }}</span>
                               </div>
                             </div>
                             <div class="col-md-4">
-                              <label class="form-label small fw-semibold">Trạng thái <span class="text-danger">*</span></label>
+                              <label class="form-label small fw-semibold">{{ _('Trạng thái') }} <span class="text-danger">*</span></label>
                               <select name="trang_thai" class="form-select rounded-3" required>
-                                <option value="sap_dien_ra" {% if task.trang_thai == 'sap_dien_ra' %}selected{% endif %}>Sắp diễn ra</option>
-                                <option value="dang_dien_ra" {% if task.trang_thai in ('dang_dien_ra', 'mo_dang_ky', 'mo') %}selected{% endif %}>Đang diễn ra</option>
-                                <option value="da_ket_thuc" {% if task.trang_thai in ('da_ket_thuc', 'hoan_thanh', 'dong') %}selected{% endif %}>Đã kết thúc</option>
+                                <option value="sap_dien_ra" {% if task.trang_thai == 'sap_dien_ra' %}selected{% endif %}>{{ _('Sắp diễn ra') }}</option>
+                                <option value="dang_dien_ra" {% if task.trang_thai in ('dang_dien_ra', 'mo_dang_ky', 'mo') %}selected{% endif %}>{{ _('Đang diễn ra') }}</option>
+                                <option value="da_ket_thuc" {% if task.trang_thai in ('da_ket_thuc', 'hoan_thanh', 'dong') %}selected{% endif %}>{{ _('Đã kết thúc') }}</option>
                               </select>
                             </div>
                             <div class="col-md-4">
-                              <label class="form-label small fw-semibold">Ngày bắt đầu</label>
+                              <label class="form-label small fw-semibold">{{ _('Ngày bắt đầu') }}</label>
                               <input type="date" name="ngay_bat_dau" class="form-control rounded-3" value="{{ task.ngay_bat_dau or '' }}">
                             </div>
                             <div class="col-md-4">
-                              <label class="form-label small fw-semibold">Ngày kết thúc</label>
+                              <label class="form-label small fw-semibold">{{ _('Ngày kết thúc') }}</label>
                               <input type="date" name="ngay_ket_thuc" class="form-control rounded-3" value="{{ task.ngay_ket_thuc or task.han_dang_ky or '' }}">
                             </div>
                             {% if is_super_admin %}
                             <div class="col-md-6">
-                              <label class="form-label small fw-semibold">Trường áp dụng</label>
+                              <label class="form-label small fw-semibold">{{ _('Trường áp dụng') }}</label>
                               <select name="truong_id" class="form-select rounded-3">
                                 {% for s in all_schools %}
                                   <option value="{{ s.id }}" {% if task.truong_id == s.id %}selected{% endif %}>{{ s.ten_truong }}</option>
@@ -1192,19 +1192,19 @@
                             </div>
                             {% endif %}
                             <div class="col-md-{{ '6' if is_super_admin else '12' }}">
-                              <label class="form-label small fw-semibold">Địa điểm tổ chức</label>
-                              <input type="text" name="dia_diem" class="form-control rounded-3" value="{{ task.dia_diem or '' }}" placeholder="Ví dụ: Thư viện tầng 2, Sân trường...">
+                              <label class="form-label small fw-semibold">{{ _('Địa điểm tổ chức') }}</label>
+                              <input type="text" name="dia_diem" class="form-control rounded-3" value="{{ task.dia_diem or '' }}" placeholder="{{ _('Ví dụ: Thư viện tầng 2, Sân trường...') }}">
                             </div>
                             <div class="col-12">
-                              <label class="form-label small fw-semibold">Mô tả nội dung</label>
+                              <label class="form-label small fw-semibold">{{ _('Mô tả nội dung') }}</label>
                               <textarea name="mo_ta" class="form-control rounded-3" rows="3">{{ task.mo_ta or '' }}</textarea>
                             </div>
                           </div>
                         </div>
                         <div class="modal-footer border-top bg-light rounded-bottom-4">
-                          <button type="button" class="btn btn-light rounded-pill px-3" data-bs-dismiss="modal">Hủy</button>
+                          <button type="button" class="btn btn-light rounded-pill px-3" data-bs-dismiss="modal">{{ _('Hủy') }}</button>
                           <button type="submit" class="btn btn-brand rounded-pill px-4 fw-semibold">
-                            <i class="bi bi-check2-circle me-1"></i> Lưu thay đổi
+                            <i class="bi bi-check2-circle me-1"></i> {{ _('Lưu thay đổi') }}
                           </button>
                         </div>
                       </form>
@@ -1218,8 +1218,8 @@
           {% else %}
           <div class="text-center py-5 text-muted">
             <i class="bi bi-heartbreak fs-1 text-danger opacity-50 d-block mb-2"></i>
-            <h6 class="fw-bold">Chưa có chương trình cộng đồng nào</h6>
-            <p class="small mb-0">Hãy sử dụng biểu mẫu phía trên để phát động chương trình giờ công ích đầu tiên cho học sinh!</p>
+            <h6 class="fw-bold">{{ _('Chưa có chương trình cộng đồng nào') }}</h6>
+            <p class="small mb-0">{{ _('Hãy sử dụng biểu mẫu phía trên để phát động chương trình giờ công ích đầu tiên cho học sinh!') }}</p>
           </div>
           {% endif %}
         </div>
@@ -1236,9 +1236,9 @@
         <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
           <div>
             <h5 class="fw-bold text-dark mb-1">
-              <i class="bi bi-building-add text-primary me-2"></i>Thêm Trường Học Mới Vào Hệ Thống
+              <i class="bi bi-building-add text-primary me-2"></i>{{ _('Thêm Trường Học Mới Vào Hệ Thống') }}
             </h5>
-            <p class="text-muted small mb-0">Hệ thống sẽ tự động cấp phát ID mới, cho phép tạo mã mời riêng và cách ly dữ liệu học sinh theo trường.</p>
+            <p class="text-muted small mb-0">{{ _('Hệ thống sẽ tự động cấp phát ID mới, cho phép tạo mã mời riêng và cách ly dữ liệu học sinh theo trường.') }}</p>
           </div>
           <span class="badge bg-primary-subtle text-primary border border-primary px-3 py-2 rounded-pill">
             <i class="bi bi-shield-check me-1"></i> Super Admin
@@ -1248,28 +1248,28 @@
         <form method="POST" action="{{ url_for('admin_create_school') }}" enctype="multipart/form-data">
           <div class="row g-3 align-items-end">
             <div class="col-md-5">
-              <label class="form-label small fw-semibold">Tên trường học <span class="text-danger">*</span></label>
-              <input type="text" name="ten_truong" class="form-control rounded-3" placeholder="Ví dụ: THPT Chuyên Hạ Long" required>
+              <label class="form-label small fw-semibold">{{ _('Tên trường học') }} <span class="text-danger">*</span></label>
+              <input type="text" name="ten_truong" class="form-control rounded-3" placeholder="{{ _('Ví dụ: THPT Chuyên Hạ Long') }}" required>
             </div>
 
             <div class="col-md-3">
-              <label class="form-label small fw-semibold">Trạng thái ban đầu <span class="text-danger">*</span></label>
+              <label class="form-label small fw-semibold">{{ _('Trạng thái ban đầu') }} <span class="text-danger">*</span></label>
               <select name="trang_thai" class="form-select rounded-3" required>
-                <option value="chuan_bi_trien_khai">Chuẩn bị triển khai</option>
-                <option value="dang_thi_diem" selected>Đang thí điểm</option>
-                <option value="dang_hoat_dong">Đang hoạt động</option>
-                <option value="tam_ngung">Tạm ngưng</option>
+                <option value="chuan_bi_trien_khai">{{ _('Chuẩn bị triển khai') }}</option>
+                <option value="dang_thi_diem" selected>{{ _('Đang thí điểm') }}</option>
+                <option value="dang_hoat_dong">{{ _('Đang hoạt động') }}</option>
+                <option value="tam_ngung">{{ _('Tạm ngưng') }}</option>
               </select>
             </div>
 
             <div class="col-md-4">
-              <label class="form-label small fw-semibold">Logo trường (Tùy chọn tải lên)</label>
+              <label class="form-label small fw-semibold">{{ _('Logo trường (Tùy chọn tải lên)') }}</label>
               <input type="file" name="logo" class="form-control rounded-3" accept="image/*">
             </div>
 
             <div class="col-12 text-end">
               <button type="submit" class="btn btn-primary rounded-pill px-4 fw-semibold shadow-sm">
-                <i class="bi bi-plus-circle me-1"></i> Thêm Trường Mới
+                <i class="bi bi-plus-circle me-1"></i> {{ _('Thêm Trường Mới') }}
               </button>
             </div>
           </div>
@@ -1280,9 +1280,9 @@
       <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden mb-4">
         <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
           <h5 class="fw-bold mb-0 text-dark">
-            <i class="bi bi-buildings-fill me-2 text-primary"></i>Danh Sách Trường Học Đang Quản Trị
+            <i class="bi bi-buildings-fill me-2 text-primary"></i>{{ _('Danh Sách Trường Học Đang Quản Trị') }}
           </h5>
-          <span class="badge bg-light text-dark border">Tổng cộng {{ all_schools_management|length }} trường</span>
+          <span class="badge bg-light text-dark border">{{ _('Tổng cộng') }} {{ all_schools_management|length }} {{ _('trường') }}</span>
         </div>
 
         <div class="card-body p-0">
@@ -1290,20 +1290,20 @@
             <table class="table table-hover align-middle mb-0">
               <thead class="table-light small text-muted">
                 <tr>
-                  <th class="ps-3" style="width: 100px;">Mã trường</th>
+                  <th class="ps-3" style="width: 100px;">{{ _('Mã trường') }}</th>
                   <th style="width: 70px;">Logo</th>
-                  <th>Tên trường học</th>
-                  <th class="text-center" style="width: 200px;">Trạng thái</th>
-                  <th class="text-center" style="width: 130px;">Số tài khoản</th>
-                  <th style="width: 160px;">Ngày tạo</th>
-                  <th class="text-end pe-3" style="width: 220px;">Thao tác</th>
+                  <th>{{ _('Tên trường học') }}</th>
+                  <th class="text-center" style="width: 200px;">{{ _('Trạng thái') }}</th>
+                  <th class="text-center" style="width: 130px;">{{ _('Số tài khoản') }}</th>
+                  <th style="width: 160px;">{{ _('Ngày tạo') }}</th>
+                  <th class="text-end pe-3" style="width: 220px;">{{ _('Thao tác') }}</th>
                 </tr>
               </thead>
               <tbody>
                 {% for s in all_schools_management %}
                 <tr>
                   <td class="ps-3">
-                    <span class="badge bg-secondary-subtle text-secondary font-monospace fw-bold">Trường #{{ s.id }}</span>
+                    <span class="badge bg-secondary-subtle text-secondary font-monospace fw-bold">{{ _('Trường #') }}{{ s.id }}</span>
                   </td>
                   <td>
                     <img src="{{ s.logo or '/static/img/logo_timebank_edu.png' }}" alt="{{ s.ten_truong }}" class="rounded-circle border" style="width: 40px; height: 40px; object-fit: contain;">
@@ -1311,32 +1311,32 @@
                   <td>
                     <div class="fw-bold text-dark">{{ s.ten_truong }}</div>
                     {% if s.id == 99 %}
-                      <small class="text-muted fst-italic">Trường dữ liệu mẫu demo hệ thống</small>
+                      <small class="text-muted fst-italic">{{ _('Trường dữ liệu mẫu demo hệ thống') }}</small>
                     {% endif %}
                   </td>
                   <td class="text-center">
                     {% if s.trang_thai in ('dang_su_dung', 'dang_hoat_dong') %}
                       <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill">
-                        <i class="bi bi-check-circle-fill me-1"></i>Đang hoạt động
+                        <i class="bi bi-check-circle-fill me-1"></i>{{ _('Đang hoạt động') }}
                       </span>
                     {% elif s.trang_thai == 'dang_thi_diem' %}
                       <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1 rounded-pill">
-                        <i class="bi bi-flag-fill me-1"></i>Đang thí điểm
+                        <i class="bi bi-flag-fill me-1"></i>{{ _('Đang thí điểm') }}
                       </span>
                     {% elif s.trang_thai == 'chuan_bi_trien_khai' %}
                       <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1 rounded-pill">
-                        <i class="bi bi-hourglass-split me-1"></i>Chuẩn bị triển khai
+                        <i class="bi bi-hourglass-split me-1"></i>{{ _('Chuẩn bị triển khai') }}
                       </span>
                     {% elif s.trang_thai in ('vo_hieu_hoa', 'tam_ngung') %}
                       <span class="badge bg-secondary-subtle text-secondary border border-secondary px-2 py-1 rounded-pill">
-                        <i class="bi bi-pause-circle-fill me-1"></i>Tạm ngưng
+                        <i class="bi bi-pause-circle-fill me-1"></i>{{ _('Tạm ngưng') }}
                       </span>
                     {% else %}
                       <span class="badge bg-secondary rounded-pill">{{ s.trang_thai }}</span>
                     {% endif %}
                     {% if s.an_truong == 1 %}
                       <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 rounded-pill ms-1">
-                        <i class="bi bi-eye-slash-fill me-1"></i>Đã ẩn
+                        <i class="bi bi-eye-slash-fill me-1"></i>{{ _('Đã ẩn') }}
                       </span>
                     {% endif %}
                   </td>
@@ -1351,21 +1351,21 @@
                   <td class="text-end pe-3">
                     {% if s.id == 99 %}
                       <span class="badge bg-secondary-subtle text-secondary border px-2 py-1">
-                        <i class="bi bi-shield-lock-fill me-1"></i>Cố định (Không sửa/xóa)
+                        <i class="bi bi-shield-lock-fill me-1"></i>{{ _('Cố định (Không sửa/xóa)') }}
                       </span>
                     {% else %}
                       <div class="d-flex align-items-center justify-content-end gap-1">
-                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2" data-bs-toggle="modal" data-bs-target="#editSchoolModal{{ s.id }}" title="Sửa tên / logo / trạng thái">
-                          <i class="bi bi-pencil-square me-1"></i>Sửa
+                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2" data-bs-toggle="modal" data-bs-target="#editSchoolModal{{ s.id }}" title="{{ _('Sửa tên / logo / trạng thái') }}">
+                          <i class="bi bi-pencil-square me-1"></i>{{ _('Sửa') }}
                         </button>
-                        <form method="POST" action="{{ url_for('admin_toggle_school_status', school_id=s.id) }}" class="d-inline" onsubmit="return confirm('{{ 'Bạn có chắc chắn muốn hiện lại trường này? Trường sẽ xuất hiện trở lại trên hệ thống.' if s.an_truong == 1 or s.trang_thai in ('vo_hieu_hoa', 'tam_ngung') else 'Bạn có chắc chắn muốn ẩn trường này khỏi hệ thống? Dữ liệu không bị xóa.' }}');">
+                        <form method="POST" action="{{ url_for('admin_toggle_school_status', school_id=s.id) }}" class="d-inline" onsubmit="return confirm('{{ _('Bạn có chắc chắn muốn hiện lại trường này? Trường sẽ xuất hiện trở lại trên hệ thống.') if s.an_truong == 1 or s.trang_thai in ('vo_hieu_hoa', 'tam_ngung') else _('Bạn có chắc chắn muốn ẩn trường này khỏi hệ thống? Dữ liệu không bị xóa.') }}');">
                           {% if s.an_truong == 1 or s.trang_thai in ('vo_hieu_hoa', 'tam_ngung') %}
-                            <button type="submit" class="btn btn-sm btn-outline-success rounded-pill px-2" title="Hiện lại trường trên hệ thống">
-                              <i class="bi bi-eye me-1"></i>Hiện lại
+                            <button type="submit" class="btn btn-sm btn-outline-success rounded-pill px-2" title="{{ _('Hiện lại trường trên hệ thống') }}">
+                              <i class="bi bi-eye me-1"></i>{{ _('Hiện lại') }}
                             </button>
                           {% else %}
-                            <button type="submit" class="btn btn-sm btn-outline-warning rounded-pill px-2" title="Ẩn trường (không xóa)">
-                              <i class="bi bi-eye-slash me-1"></i>Ẩn trường
+                            <button type="submit" class="btn btn-sm btn-outline-warning rounded-pill px-2" title="{{ _('Ẩn trường (không xóa)') }}">
+                              <i class="bi bi-eye-slash me-1"></i>{{ _('Ẩn trường') }}
                             </button>
                           {% endif %}
                         </form>
@@ -1389,20 +1389,20 @@
         <div class="d-flex flex-wrap justify-content-between align-items-center pb-3 border-bottom mb-4">
           <div>
             <h4 class="fw-bold mb-1 text-dark">
-              <i class="bi bi-google text-danger me-2"></i>Kho Lưu Trữ Đám Mây Google Drive 5TB Toàn Hệ Thống
+              <i class="bi bi-google text-danger me-2"></i>{{ _('Kho Lưu Trữ Đám Mây Google Drive 5TB Toàn Hệ Thống') }}
             </h4>
             <p class="text-muted small mb-0">
-              Tài khoản Google Drive 5TB của Thầy phụ trách chung toàn hệ thống — Tự động phân cấp thư mục theo trường và môn học.
+              {{ _('Tài khoản Google Drive 5TB của Thầy phụ trách chung toàn hệ thống — Tự động phân cấp thư mục theo trường và môn học.') }}
             </p>
           </div>
           <div>
             {% if google_drive_configured %}
               <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill fw-bold">
-                <i class="bi bi-check-circle-fill me-1"></i> Google Drive: Đã Kết Nối (OAuth2)
+                <i class="bi bi-check-circle-fill me-1"></i> {{ _('Google Drive: Đã Kết Nối (OAuth2)') }}
               </span>
             {% else %}
               <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-2 rounded-pill fw-bold">
-                <i class="bi bi-exclamation-triangle-fill me-1"></i> Chế độ Fallback / Chưa nạp Token
+                <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ _('Chế độ Fallback / Chưa nạp Token') }}
               </span>
             {% endif %}
           </div>
@@ -1412,23 +1412,23 @@
           <div class="col-lg-6">
             <div class="p-4 rounded-4 bg-light border h-100">
               <h5 class="fw-bold text-dark mb-3">
-                <i class="bi bi-key-fill text-primary me-2"></i>Xác thực OAuth2 & Biến Môi Trường (Render)
+                <i class="bi bi-key-fill text-primary me-2"></i>{{ _('Xác thực OAuth2 & Biến Môi Trường (Render)') }}
               </h5>
               <p class="small text-muted mb-3">
-                Nhấn nút bên dưới để đăng nhập bằng tài khoản Google Drive 5TB của Thầy. Sau khi cấp quyền 1 lần duy nhất, mã Refresh Token sẽ được cấp để lưu vào <code>GOOGLE_REFRESH_TOKEN</code> trên Dashboard Render.
+                {{ _('Nhấn nút bên dưới để đăng nhập bằng tài khoản Google Drive 5TB của Thầy. Sau khi cấp quyền 1 lần duy nhất, mã Refresh Token sẽ được cấp để lưu vào GOOGLE_REFRESH_TOKEN trên Dashboard Render.') }}
               </p>
               
               <div class="alert alert-warning rounded-3 small mb-4">
                 <i class="bi bi-shield-lock-fill me-1 text-danger"></i>
-                <strong>TUYỆT ĐỐI BẢO MẬT:</strong> Refresh token và Client Secret không bao giờ được hardcode trong mã nguồn hoặc commit lên GitHub. Mọi xác thực đều được đọc trực tiếp từ biến môi trường của máy chủ Render.
+                <strong>{{ _('TUYỆT ĐỐI BẢO MẬT:') }}</strong> {{ _('Refresh token và Client Secret không bao giờ được hardcode trong mã nguồn hoặc commit lên GitHub. Mọi xác thực đều được đọc trực tiếp từ biến môi trường của máy chủ Render.') }}
               </div>
 
               <div class="d-flex flex-wrap gap-2">
                 <a href="{{ url_for('admin_google_drive_auth') }}" class="btn btn-danger px-4 py-2 rounded-pill fw-semibold shadow-sm">
-                  <i class="bi bi-google me-2"></i>Kết Nối Google Drive (OAuth2)
+                  <i class="bi bi-google me-2"></i>{{ _('Kết Nối Google Drive (OAuth2)') }}
                 </a>
                 <a href="{{ url_for('documents_index') }}" class="btn btn-outline-primary px-3 py-2 rounded-pill fw-semibold">
-                  <i class="bi bi-folder2-open me-1"></i>Xem Kho Tài Liệu
+                  <i class="bi bi-folder2-open me-1"></i>{{ _('Xem Kho Tài Liệu') }}
                 </a>
               </div>
             </div>
@@ -1437,23 +1437,23 @@
           <div class="col-lg-6">
             <div class="p-4 rounded-4 bg-light border h-100">
               <h5 class="fw-bold text-dark mb-3">
-                <i class="bi bi-diagram-3-fill text-success me-2"></i>Cấu Trúc Thư Mục Tự Động
+                <i class="bi bi-diagram-3-fill text-success me-2"></i>{{ _('Cấu Trúc Thư Mục Tự Động') }}
               </h5>
-              <p class="small text-muted mb-2">Hệ thống tự động khởi tạo cấu trúc thư mục phân cấp trên Google Drive:</p>
+              <p class="small text-muted mb-2">{{ _('Hệ thống tự động khởi tạo cấu trúc thư mục phân cấp trên Google Drive:') }}</p>
               <div class="bg-dark text-light p-3 rounded-3 font-monospace small mb-3">
                 📁 /SchoolTimeBank/<br>
                 &nbsp;&nbsp;├── 📁 UK-Academy/<br>
-                &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── 📁 Toán/<br>
-                &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── 📁 Ngữ văn/<br>
-                &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── 📁 Tiếng Anh/...<br>
+                &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── 📁 {{ _('Toán') }}/<br>
+                &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── 📁 {{ _('Ngữ văn') }}/<br>
+                &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── 📁 {{ _('Tiếng Anh') }}/...<br>
                 &nbsp;&nbsp;├── 📁 THCS-Nguyen-Van-Thuoc/<br>
                 &nbsp;&nbsp;├── 📁 THCS-Le-Van-Tam/<br>
                 &nbsp;&nbsp;└── 📁 THPT-Hon-Gai/
               </div>
               <ul class="small text-muted mb-0 ps-3">
-                <li>Dung lượng tối đa: <strong>500MB/tệp</strong>.</li>
-                <li>Stream tải lên & tải về trực tiếp từ Drive (không lưu trên đĩa Render).</li>
-                <li>Học sinh chỉ xem & tải tài liệu của trường mình.</li>
+                <li>{{ _('Dung lượng tối đa:') }} <strong>500MB/{{ _('tệp') }}</strong>.</li>
+                <li>{{ _('Stream tải lên & tải về trực tiếp từ Drive (không lưu trên đĩa Render).') }}</li>
+                <li>{{ _('Học sinh chỉ xem & tải tài liệu của trường mình.') }}</li>
               </ul>
             </div>
           </div>
@@ -1469,14 +1469,14 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content rounded-4 border-0 shadow">
       <div class="modal-header">
-        <h5 class="modal-title fw-bold text-dark"><i class="bi bi-image me-2 text-primary"></i>Tải Logo Thật cho Trường học</h5>
+        <h5 class="modal-title fw-bold text-dark"><i class="bi bi-image me-2 text-primary"></i>{{ _('Tải Logo Thật cho Trường học') }}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form id="schoolLogoForm" method="POST" enctype="multipart/form-data" action="{{ url_for('admin_update_school_logo', school_id=current_user.truong_id or 1) }}">
         <div class="modal-body">
           {% if is_super_admin %}
           <div class="mb-3">
-            <label class="form-label small fw-semibold">Chọn trường học <span class="text-danger">*</span></label>
+            <label class="form-label small fw-semibold">{{ _('Chọn trường học') }} <span class="text-danger">*</span></label>
             <select name="school_id_select" id="schoolLogoSelect" class="form-select" onchange="document.getElementById('schoolLogoForm').action = '/admin/schools/' + this.value + '/logo';">
               {% for s in all_schools %}
                 <option value="{{ s.id }}">{{ s.ten_truong }}</option>
@@ -1485,20 +1485,20 @@
           </div>
           {% else %}
           <div class="mb-3">
-            <label class="form-label small fw-semibold">Trường học</label>
+            <label class="form-label small fw-semibold">{{ _('Trường học') }}</label>
             <input type="text" class="form-control" value="{{ current_school_name }}" readonly>
           </div>
           {% endif %}
           <div class="mb-3">
-            <label class="form-label small fw-semibold">Chọn file ảnh Logo thật <span class="text-danger">*</span></label>
+            <label class="form-label small fw-semibold">{{ _('Chọn file ảnh Logo thật') }} <span class="text-danger">*</span></label>
             <input type="file" name="logo" class="form-control" accept="image/*" required>
-            <small class="text-muted">Định dạng hỗ trợ: PNG, JPG, WEBP. Ảnh sẽ được cập nhật hiển thị tại thẻ trường học.</small>
+            <small class="text-muted">{{ _('Định dạng hỗ trợ: PNG, JPG, WEBP. Ảnh sẽ được cập nhật hiển thị tại thẻ trường học.') }}</small>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
+          <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">{{ _('Đóng') }}</button>
           <button type="submit" class="btn btn-brand rounded-pill px-4 fw-semibold">
-            <i class="bi bi-cloud-arrow-up-fill me-1"></i> Tải lên Logo
+            <i class="bi bi-cloud-arrow-up-fill me-1"></i> {{ _('Tải lên Logo') }}
           </button>
         </div>
       </form>
@@ -1515,38 +1515,38 @@
       <div class="modal-content rounded-4 border-0 shadow">
         <div class="modal-header">
           <h5 class="modal-title fw-bold text-dark">
-            <i class="bi bi-pencil-square me-2 text-primary"></i>Sửa Thông Tin Trường #{{ s.id }}
+            <i class="bi bi-pencil-square me-2 text-primary"></i>{{ _('Sửa Thông Tin Trường') }} #{{ s.id }}
           </h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <form method="POST" enctype="multipart/form-data" action="{{ url_for('admin_edit_school', school_id=s.id) }}">
           <div class="modal-body">
             <div class="mb-3">
-              <label class="form-label small fw-semibold">Tên trường học <span class="text-danger">*</span></label>
+              <label class="form-label small fw-semibold">{{ _('Tên trường học') }} <span class="text-danger">*</span></label>
               <input type="text" name="ten_truong" class="form-control rounded-3" value="{{ s.ten_truong }}" required>
             </div>
             <div class="mb-3">
-              <label class="form-label small fw-semibold">Trạng thái hoạt động <span class="text-danger">*</span></label>
+              <label class="form-label small fw-semibold">{{ _('Trạng thái hoạt động') }} <span class="text-danger">*</span></label>
               <select name="trang_thai" class="form-select rounded-3">
-                <option value="chuan_bi_trien_khai" {% if s.trang_thai == 'chuan_bi_trien_khai' %}selected{% endif %}>Chuẩn bị triển khai</option>
-                <option value="dang_thi_diem" {% if s.trang_thai == 'dang_thi_diem' %}selected{% endif %}>Đang thí điểm</option>
-                <option value="dang_hoat_dong" {% if s.trang_thai in ('dang_su_dung', 'dang_hoat_dong') %}selected{% endif %}>Đang hoạt động</option>
-                <option value="tam_ngung" {% if s.trang_thai in ('vo_hieu_hoa', 'tam_ngung') %}selected{% endif %}>Tạm ngưng</option>
+                <option value="chuan_bi_trien_khai" {% if s.trang_thai == 'chuan_bi_trien_khai' %}selected{% endif %}>{{ _('Chuẩn bị triển khai') }}</option>
+                <option value="dang_thi_diem" {% if s.trang_thai == 'dang_thi_diem' %}selected{% endif %}>{{ _('Đang thí điểm') }}</option>
+                <option value="dang_hoat_dong" {% if s.trang_thai in ('dang_su_dung', 'dang_hoat_dong') %}selected{% endif %}>{{ _('Đang hoạt động') }}</option>
+                <option value="tam_ngung" {% if s.trang_thai in ('vo_hieu_hoa', 'tam_ngung') %}selected{% endif %}>{{ _('Tạm ngưng') }}</option>
               </select>
             </div>
             <div class="mb-3">
-              <label class="form-label small fw-semibold">Logo trường học</label>
+              <label class="form-label small fw-semibold">{{ _('Logo trường học') }}</label>
               <div class="d-flex align-items-center gap-3 mb-2">
                 <img src="{{ s.logo or '/static/img/logo_timebank_edu.png' }}" alt="{{ s.ten_truong }}" class="rounded-circle border" style="width: 44px; height: 44px; object-fit: contain;">
                 <input type="file" name="logo" class="form-control rounded-3" accept="image/*">
               </div>
-              <small class="text-muted">Để trống nếu không muốn đổi ảnh logo.</small>
+              <small class="text-muted">{{ _('Để trống nếu không muốn đổi ảnh logo.') }}</small>
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
+            <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">{{ _('Hủy') }}</button>
             <button type="submit" class="btn btn-primary rounded-pill px-4 fw-semibold">
-              <i class="bi bi-save me-1"></i> Lưu thay đổi
+              <i class="bi bi-save me-1"></i> {{ _('Lưu thay đổi') }}
             </button>
           </div>
         </form>
@@ -1569,8 +1569,8 @@
             <i class="bi bi-file-earmark-arrow-up-fill fs-4"></i>
           </div>
           <div>
-            <h5 class="modal-title fw-bold text-dark mb-0" id="modalImportUsersLabel">Nhập Danh Sách Tài Khoản Hàng Loạt</h5>
-            <small class="text-muted">Tạo nhanh tài khoản Quản trị trường, Giáo viên và Học sinh từ file Excel/CSV</small>
+            <h5 class="modal-title fw-bold text-dark mb-0" id="modalImportUsersLabel">{{ _('Nhập Danh Sách Tài Khoản Hàng Loạt') }}</h5>
+            <small class="text-muted">{{ _('Tạo nhanh tài khoản Quản trị trường, Giáo viên và Học sinh từ file Excel/CSV') }}</small>
           </div>
         </div>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -1582,11 +1582,11 @@
           <div class="p-3 rounded-3 mb-4 border" style="background-color: #FFF8F1; border-color: #FED7AA !important;">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
               <div>
-                <span class="fw-bold text-dark d-block mb-1"><i class="bi bi-file-earmark-excel me-1 text-warning"></i>Tải file mẫu chuẩn định dạng</span>
-                <small class="text-muted">Cột mẫu: <code>họ_tên</code> | <code>vai_trò</code> (quantruong/giaovien/hocsinh) | <code>lớp</code> | <code>email</code> | <code>số_điện_thoại</code> | <code>ghi_chú</code></small>
+                <span class="fw-bold text-dark d-block mb-1"><i class="bi bi-file-earmark-excel me-1 text-warning"></i>{{ _('Tải file mẫu chuẩn định dạng') }}</span>
+                <small class="text-muted">{{ _('Cột mẫu: họ_tên | vai_trò (quantruong/giaovien/hocsinh) | lớp | email | số_điện_thoại | ghi_chú') }}</small>
               </div>
               <a href="{{ url_for('admin_download_import_template') }}" id="btnDownloadTemplate" class="btn btn-outline-primary rounded-pill btn-sm px-3 fw-semibold">
-                <i class="bi bi-download me-1"></i>Tải file Excel mẫu
+                <i class="bi bi-download me-1"></i>{{ _('Tải file Excel mẫu') }}
               </a>
             </div>
           </div>
@@ -1594,7 +1594,7 @@
           <!-- Đơn vị trường áp dụng -->
           {% if is_super_admin %}
           <div class="mb-3">
-            <label class="form-label fw-semibold small text-dark">Chọn trường học áp dụng <span class="text-danger">*</span></label>
+            <label class="form-label fw-semibold small text-dark">{{ _('Chọn trường học áp dụng') }} <span class="text-danger">*</span></label>
             <select name="truong_id" class="form-select rounded-3" required>
               {% for sc in all_schools %}
               <option value="{{ sc.id }}" {% if selected_truong_id and selected_truong_id|int == sc.id %}selected{% endif %}>
@@ -1602,15 +1602,15 @@
               </option>
               {% endfor %}
             </select>
-            <small class="text-muted">Tổng quản trị (Super Admin) có quyền chỉ định trường nhận danh sách tài khoản.</small>
+            <small class="text-muted">{{ _('Tổng quản trị (Super Admin) có quyền chỉ định trường nhận danh sách tài khoản.') }}</small>
           </div>
           {% else %}
           <div class="mb-3">
-            <label class="form-label fw-semibold small text-dark">Đơn vị trường học</label>
+            <label class="form-label fw-semibold small text-dark">{{ _('Đơn vị trường học') }}</label>
             <div class="form-control bg-light rounded-3 d-flex align-items-center gap-2">
               <i class="bi bi-building text-primary"></i>
               <span class="fw-semibold text-dark">{{ current_school_name }}</span>
-              <span class="badge bg-primary-subtle text-primary ms-auto">Trường của bạn</span>
+              <span class="badge bg-primary-subtle text-primary ms-auto">{{ _('Trường của bạn') }}</span>
             </div>
             <input type="hidden" name="truong_id" value="{{ session.get('truong_id') }}">
           </div>
@@ -1618,28 +1618,28 @@
 
           <!-- Chọn file upload -->
           <div class="mb-3">
-            <label class="form-label fw-semibold small text-dark">Chọn file Excel (.xlsx) hoặc CSV (.csv) <span class="text-danger">*</span></label>
+            <label class="form-label fw-semibold small text-dark">{{ _('Chọn file Excel (.xlsx) hoặc CSV (.csv)') }} <span class="text-danger">*</span></label>
             <input type="file" name="file" id="importFileInput" class="form-control rounded-3" accept=".xlsx,.xls,.csv" required>
-            <small class="text-muted">Hỗ trợ các định dạng bảng tính thông dụng (.xlsx, .csv định dạng UTF-8).</small>
+            <small class="text-muted">{{ _('Hỗ trợ các định dạng bảng tính thông dụng (.xlsx, .csv định dạng UTF-8).') }}</small>
           </div>
 
           <!-- Lưu ý bảo mật & cơ chế xử lý -->
           <div class="alert alert-info border-0 rounded-3 mb-0 small">
-            <div class="fw-bold mb-1"><i class="bi bi-shield-check me-1"></i>Cơ chế bảo mật & Tự động hóa hệ thống:</div>
+            <div class="fw-bold mb-1"><i class="bi bi-shield-check me-1"></i>{{ _('Cơ chế bảo mật & Tự động hóa hệ thống:') }}</div>
             <ul class="mb-0 ps-3">
-              <li><strong>Tên đăng nhập & Mật khẩu riêng:</strong> Hệ thống tự sinh mã đăng nhập duy nhất và mật khẩu ngẫu nhiên riêng cho từng người (không dùng chung mật khẩu mặc định).</li>
-              <li><strong>Mật khẩu băm an toàn:</strong> Mật khẩu được mã hóa một chiều bằng Werkzeug trước khi lưu CSDL.</li>
-              <li><strong>Trạng thái hoạt động:</strong> Tài khoản được kích hoạt ngay, học sinh tự động nhận +2.0 giờ ban đầu.</li>
-              <li><strong>Bỏ qua dòng lỗi:</strong> Dòng sai sót sẽ được bỏ qua và ghi rõ lý do, không chặn các dòng đúng.</li>
-              <li><strong>Xuất file kết quả:</strong> Ngay sau khi nhập, bạn có thể tải file Excel kết quả chứa thông tin đăng nhập để bàn giao cho từng cá nhân.</li>
+              <li><strong>{{ _('Tên đăng nhập & Mật khẩu riêng:') }}</strong> {{ _('Hệ thống tự sinh mã đăng nhập duy nhất và mật khẩu ngẫu nhiên riêng cho từng người (không dùng chung mật khẩu mặc định).') }}</li>
+              <li><strong>{{ _('Mật khẩu băm an toàn:') }}</strong> {{ _('Mật khẩu được mã hóa một chiều bằng Werkzeug trước khi lưu CSDL.') }}</li>
+              <li><strong>{{ _('Trạng thái hoạt động:') }}</strong> {{ _('Tài khoản được kích hoạt ngay, học sinh tự động nhận +2.0 giờ ban đầu.') }}</li>
+              <li><strong>{{ _('Bỏ qua dòng lỗi:') }}</strong> {{ _('Dòng sai sót sẽ được bỏ qua và ghi rõ lý do, không chặn các dòng đúng.') }}</li>
+              <li><strong>{{ _('Xuất file kết quả:') }}</strong> {{ _('Ngay sau khi nhập, bạn có thể tải file Excel kết quả chứa thông tin đăng nhập để bàn giao cho từng cá nhân.') }}</li>
             </ul>
           </div>
         </div>
 
         <div class="modal-footer border-0 pt-0 px-4 pb-4">
-          <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
+          <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">{{ _('Hủy') }}</button>
           <button type="submit" class="btn btn-primary rounded-pill px-4 fw-semibold shadow-sm" id="btnSubmitImport">
-            <i class="bi bi-upload me-1"></i> Bắt đầu Nhập danh sách
+            <i class="bi bi-upload me-1"></i> {{ _('Bắt đầu Nhập danh sách') }}
           </button>
         </div>
       </form>
@@ -1658,11 +1658,11 @@ function handleInviteTypeChange(val) {
   const boxMax = document.getElementById('boxMaxUses');
   const inputSoLuong = document.getElementById('inputSoLuong');
   if (val === 'lop') {
-    lbl.textContent = 'Số lượng mã lớp';
+    lbl.textContent = "{{ _('Số lượng mã lớp') }}";
     inputSoLuong.value = 1;
     boxMax.style.display = 'block';
   } else {
-    lbl.textContent = 'Số lượng mã cá nhân';
+    lbl.textContent = "{{ _('Số lượng mã cá nhân') }}";
     inputSoLuong.value = 5;
     boxMax.style.display = 'none';
   }

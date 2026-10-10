@@ -2389,7 +2389,7 @@ def change_password():
     """
     mhs = session.get("ma_hoc_sinh", "")
     if is_demo_user(mhs):
-        flash("Tài khoản demo không được phép đổi mật khẩu!", "danger")
+        flash(_("Tài khoản demo không được phép đổi mật khẩu!"), "danger")
         return redirect(url_for("profile"))
 
     mat_khau_cu = request.form.get("mat_khau_cu", "")
@@ -2397,15 +2397,15 @@ def change_password():
     xac_nhan_mat_khau = request.form.get("xac_nhan_mat_khau", "")
 
     if not mat_khau_cu or not mat_khau_moi or not xac_nhan_mat_khau:
-        flash("Vui lòng điền đầy đủ thông tin đổi mật khẩu!", "warning")
+        flash(_("Vui lòng điền đầy đủ thông tin đổi mật khẩu!"), "warning")
         return redirect(url_for("profile"))
 
     if mat_khau_moi != xac_nhan_mat_khau:
-        flash("Mật khẩu mới và xác nhận mật khẩu không khớp!", "danger")
+        flash(_("Mật khẩu mới và xác nhận mật khẩu không khớp!"), "danger")
         return redirect(url_for("profile"))
 
     if len(mat_khau_moi) < 6:
-        flash("Mật khẩu mới phải có tối thiểu 6 ký tự!", "warning")
+        flash(_("Mật khẩu mới phải có tối thiểu 6 ký tự!"), "warning")
         return redirect(url_for("profile"))
 
     db = get_db()
@@ -2413,13 +2413,13 @@ def change_password():
     cur.execute("SELECT mat_khau FROM users WHERE id = ?", (session["user_id"],))
     row = cur.fetchone()
     if not row or not check_password_hash(row["mat_khau"], mat_khau_cu):
-        flash("Mật khẩu hiện tại không chính xác!", "danger")
+        flash(_("Mật khẩu hiện tại không chính xác!"), "danger")
         return redirect(url_for("profile"))
 
     new_hash = generate_password_hash(mat_khau_moi)
     cur.execute("UPDATE users SET mat_khau = ? WHERE id = ?", (new_hash, session["user_id"]))
     db.commit()
-    flash("Đổi mật khẩu thành công! Hãy ghi nhớ mật khẩu mới của bạn.", "success")
+    flash(_("Đổi mật khẩu thành công! Hãy ghi nhớ mật khẩu mới của bạn."), "success")
     return redirect(url_for("profile"))
 
 
@@ -2500,7 +2500,7 @@ def forgot_password():
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
         if not email:
-            flash("Vui lòng nhập địa chỉ email của bạn!", "warning")
+            flash(_("Vui lòng nhập địa chỉ email của bạn!"), "warning")
             return render_template("forgot_password.html")
 
         db = get_db()
@@ -2513,7 +2513,7 @@ def forgot_password():
         user = cur.fetchone()
 
         if not user:
-            flash("Không tìm thấy tài khoản quản trị hoặc giáo viên với email này. Vui lòng liên hệ Tổng Quản trị viên (mshuyenuka@gmail.com) để được hỗ trợ.", "warning")
+            flash(_("Không tìm thấy tài khoản quản trị hoặc giáo viên với email này. Vui lòng liên hệ Tổng Quản trị viên (mshuyenuka@gmail.com) để được hỗ trợ."), "warning")
             return render_template("forgot_password.html")
 
         token = secrets.token_urlsafe(32)
@@ -2533,7 +2533,7 @@ def forgot_password():
 
         sent, err = send_password_reset_email(email, user["ho_ten"], reset_url)
         if sent:
-            flash(f"Đã gửi liên kết đặt lại mật khẩu đến email {email}. Vui lòng kiểm tra hộp thư (liên kết có hiệu lực trong 60 phút).", "success")
+            flash(_("Đã gửi liên kết đặt lại mật khẩu đến email %(email)s. Vui lòng kiểm tra hộp thư (liên kết có hiệu lực trong 60 phút).", email=email), "success")
         else:
             flash(err, "info")
 
@@ -2560,7 +2560,7 @@ def reset_password(token):
     record = cur.fetchone()
 
     if not record:
-        flash("Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn (chỉ dùng được 1 lần trong 60 phút). Vui lòng gửi lại yêu cầu mới.", "danger")
+        flash(_("Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn (chỉ dùng được 1 lần trong 60 phút). Vui lòng gửi lại yêu cầu mới."), "danger")
         return redirect(url_for("forgot_password"))
 
     if request.method == "POST":
@@ -2568,15 +2568,15 @@ def reset_password(token):
         xac_nhan = (request.form.get("mat_khau_xac_nhan") or request.form.get("xac_nhan_mat_khau", "")).strip()
 
         if not mat_khau or not xac_nhan:
-            flash("Vui lòng nhập đầy đủ mật khẩu mới và xác nhận mật khẩu!", "warning")
+            flash(_("Vui lòng nhập đầy đủ mật khẩu mới và xác nhận mật khẩu!"), "warning")
             return render_template("reset_password.html", token=token, user=record, user_name=record["ho_ten"])
 
         if mat_khau != xac_nhan:
-            flash("Mật khẩu mới và xác nhận mật khẩu không khớp!", "danger")
+            flash(_("Mật khẩu mới và xác nhận mật khẩu không khớp!"), "danger")
             return render_template("reset_password.html", token=token, user=record, user_name=record["ho_ten"])
 
         if len(mat_khau) < 6:
-            flash("Mật khẩu mới phải có tối thiểu 6 ký tự!", "warning")
+            flash(_("Mật khẩu mới phải có tối thiểu 6 ký tự!"), "warning")
             return render_template("reset_password.html", token=token, user=record, user_name=record["ho_ten"])
 
         new_hash = generate_password_hash(mat_khau)
@@ -2584,7 +2584,7 @@ def reset_password(token):
         cur.execute("UPDATE password_reset_tokens SET da_dung = 1 WHERE id = ?", (record["id"],))
         db.commit()
 
-        flash("Đặt lại mật khẩu thành công! Bạn có thể đăng nhập bằng mật khẩu mới.", "success")
+        flash(_("Đặt lại mật khẩu thành công! Bạn có thể đăng nhập bằng mật khẩu mới."), "success")
         return redirect(url_for("login"))
 
     return render_template("reset_password.html", token=token, user=record, user_name=record["ho_ten"])
@@ -2636,7 +2636,7 @@ def profile():
         (user["id"],)
     )
     user_ratings = cur.fetchall()
-    ai_feedback, _ = ai_summarize_feedback(db, user["id"], user_ratings)
+    ai_feedback, _unused = ai_summarize_feedback(db, user["id"], user_ratings)
 
     # Điểm chạm ghép cặp tự động: "Gợi ý cho bạn hôm nay" (Cache theo ngày)
     today_str = datetime.now().strftime("%Y-%m-%d")
@@ -3115,7 +3115,7 @@ def admin_accounts():
     - Nút 'Reset demo': 1 click đưa dữ liệu Trường Demo về trạng thái ban đầu
     """
     if not is_super_admin():
-        flash("Chức năng chỉ dành riêng cho Tổng Quản trị viên (Super Admin)!", "danger")
+        flash(_("Chức năng chỉ dành riêng cho Tổng Quản trị viên (Super Admin)!"), "danger")
         return redirect(url_for("admin_dashboard"))
 
     db = get_db()
@@ -3150,7 +3150,7 @@ def admin_create_account():
     Tạo tài khoản Quản trị trường (school_admin) hoặc Giáo viên (giao_vien) - chỉ super_admin.
     """
     if not is_super_admin():
-        flash("Chức năng chỉ dành riêng cho Tổng Quản trị viên (Super Admin)!", "danger")
+        flash(_("Chức năng chỉ dành riêng cho Tổng Quản trị viên (Super Admin)!"), "danger")
         return redirect(url_for("admin_dashboard"))
 
     ma_dang_nhap = (request.form.get("ma_hoc_sinh") or request.form.get("ma_dang_nhap", "")).strip()
@@ -3162,24 +3162,24 @@ def admin_create_account():
     lop = request.form.get("lop", "").strip()
 
     if not ma_dang_nhap or not ho_ten or not mat_khau or not truong_id_val:
-        flash("Vui lòng điền đầy đủ các thông tin bắt buộc (Mã đăng nhập, Họ tên, Trường học, Mật khẩu)!", "warning")
+        flash(_("Vui lòng điền đầy đủ các thông tin bắt buộc (Mã đăng nhập, Họ tên, Trường học, Mật khẩu)!"), "warning")
         return redirect(url_for("admin_accounts"))
 
     if vai_tro not in ("school_admin", "giao_vien"):
-        flash("Vai trò không hợp lệ (chỉ được tạo Quản trị trường hoặc Giáo viên)!", "danger")
+        flash(_("Vai trò không hợp lệ (chỉ được tạo Quản trị trường hoặc Giáo viên)!"), "danger")
         return redirect(url_for("admin_accounts"))
 
     try:
         tid = int(truong_id_val)
     except ValueError:
-        flash("ID trường học không hợp lệ!", "danger")
+        flash(_("ID trường học không hợp lệ!"), "danger")
         return redirect(url_for("admin_accounts"))
 
     db = get_db()
     cur = db.cursor()
     cur.execute("SELECT id FROM users WHERE ma_hoc_sinh = ?", (ma_dang_nhap,))
     if cur.fetchone():
-        flash(f"Mã đăng nhập '{ma_dang_nhap}' đã tồn tại trong hệ thống!", "danger")
+        flash(_("Mã đăng nhập '%(ma)s' đã tồn tại trong hệ thống!", ma=ma_dang_nhap), "danger")
         return redirect(url_for("admin_accounts"))
 
     pwd_hash = generate_password_hash(mat_khau)
@@ -3192,7 +3192,7 @@ def admin_create_account():
     """, (ma_dang_nhap, ho_ten, unit_lop, vai_tro, so_du, pwd_hash, tid, email))
     db.commit()
 
-    flash(f"Đã tạo thành công tài khoản '{ho_ten}' ({vai_tro}) gắn với trường học ID {tid}!", "success")
+    flash(_("Đã tạo thành công tài khoản '%(ho_ten)s' (%(vai_tro)s) gắn với trường học ID %(tid)s!", ho_ten=ho_ten, vai_tro=vai_tro, tid=tid), "success")
     return redirect(url_for("admin_accounts"))
 
 
@@ -3207,12 +3207,12 @@ def reset_demo_data_route():
     is_demo_admin = (session.get("vai_tro") in ("school_admin", "admin") and session.get("truong_id") == DEMO_SCHOOL_ID)
 
     if not (is_super or is_demo_admin):
-        flash("Bạn không có quyền khôi phục dữ liệu Trường Demo!", "danger")
+        flash(_("Bạn không có quyền khôi phục dữ liệu Trường Demo!"), "danger")
         return redirect(url_for("admin_dashboard"))
 
     db = get_db()
     reset_demo_school_data(db)
-    flash("Đã khôi phục toàn bộ dữ liệu Trường Demo về trạng thái ban đầu thành công!", "success")
+    flash(_("Đã khôi phục toàn bộ dữ liệu Trường Demo về trạng thái ban đầu thành công!"), "success")
     if request.referrer:
         return redirect(request.referrer)
     return redirect(url_for("admin_dashboard") if not is_super else url_for("admin_accounts"))
@@ -3284,7 +3284,7 @@ def generate_secure_random_password(length=8):
         secrets.choice(chars_digits),
     ]
     all_chars = chars_upper + chars_lower + chars_digits
-    pwd += [secrets.choice(all_chars) for _ in range(max(0, length - 3))]
+    pwd += [secrets.choice(all_chars) for _i in range(max(0, length - 3))]
     rnd = secrets.SystemRandom()
     rnd.shuffle(pwd)
     return "".join(pwd)
@@ -3395,7 +3395,7 @@ def admin_import_users():
     else:
         # Quản trị trường chỉ được nhập cho trường của mình
         if form_truong_id and str(form_truong_id) != str(current_school_id):
-            flash("Quản trị trường chỉ có quyền nhập danh sách cho trường của mình!", "danger")
+            flash(_("Quản trị trường chỉ có quyền nhập danh sách cho trường của mình!"), "danger")
             return redirect(url_for("admin_dashboard") + "#tab-users")
         target_school_id = current_school_id
 
@@ -3407,7 +3407,7 @@ def admin_import_users():
     # Kiểm tra file upload
     file = request.files.get("file")
     if not file or not file.filename:
-        flash("Vui lòng chọn file Excel (.xlsx) hoặc CSV (.csv) để nhập danh sách!", "warning")
+        flash(_("Vui lòng chọn file Excel (.xlsx) hoặc CSV (.csv) để nhập danh sách!"), "warning")
         return redirect(url_for("admin_dashboard") + "#tab-users")
 
     filename_lower = file.filename.lower()
@@ -3419,7 +3419,7 @@ def admin_import_users():
             ws = wb.active
             rows_data = list(ws.iter_rows(values_only=True))
         except Exception as e:
-            flash(f"Lỗi khi đọc file Excel: {str(e)}", "danger")
+            flash(_("Lỗi khi đọc file Excel: %(err)s", err=str(e)), "danger")
             return redirect(url_for("admin_dashboard") + "#tab-users")
     elif filename_lower.endswith(".csv"):
         try:
@@ -3432,19 +3432,19 @@ def admin_import_users():
                 except Exception:
                     continue
             if not decoded_text:
-                flash("Không thể giải mã file CSV. Vui lòng lưu file với định dạng UTF-8!", "danger")
+                flash(_("Không thể giải mã file CSV. Vui lòng lưu file với định dạng UTF-8!"), "danger")
                 return redirect(url_for("admin_dashboard") + "#tab-users")
             reader = csv.reader(io.StringIO(decoded_text))
             rows_data = list(reader)
         except Exception as e:
-            flash(f"Lỗi khi đọc file CSV: {str(e)}", "danger")
+            flash(_("Lỗi khi đọc file CSV: %(err)s", err=str(e)), "danger")
             return redirect(url_for("admin_dashboard") + "#tab-users")
     else:
-        flash("Định dạng file không được hỗ trợ. Vui lòng tải lên file .xlsx hoặc .csv!", "danger")
+        flash(_("Định dạng file không được hỗ trợ. Vui lòng tải lên file .xlsx hoặc .csv!"), "danger")
         return redirect(url_for("admin_dashboard") + "#tab-users")
 
     if not rows_data or len(rows_data) < 2:
-        flash("File tải lên không có dữ liệu để nhập!", "warning")
+        flash(_("File tải lên không có dữ liệu để nhập!"), "warning")
         return redirect(url_for("admin_dashboard") + "#tab-users")
 
     header_row = [str(cell or "").strip() for cell in rows_data[0]]
@@ -3467,7 +3467,7 @@ def admin_import_users():
     idx_ghi_chu = find_col_idx(header_row, ["ghi chu", "ghichu", "note", "mo ta"])
 
     if idx_ho_ten is None or idx_vai_tro is None:
-        flash("File thiếu cột bắt buộc 'họ_tên' hoặc 'vai_trò'. Vui lòng tải file mẫu để kiểm tra đúng cấu trúc!", "danger")
+        flash(_("File thiếu cột bắt buộc 'họ_tên' hoặc 'vai_trò'. Vui lòng tải file mẫu để kiểm tra đúng cấu trúc!"), "danger")
         return redirect(url_for("admin_dashboard") + "#tab-users")
 
     success_list = []
@@ -3637,11 +3637,11 @@ def admin_import_users():
     }
 
     if len(success_list) > 0 and len(error_list) == 0:
-        flash(f"Nhập danh sách thành công! Đã tạo {len(success_list)} tài khoản cho trường '{school_name}'. Vui lòng tải file Excel kết quả để phát thông tin đăng nhập cho từng người.", "success")
+        flash(_("Nhập danh sách thành công! Đã tạo %(count)s tài khoản cho trường '%(school)s'. Vui lòng tải file Excel kết quả để phát thông tin đăng nhập cho từng người.", count=len(success_list), school=school_name), "success")
     elif len(success_list) > 0 and len(error_list) > 0:
-        flash(f"Đã tạo thành công {len(success_list)} tài khoản; {len(error_list)} dòng bị lỗi/bỏ qua. Xem bảng tổng kết chi tiết bên dưới.", "warning")
+        flash(_("Đã tạo thành công %(sc)s tài khoản; %(ec)s dòng bị lỗi/bỏ qua. Xem bảng tổng kết chi tiết bên dưới.", sc=len(success_list), ec=len(error_list)), "warning")
     else:
-        flash(f"Không có tài khoản nào được tạo. Toàn bộ {len(error_list)} dòng trong danh sách đều có lỗi.", "danger")
+        flash(_("Không có tài khoản nào được tạo. Toàn bộ %(ec)s dòng trong danh sách đều có lỗi.", ec=len(error_list)), "danger")
 
     return redirect(url_for("admin_dashboard") + "#tab-users")
 
@@ -3655,7 +3655,7 @@ def admin_download_import_result():
     """
     last_import = session.get("last_import_result")
     if not last_import or not last_import.get("success_list"):
-        flash("Chưa có kết quả nhập tài khoản nào trong phiên làm việc hiện tại để tải về!", "warning")
+        flash(_("Chưa có kết quả nhập tài khoản nào trong phiên làm việc hiện tại để tải về!"), "warning")
         return redirect(url_for("admin_dashboard") + "#tab-users")
 
     success_list = last_import["success_list"]
@@ -3852,9 +3852,9 @@ def admin_generate_invite_codes():
     creator_id = session["user_id"]
 
     created_codes = []
-    for _ in range(num_codes):
-        part1 = "".join(secrets.choice(chars) for _ in range(4))
-        part2 = "".join(secrets.choice(chars) for _ in range(4))
+    for _i in range(num_codes):
+        part1 = "".join(secrets.choice(chars) for _k in range(4))
+        part2 = "".join(secrets.choice(chars) for _k in range(4))
         ma_code = f"TBEDU-{part1}-{part2}"
         cur.execute("""
             INSERT INTO invite_codes (truong_id, ma_code, loai, so_luot_toi_da, da_dung, ngay_tao, nguoi_tao)
@@ -3863,7 +3863,7 @@ def admin_generate_invite_codes():
         created_codes.append(ma_code)
 
     db.commit()
-    flash(f"Đã sinh thành công {len(created_codes)} mã mời dạng TBEDU-XXXX-XXXX!", "success")
+    flash(_("Đã sinh thành công %(count)s mã mời dạng TBEDU-XXXX-XXXX!", count=len(created_codes)), "success")
     return redirect(url_for("admin_dashboard", _anchor="tab-invite"))
 
 
@@ -3879,16 +3879,16 @@ def admin_approve_student(user_id):
     cur.execute("SELECT * FROM users WHERE id = ?", (user_id,))
     target = cur.fetchone()
     if not target:
-        flash("Không tìm thấy người dùng.", "danger")
+        flash(_("Không tìm thấy người dùng."), "danger")
         return redirect(url_for("admin_dashboard"))
 
     if not is_super and target["truong_id"] != current_user_school_id:
-        flash("Bạn chỉ có quyền phê duyệt học sinh thuộc trường của mình!", "danger")
+        flash(_("Bạn chỉ có quyền phê duyệt học sinh thuộc trường của mình!"), "danger")
         return redirect(url_for("admin_dashboard"))
 
     cur.execute("UPDATE users SET trang_thai = 'hoat_dong' WHERE id = ?", (user_id,))
     db.commit()
-    flash(f"Đã phê duyệt tài khoản {target['ho_ten']} ({target['ma_hoc_sinh']}) thành công!", "success")
+    flash(_("Đã phê duyệt tài khoản %(name)s (%(code)s) thành công!", name=target['ho_ten'], code=target['ma_hoc_sinh']), "success")
     return redirect(url_for("admin_dashboard"))
 
 
@@ -3904,16 +3904,16 @@ def admin_reject_student(user_id):
     cur.execute("SELECT * FROM users WHERE id = ?", (user_id,))
     target = cur.fetchone()
     if not target:
-        flash("Không tìm thấy người dùng.", "danger")
+        flash(_("Không tìm thấy người dùng."), "danger")
         return redirect(url_for("admin_dashboard"))
 
     if not is_super and target["truong_id"] != current_user_school_id:
-        flash("Bạn chỉ có quyền thao tác trên học sinh thuộc trường của mình!", "danger")
+        flash(_("Bạn chỉ có quyền thao tác trên học sinh thuộc trường của mình!"), "danger")
         return redirect(url_for("admin_dashboard"))
 
     cur.execute("UPDATE users SET trang_thai = 'tu_choi' WHERE id = ?", (user_id,))
     db.commit()
-    flash(f"Đã từ chối đăng ký của học sinh {target['ho_ten']}.", "info")
+    flash(_("Đã từ chối đăng ký của học sinh %(name)s.", name=target['ho_ten']), "info")
     return redirect(url_for("admin_dashboard"))
 
 
@@ -3942,7 +3942,7 @@ def admin_approve_all_students():
             except ValueError:
                 pass
         db.commit()
-        flash(f"Đã phê duyệt {count} học sinh được chọn thành công!", "success")
+        flash(_("Đã phê duyệt %(count)s học sinh được chọn thành công!", count=count), "success")
     else:
         if is_super:
             if target_truong_id and target_truong_id.isdigit():
@@ -3953,7 +3953,7 @@ def admin_approve_all_students():
             cur.execute("UPDATE users SET trang_thai = 'hoat_dong' WHERE trang_thai = 'cho_duyet' AND truong_id = ?", (current_user_school_id,))
         count = cur.rowcount
         db.commit()
-        flash(f"Đã duyệt toàn bộ {count} học sinh trong hàng chờ thành công!", "success")
+        flash(_("Đã duyệt toàn bộ %(count)s học sinh trong hàng chờ thành công!", count=count), "success")
 
     return redirect(url_for("admin_dashboard"))
 
@@ -3973,16 +3973,16 @@ def admin_confirm_lock_user(user_id):
     cur.execute("SELECT * FROM users WHERE id = ?", (user_id,))
     target = cur.fetchone()
     if not target:
-        flash("Không tìm thấy người dùng.", "danger")
+        flash(_("Không tìm thấy người dùng."), "danger")
         return redirect(url_for("admin_dashboard"))
 
     if not is_super and target["truong_id"] != current_user_school_id:
-        flash("Bạn chỉ có quyền khóa tài khoản thuộc trường của mình!", "danger")
+        flash(_("Bạn chỉ có quyền khóa tài khoản thuộc trường của mình!"), "danger")
         return redirect(url_for("admin_dashboard"))
 
     cur.execute("UPDATE users SET trang_thai = 'da_khoa' WHERE id = ?", (user_id,))
     db.commit()
-    flash(f"Đã xác nhận KHÓA VĨNH VIỄN tài khoản của học sinh {target['ho_ten']} ({target['ma_hoc_sinh']}) theo quy chế xử lý vi phạm.", "danger")
+    flash(_("Đã xác nhận KHÓA VĨNH VIỄN tài khoản của học sinh %(name)s (%(code)s) theo quy chế xử lý vi phạm.", name=target['ho_ten'], code=target['ma_hoc_sinh']), "danger")
     return redirect(url_for("admin_dashboard"))
 
 
@@ -3997,7 +3997,7 @@ def admin_dismiss_violation(violation_id):
     if viol:
         cur.execute("UPDATE users SET trang_thai = 'hoat_dong' WHERE id = ? AND trang_thai = 'de_xuat_khoa'", (viol["user_id"],))
         db.commit()
-    flash("Đã xử lý / hủy đề xuất kỷ luật.", "info")
+    flash(_("Đã xử lý / hủy đề xuất kỷ luật."), "info")
     return redirect(url_for("admin_dashboard"))
 
 
@@ -4011,11 +4011,11 @@ def admin_update_school_logo(school_id):
     - Trường Demo (ID 99) không cho phép sửa logo.
     """
     if school_id == DEMO_SCHOOL_ID:
-        flash("Trường Demo (ID 99) là dữ liệu mẫu của hệ thống, không được phép chỉnh sửa logo!", "warning")
+        flash(_("Trường Demo (ID 99) là dữ liệu mẫu của hệ thống, không được phép chỉnh sửa logo!"), "warning")
         return redirect(url_for("admin_dashboard", _anchor="tab-schools"))
 
     if not is_super_admin() and session.get("truong_id") != school_id:
-        flash("Bạn không có quyền cập nhật logo cho trường này.", "danger")
+        flash(_("Bạn không có quyền cập nhật logo cho trường này."), "danger")
         return redirect(url_for("admin_dashboard"))
 
     if "logo" in request.files:
@@ -4031,9 +4031,9 @@ def admin_update_school_logo(school_id):
             cur = db.cursor()
             cur.execute("UPDATE truong SET logo = ? WHERE id = ?", (logo_url, school_id))
             db.commit()
-            flash("Đã cập nhật logo trường thành công!", "success")
+            flash(_("Đã cập nhật logo trường thành công!"), "success")
         else:
-            flash("Vui lòng chọn file ảnh hợp lệ (PNG, JPG, WEBP).", "warning")
+            flash(_("Vui lòng chọn file ảnh hợp lệ (PNG, JPG, WEBP)."), "warning")
     return redirect(url_for("admin_dashboard", _anchor="tab-schools" if is_super_admin() else None))
 
 
@@ -4053,7 +4053,7 @@ def admin_create_school():
     raw_status = request.form.get("trang_thai", "dang_thi_diem").strip()
 
     if not ten_truong:
-        flash("Tên trường học không được để trống!", "danger")
+        flash(_("Tên trường học không được để trống!"), "danger")
         return redirect(url_for("admin_dashboard", _anchor="tab-schools"))
 
     status_map = {
@@ -4073,7 +4073,7 @@ def admin_create_school():
     # Validate tên trường không trùng (case-insensitive)
     cur.execute("SELECT id FROM truong WHERE LOWER(TRIM(ten_truong)) = LOWER(?)", (ten_truong,))
     if cur.fetchone():
-        flash(f"Trường học '{ten_truong}' đã tồn tại trong hệ thống!", "danger")
+        flash(_("Trường học '%(name)s' đã tồn tại trong hệ thống!", name=ten_truong), "danger")
         return redirect(url_for("admin_dashboard", _anchor="tab-schools"))
 
     # Xử lý logo trường học
@@ -4112,7 +4112,7 @@ def admin_create_school():
             pass
 
     db.commit()
-    flash(f"Đã thêm trường học mới '{ten_truong}' (Mã trường ID #{next_id}) thành công!", "success")
+    flash(_("Đã thêm trường học mới '%(name)s' (Mã trường ID #%(id)s) thành công!", name=ten_truong, id=next_id), "success")
     return redirect(url_for("admin_dashboard", _anchor="tab-schools"))
 
 
@@ -4124,7 +4124,7 @@ def admin_edit_school(school_id):
     - Trường Demo (ID 99) không cho phép sửa
     """
     if school_id == DEMO_SCHOOL_ID:
-        flash("Trường Demo (ID 99) là trường mẫu của hệ thống, không được phép chỉnh sửa hoặc xóa!", "warning")
+        flash(_("Trường Demo (ID 99) là trường mẫu của hệ thống, không được phép chỉnh sửa hoặc xóa!"), "warning")
         return redirect(url_for("admin_dashboard", _anchor="tab-schools"))
 
     db = get_db()
@@ -4132,14 +4132,14 @@ def admin_edit_school(school_id):
     cur.execute("SELECT * FROM truong WHERE id = ?", (school_id,))
     school = cur.fetchone()
     if not school:
-        flash("Không tìm thấy trường học cần sửa!", "danger")
+        flash(_("Không tìm thấy trường học cần sửa!"), "danger")
         return redirect(url_for("admin_dashboard", _anchor="tab-schools"))
 
     ten_truong = request.form.get("ten_truong", "").strip()
     raw_status = request.form.get("trang_thai", school["trang_thai"]).strip()
 
     if not ten_truong:
-        flash("Tên trường học không được để trống!", "danger")
+        flash(_("Tên trường học không được để trống!"), "danger")
         return redirect(url_for("admin_dashboard", _anchor="tab-schools"))
 
     status_map = {
@@ -4154,7 +4154,7 @@ def admin_edit_school(school_id):
 
     cur.execute("SELECT id FROM truong WHERE LOWER(TRIM(ten_truong)) = LOWER(?) AND id != ?", (ten_truong, school_id))
     if cur.fetchone():
-        flash(f"Tên trường '{ten_truong}' trùng với một trường học khác đã có!", "danger")
+        flash(_("Tên trường '%(name)s' trùng với một trường học khác đã có!", name=ten_truong), "danger")
         return redirect(url_for("admin_dashboard", _anchor="tab-schools"))
 
     logo_url = school["logo"]
@@ -4176,7 +4176,7 @@ def admin_edit_school(school_id):
         WHERE id = ?
     """, (ten_truong, logo_url, trang_thai, new_an, school_id))
     db.commit()
-    flash(f"Đã cập nhật thông tin trường '{ten_truong}' thành công!", "success")
+    flash(_("Đã cập nhật thông tin trường '%(name)s' thành công!", name=ten_truong), "success")
     return redirect(url_for("admin_dashboard", _anchor="tab-schools"))
 
 
@@ -4190,7 +4190,7 @@ def admin_toggle_school_status(school_id):
     - Toggle an_truong (0 <-> 1) và đồng bộ trang_thai
     """
     if school_id == DEMO_SCHOOL_ID:
-        flash("Trường Demo (ID 99) là trường mẫu của hệ thống, không được phép vô hiệu hóa!", "warning")
+        flash(_("Trường Demo (ID 99) là trường mẫu của hệ thống, không được phép vô hiệu hóa!"), "warning")
         return redirect(url_for("admin_dashboard", _anchor="tab-schools"))
 
     db = get_db()
@@ -4198,7 +4198,7 @@ def admin_toggle_school_status(school_id):
     cur.execute("SELECT * FROM truong WHERE id = ?", (school_id,))
     school = cur.fetchone()
     if not school:
-        flash("Không tìm thấy trường học!", "danger")
+        flash(_("Không tìm thấy trường học!"), "danger")
         return redirect(url_for("admin_dashboard", _anchor="tab-schools"))
 
     has_an_col = "an_truong" in school.keys()
@@ -4566,7 +4566,7 @@ def approve_skill_action(skill_id, action):
     - action: 'da_duyet' hoặc 'tu_choi'
     """
     if action not in ("da_duyet", "tu_choi"):
-        flash("Hành động không hợp lệ.", "danger")
+        flash(_("Hành động không hợp lệ."), "danger")
         return redirect(url_for("skills_approval"))
 
     db = get_db()
@@ -4575,7 +4575,7 @@ def approve_skill_action(skill_id, action):
     db.commit()
 
     action_label = "phê duyệt" if action == "da_duyet" else "từ chối"
-    flash(f"Đã {action_label} kỹ năng #{skill_id} thành công.", "success")
+    flash(_("Đã %(action)s kỹ năng #%(id)s thành công.", action=action_label, id=skill_id), "success")
     return redirect(url_for("skills_approval"))
 
 
@@ -4599,11 +4599,11 @@ def publish_community_skill(skill_id):
     cur.execute("SELECT * FROM skills WHERE id = ?", (skill_id,))
     sk = cur.fetchone()
     if not sk:
-        flash("Kỹ năng không tồn tại!", "danger")
+        flash(_("Kỹ năng không tồn tại!"), "danger")
         return redirect(url_for("profile"))
 
     if sk["user_id"] != user_id:
-        flash("Bạn chỉ có thể đăng kỹ năng của chính mình lên Cộng đồng liên trường!", "danger")
+        flash(_("Bạn chỉ có thể đăng kỹ năng của chính mình lên Cộng đồng liên trường!"), "danger")
         return redirect(url_for("profile"))
 
     threshold = get_community_threshold()
@@ -4611,7 +4611,7 @@ def publish_community_skill(skill_id):
     if hours_taught < threshold:
         remaining = max(0.0, threshold - hours_taught)
         rem_str = int(remaining) if remaining == int(remaining) else round(remaining, 1)
-        flash(f"Bạn cần {rem_str} giờ dạy nữa để mở khóa Cộng đồng liên trường!", "warning")
+        flash(_("Bạn cần %(rem)s giờ dạy nữa để mở khóa Cộng đồng liên trường!", rem=rem_str), "warning")
         return redirect(url_for("profile"))
 
     cur.execute("""
@@ -4622,7 +4622,7 @@ def publish_community_skill(skill_id):
     """, (skill_id,))
     db.commit()
 
-    flash("Đã gửi yêu cầu đăng kỹ năng lên Cộng đồng liên trường. Vui lòng chờ Ban quản trị duyệt!", "success")
+    flash(_("Đã gửi yêu cầu đăng kỹ năng lên Cộng đồng liên trường. Vui lòng chờ Ban quản trị duyệt!"), "success")
     return redirect(url_for("profile"))
 
 
@@ -4645,7 +4645,7 @@ def admin_approve_community_skill(skill_id):
     """, (skill_id,))
     sk = cur.fetchone()
     if not sk:
-        flash("Không tìm thấy kỹ năng!", "danger")
+        flash(_("Không tìm thấy kỹ năng!"), "danger")
         return redirect(url_for("admin_dashboard"))
 
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -4661,7 +4661,7 @@ def admin_approve_community_skill(skill_id):
     db.commit()
 
     school_name = sk["ten_truong"] if sk["ten_truong"] else "Trường học"
-    flash(f"Đã duyệt kỹ năng '{sk['tieu_de']}' ({school_name}) lên Cộng đồng liên trường thành công!", "success")
+    flash(_("Đã duyệt kỹ năng '%(title)s' (%(school)s) lên Cộng đồng liên trường thành công!", title=sk['tieu_de'], school=school_name), "success")
     return redirect(url_for("admin_dashboard"))
 
 
@@ -4676,7 +4676,7 @@ def admin_reject_community_skill(skill_id):
     cur.execute("SELECT s.*, u.ho_ten FROM skills s JOIN users u ON s.user_id = u.id WHERE s.id = ?", (skill_id,))
     sk = cur.fetchone()
     if not sk:
-        flash("Không tìm thấy kỹ năng!", "danger")
+        flash(_("Không tìm thấy kỹ năng!"), "danger")
         return redirect(url_for("admin_dashboard"))
 
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -4690,7 +4690,7 @@ def admin_reject_community_skill(skill_id):
     """, (session["user_id"], now_str, skill_id))
     db.commit()
 
-    flash(f"Đã từ chối đưa kỹ năng '{sk['tieu_de']}' lên Cộng đồng liên trường.", "info")
+    flash(_("Đã từ chối đưa kỹ năng '%(title)s' lên Cộng đồng liên trường.", title=sk['tieu_de']), "info")
     return redirect(url_for("admin_dashboard"))
 
 
@@ -4711,7 +4711,7 @@ def community_market():
     is_admin_user = user_role in ("super_admin", "school_admin", "admin", "giao_vien")
 
     if not user_id:
-        flash("Vui lòng đăng nhập để truy cập Cộng đồng liên trường.", "warning")
+        flash(_("Vui lòng đăng nhập để truy cập Cộng đồng liên trường."), "warning")
         return redirect(url_for("login", next=request.url))
 
     teaching_hours = get_user_teaching_hours(db, user_id)
@@ -4923,7 +4923,7 @@ def new_skill():
     cur.execute("SELECT trang_thai FROM users WHERE id = ?", (session["user_id"],))
     u_row = cur.fetchone()
     if u_row and u_row["trang_thai"] == "cho_duyet":
-        flash("Tài khoản của bạn đang trong hàng chờ duyệt bởi Quản trị viên nhà trường. Bạn chưa thể đăng kỹ năng cho đến khi tài khoản được kích hoạt.", "warning")
+        flash(_("Tài khoản của bạn đang trong hàng chờ duyệt bởi Quản trị viên nhà trường. Bạn chưa thể đăng kỹ năng cho đến khi tài khoản được kích hoạt."), "warning")
         return redirect(url_for("profile"))
 
     if request.method == "POST":
@@ -4932,11 +4932,11 @@ def new_skill():
         mo_ta = request.form.get("mo_ta", "").strip()
         
         if not linh_vuc or not tieu_de or not mo_ta:
-            flash("Vui lòng điền đầy đủ lĩnh vực, tiêu đề và mô tả kỹ năng.", "danger")
+            flash(_("Vui lòng điền đầy đủ lĩnh vực, tiêu đề và mô tả kỹ năng."), "danger")
             return render_template("skills_new.html")
             
         if linh_vuc not in valid_categories:
-            flash("Lĩnh vực đã chọn không hợp lệ.", "danger")
+            flash(_("Lĩnh vực đã chọn không hợp lệ."), "danger")
             return render_template("skills_new.html")
         
         # Điểm chạm 1: AI Kiểm duyệt kỹ năng (Gemini Pro)
@@ -4958,9 +4958,9 @@ def new_skill():
         db.commit()
         
         if is_approved:
-            flash(f"Đăng ký thành công! {ly_do_luu}. Kỹ năng đã sẵn sàng trên Kho kỹ năng học đường.", "success")
+            flash(_("Đăng ký thành công! %(reason)s. Kỹ năng đã sẵn sàng trên Kho kỹ năng học đường.", reason=ly_do_luu), "success")
         else:
-            flash(f"Kỹ năng đang ở trạng thái 'Chờ duyệt' để Giáo viên thẩm định thêm. {ly_do_luu}", "warning")
+            flash(_("Kỹ năng đang ở trạng thái 'Chờ duyệt' để Giáo viên thẩm định thêm. %(reason)s", reason=ly_do_luu), "warning")
         return redirect(url_for("profile"))
         
     return render_template("skills_new.html")
@@ -4987,7 +4987,7 @@ def book_skill_page(skill_id):
     """, (skill_id,))
     skill = cur.fetchone()
     if not skill or (skill["trang_thai_duyet"] != "da_duyet" and skill.get("hien_thi_cong_dong") != 1):
-        flash("Kỹ năng này chưa sẵn sàng để đặt lịch học!", "warning")
+        flash(_("Kỹ năng này chưa sẵn sàng để đặt lịch học!"), "warning")
         return redirect(url_for("skills_market"))
 
     cur.execute("SELECT * FROM users WHERE id = ?", (session["user_id"],))
@@ -5014,16 +5014,16 @@ def book_session():
     cur.execute("SELECT * FROM users WHERE id = ?", (session["user_id"],))
     learner = cur.fetchone()
     if not learner:
-        flash("Không tìm thấy thông tin tài khoản người học.", "danger")
+        flash(_("Không tìm thấy thông tin tài khoản người học."), "danger")
         return redirect(url_for("skills_market"))
     if learner["trang_thai"] == "cho_duyet":
-        flash("Tài khoản của bạn đang trong hàng chờ duyệt bởi Quản trị viên nhà trường. Bạn chưa thể đặt lịch học cho đến khi tài khoản được kích hoạt.", "warning")
+        flash(_("Tài khoản của bạn đang trong hàng chờ duyệt bởi Quản trị viên nhà trường. Bạn chưa thể đặt lịch học cho đến khi tài khoản được kích hoạt."), "warning")
         return redirect(url_for("skills_market"))
 
     try:
         skill_id = int(request.form.get("skill_id", 0))
     except (ValueError, TypeError):
-        flash("Kỹ năng không hợp lệ.", "danger")
+        flash(_("Kỹ năng không hợp lệ."), "danger")
         return redirect(url_for("skills_market"))
         
     thoi_gian_bat_dau = request.form.get("thoi_gian_bat_dau", "").strip()
@@ -5033,29 +5033,29 @@ def book_session():
         so_gio = 1.0
         
     if not thoi_gian_bat_dau:
-        flash("Vui lòng chọn thời gian hẹn học.", "danger")
+        flash(_("Vui lòng chọn thời gian hẹn học."), "danger")
         return redirect(url_for("skills_market"))
         
     # Giới hạn tối đa 2 giờ / phiên
     if so_gio <= 0 or so_gio > 2.0:
-        flash("Thời lượng mỗi buổi học tối đa là 2.0 giờ (và tối thiểu 0.5 giờ)!", "danger")
+        flash(_("Thời lượng mỗi buổi học tối đa là 2.0 giờ (và tối thiểu 0.5 giờ)!"), "danger")
         return redirect(url_for("skills_market"))
     
     # 1. Kiểm tra kỹ năng có tồn tại và đã duyệt chưa
     cur.execute("SELECT * FROM skills WHERE id = ?", (skill_id,))
     skill = cur.fetchone()
     if not skill or (skill["trang_thai_duyet"] != "da_duyet" and skill.get("hien_thi_cong_dong") != 1):
-        flash("Kỹ năng này chưa sẵn sàng hoặc chưa được phê duyệt sư phạm!", "danger")
+        flash(_("Kỹ năng này chưa sẵn sàng hoặc chưa được phê duyệt sư phạm!"), "danger")
         return redirect(url_for("skills_market"))
         
     # 2. Không được tự đặt lịch kỹ năng của chính mình
     if skill["user_id"] == session["user_id"]:
-        flash("Bạn không thể tự đặt lịch kỹ năng của chính mình!", "warning")
+        flash(_("Bạn không thể tự đặt lịch kỹ năng của chính mình!"), "warning")
         return redirect(url_for("skills_market"))
         
     # 3. Kiểm tra số dư người học
     if learner["so_du_gio"] < so_gio:
-        flash(f"Số dư tín dụng của bạn không đủ để đặt lịch buổi học này! (Hiện có: {learner['so_du_gio']:.1f}h, Cần: {so_gio:.1f}h). Hãy dạy kèm bạn bè để tích thêm giờ nhé!", "danger")
+        flash(_("Số dư tín dụng của bạn không đủ để đặt lịch buổi học này! (Hiện có: %(cur).1fh, Cần: %(need).1fh). Hãy dạy kèm bạn bè để tích thêm giờ nhé!", cur=learner['so_du_gio'], need=so_gio), "danger")
         return redirect(url_for("skills_market"))
         
     # 4. Lấy thông tin gia sư
@@ -5083,7 +5083,7 @@ def book_session():
         except Exception as e:
             app.logger.warning(f"Không thể tạo phòng Daily.co khi đặt lịch #{new_session_id}: {e}")
     
-    flash(f"Đặt lịch học thành công với {tutor_name} ({so_gio:.1f} giờ)! Cả hai bạn đều có thể theo dõi trong 'Lịch của tôi'.", "success")
+    flash(_("Đặt lịch học thành công với %(tutor)s (%(hrs).1f giờ)! Cả hai bạn đều có thể theo dõi trong 'Lịch của tôi'.", tutor=tutor_name, hrs=so_gio), "success")
     return redirect(url_for("my_schedule"))
 
 
@@ -5202,7 +5202,7 @@ def wallet():
     cur.execute("SELECT * FROM users WHERE id = ?", (user_id,))
     user = cur.fetchone()
     if not user:
-        flash("Không tìm thấy thông tin người dùng!", "danger")
+        flash(_("Không tìm thấy thông tin người dùng!"), "danger")
         return redirect(url_for("index"))
     session["so_du_gio"] = user["so_du_gio"]
     
@@ -5266,7 +5266,7 @@ def session_detail(session_id):
     session_data = cur.fetchone()
     
     if not session_data:
-        flash("Phiên học không tồn tại trong hệ thống!", "danger")
+        flash(_("Phiên học không tồn tại trong hệ thống!"), "danger")
         return redirect(url_for("my_schedule"))
         
     is_teacher = (session_data["nguoi_day_id"] == user_id)
@@ -5275,7 +5275,7 @@ def session_detail(session_id):
     
     # Bảo mật: Không cho học sinh ngoài cuộc xem chi tiết phiên của người khác
     if not (is_teacher or is_learner or is_admin):
-        flash("Bạn không có quyền truy cập thông tin phiên học này!", "danger")
+        flash(_("Bạn không có quyền truy cập thông tin phiên học này!"), "danger")
         return redirect(url_for("my_schedule"))
         
     # Kiểm tra số lượng câu hỏi quiz và kết quả làm bài (Milestone M-AI+)
@@ -5345,12 +5345,12 @@ def generate_ai_lesson_plan_route(session_id):
     )
     s_row = cur.fetchone()
     if not s_row:
-        flash("Phiên học không tồn tại!", "danger")
+        flash(_("Phiên học không tồn tại!"), "danger")
         return redirect(url_for("my_schedule"))
 
     # Kiểm tra quyền: người dạy hoặc GV/Admin
     if s_row["nguoi_day_id"] != user_id and user_role not in ("admin", "giao_vien"):
-        flash("Chỉ người dạy (Gia sư) của phiên học này mới có thể nhờ AI soạn dàn ý!", "danger")
+        flash(_("Chỉ người dạy (Gia sư) của phiên học này mới có thể nhờ AI soạn dàn ý!"), "danger")
         return redirect(url_for("session_detail", session_id=session_id))
 
     dan_y, is_live = ai_generate_lesson_plan(
@@ -5366,9 +5366,9 @@ def generate_ai_lesson_plan_route(session_id):
     db.commit()
 
     if is_live:
-        flash("AI (Gemini Pro) đã soạn xong dàn ý buổi học 4 bước chuẩn 60 phút!", "success")
+        flash(_("AI (Gemini Pro) đã soạn xong dàn ý buổi học 4 bước chuẩn 60 phút!"), "success")
     else:
-        flash("Đã tạo dàn ý buổi học 4 bước chuẩn 60 phút (Hỗ trợ bởi AI - Chế độ cơ bản)!", "info")
+        flash(_("Đã tạo dàn ý buổi học 4 bước chuẩn 60 phút (Hỗ trợ bởi AI - Chế độ cơ bản)!"), "info")
 
     return redirect(url_for("session_detail", session_id=session_id))
 
@@ -5391,11 +5391,11 @@ def checkin_session(session_id):
     cur.execute("SELECT * FROM sessions WHERE id = ?", (session_id,))
     s_row = cur.fetchone()
     if not s_row:
-        flash("Phiên học không tồn tại!", "danger")
+        flash(_("Phiên học không tồn tại!"), "danger")
         return redirect(url_for("my_schedule"))
         
     if s_row["trang_thai"] != "da_dat":
-        flash(f"Phiên học hiện đang ở trạng thái '{s_row['trang_thai']}', không thể điểm danh check-in!", "warning")
+        flash(_("Phiên học hiện đang ở trạng thái '%(st)s', không thể điểm danh check-in!", st=s_row['trang_thai']), "warning")
         return redirect(url_for("session_detail", session_id=session_id))
         
     updated = False
@@ -5405,9 +5405,9 @@ def checkin_session(session_id):
         if s_row["nguoi_day_id"] == user_id or user_role in ("admin", "giao_vien"):
             cur.execute("UPDATE sessions SET checkin_day = 1 WHERE id = ?", (session_id,))
             updated = True
-            flash("Người dạy (Gia sư) đã check-in xác nhận thành công!", "success")
+            flash(_("Người dạy (Gia sư) đã check-in xác nhận thành công!"), "success")
         else:
-            flash("Bạn không phải người dạy trong phiên học này!", "danger")
+            flash(_("Bạn không phải người dạy trong phiên học này!"), "danger")
             return redirect(url_for("session_detail", session_id=session_id))
             
     # 2. Trường hợp người học check-in
@@ -5415,12 +5415,12 @@ def checkin_session(session_id):
         if s_row["nguoi_hoc_id"] == user_id or user_role in ("admin", "giao_vien"):
             cur.execute("UPDATE sessions SET checkin_hoc = 1 WHERE id = ?", (session_id,))
             updated = True
-            flash("Người học (Học sinh) đã check-in xác nhận thành công!", "success")
+            flash(_("Người học (Học sinh) đã check-in xác nhận thành công!"), "success")
         else:
-            flash("Bạn không phải người học trong phiên học này!", "danger")
+            flash(_("Bạn không phải người học trong phiên học này!"), "danger")
             return redirect(url_for("session_detail", session_id=session_id))
     else:
-        flash("Thông tin vai trò điểm danh không hợp lệ!", "danger")
+        flash(_("Thông tin vai trò điểm danh không hợp lệ!"), "danger")
         return redirect(url_for("session_detail", session_id=session_id))
         
     if updated:
@@ -5453,23 +5453,23 @@ def complete_session(session_id):
     cur.execute("SELECT * FROM sessions WHERE id = ?", (session_id,))
     s_row = cur.fetchone()
     if not s_row:
-        flash("Phiên học không tồn tại!", "danger")
+        flash(_("Phiên học không tồn tại!"), "danger")
         return redirect(url_for("my_schedule"))
         
     is_teacher = (s_row["nguoi_day_id"] == user_id)
     is_admin = (user_role in ("admin", "giao_vien"))
     
     if not (is_teacher or is_admin):
-        flash("Chỉ bạn gia sư (người dạy) hoặc Quản trị viên mới có quyền xác nhận hoàn thành buổi học!", "danger")
+        flash(_("Chỉ bạn gia sư (người dạy) hoặc Quản trị viên mới có quyền xác nhận hoàn thành buổi học!"), "danger")
         return redirect(url_for("session_detail", session_id=session_id))
         
     if s_row["trang_thai"] != "da_dat":
-        flash(f"Phiên học này hiện đang ở trạng thái '{s_row['trang_thai']}', không thể xác nhận hoàn thành lại!", "warning")
+        flash(_("Phiên học này hiện đang ở trạng thái '%(st)s', không thể xác nhận hoàn thành lại!", st=s_row['trang_thai']), "warning")
         return redirect(url_for("session_detail", session_id=session_id))
         
     # ĐIỀU KIỆN TIÊN QUYẾT NGHIỆM THU: CẢ HAI BÊN ĐỀU PHẢI CHECK-IN
     if s_row["checkin_day"] != 1 or s_row["checkin_hoc"] != 1:
-        flash("Chưa thể hoàn thành! Yêu cầu cả hai bên (Người dạy và Người học) đều phải check-in.", "danger")
+        flash(_("Chưa thể hoàn thành! Yêu cầu cả hai bên (Người dạy và Người học) đều phải check-in."), "danger")
         return redirect(url_for("session_detail", session_id=session_id))
         
     so_gio = float(s_row["so_gio"])
@@ -5517,11 +5517,11 @@ def complete_session(session_id):
             cur.execute("SELECT so_du_gio FROM users WHERE id = ?", (user_id,))
             session["so_du_gio"] = cur.fetchone()[0]
             
-        flash(f"Buổi học đã hoàn thành xuất sắc! Đã cộng +{so_gio:.1f}h cho người dạy và trừ -{so_gio:.1f}h của người học.", "success")
+        flash(_("Buổi học đã hoàn thành xuất sắc! Đã cộng +%(hrs).1fh cho người dạy và trừ -%(hrs).1fh của người học.", hrs=so_gio), "success")
     except Exception as e:
         db.rollback()
         app.logger.error(f"Lỗi khi hoàn thành phiên học và chuyển giờ: {e}")
-        flash(f"Có lỗi xảy ra trong quá trình hoàn thành phiên học: {e}", "danger")
+        flash(_("Có lỗi xảy ra trong quá trình hoàn thành phiên học: %(err)s", err=str(e)), "danger")
         
     return redirect(url_for("session_detail", session_id=session_id))
 
@@ -5543,11 +5543,11 @@ def rate_session(session_id):
     cur.execute("SELECT * FROM sessions WHERE id = ?", (session_id,))
     s_row = cur.fetchone()
     if not s_row:
-        flash("Phiên học không tồn tại!", "danger")
+        flash(_("Phiên học không tồn tại!"), "danger")
         return redirect(url_for("my_schedule"))
 
     if s_row["trang_thai"] != "hoan_thanh":
-        flash("Chỉ có thể đánh giá sau khi buổi học đã hoàn thành!", "warning")
+        flash(_("Chỉ có thể đánh giá sau khi buổi học đã hoàn thành!"), "warning")
         return redirect(url_for("session_detail", session_id=session_id))
 
     is_teacher = (s_row["nguoi_day_id"] == user_id)
@@ -5555,7 +5555,7 @@ def rate_session(session_id):
     is_admin = (user_role in ("admin", "giao_vien"))
 
     if not (is_teacher or is_learner or is_admin):
-        flash("Bạn không phải thành viên tham gia phiên học này!", "danger")
+        flash(_("Bạn không phải thành viên tham gia phiên học này!"), "danger")
         return redirect(url_for("session_detail", session_id=session_id))
 
     # Xác định người được đánh giá
@@ -5574,7 +5574,7 @@ def rate_session(session_id):
     )
     existing = cur.fetchone()
     if existing:
-        flash("Bạn đã đánh giá buổi học này rồi! Mỗi thành viên chỉ được đánh giá 1 lần duy nhất để bảo đảm tính khách quan.", "warning")
+        flash(_("Bạn đã đánh giá buổi học này rồi! Mỗi thành viên chỉ được đánh giá 1 lần duy nhất để bảo đảm tính khách quan."), "warning")
         return redirect(url_for("session_detail", session_id=session_id))
 
     try:
@@ -5594,7 +5594,7 @@ def rate_session(session_id):
     )
     db.commit()
 
-    flash("Cảm ơn bạn đã gửi đánh giá tương hỗ! Phản hồi của bạn giúp cộng đồng học tập ngày càng gắn kết và tiến bộ.", "success")
+    flash(_("Cảm ơn bạn đã gửi đánh giá tương hỗ! Phản hồi của bạn giúp cộng đồng học tập ngày càng gắn kết và tiến bộ."), "success")
     return redirect(url_for("session_detail", session_id=session_id))
 
 
@@ -5625,16 +5625,16 @@ def generate_ai_quiz_route(session_id):
     )
     s_row = cur.fetchone()
     if not s_row:
-        flash("Phiên học không tồn tại!", "danger")
+        flash(_("Phiên học không tồn tại!"), "danger")
         return redirect(url_for("my_schedule"))
 
     # Phân quyền: người dạy hoặc GV/Admin
     if s_row["nguoi_day_id"] != user_id and user_role not in ("admin", "giao_vien"):
-        flash("Chỉ bạn gia sư (người dạy) hoặc Giáo viên mới có thể nhờ AI tạo bộ câu hỏi quiz!", "danger")
+        flash(_("Chỉ bạn gia sư (người dạy) hoặc Giáo viên mới có thể nhờ AI tạo bộ câu hỏi quiz!"), "danger")
         return redirect(url_for("session_detail", session_id=session_id))
 
     if s_row["trang_thai"] != "hoan_thanh":
-        flash("Buổi học cần được xác nhận hoàn thành trước khi tạo Quiz lượng giá!", "warning")
+        flash(_("Buổi học cần được xác nhận hoàn thành trước khi tạo Quiz lượng giá!"), "warning")
         return redirect(url_for("session_detail", session_id=session_id))
 
     questions, is_live = ai_generate_quiz(
@@ -5644,9 +5644,9 @@ def generate_ai_quiz_route(session_id):
     )
 
     if is_live:
-        flash("Trợ lý AI (Gemini Pro) đã thiết kế thành công bộ 5 câu hỏi trắc nghiệm lượng giá vui nhộn!", "success")
+        flash(_("Trợ lý AI (Gemini Pro) đã thiết kế thành công bộ 5 câu hỏi trắc nghiệm lượng giá vui nhộn!"), "success")
     else:
-        flash("Đã khởi tạo bộ 5 câu hỏi trắc nghiệm chuẩn sư phạm (Hỗ trợ bởi AI - Chế độ cơ bản)!", "info")
+        flash(_("Đã khởi tạo bộ 5 câu hỏi trắc nghiệm chuẩn sư phạm (Hỗ trợ bởi AI - Chế độ cơ bản)!"), "info")
 
     return redirect(url_for("session_quiz_view", session_id=session_id))
 
@@ -5686,7 +5686,7 @@ def session_quiz_view(session_id):
     )
     session_data = cur.fetchone()
     if not session_data:
-        flash("Phiên học không tồn tại!", "danger")
+        flash(_("Phiên học không tồn tại!"), "danger")
         return redirect(url_for("my_schedule"))
 
     is_teacher = (session_data["nguoi_day_id"] == user_id)
@@ -5694,7 +5694,7 @@ def session_quiz_view(session_id):
     is_admin = (user_role in ("admin", "giao_vien"))
 
     if not (is_teacher or is_learner or is_admin):
-        flash("Bạn không có quyền truy cập bài kiểm tra của phiên học này!", "danger")
+        flash(_("Bạn không có quyền truy cập bài kiểm tra của phiên học này!"), "danger")
         return redirect(url_for("my_schedule"))
 
     # Lấy danh sách câu hỏi
@@ -5746,14 +5746,14 @@ def submit_quiz_route(session_id):
     cur.execute("SELECT * FROM sessions WHERE id = ?", (session_id,))
     s_row = cur.fetchone()
     if not s_row:
-        flash("Phiên học không tồn tại!", "danger")
+        flash(_("Phiên học không tồn tại!"), "danger")
         return redirect(url_for("my_schedule"))
 
     is_learner = (s_row["nguoi_hoc_id"] == user_id)
     is_admin = (user_role in ("admin", "giao_vien"))
 
     if not (is_learner or is_admin):
-        flash("Chỉ người học trong phiên mới có quyền nộp bài làm Quiz!", "danger")
+        flash(_("Chỉ người học trong phiên mới có quyền nộp bài làm Quiz!"), "danger")
         return redirect(url_for("session_detail", session_id=session_id))
 
     # CHẶN LÀM LẦN 2 (YÊU CẦU NGHIỆM THU BẮT BUỘC)
@@ -5763,14 +5763,14 @@ def submit_quiz_route(session_id):
     )
     existing_result = cur.fetchone()
     if existing_result:
-        flash("Bạn đã hoàn thành bài quiz này rồi! Mỗi học sinh chỉ được làm bài 1 lần duy nhất để đảm bảo tính khách quan sư phạm.", "warning")
+        flash(_("Bạn đã hoàn thành bài quiz này rồi! Mỗi học sinh chỉ được làm bài 1 lần duy nhất để đảm bảo tính khách quan sư phạm."), "warning")
         return redirect(url_for("session_quiz_view", session_id=session_id))
 
     # Lấy danh sách câu hỏi
     cur.execute("SELECT * FROM quiz_questions WHERE session_id = ? ORDER BY id ASC", (session_id,))
     questions = cur.fetchall()
     if not questions:
-        flash("Chưa có bộ câu hỏi nào được tạo cho buổi học này!", "warning")
+        flash(_("Chưa có bộ câu hỏi nào được tạo cho buổi học này!"), "warning")
         return redirect(url_for("session_detail", session_id=session_id))
 
     # Lấy tự đánh giá trước (1-5 sao)
@@ -5805,10 +5805,10 @@ def submit_quiz_route(session_id):
     if pct >= 0.60:
         cur.execute("UPDATE sessions SET quiz_dat_chuan = 1 WHERE id = ?", (session_id,))
         db.commit()
-        flash(f"Chúc mừng em! Em đã làm đúng {correct_count}/{total_count} câu ({pct*100:.0f}%) — ĐẠT CHUẨN KIẾN THỨC!", "success")
+        flash(_("Chúc mừng em! Em đã làm đúng %(c)s/%(t)s câu (%(pct).0f%%) — ĐẠT CHUẨN KIẾN THỨC!", c=correct_count, t=total_count, pct=pct*100), "success")
     else:
         db.commit()
-        flash(f"Em đã hoàn thành bài quiz: đúng {correct_count}/{total_count} câu ({pct*100:.0f}%). Hãy ôn lại các đáp án giải thích để nắm vững kiến thức hơn nhé!", "info")
+        flash(_("Em đã hoàn thành bài quiz: đúng %(c)s/%(t)s câu (%(pct).0f%%). Hãy ôn lại các đáp án giải thích để nắm vững kiến thức hơn nhé!", c=correct_count, t=total_count, pct=pct*100), "info")
 
     return redirect(url_for("session_quiz_view", session_id=session_id))
 
@@ -6217,7 +6217,7 @@ def virtual_room(session_id):
     session_data = cur.fetchone()
     
     if not session_data:
-        flash("Phiên học không tồn tại!", "danger")
+        flash(_("Phiên học không tồn tại!"), "danger")
         return redirect(url_for("my_schedule"))
         
     is_teacher = (session_data["nguoi_day_id"] == user_id)
@@ -6225,7 +6225,7 @@ def virtual_room(session_id):
     is_supervisor = (user_role in ("admin", "giao_vien"))
     
     if not (is_teacher or is_learner or is_supervisor):
-        flash("Bạn không có quyền tham gia phòng học ảo của phiên này!", "danger")
+        flash(_("Bạn không có quyền tham gia phòng học ảo của phiên này!"), "danger")
         return redirect(url_for("my_schedule"))
         
     # Ghi nhận lượt tham gia vào session_attendance và tự động check-in
@@ -6466,7 +6466,7 @@ def finish_virtual_room(session_id):
     cur.execute("SELECT * FROM sessions WHERE id = ?", (session_id,))
     s_row = cur.fetchone()
     if not s_row:
-        flash("Phiên học không tồn tại!", "danger")
+        flash(_("Phiên học không tồn tại!"), "danger")
         return redirect(url_for("my_schedule"))
         
     is_teacher = (s_row["nguoi_day_id"] == user_id)
@@ -6474,7 +6474,7 @@ def finish_virtual_room(session_id):
     is_admin = (user_role in ("admin", "giao_vien"))
     
     if not (is_teacher or is_learner or is_admin):
-        flash("Bạn không có quyền thao tác trên phiên học này!", "danger")
+        flash(_("Bạn không có quyền thao tác trên phiên học này!"), "danger")
         return redirect(url_for("my_schedule"))
         
     # 1. Chốt thời gian ra cho các bản ghi attendance đang mở
@@ -6507,13 +6507,13 @@ def finish_virtual_room(session_id):
         cur.execute("UPDATE sessions SET trang_thai = 'hoan_thanh' WHERE id = ?", (session_id,))
         db.commit()
         
-        flash(f"Buổi học đã hoàn thành xuất sắc! Thời lượng cùng học online đạt {ti_le*100:.1f}% (≥ 80%), giờ tín dụng đã được tự động chuyển thành công.", "success")
+        flash(_("Buổi học đã hoàn thành xuất sắc! Thời lượng cùng học online đạt %(rate).1f%% (≥ 80%%), giờ tín dụng đã được tự động chuyển thành công.", rate=ti_le*100), "success")
     else:
         # Không đạt < 80%: Chuyển sang 'can_xac_minh'
         cur.execute("UPDATE sessions SET trang_thai = 'can_xac_minh' WHERE id = ?", (session_id,))
         db.commit()
         
-        flash(f"Thời lượng cùng học trực tuyến chưa đạt 80% quy định (chỉ đạt {ti_le*100:.1f}% / 80%). Phiên học đã chuyển sang trạng thái 'Cần xác minh' để Thầy/Cô kiểm tra và phê duyệt tay.", "warning")
+        flash(_("Thời lượng cùng học trực tuyến chưa đạt 80%% quy định (chỉ đạt %(rate).1f%% / 80%%). Phiên học đã chuyển sang trạng thái 'Cần xác minh' để Thầy/Cô kiểm tra và phê duyệt tay.", rate=ti_le*100), "warning")
         
     return redirect(url_for("session_detail", session_id=session_id))
 
@@ -6531,7 +6531,7 @@ def manual_approve_session(session_id):
     cur.execute("SELECT * FROM sessions WHERE id = ?", (session_id,))
     s_row = cur.fetchone()
     if not s_row:
-        flash("Phiên học không tồn tại!", "danger")
+        flash(_("Phiên học không tồn tại!"), "danger")
         return redirect(url_for("virtual_rooms_dashboard"))
         
     so_gio = float(s_row["so_gio"])
@@ -6553,7 +6553,7 @@ def manual_approve_session(session_id):
     cur.execute("UPDATE sessions SET trang_thai = 'hoan_thanh' WHERE id = ?", (session_id,))
     db.commit()
     
-    flash(f"Đã duyệt tay thành công phiên #{session_id}! Giờ tín dụng đã được chuyển cho hai học sinh.", "success")
+    flash(_("Đã duyệt tay thành công phiên #%(id)s! Giờ tín dụng đã được chuyển cho hai học sinh.", id=session_id), "success")
     return redirect(request.referrer or url_for("virtual_rooms_dashboard"))
 
 
@@ -6567,7 +6567,7 @@ def manual_reject_session(session_id):
     cur = db.cursor()
     cur.execute("UPDATE sessions SET trang_thai = 'huy' WHERE id = ?", (session_id,))
     db.commit()
-    flash(f"Đã hủy phiên học #{session_id}.", "info")
+    flash(_("Đã hủy phiên học #%(id)s.", id=session_id), "info")
     return redirect(request.referrer or url_for("virtual_rooms_dashboard"))
 
 
@@ -6784,7 +6784,7 @@ def create_community_task():
     han_dang_ky = request.form.get("han_dang_ky", "").strip()
 
     if not tieu_de:
-        flash("Vui lòng nhập tiêu đề cho nhiệm vụ cộng đồng.", "danger")
+        flash(_("Vui lòng nhập tiêu đề cho nhiệm vụ cộng đồng."), "danger")
         return redirect(url_for("community_tasks_view"))
 
     anh_bia = None
@@ -6809,7 +6809,7 @@ def create_community_task():
     )
     db.commit()
 
-    flash(f"Đã tạo thành công nhiệm vụ: '{tieu_de}' (+{so_gio_thuong}h thưởng)!", "success")
+    flash(_("Đã tạo thành công nhiệm vụ: '%(title)s' (+%(hrs)sh thưởng)!", title=tieu_de, hrs=so_gio_thuong), "success")
     return redirect(url_for("community_tasks_view"))
 
 
@@ -6827,17 +6827,17 @@ def register_community_task(task_id):
     cur.execute("SELECT * FROM community_tasks WHERE id = ?", (task_id,))
     task = cur.fetchone()
     if not task:
-        flash("Nhiệm vụ cộng đồng không tồn tại.", "danger")
+        flash(_("Nhiệm vụ cộng đồng không tồn tại."), "danger")
         return redirect(url_for("community_tasks_view"))
 
     if task["trang_thai"] not in ("mo_dang_ky", "mo", "sap_dien_ra", "dang_dien_ra"):
-        flash("Nhiệm vụ này hiện đã đóng hoặc kết thúc đăng ký.", "warning")
+        flash(_("Nhiệm vụ này hiện đã đóng hoặc kết thúc đăng ký."), "warning")
         return redirect(url_for("community_tasks_view"))
 
     # Kiểm tra hạn đăng ký
     today_str = datetime.now().strftime("%Y-%m-%d")
     if task["han_dang_ky"] and task["han_dang_ky"] < today_str:
-        flash("Rất tiếc! Đã quá hạn đăng ký cho nhiệm vụ này.", "danger")
+        flash(_("Rất tiếc! Đã quá hạn đăng ký cho nhiệm vụ này."), "danger")
         return redirect(url_for("community_tasks_view"))
 
     # Kiểm tra số lượng người tham gia
@@ -6847,7 +6847,7 @@ def register_community_task(task_id):
     )
     so_luong_hien_tai = cur.fetchone()[0]
     if so_luong_hien_tai >= task["so_luong_toi_da"]:
-        flash(f"Nhiệm vụ đã đủ số lượng người đăng ký ({task['so_luong_toi_da']} bạn).", "warning")
+        flash(_("Nhiệm vụ đã đủ số lượng người đăng ký (%(max)s bạn).", max=task['so_luong_toi_da']), "warning")
         return redirect(url_for("community_tasks_view"))
 
     # Kiểm tra xem đã đăng ký trước đó chưa
@@ -6855,12 +6855,12 @@ def register_community_task(task_id):
     existing = cur.fetchone()
     if existing:
         if existing["trang_thai"] != "huy":
-            flash("Bạn đã đăng ký nhiệm vụ này rồi!", "info")
+            flash(_("Bạn đã đăng ký nhiệm vụ này rồi!"), "info")
             return redirect(url_for("community_tasks_view"))
         else:
             cur.execute("UPDATE task_registrations SET trang_thai = 'da_dang_ky' WHERE id = ?", (existing["id"],))
             db.commit()
-            flash("Đã kích hoạt lại đăng ký tham gia nhiệm vụ thành công!", "success")
+            flash(_("Đã kích hoạt lại đăng ký tham gia nhiệm vụ thành công!"), "success")
             return redirect(url_for("community_tasks_view"))
 
     # Thêm bản ghi đăng ký mới kèm truong_id
@@ -6871,7 +6871,7 @@ def register_community_task(task_id):
     )
     db.commit()
 
-    flash(f"Đăng ký tham gia '{task['tieu_de']}' thành công! Hãy có mặt đúng giờ nhé.", "success")
+    flash(_("Đăng ký tham gia '%(title)s' thành công! Hãy có mặt đúng giờ nhé.", title=task['tieu_de']), "success")
     return redirect(url_for("community_tasks_view"))
 
 
@@ -6895,7 +6895,7 @@ def task_attendance(task_id):
     """, (task_id,))
     task = cur.fetchone()
     if not task:
-        flash("Không tìm thấy nhiệm vụ cộng đồng.", "danger")
+        flash(_("Không tìm thấy nhiệm vụ cộng đồng."), "danger")
         return redirect(url_for("community_tasks_view"))
 
     if request.method == "POST":
@@ -6953,7 +6953,7 @@ def task_attendance(task_id):
             cur.execute("UPDATE community_tasks SET trang_thai = 'hoan_thanh' WHERE id = ?", (task_id,))
 
         db.commit()
-        flash(f"Điểm danh thành công! Đã ghi nhận {so_ban_hoan_thanh} bạn hoàn thành (+{so_gio_thuong}h vào ví) và {so_ban_vang} bạn vắng mặt.", "success")
+        flash(_("Điểm danh thành công! Đã ghi nhận %(done)s bạn hoàn thành (+%(hrs)sh vào ví) và %(absent)s bạn vắng mặt.", done=so_ban_hoan_thanh, hrs=so_gio_thuong, absent=so_ban_vang), "success")
         return redirect(url_for("task_attendance", task_id=task_id))
 
     # Lấy danh sách học sinh đăng ký
@@ -7136,12 +7136,12 @@ def report_session_violation(session_id):
     cur.execute("SELECT * FROM sessions WHERE id = ?", (session_id,))
     ses = cur.fetchone()
     if not ses:
-        flash("Phiên học không tồn tại.", "danger")
+        flash(_("Phiên học không tồn tại."), "danger")
         return redirect(url_for("my_schedule"))
 
     user_id = session["user_id"]
     if user_id != ses["nguoi_day_id"] and user_id != ses["nguoi_hoc_id"] and session.get("vai_tro") not in ("admin", "super_admin", "school_admin", "giao_vien"):
-        flash("Bạn không có quyền báo cáo trong phiên học này.", "danger")
+        flash(_("Bạn không có quyền báo cáo trong phiên học này."), "danger")
         return redirect(url_for("my_schedule"))
 
     reported_user_id = ses["nguoi_hoc_id"] if user_id == ses["nguoi_day_id"] else ses["nguoi_day_id"]
@@ -7159,7 +7159,7 @@ def report_session_violation(session_id):
     """, (reported_user_id, session_id, loai_vi_pham, full_mo_ta, now_dt))
     db.commit()
 
-    flash("Đã gửi báo cáo vi phạm tới Ban Quản trị và Giáo viên phụ trách. Cảm ơn bạn đã giữ gìn môi trường học tập văn minh.", "success")
+    flash(_("Đã gửi báo cáo vi phạm tới Ban Quản trị và Giáo viên phụ trách. Cảm ơn bạn đã giữ gìn môi trường học tập văn minh."), "success")
     return redirect(url_for("virtual_room", session_id=session_id))
 
 
@@ -7282,7 +7282,7 @@ def blog_create():
             trang_thai = "nhap"
 
         if not tieu_de or not noi_dung:
-            flash("Vui lòng nhập đầy đủ tiêu đề và nội dung bài viết.", "danger")
+            flash(_("Vui lòng nhập đầy đủ tiêu đề và nội dung bài viết."), "danger")
             return render_template("blog_form.html", post=None, action="create")
 
         # Xử lý upload ảnh minh họa
@@ -7291,7 +7291,7 @@ def blog_create():
             file = request.files["anh_minh_hoa"]
             if file and file.filename and allowed_image_file(file.filename):
                 fname = secure_filename(file.filename)
-                _, ext = os.path.splitext(fname)
+                _fname, ext = os.path.splitext(fname)
                 unique_name = f"blog_{int(time.time())}_{secrets.token_hex(4)}{ext}"
                 file.save(str(UPLOAD_BLOG_FOLDER / unique_name))
                 anh_minh_hoa = f"/static/uploads/blog/{unique_name}"
@@ -7305,7 +7305,7 @@ def blog_create():
         """, (tieu_de, noi_dung, anh_minh_hoa, trang_thai, school_id))
         db.commit()
 
-        flash("Bài viết đã được tạo thành công!", "success")
+        flash(_("Bài viết đã được tạo thành công!"), "success")
         return redirect(url_for("blog_manage"))
 
     return render_template("blog_form.html", post=None, action="create")
@@ -7334,7 +7334,7 @@ def blog_edit(post_id):
             trang_thai = post["trang_thai"]
 
         if not tieu_de or not noi_dung:
-            flash("Vui lòng nhập đầy đủ tiêu đề và nội dung bài viết.", "danger")
+            flash(_("Vui lòng nhập đầy đủ tiêu đề và nội dung bài viết."), "danger")
             return render_template("blog_form.html", post=post, action="edit")
 
         anh_minh_hoa = post["anh_minh_hoa"]
@@ -7342,7 +7342,7 @@ def blog_edit(post_id):
             file = request.files["anh_minh_hoa"]
             if file and file.filename and allowed_image_file(file.filename):
                 fname = secure_filename(file.filename)
-                _, ext = os.path.splitext(fname)
+                _fname, ext = os.path.splitext(fname)
                 unique_name = f"blog_{int(time.time())}_{secrets.token_hex(4)}{ext}"
                 file.save(str(UPLOAD_BLOG_FOLDER / unique_name))
                 anh_minh_hoa = f"/static/uploads/blog/{unique_name}"
@@ -7354,7 +7354,7 @@ def blog_edit(post_id):
         """, (tieu_de, noi_dung, anh_minh_hoa, trang_thai, post_id))
         db.commit()
 
-        flash("Cập nhật bài viết thành công!", "success")
+        flash(_("Cập nhật bài viết thành công!"), "success")
         return redirect(url_for("blog_manage"))
 
     return render_template("blog_form.html", post=post, action="edit")
@@ -7370,7 +7370,7 @@ def blog_delete(post_id):
     cur = db.cursor()
     cur.execute("DELETE FROM blog_posts WHERE id = ?", (post_id,))
     db.commit()
-    flash("Đã xóa bài viết thành công.", "info")
+    flash(_("Đã xóa bài viết thành công."), "info")
     return redirect(url_for("blog_manage"))
 
 
@@ -7391,7 +7391,7 @@ def blog_publish(post_id):
     """, (post_id,))
     db.commit()
 
-    flash("Duyệt thành công! Bài viết đã được đăng công khai trên Bảng tin học đường.", "success")
+    flash(_("Duyệt thành công! Bài viết đã được đăng công khai trên Bảng tin học đường."), "success")
     return redirect(url_for("blog_detail", post_id=post_id))
 
 
@@ -7543,7 +7543,7 @@ def forum_new():
         user_id = session["user_id"]
 
         if not tieu_de or not noi_dung:
-            flash("Vui lòng nhập đầy đủ tiêu đề và nội dung chủ đề.", "warning")
+            flash(_("Vui lòng nhập đầy đủ tiêu đề và nội dung chủ đề."), "warning")
             return render_template("forum_new.html", school_name=school_name, tieu_de=tieu_de, noi_dung=noi_dung)
 
         # AI Lọc từ tục cho cả Tiêu đề và Nội dung (VIỆC 5 / P17)
@@ -7572,7 +7572,7 @@ def forum_new():
                 cur.execute("UPDATE users SET trang_thai = 'de_xuat_khoa' WHERE id = ?", (user_id,))
             db.commit()
 
-            flash(f"⚠️ Bài viết của bạn bị AI từ chối đăng do vi phạm quy chuẩn ngôn ngữ học đường ({reason}). Hệ thống đã ghi nhận vi phạm vào Sổ kỷ luật.", "danger")
+            flash(_("⚠️ Bài viết của bạn bị AI từ chối đăng do vi phạm quy chuẩn ngôn ngữ học đường (%(reason)s). Hệ thống đã ghi nhận vi phạm vào Sổ kỷ luật.", reason=reason), "danger")
             return render_template("forum_new.html", school_name=school_name, tieu_de=tieu_de, noi_dung=noi_dung)
 
         # Hợp lệ: Thêm chủ đề mới
@@ -7584,7 +7584,7 @@ def forum_new():
         topic_id = cur.lastrowid
         db.commit()
 
-        flash("✨ Tạo chủ đề thảo luận mới thành công!", "success")
+        flash(_("✨ Tạo chủ đề thảo luận mới thành công!"), "success")
         return redirect(url_for("forum_topic", topic_id=topic_id))
 
     return render_template("forum_new.html", school_name=school_name)
@@ -7614,12 +7614,12 @@ def forum_topic(topic_id):
     topic = cur.fetchone()
 
     if not topic:
-        flash("Chủ đề không tồn tại hoặc đã bị xóa.", "danger")
+        flash(_("Chủ đề không tồn tại hoặc đã bị xóa."), "danger")
         return redirect(url_for("forum_index"))
 
     # Kiểm tra phân lập trường học (Multi-Tenant Isolation)
     if not is_super and topic["truong_id"] != user_school_id:
-        flash("Bạn không có quyền xem diễn đàn của trường khác.", "danger")
+        flash(_("Bạn không có quyền xem diễn đàn của trường khác."), "danger")
         return redirect(url_for("forum_index"))
 
     # Lấy danh sách bình luận
@@ -7662,20 +7662,20 @@ def forum_topic_reply(topic_id):
     cur.execute("SELECT * FROM forum_topics WHERE id = ?", (topic_id,))
     topic = cur.fetchone()
     if not topic:
-        flash("Chủ đề không tồn tại.", "danger")
+        flash(_("Chủ đề không tồn tại."), "danger")
         return redirect(url_for("forum_index"))
 
     if not is_super and topic["truong_id"] != user_school_id:
-        flash("Bạn không có quyền bình luận trong diễn đàn trường khác.", "danger")
+        flash(_("Bạn không có quyền bình luận trong diễn đàn trường khác."), "danger")
         return redirect(url_for("forum_index"))
 
     if topic["trang_thai"] == "khoa":
-        flash("Chủ đề này đã bị khóa bình luận bởi Giáo viên / Quản trị viên.", "warning")
+        flash(_("Chủ đề này đã bị khóa bình luận bởi Giáo viên / Quản trị viên."), "warning")
         return redirect(url_for("forum_topic", topic_id=topic_id))
 
     noi_dung = request.form.get("noi_dung", "").strip()
     if not noi_dung:
-        flash("Nội dung bình luận không được để trống.", "warning")
+        flash(_("Nội dung bình luận không được để trống."), "warning")
         return redirect(url_for("forum_topic", topic_id=topic_id))
 
     # AI Kiểm duyệt ngôn từ realtime (VIỆC 5 / P17)
@@ -7698,7 +7698,7 @@ def forum_topic_reply(topic_id):
             cur.execute("UPDATE users SET trang_thai = 'de_xuat_khoa' WHERE id = ?", (user_id,))
         db.commit()
 
-        flash(f"⚠️ Bình luận bị AI chặn do vi phạm quy chuẩn ngôn ngữ ({reason}). Vi phạm đã được ghi nhận vào Sổ kỷ luật.", "danger")
+        flash(_("⚠️ Bình luận bị AI chặn do vi phạm quy chuẩn ngôn ngữ (%(reason)s). Vi phạm đã được ghi nhận vào Sổ kỷ luật.", reason=reason), "danger")
         return redirect(url_for("forum_topic", topic_id=topic_id))
 
     # Hợp lệ: Lưu bình luận
@@ -7709,7 +7709,7 @@ def forum_topic_reply(topic_id):
     """, (topic_id, user_id, noi_dung, now_str))
     db.commit()
 
-    flash("💬 Đã gửi bình luận thành công!", "success")
+    flash(_("💬 Đã gửi bình luận thành công!"), "success")
     return redirect(url_for("forum_topic", topic_id=topic_id))
 
 
@@ -7725,12 +7725,12 @@ def forum_topic_toggle_lock(topic_id):
     cur.execute("SELECT * FROM forum_topics WHERE id = ?", (topic_id,))
     topic = cur.fetchone()
     if not topic:
-        flash("Chủ đề không tồn tại.", "danger")
+        flash(_("Chủ đề không tồn tại."), "danger")
         return redirect(url_for("forum_index"))
 
     user_school_id = session.get("truong_id", 1)
     if not is_super_admin() and topic["truong_id"] != user_school_id:
-        flash("Bạn không có quyền quản lý chủ đề của trường khác.", "danger")
+        flash(_("Bạn không có quyền quản lý chủ đề của trường khác."), "danger")
         return redirect(url_for("forum_index"))
 
     new_status = "khoa" if topic["trang_thai"] == "mo" else "mo"
@@ -7761,15 +7761,15 @@ def forum_topic_delete(topic_id):
     cur.execute("SELECT * FROM forum_topics WHERE id = ?", (topic_id,))
     topic = cur.fetchone()
     if not topic:
-        flash("Chủ đề không tồn tại.", "danger")
+        flash(_("Chủ đề không tồn tại."), "danger")
         return redirect(url_for("forum_index"))
 
     if not is_super_admin() and topic["truong_id"] != user_school_id:
-        flash("Bạn không có quyền can thiệp vào chủ đề của trường khác.", "danger")
+        flash(_("Bạn không có quyền can thiệp vào chủ đề của trường khác."), "danger")
         return redirect(url_for("forum_index"))
 
     if not (is_teacher_or_admin or topic["user_id"] == user_id):
-        flash("Bạn không có quyền xóa chủ đề này.", "danger")
+        flash(_("Bạn không có quyền xóa chủ đề này."), "danger")
         return redirect(url_for("forum_topic", topic_id=topic_id))
 
     # Xóa các bình luận liên quan và xóa chủ đề
@@ -7777,7 +7777,7 @@ def forum_topic_delete(topic_id):
     cur.execute("DELETE FROM forum_topics WHERE id = ?", (topic_id,))
     db.commit()
 
-    flash("Đã xóa chủ đề thảo luận.", "info")
+    flash(_("Đã xóa chủ đề thảo luận."), "info")
     return redirect(url_for("forum_index"))
 
 
@@ -7806,23 +7806,23 @@ def forum_reply_delete(reply_id):
     reply = cur.fetchone()
 
     if not reply:
-        flash("Bình luận không tồn tại.", "danger")
+        flash(_("Bình luận không tồn tại."), "danger")
         return redirect(url_for("forum_index"))
 
     topic_id = reply["topic_id"]
 
     if not is_super_admin() and reply["truong_id"] != user_school_id:
-        flash("Bạn không có quyền can thiệp vào bình luận của trường khác.", "danger")
+        flash(_("Bạn không có quyền can thiệp vào bình luận của trường khác."), "danger")
         return redirect(url_for("forum_topic", topic_id=topic_id))
 
     if not (is_teacher_or_admin or reply["user_id"] == user_id):
-        flash("Bạn không có quyền xóa bình luận này.", "danger")
+        flash(_("Bạn không có quyền xóa bình luận này."), "danger")
         return redirect(url_for("forum_topic", topic_id=topic_id))
 
     cur.execute("DELETE FROM forum_replies WHERE id = ?", (reply_id,))
     db.commit()
 
-    flash("Đã xóa bình luận.", "info")
+    flash(_("Đã xóa bình luận."), "info")
     return redirect(url_for("forum_topic", topic_id=topic_id))
 
 
@@ -7869,7 +7869,7 @@ def admin_google_drive_callback():
     """
     code = request.args.get("code")
     if not code:
-        flash("Không nhận được mã xác thực từ Google.", "danger")
+        flash(_("Không nhận được mã xác thực từ Google."), "danger")
         return redirect(url_for("admin_dashboard"))
 
     redirect_uri = url_for("admin_google_drive_callback", _external=True)
@@ -7903,7 +7903,7 @@ def admin_google_drive_token_display():
     """
     token = session.pop("temp_drive_refresh_token", None)
     if not token:
-        flash("Mã Refresh Token chỉ hiển thị 1 lần duy nhất và đã được xóa khỏi phiên làm việc để đảm bảo an toàn.", "info")
+        flash(_("Mã Refresh Token chỉ hiển thị 1 lần duy nhất và đã được xóa khỏi phiên làm việc để đảm bảo an toàn."), "info")
         return redirect(url_for("admin_dashboard"))
 
     return render_template("admin_drive_token_display.html", refresh_token=token)
@@ -8000,11 +8000,11 @@ def documents_upload():
         valid_files = [f for f in uploaded_files if f and f.filename]
 
         if not mon_hoc:
-            flash("Vui lòng chọn môn học cho tài liệu.", "warning")
+            flash(_("Vui lòng chọn môn học cho tài liệu."), "warning")
             return render_template("documents_upload.html", school_name=school_name, subjects_list=DOC_SUBJECTS_LIST)
 
         if not valid_files:
-            flash("Vui lòng chọn ít nhất một tệp đính kèm.", "warning")
+            flash(_("Vui lòng chọn ít nhất một tệp đính kèm."), "warning")
             return render_template("documents_upload.html", school_name=school_name, subjects_list=DOC_SUBJECTS_LIST)
 
         success_count = 0
@@ -8039,7 +8039,7 @@ def documents_upload():
             # Kiểm tra giới hạn 500MB (500 * 1024 * 1024 bytes)
             if file_size > 500 * 1024 * 1024:
                 app.logger.warning(f"File {filename} ({file_size} bytes) vượt quá 500MB")
-                flash(f"Tệp '{orig_name}' vượt quá dung lượng tối đa cho phép (500MB), đã bị bỏ qua.", "danger")
+                flash(_("Tệp '%(name)s' vượt quá dung lượng tối đa cho phép (500MB), đã bị bỏ qua.", name=orig_name), "danger")
                 failed_count += 1
                 continue
 
@@ -8076,7 +8076,7 @@ def documents_upload():
             except Exception as e:
                 app.logger.error(f"Lỗi tải lên tệp {filename} lên Google Drive: {e}")
                 failed_count += 1
-                flash(f"Lỗi khi tải tệp '{orig_name}' lên hệ thống: {str(e)}", "danger")
+                flash(_("Lỗi khi tải tệp '%(name)s' lên hệ thống: %(err)s", name=orig_name, err=str(e)), "danger")
                 continue
 
         # Thông báo tổng kết: Đã tải X/Y thành công
@@ -8086,18 +8086,18 @@ def documents_upload():
             if total_files == 1:
                 single_title = uploaded_titles[0]
                 if is_all_mock:
-                    flash(f"Tải lên kho tạm (chưa kết nối hệ thống), vui lòng liên hệ quản trị viên. Tài liệu '{single_title}' đã được lưu tạm. Đã tải 1/1 thành công.", "warning")
+                    flash(_("Tải lên kho tạm (chưa kết nối hệ thống), vui lòng liên hệ quản trị viên. Tài liệu '%(title)s' đã được lưu tạm. Đã tải 1/1 thành công.", title=single_title), "warning")
                 else:
-                    flash(f"🎉 Tải lên tài liệu '{single_title}' thành công vào thư mục {mon_hoc} trên hệ thống! Đã tải 1/1 thành công.", "success")
+                    flash(_("🎉 Tải lên tài liệu '%(title)s' thành công vào thư mục %(folder)s trên hệ thống! Đã tải 1/1 thành công.", title=single_title, folder=mon_hoc), "success")
             else:
                 if is_all_mock:
-                    flash(f"Tải lên kho tạm (chưa kết nối hệ thống), vui lòng liên hệ quản trị viên. Đã tải {success_count}/{total_files} thành công.", "warning")
+                    flash(_("Tải lên kho tạm (chưa kết nối hệ thống), vui lòng liên hệ quản trị viên. Đã tải %(sc)s/%(tf)s thành công.", sc=success_count, tf=total_files), "warning")
                 else:
-                    flash(f"🎉 Đã tải {success_count}/{total_files} thành công vào thư mục {mon_hoc} trên hệ thống!", "success")
+                    flash(_("🎉 Đã tải %(sc)s/%(tf)s thành công vào thư mục %(folder)s trên hệ thống!", sc=success_count, tf=total_files, folder=mon_hoc), "success")
 
             return redirect(url_for("documents_index"))
         else:
-            flash(f"Không có tài liệu nào được tải lên thành công (0/{total_files}).", "danger")
+            flash(_("Không có tài liệu nào được tải lên thành công (0/%(tf)s).", tf=total_files), "danger")
             return render_template("documents_upload.html", school_name=school_name, subjects_list=DOC_SUBJECTS_LIST)
 
     return render_template("documents_upload.html", school_name=school_name, subjects_list=DOC_SUBJECTS_LIST)
@@ -8120,12 +8120,12 @@ def documents_download(doc_id):
     cur.execute("SELECT * FROM documents WHERE id = ? AND trang_thai = 'hoat_dong'", (doc_id,))
     doc = cur.fetchone()
     if not doc:
-        flash("Tài liệu không tồn tại hoặc đã bị xóa.", "danger")
+        flash(_("Tài liệu không tồn tại hoặc đã bị xóa."), "danger")
         return redirect(url_for("documents_index"))
 
     # Kiểm tra quyền trường
     if not is_super and doc["truong_id"] != user_school_id:
-        flash("Bạn không có quyền tải tài liệu của trường khác.", "danger")
+        flash(_("Bạn không có quyền tải tài liệu của trường khác."), "danger")
         return redirect(url_for("documents_index"))
 
     try:
@@ -8152,7 +8152,7 @@ def documents_download(doc_id):
 
     except Exception as e:
         app.logger.error(f"Lỗi tải tài liệu từ Google Drive #{doc_id}: {e}")
-        flash(f"Không thể tải tài liệu từ hệ thống: {str(e)}", "danger")
+        flash(_("Không thể tải tài liệu từ hệ thống: %(err)s", err=str(e)), "danger")
         return redirect(url_for("documents_index"))
 
 
@@ -8171,7 +8171,7 @@ def documents_report(doc_id):
     cur.execute("SELECT * FROM documents WHERE id = ?", (doc_id,))
     doc = cur.fetchone()
     if not doc:
-        flash("Tài liệu không tồn tại.", "danger")
+        flash(_("Tài liệu không tồn tại."), "danger")
         return redirect(url_for("documents_index"))
 
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -8185,7 +8185,7 @@ def documents_report(doc_id):
     ))
     db.commit()
 
-    flash("Đã gửi báo cáo vi phạm tới Ban Quản trị nhà trường để kiểm tra và xử lý.", "info")
+    flash(_("Đã gửi báo cáo vi phạm tới Ban Quản trị nhà trường để kiểm tra và xử lý."), "info")
     return redirect(url_for("documents_index"))
 
 
@@ -8207,15 +8207,15 @@ def documents_delete(doc_id):
     cur.execute("SELECT * FROM documents WHERE id = ?", (doc_id,))
     doc = cur.fetchone()
     if not doc:
-        flash("Tài liệu không tồn tại.", "danger")
+        flash(_("Tài liệu không tồn tại."), "danger")
         return redirect(url_for("documents_index"))
 
     if not is_super_admin() and doc["truong_id"] != user_school_id:
-        flash("Bạn không có quyền thao tác trên tài liệu của trường khác.", "danger")
+        flash(_("Bạn không có quyền thao tác trên tài liệu của trường khác."), "danger")
         return redirect(url_for("documents_index"))
 
     if not (is_teacher_or_admin or doc["user_id"] == user_id):
-        flash("Bạn không có quyền xóa tài liệu này.", "danger")
+        flash(_("Bạn không có quyền xóa tài liệu này."), "danger")
         return redirect(url_for("documents_index"))
 
     try:
@@ -8227,7 +8227,7 @@ def documents_delete(doc_id):
     cur.execute("UPDATE documents SET trang_thai = 'da_xoa' WHERE id = ?", (doc_id,))
     db.commit()
 
-    flash(f"Đã xóa tài liệu '{doc['tieu_de']}' khỏi hệ thống thành công.", "success")
+    flash(_("Đã xóa tài liệu '%(title)s' khỏi hệ thống thành công.", title=doc['tieu_de']), "success")
     return redirect(url_for("documents_index"))
 
 
@@ -8324,7 +8324,7 @@ def submit_contact_consultation():
     if not ten_truong or not ho_ten or not sdt:
         if request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest":
             return jsonify({"success": False, "message": "Vui lòng nhập đầy đủ Tên trường, Họ tên và Số điện thoại!"}), 400
-        flash("Vui lòng nhập đầy đủ Tên trường, Họ tên và Số điện thoại!", "warning")
+        flash(_("Vui lòng nhập đầy đủ Tên trường, Họ tên và Số điện thoại!"), "warning")
         return redirect(url_for("index") + "#contactForm")
 
     db = get_db()
@@ -8347,7 +8347,7 @@ def submit_contact_consultation():
             pass
         if request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest":
             return jsonify({"success": False, "message": "Có lỗi khi lưu dữ liệu đăng ký!"}), 500
-        flash("Có lỗi khi lưu thông tin. Vui lòng thử lại!", "danger")
+        flash(_("Có lỗi khi lưu thông tin. Vui lòng thử lại!"), "danger")
         return redirect(url_for("index") + "#contactForm")
 
     # Gửi email thông báo (an toàn, không crash khi không có biến môi trường hoặc lỗi)
@@ -8389,4 +8389,3 @@ if __name__ == "__main__":
     
     # Khởi chạy Flask Server
     app.run(host="0.0.0.0", port=port, debug=debug_mode)
-

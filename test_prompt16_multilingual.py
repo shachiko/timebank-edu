@@ -182,6 +182,56 @@ class TestPrompt16Multilingual(unittest.TestCase):
             html = res.get_data(as_text=True)
             self.assertIn('lang="vi"', html)
 
+    def test_09_all_languages_render_homepage_ui(self):
+        """Kiểm tra trang chủ ở 4 ngôn ngữ en, zh, fr, de hiển thị đúng nhãn giao diện quốc tế"""
+        checks = {
+            "en": ["School Time Bank", "Skills Market", "Operating Model", "4-Step Process"],
+            "zh": ["校园时间银行", "技能市集", "运作模式", "四步流程"],
+            "fr": ["Banque de Temps Scolaire", "Marché des Compétences"],
+            "de": ["Schul-Zeitbank", "Kompetenzmarkt"]
+        }
+        for lang, expected_terms in checks.items():
+            with self.client as c:
+                c.get(f"/set-language/{lang}", follow_redirects=True)
+                res = c.get("/")
+                self.assertEqual(res.status_code, 200)
+                html = res.get_data(as_text=True)
+                self.assertIn(f'lang="{lang}"', html)
+                for term in expected_terms:
+                    self.assertIn(term, html, f"Missing expected term '{term}' in language '{lang}'")
+
+    def test_10_all_languages_render_admin_dashboard(self):
+        """Kiểm tra trang /admin ở 4 ngôn ngữ en, zh, fr, de kết xuất chuẩn xác"""
+        with self.client as c:
+            res_login = c.post("/login", data={
+                "ma_hoc_sinh": "demo_quantruong",
+                "mat_khau": "demo123"
+            }, follow_redirects=True)
+            self.assertEqual(res_login.status_code, 200)
+
+            for lang in ["en", "zh", "fr", "de"]:
+                c.get(f"/set-language/{lang}", follow_redirects=True)
+                res = c.get("/admin")
+                self.assertEqual(res.status_code, 200)
+                html = res.get_data(as_text=True)
+                self.assertIn(f'lang="{lang}"', html)
+                self.assertIn("adminTabs", html)
+
+    def test_11_all_languages_render_market_and_forum(self):
+        """Kiểm tra các trang /skills và /forum ở các ngôn ngữ khác nhau không gây lỗi"""
+        for lang in ["en", "zh", "fr", "de", "vi"]:
+            with self.client as c:
+                c.post("/login", data={
+                    "ma_hoc_sinh": "demo_hocsinh",
+                    "mat_khau": "demo123"
+                }, follow_redirects=True)
+                c.get(f"/set-language/{lang}", follow_redirects=True)
+                res_skills = c.get("/skills")
+                self.assertEqual(res_skills.status_code, 200)
+                res_forum = c.get("/forum")
+                self.assertEqual(res_forum.status_code, 200)
+
 
 if __name__ == "__main__":
     unittest.main()
+

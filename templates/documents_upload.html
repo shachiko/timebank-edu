@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Tải Lên Tài Liệu - Kho tài liệu{% endblock %}
+{% block title %}{{ _('Tải Lên Tài Liệu - Kho tài liệu') }}{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -11,9 +11,9 @@
             </a>
             <div>
                 <h3 class="fw-bold mb-0" style="color: #0f172a;">
-                    <i class="bi bi-cloud-arrow-up text-primary me-2"></i>Tải Lên Tài Liệu Học Tập
+                    <i class="bi bi-cloud-arrow-up text-primary me-2"></i>{{ _('Tải Lên Tài Liệu Học Tập') }}
                 </h3>
-                <small class="text-muted">Lưu trữ đám mây hệ thống &bull; Thư mục trường: <strong>{{ school_name or "Chung" }}</strong></small>
+                <small class="text-muted">{{ _('Lưu trữ đám mây hệ thống &bull; Thư mục trường:') }}<strong>{{ school_name or "Chung" }}</strong></small>
             </div>
         </div>
 
@@ -23,46 +23,46 @@
                     <!-- Môn học -->
                     <div class="mb-3">
                         <label for="mon_hoc" class="form-label fw-semibold text-secondary">
-                            <i class="bi bi-book me-1"></i>Môn học <span class="text-danger">*</span>
+                            <i class="bi bi-book me-1"></i>{{ _('Môn học') }}<span class="text-danger">*</span>
                         </label>
                         <select name="mon_hoc" id="mon_hoc" class="form-select form-select-lg rounded-3" required>
-                            <option value="">-- Chọn môn học --</option>
+                            <option value="">{{ _('-- Chọn môn học --') }}</option>
                             {% for m in subjects_list %}
                             <option value="{{ m }}">{{ m }}</option>
                             {% endfor %}
-                            <option value="Khác">Khác / Ngoại khóa</option>
+                            <option value="Khác">{{ _('Khác / Ngoại khóa') }}</option>
                         </select>
-                        <div class="form-text">Tài liệu sẽ được lưu tự động vào thư mục môn học tương ứng trên hệ thống.</div>
+                        <div class="form-text">{{ _('Tài liệu sẽ được lưu tự động vào thư mục môn học tương ứng trên hệ thống.') }}</div>
                     </div>
 
                     <!-- Tiêu đề tài liệu (Tùy chọn) -->
                     <div class="mb-3">
                         <label for="tieu_de" class="form-label fw-semibold text-secondary">
-                            <i class="bi bi-type me-1"></i>Tiêu đề tài liệu <span class="badge bg-light text-muted border ms-1">Tùy chọn</span>
+                            <i class="bi bi-type me-1"></i>{{ _('Tiêu đề tài liệu') }}<span class="badge bg-light text-muted border ms-1">{{ _('Tùy chọn') }}</span>
                         </label>
                         <input type="text" name="tieu_de" id="tieu_de" class="form-control form-control-lg rounded-3" 
-                               placeholder="Để trống: tự lấy tên file; hoặc điền làm tiền tố chung (VD: [Toán 10])..." maxlength="250">
-                        <div class="form-text">Để trống: tự động lấy tên file làm tiêu đề. Điền tiêu đề: dùng làm tiền tố chung cho các tệp tải lên.</div>
+                               placeholder="{{ _('Để trống: tự lấy tên file; hoặc điền làm tiền tố chung (VD: [Toán 10])...') }}" maxlength="250">
+                        <div class="form-text">{{ _('Để trống: tự động lấy tên file làm tiêu đề. Điền tiêu đề: dùng làm tiền tố chung cho các tệp tải lên.') }}</div>
                     </div>
 
                     <!-- Mô tả -->
                     <div class="mb-4">
                         <label for="mo_ta" class="form-label fw-semibold text-secondary">
-                            <i class="bi bi-card-text me-1"></i>Mô tả tóm tắt (không bắt buộc)
+                            <i class="bi bi-card-text me-1"></i>{{ _('Mô tả tóm tắt (không bắt buộc)') }}
                         </label>
                         <textarea name="mo_ta" id="mo_ta" class="form-control rounded-3" rows="3" 
-                                  placeholder="Nêu ngắn gọn nội dung tài liệu, dành cho khối nào, lưu ý khi ôn tập..."></textarea>
+                                  placeholder="{{ _('Nêu ngắn gọn nội dung tài liệu, dành cho khối nào, lưu ý khi ôn tập...') }}"></textarea>
                     </div>
 
                     <!-- File đính kèm (Tối đa 500MB, chọn nhiều tệp) -->
                     <div class="mb-4">
                         <label for="files" class="form-label fw-semibold text-secondary">
-                            <i class="bi bi-paperclip me-1"></i>Tệp đính kèm (Hỗ trợ chọn nhiều tệp cùng lúc) <span class="text-danger">*</span>
+                            <i class="bi bi-paperclip me-1"></i>{{ _('Tệp đính kèm (Hỗ trợ chọn nhiều tệp cùng lúc)') }}<span class="text-danger">*</span>
                         </label>
                         <input type="file" name="files" id="files" class="form-control form-control-lg rounded-3" required multiple
                                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,.7z,.mp4,.avi,.mov,.mp3,.jpg,.jpeg,.png,.webp">
                         <div class="form-text d-flex justify-content-between mt-1">
-                            <span class="text-muted"><i class="bi bi-shield-check me-1 text-success"></i>Tối đa 500MB/tệp &bull; Tải trực tiếp lên hệ thống</span>
+                            <span class="text-muted"><i class="bi bi-shield-check me-1 text-success"></i>{{ _('Tối đa 500MB/tệp &bull; Tải trực tiếp lên hệ thống') }}</span>
                             <span id="fileSizeNotice" class="fw-semibold"></span>
                         </div>
 
@@ -70,7 +70,7 @@
                         <div id="selectedFilesContainer" class="d-none mt-3">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <span class="fw-semibold text-secondary small">
-                                    <i class="bi bi-files me-1"></i>Danh sách tệp đã chọn (<span id="fileCountBadge">0</span> tệp):
+                                    <i class="bi bi-files me-1"></i>{{ _('Danh sách tệp đã chọn (') }}<span id="fileCountBadge">0</span> {{ _('tệp):') }}
                                 </span>
                                 <span class="badge bg-primary-subtle text-primary fw-semibold" id="totalSizeBadge">0 MB</span>
                             </div>
@@ -82,8 +82,8 @@
                     <!-- Tiến trình tải lên (ẩn ban đầu) -->
                     <div id="uploadProgressContainer" class="d-none mb-4">
                         <div class="d-flex justify-content-between mb-1">
-                            <span class="small fw-semibold text-primary"><i class="bi bi-cloud-upload me-1"></i>Đang tải tệp lên hệ thống...</span>
-                            <span class="small text-muted" id="progressPercentage">Vui lòng chờ...</span>
+                            <span class="small fw-semibold text-primary"><i class="bi bi-cloud-upload me-1"></i>{{ _('Đang tải tệp lên hệ thống...') }}</span>
+                            <span class="small text-muted" id="progressPercentage">{{ _('Vui lòng chờ...') }}</span>
                         </div>
                         <div class="progress" style="height: 10px;">
                             <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 100%"></div>
@@ -92,10 +92,10 @@
 
                     <div class="d-flex gap-2 justify-content-end pt-3 border-top">
                         <a href="{{ url_for('documents_index') }}" class="btn btn-light px-4 py-2 rounded-pill fw-semibold">
-                            Hủy
+                            {{ _('Hủy') }}
                         </a>
                         <button type="submit" id="submitBtn" class="btn btn-primary px-4 py-2 rounded-pill fw-semibold shadow-sm">
-                            <i class="bi bi-cloud-arrow-up-fill me-1"></i>Bắt Đầu Tải Lên
+                            <i class="bi bi-cloud-arrow-up-fill me-1"></i>{{ _('Bắt Đầu Tải Lên') }}
                         </button>
                     </div>
                 </form>
@@ -157,15 +157,15 @@ document.getElementById('files').addEventListener('change', function(e) {
         listPreview.appendChild(li);
     });
 
-    totalBadge.textContent = 'Tổng: ' + formatFileSize(totalBytes);
+    totalBadge.textContent = '{{ _('Tổng:') }} ' + formatFileSize(totalBytes);
 
     if (hasOversized) {
         notice.className = 'text-danger fw-bold';
-        notice.textContent = 'Có tệp vượt quá giới hạn 500MB!';
+        notice.textContent = '{{ _('Có tệp vượt quá giới hạn 500MB!') }}';
         submitBtn.disabled = true;
     } else {
         notice.className = 'text-success fw-semibold';
-        notice.textContent = `Hợp lệ (${files.length} tệp)`;
+        notice.textContent = '{{ _('Hợp lệ') }} (' + files.length + ' {{ _('tệp') }})';
         submitBtn.disabled = false;
     }
 });
@@ -173,7 +173,7 @@ document.getElementById('files').addEventListener('change', function(e) {
 document.getElementById('uploadForm').addEventListener('submit', function() {
     const submitBtn = document.getElementById('submitBtn');
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Đang tải tệp lên hệ thống...';
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>' + '{{ _('Đang tải tệp lên hệ thống...') }}';
     document.getElementById('uploadProgressContainer').classList.remove('d-none');
 });
 </script>

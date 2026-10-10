@@ -820,6 +820,16 @@ TRANSLATIONS = {
 
 
 def populate_catalogs():
+    import json
+    cache_file = Path("scripts/translations_cache.json")
+    cache = {}
+    if cache_file.exists():
+        with open(cache_file, "r", encoding="utf-8") as f:
+            try:
+                cache = json.load(f)
+            except Exception:
+                pass
+
     locales = ["vi", "en", "zh", "fr", "de"]
     for lang in locales:
         po_path = TRANSLATIONS_DIR / lang / "LC_MESSAGES" / "messages.po"
@@ -836,12 +846,16 @@ def populate_catalogs():
                 continue
             
             if lang == "vi":
-                # Bản dịch tiếng Việt giữ nguyên msgid
                 msg.string = msg.id
                 updated_count += 1
             else:
                 if msg.id in dict_map:
                     msg.string = dict_map[msg.id]
+                    updated_count += 1
+                elif msg.id in cache and lang in cache[msg.id] and cache[msg.id][lang]:
+                    msg.string = cache[msg.id][lang]
+                    updated_count += 1
+                elif msg.string and msg.string != msg.id:
                     updated_count += 1
                 else:
                     print(f"[{lang}] Missing translation for: {repr(msg.id)}")
@@ -853,3 +867,4 @@ def populate_catalogs():
 
 if __name__ == "__main__":
     populate_catalogs()
+

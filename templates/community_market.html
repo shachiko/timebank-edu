@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Cộng Đồng Liên Trường — School Time Bank{% endblock %}
+{% block title %}{{ _('Cộng Đồng Liên Trường — School Time Bank') }}{% endblock %}
 
 {% block content %}
 <div class="container py-4">
@@ -9,22 +9,22 @@
     <div>
       <div class="d-flex align-items-center gap-2 mb-1">
         <span class="badge bg-warning text-dark fw-bold px-3 py-1 rounded-pill">
-          <i class="bi bi-globe2 me-1"></i> KHÔNG GIAN GIAO LƯU LIÊN TRƯỜNG
+          <i class="bi bi-globe2 me-1"></i> {{ _('KHÔNG GIAN GIAO LƯU LIÊN TRƯỜNG') }}
         </span>
         <span class="badge bg-success text-white px-3 py-1 rounded-pill">
-          <i class="bi bi-shield-check me-1"></i> Cổng kiểm chuẩn {{ threshold|int if threshold == threshold|int else threshold }}h dạy
+          <i class="bi bi-shield-check me-1"></i> {{ _('Cổng kiểm chuẩn') }} {{ threshold|int if threshold == threshold|int else threshold }}{{ _('h dạy') }}
         </span>
       </div>
-      <h2 class="fw-bold mb-0 text-dark">Cộng Đồng Liên Trường</h2>
-      <p class="text-muted small mb-0">Nơi học sinh các trường trao đổi tri thức, sẻ chia kỹ năng bằng ví tín dụng thời gian hợp nhất.</p>
+      <h2 class="fw-bold mb-0 text-dark">{{ _('Cộng Đồng Liên Trường') }}</h2>
+      <p class="text-muted small mb-0">{{ _('Nơi học sinh các trường trao đổi tri thức, sẻ chia kỹ năng bằng ví tín dụng thời gian hợp nhất.') }}</p>
     </div>
 
     <div class="d-flex flex-wrap gap-2">
       <a href="{{ url_for('profile') }}" class="btn btn-outline-primary rounded-pill px-3">
-        <i class="bi bi-award-fill text-warning me-1"></i> Hồ sơ & Kỹ năng của tôi
+        <i class="bi bi-award-fill text-warning me-1"></i> {{ _('Hồ sơ & Kỹ năng của tôi') }}
       </a>
       <a href="{{ url_for('skills_market') }}" class="btn btn-outline-secondary rounded-pill px-3">
-        <i class="bi bi-shop me-1"></i> Kho nội trường
+        <i class="bi bi-shop me-1"></i> {{ _('Kho nội trường') }}
       </a>
     </div>
   </div>
@@ -36,14 +36,14 @@
       <div class="col-md-5 col-lg-5">
         <div class="input-group">
           <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-          <input type="text" class="form-control border-start-0" name="q" placeholder="Tìm kiếm kỹ năng, môn học, trường..." value="{{ search_query }}">
+          <input type="text" class="form-control border-start-0" name="q" placeholder="{{ _('Tìm kiếm kỹ năng, môn học, trường...') }}" value="{{ search_query }}">
         </div>
       </div>
 
       <!-- Lọc Trường học -->
       <div class="col-md-4 col-lg-4">
         <select class="form-select" name="truong_id" onchange="this.form.submit()">
-          <option value="">-- Tất cả trường học --</option>
+          <option value="">-- {{ _('Tất cả trường học') }} --</option>
           {% for sc in all_schools %}
             <option value="{{ sc.id }}" {% if selected_school|string == sc.id|string %}selected{% endif %}>
               {{ sc.ten_truong }}
@@ -55,17 +55,17 @@
       <!-- Lọc Lĩnh vực -->
       <div class="col-md-3 col-lg-3 d-flex gap-2">
         <select class="form-select" name="linh_vuc" onchange="this.form.submit()">
-          <option value="">-- Lĩnh vực --</option>
+          <option value="">-- {{ _('Lĩnh vực') }} --</option>
           {% for lv in ['Toán', 'Lý', 'Hóa', 'Văn', 'Anh', 'Tin học', 'Đàn', 'Vẽ', 'Thể thao', 'Kỹ năng mềm', 'Khác'] %}
-            <option value="{{ lv }}" {% if selected_category == lv %}selected{% endif %}>{{ lv }}</option>
+            <option value="{{ lv }}" {% if selected_category == lv %}selected{% endif %}>{{ _(lv) }}</option>
           {% endfor %}
         </select>
 
-        <button type="submit" class="btn btn-primary px-3 rounded-3" title="Lọc dữ liệu">
+        <button type="submit" class="btn btn-primary px-3 rounded-3" title="{{ _('Lọc dữ liệu') }}">
           <i class="bi bi-funnel"></i>
         </button>
         {% if search_query or selected_school or selected_category %}
-          <a href="{{ url_for('community_market') }}" class="btn btn-outline-secondary rounded-3" title="Xóa bộ lọc">
+          <a href="{{ url_for('community_market') }}" class="btn btn-outline-secondary rounded-3" title="{{ _('Xóa bộ lọc') }}">
             <i class="bi bi-x-lg"></i>
           </a>
         {% endif %}
@@ -86,7 +86,7 @@
                 <i class="bi bi-tag-fill me-1"></i>{{ skill.linh_vuc }}
               </span>
               <span class="badge bg-warning bg-opacity-25 text-dark border border-warning small px-2 py-1 rounded-pill">
-                <i class="bi bi-award-fill text-warning me-1"></i>Liên trường
+                <i class="bi bi-award-fill text-warning me-1"></i>{{ _('Liên trường') }}
               </span>
             </div>
 
@@ -94,7 +94,7 @@
             <div class="mb-2 p-2 rounded-3 bg-light border border-primary border-opacity-10 d-flex align-items-center gap-2">
               <i class="bi bi-building text-primary fs-5"></i>
               <div class="overflow-hidden">
-                <small class="text-muted d-block" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;">Trường học</small>
+                <small class="text-muted d-block" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;">{{ _('Trường học') }}</small>
                 <strong class="text-dark d-block text-truncate small" title="{{ skill.ten_truong }}">{{ skill.ten_truong }}</strong>
               </div>
             </div>
@@ -113,12 +113,12 @@
                 </div>
                 <div class="overflow-hidden">
                   <div class="fw-bold text-dark small text-truncate">{{ skill.ho_ten }}</div>
-                  <div class="text-muted" style="font-size: 0.75rem;">Lớp: {{ skill.lop }} • Mã: <code>{{ skill.ma_hoc_sinh }}</code></div>
+                  <div class="text-muted" style="font-size: 0.75rem;">{{ _('Lớp:') }} {{ skill.lop }} • {{ _('Mã:') }} <code>{{ skill.ma_hoc_sinh }}</code></div>
                 </div>
               </div>
 
               <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-10 small">
-                <span class="text-muted">Đánh giá uy tín:</span>
+                <span class="text-muted">{{ _('Đánh giá uy tín:') }}</span>
                 <span class="text-warning fw-semibold">
                   {% for s in range(skill.sao_tb|round|int) %}★{% endfor %}
                   <span class="text-dark">({{ skill.sao_tb }}/5)</span>
@@ -131,11 +131,11 @@
           <div class="pt-2 border-top">
             {% if current_user and current_user.id == skill.user_id %}
               <button class="btn btn-secondary w-100 disabled" style="opacity: 0.7;">
-                <i class="bi bi-person-check me-1"></i> Kỹ năng của bạn
+                <i class="bi bi-person-check me-1"></i> {{ _('Kỹ năng của bạn') }}
               </button>
             {% else %}
               <a href="{{ url_for('book_skill_page', skill_id=skill.id) }}" class="btn btn-brand w-100 fw-semibold shadow-sm">
-                <i class="bi bi-calendar-plus me-1"></i> Đặt lịch học liên trường
+                <i class="bi bi-calendar-plus me-1"></i> {{ _('Đặt lịch học liên trường') }}
               </a>
             {% endif %}
           </div>
@@ -148,10 +148,10 @@
     <div class="card border-0 shadow-sm rounded-4 p-5 bg-white text-center">
       <div class="py-4">
         <i class="bi bi-globe-americas display-3 text-muted mb-3 d-block"></i>
-        <h4 class="fw-bold text-dark">Chưa có kỹ năng nào trên Cộng đồng liên trường</h4>
-        <p class="text-muted mb-4">Các kỹ năng đang chờ học sinh ưu tú đăng ký và Ban quản trị nhà trường phê duyệt.</p>
+        <h4 class="fw-bold text-dark">{{ _('Chưa có kỹ năng nào trên Cộng đồng liên trường') }}</h4>
+        <p class="text-muted mb-4">{{ _('Các kỹ năng đang chờ học sinh ưu tú đăng ký và Ban quản trị nhà trường phê duyệt.') }}</p>
         <a href="{{ url_for('skills_market') }}" class="btn btn-primary rounded-pill px-4">
-          <i class="bi bi-shop me-1"></i> Khám phá Kho kỹ năng nội trường
+          <i class="bi bi-shop me-1"></i> {{ _('Khám phá Kho kỹ năng nội trường') }}
         </a>
       </div>
     </div>

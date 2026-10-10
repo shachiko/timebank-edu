@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Quản lý Tài khoản & Phân quyền - School Time Bank{% endblock %}
+{% block title %}{{ _('Quản lý Tài khoản & Phân quyền - School Time Bank') }}{% endblock %}
 
 {% block content %}
 <div class="container py-4">
@@ -8,21 +8,21 @@
   <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3 bg-white p-4 rounded-4 shadow-sm border">
     <div>
       <div class="d-flex align-items-center gap-2 mb-1">
-        <span class="badge bg-danger px-3 py-2 rounded-pill"><i class="bi bi-shield-lock-fill me-1"></i> KHU VỰC TỔNG QUẢN TRỊ</span>
+        <span class="badge bg-danger px-3 py-2 rounded-pill"><i class="bi bi-shield-lock-fill me-1"></i> {{ _('KHU VỰC TỔNG QUẢN TRỊ') }}</span>
         <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold">Cô Nguyễn Thị Huyền</span>
       </div>
-      <h2 class="fw-bold mb-1 text-dark">Quản lý Tài khoản Hệ thống</h2>
-      <p class="text-muted small mb-0">Cấp phát tài khoản Quản trị trường (School Admin), Giáo viên và Khôi phục môi trường Demo</p>
+      <h2 class="fw-bold mb-1 text-dark">{{ _('Quản lý Tài khoản Hệ thống') }}</h2>
+      <p class="text-muted small mb-0">{{ _('Cấp phát tài khoản Quản trị trường (School Admin), Giáo viên và Khôi phục môi trường Demo') }}</p>
     </div>
 
     <div class="d-flex align-items-center gap-2">
       <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-        <i class="bi bi-arrow-left me-1"></i> Quay lại Dashboard
+        <i class="bi bi-arrow-left me-1"></i> {{ _('Quay lại Dashboard') }}
       </a>
       <!-- Nút Reset Demo 1-click -->
-      <form action="{{ url_for('reset_demo_data_route') }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn đưa Trường Demo về trạng thái ban đầu? Toàn bộ giao dịch và kỹ năng thử nghiệm trong Trường Demo sẽ được hoàn tác sạch sẽ.');">
+      <form action="{{ url_for('reset_demo_data_route') }}" method="POST" onsubmit="return confirm('{{ _('Bạn có chắc chắn muốn đưa Trường Demo về trạng thái ban đầu? Toàn bộ giao dịch và kỹ năng thử nghiệm trong Trường Demo sẽ được hoàn tác sạch sẽ.') }}');">
         <button type="submit" class="btn btn-warning btn-sm rounded-pill px-3 fw-bold shadow-sm">
-          <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Trường Demo
+          <i class="bi bi-arrow-counterclockwise me-1"></i> {{ _('Reset Trường Demo') }}
         </button>
       </form>
     </div>
@@ -34,26 +34,26 @@
       <div class="card border-0 shadow-sm rounded-4 bg-white mb-4">
         <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
           <h5 class="fw-bold text-dark mb-1">
-            <i class="bi bi-person-plus-fill text-primary me-2"></i>Tạo tài khoản Quản lý / Giáo viên
+            <i class="bi bi-person-plus-fill text-primary me-2"></i>{{ _('Tạo tài khoản Quản lý / Giáo viên') }}
           </h5>
-          <p class="text-muted small mb-0">Tài khoản được tạo sẽ lập tức kích hoạt với đầy đủ quyền hạn theo vai trò.</p>
+          <p class="text-muted small mb-0">{{ _('Tài khoản được tạo sẽ lập tức kích hoạt với đầy đủ quyền hạn theo vai trò.') }}</p>
         </div>
         <div class="card-body p-4">
           <form action="{{ url_for('admin_create_account') }}" method="POST">
             <!-- Chọn vai trò -->
             <div class="mb-3">
-              <label class="form-label small fw-bold">Vai trò <span class="text-danger">*</span></label>
+              <label class="form-label small fw-bold">{{ _('Vai trò') }} <span class="text-danger">*</span></label>
               <div class="d-flex gap-3">
                 <div class="form-check">
                   <input class="form-check-input" type="radio" name="vai_tro" id="roleSchoolAdmin" value="school_admin" checked>
                   <label class="form-check-label small fw-semibold" for="roleSchoolAdmin">
-                    <i class="bi bi-building me-1 text-primary"></i>Quản trị trường (School Admin)
+                    <i class="bi bi-building me-1 text-primary"></i>{{ _('Quản trị trường (School Admin)') }}
                   </label>
                 </div>
                 <div class="form-check">
                   <input class="form-check-input" type="radio" name="vai_tro" id="roleGiaoVien" value="giao_vien">
                   <label class="form-check-label small fw-semibold" for="roleGiaoVien">
-                    <i class="bi bi-mortarboard me-1 text-success"></i>Giáo viên
+                    <i class="bi bi-mortarboard me-1 text-success"></i>{{ _('Giáo viên') }}
                   </label>
                 </div>
               </div>
@@ -61,42 +61,42 @@
 
             <!-- Tên đăng nhập (mã) -->
             <div class="mb-3">
-              <label for="ma_hoc_sinh" class="form-label small fw-bold">Tên đăng nhập (Username) <span class="text-danger">*</span></label>
+              <label for="ma_hoc_sinh" class="form-label small fw-bold">{{ _('Tên đăng nhập (Username)') }} <span class="text-danger">*</span></label>
               <input type="text" class="form-control rounded-3" id="ma_hoc_sinh" name="ma_hoc_sinh" placeholder="vd: admin_lequydon, gv_nguyenvanan" required>
-              <div class="form-text small">Dùng để đăng nhập vào hệ thống.</div>
+              <div class="form-text small">{{ _('Dùng để đăng nhập vào hệ thống.') }}</div>
             </div>
 
             <!-- Họ tên -->
             <div class="mb-3">
-              <label for="ho_ten" class="form-label small fw-bold">Họ và tên <span class="text-danger">*</span></label>
-              <input type="text" class="form-control rounded-3" id="ho_ten" name="ho_ten" placeholder="vd: Thầy Trần Minh Tuấn" required>
+              <label for="ho_ten" class="form-label small fw-bold">{{ _('Họ và tên') }} <span class="text-danger">*</span></label>
+              <input type="text" class="form-control rounded-3" id="ho_ten" name="ho_ten" placeholder="{{ _('vd: Thầy Trần Minh Tuấn') }}" required>
             </div>
 
             <!-- Email -->
             <div class="mb-3">
-              <label for="email" class="form-label small fw-bold">Địa chỉ Email</label>
+              <label for="email" class="form-label small fw-bold">{{ _('Địa chỉ Email') }}</label>
               <input type="email" class="form-control rounded-3" id="email" name="email" placeholder="vd: giaovien@truong.edu.vn">
-              <div class="form-text small">Dùng để khôi phục mật khẩu khi quên qua hệ thống email.</div>
+              <div class="form-text small">{{ _('Dùng để khôi phục mật khẩu khi quên qua hệ thống email.') }}</div>
             </div>
 
             <!-- Trường học -->
             <div class="mb-3">
-              <label for="truong_id" class="form-label small fw-bold">Trực thuộc Trường <span class="text-danger">*</span></label>
+              <label for="truong_id" class="form-label small fw-bold">{{ _('Trực thuộc Trường') }} <span class="text-danger">*</span></label>
               <select class="form-select rounded-3" id="truong_id" name="truong_id" required>
                 {% for school in schools %}
-                  <option value="{{ school.id }}">{{ school.ten_truong }}{% if school.id == 99 %} (Khu vực Demo){% endif %}</option>
+                  <option value="{{ school.id }}">{{ school.ten_truong }}{% if school.id == 99 %} ({{ _('Khu vực Demo') }}){% endif %}</option>
                 {% endfor %}
               </select>
             </div>
 
             <!-- Mật khẩu -->
             <div class="mb-3">
-              <label for="mat_khau" class="form-label small fw-bold">Mật khẩu khởi tạo <span class="text-danger">*</span></label>
-              <input type="password" class="form-control rounded-3" id="mat_khau" name="mat_khau" placeholder="Tối thiểu 6 ký tự" minlength="6" required>
+              <label for="mat_khau" class="form-label small fw-bold">{{ _('Mật khẩu khởi tạo') }} <span class="text-danger">*</span></label>
+              <input type="password" class="form-control rounded-3" id="mat_khau" name="mat_khau" placeholder="{{ _('Tối thiểu 6 ký tự') }}" minlength="6" required>
             </div>
 
             <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-semibold">
-              <i class="bi bi-check-circle-fill me-1"></i> Khởi tạo Tài khoản
+              <i class="bi bi-check-circle-fill me-1"></i> {{ _('Khởi tạo Tài khoản') }}
             </button>
           </form>
         </div>
@@ -105,13 +105,13 @@
       <!-- Hộp giải thích về Trường Demo -->
       <div class="card border-0 shadow-sm rounded-4 bg-light p-4">
         <h6 class="fw-bold text-dark mb-2">
-          <i class="bi bi-info-circle-fill text-warning me-2"></i>Trường Demo & Tài khoản Giám Khảo
+          <i class="bi bi-info-circle-fill text-warning me-2"></i>{{ _('Trường Demo & Tài khoản Giám Khảo') }}
         </h6>
         <p class="small text-muted mb-2">
-          Hệ thống đã cách ly hoàn toàn <strong>Trường Demo (ID 99)</strong>. Giám khảo đăng nhập vào các tài khoản demo sẽ được trải nghiệm đầy đủ tính năng mà không ảnh hưởng tới dữ liệu của 4 trường thật.
+          {{ _('Hệ thống đã cách ly hoàn toàn') }} <strong>{{ _('Trường Demo (ID 99)') }}</strong>. {{ _('Giám khảo đăng nhập vào các tài khoản demo sẽ được trải nghiệm đầy đủ tính năng mà không ảnh hưởng tới dữ liệu của 4 trường thật.') }}
         </p>
         <p class="small text-muted mb-0">
-          Khi cần dọn dẹp sau các bài kiểm tra hoặc thuyết trình, nhấn nút <strong>Reset Trường Demo</strong> để hoàn nguyên dữ liệu chuẩn ban đầu.
+          {{ _('Khi cần dọn dẹp sau các bài kiểm tra hoặc thuyết trình, nhấn nút') }} <strong>{{ _('Reset Trường Demo') }}</strong> {{ _('để hoàn nguyên dữ liệu chuẩn ban đầu.') }}
         </p>
       </div>
     </div>
@@ -122,9 +122,9 @@
         <div class="card-header bg-white border-0 pt-4 px-4 pb-2 d-flex justify-content-between align-items-center">
           <div>
             <h5 class="fw-bold text-dark mb-0">
-              <i class="bi bi-people-fill text-primary me-2"></i>Danh sách Tài khoản Quản lý & Giáo viên
+              <i class="bi bi-people-fill text-primary me-2"></i>{{ _('Danh sách Tài khoản Quản lý & Giáo viên') }}
             </h5>
-            <small class="text-muted">Tổng số: {{ accounts|length }} tài khoản</small>
+            <small class="text-muted">{{ _('Tổng số:') }} {{ accounts|length }} {{ _('tài khoản') }}</small>
           </div>
         </div>
         <div class="card-body p-4 pt-2">
@@ -132,11 +132,11 @@
             <table class="table table-hover align-middle mb-0">
               <thead class="table-light small">
                 <tr>
-                  <th>Tài khoản</th>
-                  <th>Họ tên & Email</th>
-                  <th>Vai trò</th>
-                  <th>Trường trực thuộc</th>
-                  <th>Trạng thái</th>
+                  <th>{{ _('Tài khoản') }}</th>
+                  <th>{{ _('Họ tên & Email') }}</th>
+                  <th>{{ _('Vai trò') }}</th>
+                  <th>{{ _('Trường trực thuộc') }}</th>
+                  <th>{{ _('Trạng thái') }}</th>
                 </tr>
               </thead>
               <tbody class="small">
@@ -153,7 +153,7 @@
                     {% if acc.email %}
                       <div class="text-muted small"><i class="bi bi-envelope me-1"></i>{{ acc.email }}</div>
                     {% else %}
-                      <span class="text-muted fst-italic" style="font-size: 0.75rem;">(Chưa có email)</span>
+                      <span class="text-muted fst-italic" style="font-size: 0.75rem;">({{ _('Chưa có email') }})</span>
                     {% endif %}
                   </td>
                   <td>
@@ -162,19 +162,19 @@
                     {% elif acc.vai_tro in ('school_admin', 'admin') %}
                       <span class="badge bg-primary rounded-pill"><i class="bi bi-building me-1"></i>School Admin</span>
                     {% elif acc.vai_tro == 'giao_vien' %}
-                      <span class="badge bg-success rounded-pill"><i class="bi bi-mortarboard me-1"></i>Giáo viên</span>
+                      <span class="badge bg-success rounded-pill"><i class="bi bi-mortarboard me-1"></i>{{ _('Giáo viên') }}</span>
                     {% else %}
                       <span class="badge bg-secondary rounded-pill">{{ acc.vai_tro }}</span>
                     {% endif %}
                   </td>
                   <td>
                     <span class="badge bg-light text-dark border">
-                      {{ acc.ten_truong if acc.ten_truong else ('Trường #' ~ acc.truong_id) }}
+                      {{ acc.ten_truong if acc.ten_truong else (_('Trường #') ~ acc.truong_id) }}
                     </span>
                   </td>
                   <td>
                     {% if acc.trang_thai == 'hoat_dong' %}
-                      <span class="badge bg-success-subtle text-success border border-success-subtle">Hoạt động</span>
+                      <span class="badge bg-success-subtle text-success border border-success-subtle">{{ _('Hoạt động') }}</span>
                     {% else %}
                       <span class="badge bg-warning-subtle text-warning border border-warning-subtle">{{ acc.trang_thai }}</span>
                     {% endif %}
@@ -183,7 +183,7 @@
                 {% else %}
                 <tr>
                   <td colspan="5" class="text-center py-4 text-muted">
-                    Chưa có tài khoản quản lý nào được tạo.
+                    {{ _('Chưa có tài khoản quản lý nào được tạo.') }}
                   </td>
                 </tr>
                 {% endfor %}

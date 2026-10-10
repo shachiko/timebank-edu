@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Bảng tin Học đường & Bản tin Tuần — TimeBank EDU{% endblock %}
+{% block title %}{{ _('Bảng tin Học đường & Bản tin Tuần — TimeBank EDU') }}{% endblock %}
 
 {% block content %}
 <div class="container py-4">
@@ -9,18 +9,18 @@
     <div class="row align-items-center position-relative" style="z-index: 2;">
       <div class="col-lg-8">
         <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold mb-3">
-          <i class="bi bi-newspaper me-1"></i> BẢNG TIN HỌC ĐƯỜNG
+          <i class="bi bi-newspaper me-1"></i> {{ _('BẢNG TIN HỌC ĐƯỜNG') }}
         </span>
-        <h1 class="display-6 fw-bold mb-2">Bản tin & Câu chuyện Học tập</h1>
+        <h1 class="display-6 fw-bold mb-2">{{ _('Bản tin & Câu chuyện Học tập') }}</h1>
         <p class="lead mb-3 text-light opacity-90">
-          Nơi lan tỏa các câu chuyện tương trợ tri thức, vinh danh gia sư tiêu biểu và cập nhật nhịp đập hoạt động tại {{ config.ten_truong }}.
+          {{ _('Nơi lan tỏa các câu chuyện tương trợ tri thức, vinh danh gia sư tiêu biểu và cập nhật nhịp đập hoạt động tại %(ten_truong)s.', ten_truong=config.ten_truong) }}
         </p>
         <div class="d-flex flex-wrap gap-2 align-items-center">
           <span class="badge bg-white bg-opacity-25 text-white border border-white border-opacity-25 py-2 px-3 rounded-pill">
-            <i class="bi bi-stars text-warning me-1"></i> Hỗ trợ bởi AI (Trí tuệ nhân tạo)
+            <i class="bi bi-stars text-warning me-1"></i> {{ _('Hỗ trợ bởi AI (Trí tuệ nhân tạo)') }}
           </span>
           <span class="badge bg-white bg-opacity-25 text-white border border-white border-opacity-25 py-2 px-3 rounded-pill">
-            <i class="bi bi-shield-check me-1"></i> 100% Nội bộ nhà trường
+            <i class="bi bi-shield-check me-1"></i> {{ _('100% Nội bộ nhà trường') }}
           </span>
         </div>
       </div>
@@ -28,10 +28,10 @@
         {% if current_user and current_user.vai_tro in ('admin', 'giao_vien') %}
         <div class="d-inline-flex flex-column gap-2">
           <a href="{{ url_for('blog_manage') }}" class="btn btn-warning btn-lg fw-bold rounded-pill shadow-sm">
-            <i class="bi bi-gear-fill me-2"></i>Quản lý Bảng tin
+            <i class="bi bi-gear-fill me-2"></i>{{ _('Quản lý Bảng tin') }}
           </a>
           <a href="{{ url_for('blog_ai_newsletter') }}" class="btn btn-outline-light rounded-pill btn-sm fw-medium">
-            <i class="bi bi-stars me-1"></i>Nhờ AI soạn bản tin tuần
+            <i class="bi bi-stars me-1"></i>{{ _('Nhờ AI soạn bản tin tuần') }}
           </a>
         </div>
         {% endif %}
@@ -43,13 +43,13 @@
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
       <h3 class="fw-bold mb-0 text-dark">
-        <i class="bi bi-collection text-primary me-2"></i>Bài viết & Bản tin mới nhất
+        <i class="bi bi-collection text-primary me-2"></i>{{ _('Bài viết & Bản tin mới nhất') }}
       </h3>
-      <small class="text-muted">Tổng số: {{ posts|length }} bài viết đã công khai</small>
+      <small class="text-muted">{{ _('Tổng số:') }} {{ posts|length }} {{ _('bài viết đã công khai') }}</small>
     </div>
     {% if current_user and current_user.vai_tro in ('admin', 'giao_vien') %}
     <a href="{{ url_for('blog_create') }}" class="btn btn-outline-primary btn-sm rounded-pill">
-      <i class="bi bi-plus-circle me-1"></i>Viết bài mới
+      <i class="bi bi-plus-circle me-1"></i>{{ _('Viết bài mới') }}
     </a>
     {% endif %}
   </div>
@@ -67,7 +67,7 @@
           {% if post.tac_gia_ai == 1 %}
           <div class="position-absolute top-0 end-0 m-2">
             <span class="badge bg-dark bg-opacity-75 text-warning border border-warning border-opacity-50 py-1 px-2 rounded-pill small">
-              <i class="bi bi-stars me-1"></i>Hỗ trợ bởi AI (Trí tuệ nhân tạo)
+              <i class="bi bi-stars me-1"></i>{{ _('Hỗ trợ bởi AI (Trí tuệ nhân tạo)') }}
             </span>
           </div>
           {% endif %}
@@ -79,7 +79,7 @@
             <span>{{ post.thoi_gian_dang | format_date }}</span>
             <span>•</span>
             <span class="text-primary fw-medium">
-              {% if post.tac_gia_ai == 1 %}Bản tin AI{% else %}Giáo viên{% endif %}
+              {% if post.tac_gia_ai == 1 %}{{ _('Bản tin AI') }}{% else %}{{ _('Giáo viên') }}{% endif %}
             </span>
           </div>
 
@@ -95,10 +95,10 @@
 
           <div class="pt-3 border-top mt-auto d-flex justify-content-between align-items-center">
             <a href="{{ url_for('blog_detail', post_id=post.id) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-medium">
-              Đọc bài viết <i class="bi bi-arrow-right ms-1"></i>
+              {{ _('Đọc bài viết') }}<i class="bi bi-arrow-right ms-1"></i>
             </a>
             {% if current_user and current_user.vai_tro in ('admin', 'giao_vien') %}
-            <a href="{{ url_for('blog_edit', post_id=post.id) }}" class="btn btn-sm btn-light text-muted rounded-circle" title="Chỉnh sửa">
+            <a href="{{ url_for('blog_edit', post_id=post.id) }}" class="btn btn-sm btn-light text-muted rounded-circle" title="{{ _('Chỉnh sửa') }}">
               <i class="bi bi-pencil"></i>
             </a>
             {% endif %}
@@ -112,17 +112,17 @@
   <!-- Khi chưa có bài viết đã đăng -->
   <div class="text-center py-5 bg-light rounded-4 border p-5">
     <div class="display-4 text-muted mb-3"><i class="bi bi-newspaper"></i></div>
-    <h4 class="fw-bold text-secondary">Chưa có bài viết nào được công khai</h4>
+    <h4 class="fw-bold text-secondary">{{ _('Chưa có bài viết nào được công khai') }}</h4>
     <p class="text-muted max-w-500 mx-auto">
-      Các bản tin hoặc bài viết sẽ hiển thị tại đây sau khi được Thầy Cô giáo duyệt và đăng tải chính thức.
+      {{ _('Các bản tin hoặc bài viết sẽ hiển thị tại đây sau khi được Thầy Cô giáo duyệt và đăng tải chính thức.') }}
     </p>
     {% if current_user and current_user.vai_tro in ('admin', 'giao_vien') %}
     <div class="d-flex justify-content-center gap-2 mt-3">
       <a href="{{ url_for('blog_ai_newsletter') }}" class="btn btn-primary rounded-pill px-4">
-        <i class="bi bi-stars me-1"></i>Nhờ AI soạn bản tin tuần
+        <i class="bi bi-stars me-1"></i>{{ _('Nhờ AI soạn bản tin tuần') }}
       </a>
       <a href="{{ url_for('blog_create') }}" class="btn btn-outline-secondary rounded-pill px-4">
-        <i class="bi bi-pencil me-1"></i>Viết bài mới
+        <i class="bi bi-pencil me-1"></i>{{ _('Viết bài mới') }}
       </a>
     </div>
     {% endif %}

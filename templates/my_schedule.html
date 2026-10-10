@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Lịch của tôi - {{ config.ten_truong }}{% endblock %}
+{% block title %}{{ _('Lịch của tôi - {{ config.ten_truong }}') }}{% endblock %}
 
 {% block content %}
 <div class="container py-4">
@@ -8,15 +8,15 @@
   <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
     <div>
       <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold px-3 py-1 rounded-pill mb-1">
-        <i class="bi bi-calendar-event me-1"></i> QUẢN LÝ PHIÊN HỌC 2 CHIỀU
+        <i class="bi bi-calendar-event me-1"></i> {{ _('QUẢN LÝ PHIÊN HỌC 2 CHIỀU') }}
       </span>
-      <h2 class="fw-bold mb-0 text-dark">Lịch Của Tôi</h2>
-      <p class="text-muted small mb-0">{{ user.ho_ten }} (Mã: <code>{{ user.ma_hoc_sinh }}</code>) — Số dư: <strong class="text-success">{{ "%.1f"|format(user.so_du_gio) }} giờ</strong></p>
+      <h2 class="fw-bold mb-0 text-dark">{{ _('Lịch Của Tôi') }}</h2>
+      <p class="text-muted small mb-0">{{ user.ho_ten }} ({{ _('Mã:') }} <code>{{ user.ma_hoc_sinh }}</code>{{ _(') — Số dư:') }}<strong class="text-success">{{ "%.1f"|format(user.so_du_gio) }} {{ _('giờ') }}</strong></p>
     </div>
 
     <div>
       <a href="{{ url_for('skills_market') }}" class="btn btn-brand btn-sm">
-        <i class="bi bi-plus-lg me-1"></i> Đặt thêm buổi học mới
+        <i class="bi bi-plus-lg me-1"></i> {{ _('Đặt thêm buổi học mới') }}
       </a>
     </div>
   </div>
@@ -25,25 +25,25 @@
   <div class="row g-3 mb-4">
     <div class="col-sm-6 col-lg-3">
       <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
-        <span class="text-muted small">Buổi tôi dạy (Gia sư)</span>
+        <span class="text-muted small">{{ _('Buổi tôi dạy (Gia sư)') }}</span>
         <h3 class="fw-bold mb-0 text-primary">{{ teaching_sessions|length }}</h3>
       </div>
     </div>
     <div class="col-sm-6 col-lg-3">
       <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
-        <span class="text-muted small">Buổi tôi học (Người học)</span>
+        <span class="text-muted small">{{ _('Buổi tôi học (Người học)') }}</span>
         <h3 class="fw-bold mb-0 text-success">{{ learning_sessions|length }}</h3>
       </div>
     </div>
     <div class="col-sm-6 col-lg-3">
       <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
-        <span class="text-muted small">Phiên đã đặt (Sắp tới)</span>
+        <span class="text-muted small">{{ _('Phiên đã đặt (Sắp tới)') }}</span>
         <h3 class="fw-bold mb-0 text-warning">{{ upcoming_count }}</h3>
       </div>
     </div>
     <div class="col-sm-6 col-lg-3">
       <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
-        <span class="text-muted small">Số dư giờ khả dụng</span>
+        <span class="text-muted small">{{ _('Số dư giờ khả dụng') }}</span>
         <h3 class="fw-bold mb-0 text-info-emphasis">{{ "%.1f"|format(user.so_du_gio) }}h</h3>
       </div>
     </div>
@@ -55,13 +55,13 @@
       <ul class="nav nav-tabs nav-fill border-bottom-0" id="scheduleTab" role="tablist">
         <li class="nav-item" role="presentation">
           <button class="nav-link active py-3 fw-semibold border-0 border-bottom border-3" id="teaching-tab" data-bs-toggle="tab" data-bs-target="#teaching-pane" type="button" role="tab" aria-controls="teaching-pane" aria-selected="true">
-            <i class="bi bi-mortarboard me-2 text-primary"></i>Phiên Tôi Dạy (Gia sư) 
+            <i class="bi bi-mortarboard me-2 text-primary"></i>{{ _('Phiên Tôi Dạy (Gia sư)') }}
             <span class="badge bg-primary rounded-pill ms-1">{{ teaching_sessions|length }}</span>
           </button>
         </li>
         <li class="nav-item" role="presentation">
           <button class="nav-link py-3 fw-semibold border-0 border-bottom border-3" id="learning-tab" data-bs-toggle="tab" data-bs-target="#learning-pane" type="button" role="tab" aria-controls="learning-pane" aria-selected="false">
-            <i class="bi bi-book me-2 text-success"></i>Phiên Tôi Học (Người học) 
+            <i class="bi bi-book me-2 text-success"></i>{{ _('Phiên Tôi Học (Người học)') }}
             <span class="badge bg-success rounded-pill ms-1">{{ learning_sessions|length }}</span>
           </button>
         </li>
@@ -77,13 +77,13 @@
               <table class="table table-hover align-middle mb-0">
                 <thead class="table-light small text-muted">
                   <tr>
-                    <th scope="col">Mã phiên</th>
-                    <th scope="col">Kỹ năng giảng dạy</th>
-                    <th scope="col">Bạn học (Học sinh)</th>
-                    <th scope="col">Thời gian hẹn</th>
-                    <th scope="col" class="text-center">Thời lượng</th>
-                    <th scope="col" class="text-center">Trạng thái</th>
-                    <th scope="col" class="text-end">Thao tác</th>
+                    <th scope="col">{{ _('Mã phiên') }}</th>
+                    <th scope="col">{{ _('Kỹ năng giảng dạy') }}</th>
+                    <th scope="col">{{ _('Bạn học (Học sinh)') }}</th>
+                    <th scope="col">{{ _('Thời gian hẹn') }}</th>
+                    <th scope="col" class="text-center">{{ _('Thời lượng') }}</th>
+                    <th scope="col" class="text-center">{{ _('Trạng thái') }}</th>
+                    <th scope="col" class="text-end">{{ _('Thao tác') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -96,7 +96,7 @@
                     </td>
                     <td>
                       <div class="fw-semibold text-dark">{{ s.ten_nguoi_hoc }}</div>
-                      <small class="text-muted">Lớp {{ s.lop_nguoi_hoc }} • <code>{{ s.ma_nguoi_hoc }}</code></small>
+                      <small class="text-muted">{{ _('Lớp') }} {{ s.lop_nguoi_hoc }} • <code>{{ s.ma_nguoi_hoc }}</code></small>
                     </td>
                     <td>
                       <span class="text-dark"><i class="bi bi-clock me-1 text-primary"></i>{{ s.thoi_gian_bat_dau }}</span>
@@ -106,24 +106,24 @@
                     </td>
                     <td class="text-center">
                       {% if s.trang_thai == 'da_dat' %}
-                        <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Đã đặt lịch</span>
+                        <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>{{ _('Đã đặt lịch') }}</span>
                       {% elif s.trang_thai == 'hoan_thanh' %}
-                        <span class="badge bg-success"><i class="bi bi-check-all me-1"></i>Hoàn thành</span>
+                        <span class="badge bg-success"><i class="bi bi-check-all me-1"></i>{{ _('Hoàn thành') }}</span>
                       {% elif s.trang_thai == 'huy' %}
-                        <span class="badge bg-secondary">Đã hủy</span>
+                        <span class="badge bg-secondary">{{ _('Đã hủy') }}</span>
                       {% else %}
-                        <span class="badge bg-info text-dark">Cần xác minh</span>
+                        <span class="badge bg-info text-dark">{{ _('Cần xác minh') }}</span>
                       {% endif %}
                     </td>
                     <td class="text-end">
                       <div class="d-inline-flex gap-1">
                         {% if s.trang_thai in ('da_dat', 'can_xac_minh') %}
-                        <a href="{{ url_for('virtual_room', session_id=s.id) }}" class="btn btn-primary btn-sm" title="Vào phòng học trực tuyến">
-                          <i class="bi bi-camera-video-fill me-1"></i> Phòng ảo
+                        <a href="{{ url_for('virtual_room', session_id=s.id) }}" class="btn btn-primary btn-sm" title="{{ _('Vào phòng học trực tuyến') }}">
+                          <i class="bi bi-camera-video-fill me-1"></i> {{ _('Phòng ảo') }}
                         </a>
                         {% endif %}
                         <a href="{{ url_for('session_detail', session_id=s.id) }}" class="btn btn-outline-brand btn-sm">
-                          <i class="bi bi-qr-code-scan me-1"></i> Chi tiết & QR
+                          <i class="bi bi-qr-code-scan me-1"></i> {{ _('Chi tiết & QR') }}
                         </a>
                       </div>
                     </td>
@@ -135,7 +135,7 @@
           {% else %}
             <div class="text-center py-5 text-muted">
               <i class="bi bi-calendar-x fs-1 d-block mb-2"></i>
-              Chưa có bạn học nào đặt lịch học với bạn. Hãy <a href="{{ url_for('new_skill') }}" class="text-primary fw-semibold">đăng thêm kỹ năng</a> để nhận các lượt đặt lịch!
+              {{ _('Chưa có bạn học nào đặt lịch học với bạn. Hãy') }}<a href="{{ url_for('new_skill') }}" class="text-primary fw-semibold">{{ _('đăng thêm kỹ năng') }}</a> {{ _('để nhận các lượt đặt lịch!') }}
             </div>
           {% endif %}
         </div>
@@ -147,13 +147,13 @@
               <table class="table table-hover align-middle mb-0">
                 <thead class="table-light small text-muted">
                   <tr>
-                    <th scope="col">Mã phiên</th>
-                    <th scope="col">Chuyên đề học</th>
-                    <th scope="col">Gia sư (Người dạy)</th>
-                    <th scope="col">Thời gian hẹn</th>
-                    <th scope="col" class="text-center">Thời lượng</th>
-                    <th scope="col" class="text-center">Trạng thái</th>
-                    <th scope="col" class="text-end">Thao tác</th>
+                    <th scope="col">{{ _('Mã phiên') }}</th>
+                    <th scope="col">{{ _('Chuyên đề học') }}</th>
+                    <th scope="col">{{ _('Gia sư (Người dạy)') }}</th>
+                    <th scope="col">{{ _('Thời gian hẹn') }}</th>
+                    <th scope="col" class="text-center">{{ _('Thời lượng') }}</th>
+                    <th scope="col" class="text-center">{{ _('Trạng thái') }}</th>
+                    <th scope="col" class="text-end">{{ _('Thao tác') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -166,7 +166,7 @@
                     </td>
                     <td>
                       <div class="fw-semibold text-dark">{{ s.ten_nguoi_day }}</div>
-                      <small class="text-muted">Lớp {{ s.lop_nguoi_day }} • <code>{{ s.ma_nguoi_day }}</code></small>
+                      <small class="text-muted">{{ _('Lớp') }} {{ s.lop_nguoi_day }} • <code>{{ s.ma_nguoi_day }}</code></small>
                     </td>
                     <td>
                       <span class="text-dark"><i class="bi bi-clock me-1 text-primary"></i>{{ s.thoi_gian_bat_dau }}</span>
@@ -176,24 +176,24 @@
                     </td>
                     <td class="text-center">
                       {% if s.trang_thai == 'da_dat' %}
-                        <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Đã đặt lịch</span>
+                        <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>{{ _('Đã đặt lịch') }}</span>
                       {% elif s.trang_thai == 'hoan_thanh' %}
-                        <span class="badge bg-success"><i class="bi bi-check-all me-1"></i>Hoàn thành</span>
+                        <span class="badge bg-success"><i class="bi bi-check-all me-1"></i>{{ _('Hoàn thành') }}</span>
                       {% elif s.trang_thai == 'huy' %}
-                        <span class="badge bg-secondary">Đã hủy</span>
+                        <span class="badge bg-secondary">{{ _('Đã hủy') }}</span>
                       {% else %}
-                        <span class="badge bg-info text-dark">Cần xác minh</span>
+                        <span class="badge bg-info text-dark">{{ _('Cần xác minh') }}</span>
                       {% endif %}
                     </td>
                     <td class="text-end">
                       <div class="d-inline-flex gap-1">
                         {% if s.trang_thai in ('da_dat', 'can_xac_minh') %}
-                        <a href="{{ url_for('virtual_room', session_id=s.id) }}" class="btn btn-primary btn-sm" title="Vào phòng học trực tuyến">
-                          <i class="bi bi-camera-video-fill me-1"></i> Phòng ảo
+                        <a href="{{ url_for('virtual_room', session_id=s.id) }}" class="btn btn-primary btn-sm" title="{{ _('Vào phòng học trực tuyến') }}">
+                          <i class="bi bi-camera-video-fill me-1"></i> {{ _('Phòng ảo') }}
                         </a>
                         {% endif %}
                         <a href="{{ url_for('session_detail', session_id=s.id) }}" class="btn btn-outline-brand btn-sm">
-                          <i class="bi bi-qr-code-scan me-1"></i> Chi tiết & QR
+                          <i class="bi bi-qr-code-scan me-1"></i> {{ _('Chi tiết & QR') }}
                         </a>
                       </div>
                     </td>
@@ -205,7 +205,7 @@
           {% else %}
             <div class="text-center py-5 text-muted">
               <i class="bi bi-journal-plus fs-1 d-block mb-2"></i>
-              Bạn chưa đặt lịch học buổi nào. Hãy ghé <a href="{{ url_for('skills_market') }}" class="text-primary fw-semibold">Kho kỹ năng học đường</a> để chọn môn học thú vị!
+              {{ _('Bạn chưa đặt lịch học buổi nào. Hãy ghé') }}<a href="{{ url_for('skills_market') }}" class="text-primary fw-semibold">{{ _('Kho kỹ năng học đường') }}</a> {{ _('để chọn môn học thú vị!') }}
             </div>
           {% endif %}
         </div>

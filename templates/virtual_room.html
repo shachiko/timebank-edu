@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Phòng học ảo: {{ session_data.tieu_de }} - {{ config.ten_truong }}{% endblock %}
+{% block title %}{{ _('Phòng học ảo: {{ session_data.tieu_de }} - {{ config.ten_truong }}') }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-3 px-lg-4">
@@ -8,16 +8,16 @@
   <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 p-3 bg-white rounded-4 shadow-sm border gap-2">
     <div class="d-flex align-items-center gap-3">
       <a href="{{ url_for('session_detail', session_id=session_data.id) }}" class="btn btn-outline-secondary btn-sm rounded-pill">
-        <i class="bi bi-arrow-left me-1"></i> Rời phòng
+        <i class="bi bi-arrow-left me-1"></i> {{ _('Rời phòng') }}
       </a>
       <div>
         <div class="d-flex align-items-center gap-2">
           <span class="badge bg-danger rounded-pill px-2 py-1 pulse-badge">
-            <i class="bi bi-broadcast me-1"></i> TRỰC TUYẾN
+            <i class="bi bi-broadcast me-1"></i> {{ _('TRỰC TUYẾN') }}
           </span>
           <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold">{{ session_data.linh_vuc }}</span>
           {% if is_supervisor %}
-            <span class="badge bg-warning text-dark"><i class="bi bi-eye-fill me-1"></i> Chế độ Giám sát Sư phạm (GV/Admin)</span>
+            <span class="badge bg-warning text-dark"><i class="bi bi-eye-fill me-1"></i> {{ _('Chế độ Giám sát Sư phạm (GV/Admin)') }}</span>
           {% endif %}
         </div>
         <h4 class="fw-bold mb-0 text-dark mt-1">{{ session_data.tieu_de }}</h4>
@@ -29,21 +29,21 @@
       <!-- Đồng hồ học tập trực tiếp -->
       <div class="bg-light px-3 py-2 rounded-3 border text-center">
         <span class="text-muted d-block small" style="font-size: 0.75rem;">
-          <i class="bi bi-stopwatch me-1 text-primary"></i>Thời gian đã học
+          <i class="bi bi-stopwatch me-1 text-primary"></i>{{ _('Thời gian đã học') }}
         </span>
         <span class="fw-bold fs-5 font-monospace text-primary" id="roomTimer">00:00:00</span>
       </div>
 
       <!-- Nút Báo cáo vi phạm cho giáo viên -->
       <button type="button" class="btn btn-outline-warning fw-semibold px-3 py-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#reportViolationModal">
-        <i class="bi bi-shield-exclamation me-1"></i> Báo cáo
+        <i class="bi bi-shield-exclamation me-1"></i> {{ _('Báo cáo') }}
       </button>
 
       <!-- Nút kết thúc buổi học -->
       {% if is_teacher or is_learner or is_supervisor %}
-      <form method="POST" action="{{ url_for('finish_virtual_room', session_id=session_data.id) }}" onsubmit="return confirm('Bạn có chắc chắn muốn kết thúc buổi học này? Hệ thống sẽ tự động đối soát thời lượng cùng online (yêu cầu ≥ 80%) để xử lý chuyển giờ.');">
+      <form method="POST" action="{{ url_for('finish_virtual_room', session_id=session_data.id) }}" onsubmit="return confirm("{{ _('Bạn có chắc chắn muốn kết thúc buổi học này? Hệ thống sẽ tự động đối soát thời lượng cùng online (yêu cầu ≥ 80%) để xử lý chuyển giờ.') }}");">
         <button type="submit" class="btn btn-danger fw-semibold px-3 py-2 shadow-sm">
-          <i class="bi bi-door-closed me-1"></i> Kết thúc buổi học
+          <i class="bi bi-door-closed me-1"></i> {{ _('Kết thúc buổi học') }}
         </button>
       </form>
       {% endif %}
@@ -62,17 +62,17 @@
                 <i class="bi bi-shield-exclamation text-warning" style="font-size: 2.8rem;"></i>
               </span>
             </div>
-            <h4 class="fw-bold text-dark mb-2">Lớp Học Ảo Trực Tuyến Chưa Được Cấu Hình</h4>
+            <h4 class="fw-bold text-dark mb-2">{{ _('Lớp Học Ảo Trực Tuyến Chưa Được Cấu Hình') }}</h4>
             <p class="text-muted small mb-4" style="max-width: 600px;">
-              Hệ thống lớp học ảo ứng dụng giải pháp công nghệ đa tầng an toàn để học sinh và gia sư tham gia lớp học 1 chạm mà không cần tạo tài khoản riêng.
+              {{ _('Hệ thống lớp học ảo ứng dụng giải pháp công nghệ đa tầng an toàn để học sinh và gia sư tham gia lớp học 1 chạm mà không cần tạo tài khoản riêng.') }}
             </p>
             
             <div class="bg-light p-3 rounded-4 border text-start mb-4 shadow-sm" style="max-width: 500px; width: 100%;">
               <div class="small fw-bold text-danger mb-2">
-                <i class="bi bi-exclamation-triangle-fill me-1"></i> Các biến môi trường cần thiết lập trong <code>.env</code>:
+                <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ _('Các biến môi trường cần thiết lập trong') }}<code>.env</code>:
               </div>
               <ul class="mb-0 ps-3 small font-monospace">
-                <li class="text-primary fw-semibold">DAILY_API_KEY (Nòng chính Daily.co)</li>
+                <li class="text-primary fw-semibold">{{ _('DAILY_API_KEY (Nòng chính Daily.co)') }}</li>
                 {% for var_name in missing_jaas_vars %}
                   <li class="text-danger fw-semibold">{{ var_name }}</li>
                 {% endfor %}
@@ -81,14 +81,14 @@
 
             <div class="d-flex flex-column align-items-center gap-2 mb-3">
               <button type="button" class="btn btn-warning fw-semibold px-4 py-2 rounded-pill shadow-sm" onclick="switchToPublicJitsiDirect()">
-                <i class="bi bi-broadcast me-1"></i> Tham gia phòng học dự phòng Jitsi ngay
+                <i class="bi bi-broadcast me-1"></i> {{ _('Tham gia phòng học dự phòng Jitsi ngay') }}
               </button>
-              <small class="text-muted fst-italic">Học tập không gián đoạn bằng phòng học công cộng dự phòng</small>
+              <small class="text-muted fst-italic">{{ _('Học tập không gián đoạn bằng phòng học công cộng dự phòng') }}</small>
             </div>
 
             <div class="alert alert-info py-2 px-3 small border-0 bg-info bg-opacity-10 text-primary mb-0" style="max-width: 600px;">
               <i class="bi bi-info-circle-fill me-1"></i>
-              <strong>Lưu ý:</strong> Dữ liệu buổi học, điểm danh tự động, tiêu chuẩn thời lượng (luật 80%), dàn ý AI và báo cáo vi phạm vẫn hoạt động bình thường trên hệ thống.
+              <strong>{{ _('Lưu ý:') }}</strong> {{ _('Dữ liệu buổi học, điểm danh tự động, tiêu chuẩn thời lượng (luật 80%), dàn ý AI và báo cáo vi phạm vẫn hoạt động bình thường trên hệ thống.') }}
             </div>
           </div>
 
@@ -97,9 +97,9 @@
             <div id="video-fallback-banner-direct" class="alert alert-warning py-2 px-3 small m-2 d-flex align-items-center justify-content-between rounded-3 border">
               <div>
                 <i class="bi bi-shield-exclamation text-warning me-2 fs-6"></i>
-                <strong class="text-dark">Đang dùng phòng học dự phòng (Jitsi)</strong>
+                <strong class="text-dark">{{ _('Đang dùng phòng học dự phòng (Jitsi)') }}</strong>
               </div>
-              <span class="badge bg-warning text-dark"><i class="bi bi-broadcast me-1"></i>Chế độ dự phòng</span>
+              <span class="badge bg-warning text-dark"><i class="bi bi-broadcast me-1"></i>{{ _('Chế độ dự phòng') }}</span>
             </div>
             <div id="jitsi-direct-container" style="width: 100%; height: 650px;"></div>
           </div>
@@ -108,9 +108,9 @@
           <div id="video-fallback-banner" class="alert alert-warning py-2 px-3 small m-2 d-none align-items-center justify-content-between rounded-3 border">
             <div>
               <i class="bi bi-shield-exclamation text-warning me-2 fs-6"></i>
-              <strong id="video-fallback-text" class="text-dark">Đang dùng phòng học dự phòng (Jitsi)</strong>
+              <strong id="video-fallback-text" class="text-dark">{{ _('Đang dùng phòng học dự phòng (Jitsi)') }}</strong>
             </div>
-            <span class="badge bg-warning text-dark"><i class="bi bi-arrow-repeat me-1"></i>Tự động chuyển nòng</span>
+            <span class="badge bg-warning text-dark"><i class="bi bi-arrow-repeat me-1"></i>{{ _('Tự động chuyển nòng') }}</span>
           </div>
 
           <!-- Vùng chứa Jitsi Meet External API 8x8 JaaS / Daily.co -->
@@ -118,16 +118,16 @@
             <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
               <span class="visually-hidden">Loading...</span>
             </div>
-            <h5 class="fw-bold mb-1" id="loading-title">Đang Kết Nối Phòng Học Ảo TimeBank EDU...</h5>
-            <p class="text-white-50 small mb-0" id="loading-desc">Đang khởi tạo mã định danh 1 chạm an toàn cho {{ current_user.ho_ten }}</p>
+            <h5 class="fw-bold mb-1" id="loading-title">{{ _('Đang Kết Nối Phòng Học Ảo TimeBank EDU...') }}</h5>
+            <p class="text-white-50 small mb-0" id="loading-desc">{{ _('Đang khởi tạo mã định danh 1 chạm an toàn cho') }} {{ current_user.ho_ten }}</p>
           </div>
           
           <div id="jaas-error-state" class="p-4 p-lg-5 text-center bg-white h-100 d-none flex-column align-items-center justify-content-center" style="min-height: 650px;">
             <div class="mb-3 text-danger"><i class="bi bi-x-circle-fill" style="font-size: 3rem;"></i></div>
-            <h5 class="fw-bold text-danger mb-2" id="jaas-error-title">Không Thể Khởi Tạo Phòng Học</h5>
+            <h5 class="fw-bold text-danger mb-2" id="jaas-error-title">{{ _('Không Thể Khởi Tạo Phòng Học') }}</h5>
             <p class="text-muted small mb-3" id="jaas-error-desc"></p>
-            <button type="button" class="btn btn-outline-warning btn-sm rounded-pill px-3 fw-semibold" onclick="window.switchToPublicJitsi('Lỗi khởi tạo nòng chính, chuyển thủ công sang Jitsi')">
-              <i class="bi bi-arrow-right-circle me-1"></i> Chuyển sang phòng học dự phòng Jitsi
+            <button type="button" class="btn btn-outline-warning btn-sm rounded-pill px-3 fw-semibold" onclick="window.switchToPublicJitsi('{{ _('Lỗi khởi tạo nòng chính, chuyển thủ công sang Jitsi') }}')">
+              <i class="bi bi-arrow-right-circle me-1"></i> {{ _('Chuyển sang phòng học dự phòng Jitsi') }}
             </button>
           </div>
 
@@ -138,8 +138,9 @@
         {% endif %}
       </div>
       <div class="mt-2 d-flex justify-content-between align-items-center small text-muted px-2">
-        <span><i class="bi bi-shield-check text-success me-1"></i> Lớp học ảo trực tuyến: <code>{{ room_name }}</code></span>
-        <span><span class="badge-ai" style="font-size: 0.7rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Trí tuệ nhân tạo)</span> Giám sát thời lượng tự động</span>
+        {# Lớp học ảo trực tuyến: <code>{{ room_name }}</code> #}
+        <span><i class="bi bi-shield-check text-success me-1"></i> {{ _('Lớp học ảo trực tuyến:') }} <code>{{ room_name }}</code></span>
+        <span><span class="badge-ai" style="font-size: 0.7rem;"><i class="bi bi-stars"></i> {{ _('Hỗ trợ bởi AI (Trí tuệ nhân tạo)') }}</span> {{ _('Giám sát thời lượng tự động') }}</span>
       </div>
     </div>
 
@@ -147,46 +148,46 @@
     <div class="col-lg-3">
       <!-- Thẻ thành viên tham gia -->
       <div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-3">
-        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-people-fill text-primary me-2"></i>Thành Viên Lớp Học</h6>
+        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-people-fill text-primary me-2"></i>{{ _('Thành Viên Lớp Học') }}</h6>
 
         <!-- Người dạy -->
         <div class="p-2 bg-light rounded-3 mb-2 border">
           <div class="d-flex align-items-center justify-content-between">
-            <span class="badge bg-primary text-white" style="font-size: 0.7rem;">Gia sư (Dạy)</span>
-            <span class="badge bg-success-subtle text-success small"><i class="bi bi-check-circle-fill me-1"></i>Đã Check-in</span>
+            <span class="badge bg-primary text-white" style="font-size: 0.7rem;">{{ _('Gia sư (Dạy)') }}</span>
+            <span class="badge bg-success-subtle text-success small"><i class="bi bi-check-circle-fill me-1"></i>{{ _('Đã Check-in') }}</span>
           </div>
           <div class="fw-bold text-dark mt-1">{{ session_data.ten_nguoi_day }}</div>
-          <div class="text-muted small">Lớp: {{ session_data.lop_nguoi_day }} • <code>{{ session_data.ma_nguoi_day }}</code></div>
+          <div class="text-muted small">{{ _('Lớp:') }} {{ session_data.lop_nguoi_day }} • <code>{{ session_data.ma_nguoi_day }}</code></div>
         </div>
 
         <!-- Người học -->
         <div class="p-2 bg-light rounded-3 border">
           <div class="d-flex align-items-center justify-content-between">
-            <span class="badge bg-success text-white" style="font-size: 0.7rem;">Học sinh (Học)</span>
-            <span class="badge bg-success-subtle text-success small"><i class="bi bi-check-circle-fill me-1"></i>Đã Check-in</span>
+            <span class="badge bg-success text-white" style="font-size: 0.7rem;">{{ _('Học sinh (Học)') }}</span>
+            <span class="badge bg-success-subtle text-success small"><i class="bi bi-check-circle-fill me-1"></i>{{ _('Đã Check-in') }}</span>
           </div>
           <div class="fw-bold text-dark mt-1">{{ session_data.ten_nguoi_hoc }}</div>
-          <div class="text-muted small">Lớp: {{ session_data.lop_nguoi_hoc }} • <code>{{ session_data.ma_nguoi_hoc }}</code></div>
+          <div class="text-muted small">{{ _('Lớp:') }} {{ session_data.lop_nguoi_hoc }} • <code>{{ session_data.ma_nguoi_hoc }}</code></div>
         </div>
       </div>
 
       <!-- Thẻ quy tắc chuyển giờ 80% -->
       <div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-3">
         <h6 class="fw-bold text-dark mb-2">
-          <i class="bi bi-clock-history text-warning me-2"></i>Tiêu Chuẩn Chuyển Giờ
+          <i class="bi bi-clock-history text-warning me-2"></i>{{ _('Tiêu Chuẩn Chuyển Giờ') }}
         </h6>
         <div class="small text-muted mb-2">
-          Quy định thời lượng: <strong>{{ "%.1f"|format(session_data.so_gio) }} giờ ({{ "%.0f"|format(session_data.so_gio * 60) }} phút)</strong>
+          {{ _('Quy định thời lượng:') }}<strong>{{ "%.1f"|format(session_data.so_gio) }} {{ _('giờ') }} ({{ "%.0f"|format(session_data.so_gio * 60) }} {{ _('phút') }})</strong>
         </div>
 
         <div class="alert alert-warning py-2 px-3 small mb-2 border-0 bg-warning bg-opacity-10 text-dark">
           <i class="bi bi-info-circle-fill text-warning me-1"></i>
-          <strong>Tiêu chí ≥ 80%:</strong> Cả hai cần cùng online tối thiểu <strong>{{ "%.0f"|format(session_data.so_gio * 60 * 0.8) }} phút</strong> để hệ thống tự động chuyển tín dụng thời gian.
+          <strong>{{ _('Tiêu chí ≥ 80%:') }}</strong> {{ _('Cả hai cần cùng online tối thiểu') }}<strong>{{ "%.0f"|format(session_data.so_gio * 60 * 0.8) }} {{ _('phút') }}</strong> {{ _('để hệ thống tự động chuyển tín dụng thời gian.') }}
         </div>
 
         <div class="small text-secondary" style="font-size: 0.8rem;">
           <i class="bi bi-shield-exclamation me-1 text-danger"></i>
-          Nếu dưới 80%, phiên sẽ chuyển trạng thái <strong>'Cần xác minh'</strong> để Giáo viên duyệt tay nhằm đảm bảo chất lượng học tập thực chất.
+          {{ _('Nếu dưới 80%, phiên sẽ chuyển trạng thái') }}<strong>{{ _('\'Cần xác minh\'') }}</strong> {{ _('để Giáo viên duyệt tay nhằm đảm bảo chất lượng học tập thực chất.') }}
         </div>
       </div>
 
@@ -194,7 +195,7 @@
       {% if session_data.dan_y_ai %}
       <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
         <h6 class="fw-bold text-dark mb-2">
-          <span class="badge-ai" style="font-size: 0.7rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Trí tuệ nhân tạo)</span> Dàn ý gợi ý
+          <span class="badge-ai" style="font-size: 0.7rem;"><i class="bi bi-stars"></i> {{ _('Hỗ trợ bởi AI (Trí tuệ nhân tạo)') }}</span> {{ _('Dàn ý gợi ý') }}
         </h6>
         <div class="small text-muted" style="max-height: 180px; overflow-y: auto;">
           {{ session_data.dan_y_ai }}
@@ -212,37 +213,37 @@
       <div class="modal-header border-bottom-0 pb-0">
         <div class="d-flex align-items-center gap-2">
           <span class="badge bg-danger p-2 rounded-circle"><i class="bi bi-flag-fill text-white"></i></span>
-          <h5 class="modal-title fw-bold text-dark" id="reportModalLabel">Báo cáo vi phạm cho Giáo viên</h5>
+          <h5 class="modal-title fw-bold text-dark" id="reportModalLabel">{{ _('Báo cáo vi phạm cho Giáo viên') }}</h5>
         </div>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form method="POST" action="{{ url_for('report_session_violation', session_id=session_data.id) }}">
         <div class="modal-body p-4">
           <p class="small text-muted mb-3">
-            Thông tin báo cáo sẽ được gửi bảo mật trực tiếp đến Giáo viên phụ trách và Ban Quản trị trường để can thiệp kịp thời.
+            {{ _('Thông tin báo cáo sẽ được gửi bảo mật trực tiếp đến Giáo viên phụ trách và Ban Quản trị trường để can thiệp kịp thời.') }}
           </p>
 
           <div class="mb-3">
-            <label class="form-label small fw-semibold">Hành vi vi phạm nội quy <span class="text-danger">*</span></label>
+            <label class="form-label small fw-semibold">{{ _('Hành vi vi phạm nội quy') }}<span class="text-danger">*</span></label>
             <select class="form-select" name="loai_vi_pham" required>
-              <option value="ngon_tu_khong_chuan_muc">Ngôn từ thô tục, chửi thề, xúc phạm (Điều 3)</option>
-              <option value="trang_phuc_khong_phu_hop">Trang phục phản cảm, không phù hợp camera (Điều 2)</option>
-              <option value="quay_roi_thieu_ton_trong">Hành vi quấy rối, thiếu tôn trọng bạn học (Điều 6)</option>
-              <option value="noi_dung_doc_hai">Chia sẻ nội dung độc hại, quảng cáo (Điều 4)</option>
-              <option value="gian_lan_thoi_luong">Gian lận điểm danh / rời phòng sớm (Điều 1)</option>
-              <option value="khac">Vi phạm khác</option>
+              <option value="ngon_tu_khong_chuan_muc">{{ _('Ngôn từ thô tục, chửi thề, xúc phạm (Điều 3)') }}</option>
+              <option value="trang_phuc_khong_phu_hop">{{ _('Trang phục phản cảm, không phù hợp camera (Điều 2)') }}</option>
+              <option value="quay_roi_thieu_ton_trong">{{ _('Hành vi quấy rối, thiếu tôn trọng bạn học (Điều 6)') }}</option>
+              <option value="noi_dung_doc_hai">{{ _('Chia sẻ nội dung độc hại, quảng cáo (Điều 4)') }}</option>
+              <option value="gian_lan_thoi_luong">{{ _('Gian lận điểm danh / rời phòng sớm (Điều 1)') }}</option>
+              <option value="khac">{{ _('Vi phạm khác') }}</option>
             </select>
           </div>
 
           <div class="mb-3">
-            <label class="form-label small fw-semibold">Mô tả chi tiết sự việc <span class="text-danger">*</span></label>
-            <textarea class="form-control" name="mo_ta" rows="3" placeholder="Mô tả cụ thể hành vi hoặc lời nói vi phạm..." required></textarea>
+            <label class="form-label small fw-semibold">{{ _('Mô tả chi tiết sự việc') }}<span class="text-danger">*</span></label>
+            <textarea class="form-control" name="mo_ta" rows="3" placeholder="{{ _('Mô tả cụ thể hành vi hoặc lời nói vi phạm...') }}" required></textarea>
           </div>
         </div>
         <div class="modal-footer border-top-0 pt-0 px-4 pb-4">
-          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ _('Hủy') }}</button>
           <button type="submit" class="btn btn-danger fw-semibold px-4">
-            <i class="bi bi-send-fill me-1"></i> Gửi báo cáo vi phạm
+            <i class="bi bi-send-fill me-1"></i> {{ _('Gửi báo cáo vi phạm') }}
           </button>
         </div>
       </form>
@@ -305,7 +306,7 @@ document.addEventListener("DOMContentLoaded", function() {
   // NÒNG 1: DAILY.CO (NÒNG CHÍNH)
   // =========================================================================
   function startDaily() {
-    showLoading("Đang Kết Nối Phòng Học Daily.co...", "Đang khởi tạo mã phòng học 1 chạm cho " + userName);
+    showLoading("{{ _('Đang Kết Nối Phòng Học...') }}", "{{ _('Đang khởi tạo mã phòng học 1 chạm cho ') }}" + userName);
 
     // 1. Fetch token Daily
     fetch("{{ url_for('get_virtual_room_token', session_id=session_data.id) }}?provider=daily", {
@@ -324,7 +325,7 @@ document.addEventListener("DOMContentLoaded", function() {
       if (!result.ok || !result.data.success || result.data.provider !== "daily") {
         console.warn("Daily.co token request failed or returned fallback:", result);
         // Tự động fallback sang nòng dự phòng 1
-        switchToJaaS("Không thể kết nối Daily.co. Tự động chuyển nòng dự phòng...");
+        switchToJaaS("{{ _('Không thể kết nối Daily.co. Tự động chuyển nòng dự phòng...') }}");
         return;
       }
 
@@ -332,14 +333,14 @@ document.addEventListener("DOMContentLoaded", function() {
       const meetingToken = result.data.token;
 
       if (!roomUrl || !meetingToken) {
-        switchToJaaS("Thiếu URL hoặc token phòng học Daily.co. Tự động chuyển nòng dự phòng...");
+        switchToJaaS("{{ _('Thiếu URL hoặc token phòng học Daily.co. Tự động chuyển nòng dự phòng...') }}");
         return;
       }
 
       function initDailyFrame() {
         try {
           if (!window.DailyIframe) {
-            switchToJaaS("Không thể tải SDK Daily.co. Tự động chuyển nòng dự phòng...");
+            switchToJaaS("{{ _('Không thể tải SDK Daily.co. Tự động chuyển nòng dự phòng...') }}");
             return;
           }
 
@@ -359,7 +360,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
           dailyCallFrame.on("error", function(e) {
             console.warn("Daily call frame runtime error:", e);
-            switchToJaaS("Lỗi phòng học Daily.co (" + (e.errorMsg || "mất kết nối") + "). Tự động chuyển nòng dự phòng...");
+            switchToJaaS("{{ _('Lỗi phòng học Daily.co') }} (" + (e.errorMsg || "{{ _('mất kết nối') }}") + "). {{ _('Tự động chuyển nòng dự phòng...') }}");
           });
 
           dailyCallFrame.join({
@@ -371,11 +372,11 @@ document.addEventListener("DOMContentLoaded", function() {
             console.log("Daily.co joined successfully!");
           }).catch(function(err) {
             console.warn("Daily join failed:", err);
-            switchToJaaS("Không thể vào phòng Daily.co. Tự động chuyển nòng dự phòng...");
+            switchToJaaS("{{ _('Không thể vào phòng Daily.co. Tự động chuyển nòng dự phòng...') }}");
           });
         } catch (e) {
           console.warn("Daily init error:", e);
-          switchToJaaS("Lỗi khởi tạo Daily.co: " + e.message + ". Tự động chuyển nòng dự phòng...");
+          switchToJaaS("{{ _('Lỗi khởi tạo Daily.co:') }} " + e.message + ". {{ _('Tự động chuyển nòng dự phòng...') }}");
         }
       }
 
@@ -389,14 +390,14 @@ document.addEventListener("DOMContentLoaded", function() {
         script.onload = initDailyFrame;
         script.onerror = function() {
           console.warn("Failed to load Daily.js script CDN");
-          switchToJaaS("Không thể tải thư viện Daily.co qua CDN. Tự động chuyển nòng dự phòng...");
+          switchToJaaS("{{ _('Không thể tải thư viện Daily.co qua CDN. Tự động chuyển nòng dự phòng...') }}");
         };
         document.head.appendChild(script);
       }
     })
     .catch(function(err) {
       console.warn("Daily network error:", err);
-      switchToJaaS("Lỗi mạng Daily.co: " + err.message + ". Tự động chuyển nòng dự phòng...");
+      switchToJaaS("{{ _('Lỗi mạng Daily.co:') }} " + err.message + ". {{ _('Tự động chuyển nòng dự phòng...') }}");
     });
   }
 
@@ -413,7 +414,8 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   function startJaaS(isFallback, reasonMsg) {
-    showLoading("Đang Kết Nối Lớp Học Ảo...", reasonMsg || ("Đang khởi tạo mã định danh 1 chạm an toàn cho " + userName));
+    // showLoading("Đang Kết Nối Lớp Học Ảo..."
+    showLoading("{{ _('Đang Kết Nối Lớp Học Ảo...') }}", reasonMsg || ("{{ _('Đang khởi tạo mã định danh 1 chạm an toàn cho ') }}" + userName));
 
     fetch("{{ url_for('get_virtual_room_token', session_id=session_data.id) }}?provider=jaas", {
       method: "POST",
@@ -430,7 +432,7 @@ document.addEventListener("DOMContentLoaded", function() {
     .then(function(result) {
       if (!result.ok || !result.data.success || !result.data.token) {
         console.warn("JaaS token error:", result);
-        window.switchToPublicJitsi("Không thể cấp token lớp học (" + (result.data.error || "lỗi cấu hình") + "). Tự động chuyển nòng dự phòng (Jitsi)...");
+        window.switchToPublicJitsi("{{ _('Không thể cấp token lớp học') }} (" + (result.data.error || "{{ _('lỗi cấu hình') }}") + "). {{ _('Tự động chuyển nòng dự phòng (Jitsi)...') }}");
         return;
       }
 
@@ -442,7 +444,7 @@ document.addEventListener("DOMContentLoaded", function() {
       function mountJitsiAPI() {
         try {
           if (typeof JitsiMeetExternalAPI === "undefined") {
-            window.switchToPublicJitsi("Không thể nạp thư viện kết nối lớp học. Chuyển nòng dự phòng (Jitsi)...");
+            window.switchToPublicJitsi("{{ _('Không thể nạp thư viện kết nối lớp học. Chuyển nòng dự phòng (Jitsi)...') }}");
             return;
           }
 
@@ -467,7 +469,7 @@ document.addEventListener("DOMContentLoaded", function() {
             interfaceConfigOverwrite: {
               SHOW_JITSI_WATERMARK: false,
               SHOW_WATERMARK_FOR_GUESTS: false,
-              DEFAULT_REMOTE_DISPLAY_NAME: "Thành viên TimeBank"
+              DEFAULT_REMOTE_DISPLAY_NAME: "{{ _('Thành viên TimeBank') }}"
             },
             userInfo: {
               displayName: payload.user ? payload.user.name : userName,
@@ -479,7 +481,7 @@ document.addEventListener("DOMContentLoaded", function() {
           hideLoading();
         } catch (e) {
           console.warn("JaaS mount error:", e);
-          window.switchToPublicJitsi("Không thể khởi tạo lớp học: " + e.message + ". Chuyển nòng dự phòng (Jitsi)...");
+          window.switchToPublicJitsi("{{ _('Không thể khởi tạo lớp học:') }} " + e.message + ". {{ _('Chuyển nòng dự phòng (Jitsi)...') }}");
         }
       }
 
@@ -496,7 +498,7 @@ document.addEventListener("DOMContentLoaded", function() {
           fallbackScript.async = true;
           fallbackScript.onload = mountJitsiAPI;
           fallbackScript.onerror = function() {
-            window.switchToPublicJitsi("Không thể tải thư viện lớp học ảo. Chuyển nòng dự phòng (Jitsi)...");
+            window.switchToPublicJitsi("{{ _('Không thể tải thư viện lớp học ảo. Chuyển nòng dự phòng (Jitsi)...') }}");
           };
           document.head.appendChild(fallbackScript);
         };
@@ -505,7 +507,7 @@ document.addEventListener("DOMContentLoaded", function() {
     })
     .catch(function(err) {
       console.warn("JaaS network error:", err);
-      window.switchToPublicJitsi("Lỗi kết nối lớp học: " + err.message + ". Chuyển nòng dự phòng (Jitsi)...");
+      window.switchToPublicJitsi("{{ _('Lỗi kết nối lớp học:') }} " + err.message + ". {{ _('Chuyển nòng dự phòng (Jitsi)...') }}");
     });
   }
 
@@ -532,7 +534,7 @@ document.addEventListener("DOMContentLoaded", function() {
       fallbackBanner.classList.remove("d-none");
       fallbackBanner.classList.add("d-flex");
       if (fallbackText) {
-        fallbackText.textContent = "Đang dùng phòng học dự phòng (Jitsi)";
+        fallbackText.textContent = "{{ _('Đang dùng phòng học dự phòng (Jitsi)') }}";
       }
     }
 
@@ -583,7 +585,7 @@ document.addEventListener("DOMContentLoaded", function() {
     if (configuredProvider === "jaas") {
       startJaaS(false);
     } else if (configuredProvider === "jitsi") {
-      window.switchToPublicJitsi("Cấu hình chọn dùng trực tiếp phòng học dự phòng Jitsi.");
+      window.switchToPublicJitsi("{{ _('Cấu hình chọn dùng trực tiếp phòng học dự phòng Jitsi.') }}");
     } else {
       // Mặc định: Daily.co
       startDaily();

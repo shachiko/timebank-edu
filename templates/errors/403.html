@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Truy cập bị từ chối (403 Forbidden) - {{ config.ten_truong }}{% endblock %}
+{% block title %}{{ _('Truy cập bị từ chối (403 Forbidden) - {{ config.ten_truong }}') }}{% endblock %}
 
 {% block content %}
 <div class="container py-5 text-center">
@@ -10,18 +10,18 @@
         <div class="text-danger mb-3">
           <i class="bi bi-shield-lock-fill" style="font-size: 4rem;"></i>
         </div>
-        <h2 class="fw-bold text-dark mb-2">Truy cập bị từ chối (403)</h2>
-        <p class="text-danger fw-semibold mb-3">Khu vực này chỉ dành riêng cho Quản trị viên (Admin) hoặc Giáo viên!</p>
+        <h2 class="fw-bold text-dark mb-2">{{ _('Truy cập bị từ chối (403)') }}</h2>
+        <p class="text-danger fw-semibold mb-3">{{ _('Khu vực này chỉ dành riêng cho Quản trị viên (Admin) hoặc Giáo viên!') }}</p>
         <p class="text-muted small mb-4">
-          Tài khoản hiện tại của bạn là <strong>{{ current_user.vai_tro if current_user else 'Chưa đăng nhập' }}</strong>, 
-          không có thẩm quyền truy cập vào bảng điều khiển quản trị hoặc tính năng này.
+          {{ _('Tài khoản hiện tại của bạn là') }}<strong>{{ current_user.vai_tro if current_user else _('Chưa đăng nhập') }}</strong>, 
+          {{ _('không có thẩm quyền truy cập vào bảng điều khiển quản trị hoặc tính năng này.') }}
         </p>
         <div class="d-flex justify-content-center gap-3">
           <a href="{{ url_for('profile') if current_user else url_for('login') }}" class="btn btn-brand">
-            <i class="bi bi-person-circle me-1"></i> Về trang hồ sơ
+            <i class="bi bi-person-circle me-1"></i> {{ _('Về trang hồ sơ') }}
           </a>
           <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
-            <i class="bi bi-house-door me-1"></i> Trang chủ
+            <i class="bi bi-house-door me-1"></i> {{ _('Trang chủ') }}
           </a>
         </div>
       </div>

@@ -142,39 +142,39 @@ async function validateInviteCode() {
 
   if (!code) {
     feedback.className = 'small mt-1 text-muted';
-    feedback.textContent = 'Có mã mời: Tự gán trường & kích hoạt ngay.';
+    feedback.textContent = "{{ _('Có mã mời: Tự gán trường & kích hoạt ngay.') }}";
     schoolSelect.disabled = false;
     schoolHidden.value = '';
     schoolNotice.className = 'small mt-1 text-muted';
-    schoolNotice.textContent = 'Không mã: Vào hàng chờ quản trị trường duyệt.';
+    schoolNotice.textContent = "{{ _('Không mã: Vào hàng chờ quản trị trường duyệt.') }}";
     return;
   }
 
   feedback.className = 'small mt-1 text-info';
-  feedback.textContent = 'Đang kiểm tra mã mời...';
+  feedback.textContent = "{{ _('Đang kiểm tra mã mời...') }}";
 
   try {
     const res = await fetch(`/api/check-invite-code?code=${encodeURIComponent(code)}`);
     const data = await res.json();
     if (data.valid) {
       feedback.className = 'small mt-1 text-success fw-bold';
-      feedback.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i> Mã hợp lệ! Tự gán: ${data.ten_truong} (Còn ${data.con_lai} lượt). Kích hoạt ngay!`;
+      feedback.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i> {{ _('Mã hợp lệ! Tự gán:') }} ${data.ten_truong} ({{ _('Còn') }} ${data.con_lai} {{ _('lượt') }}). {{ _('Kích hoạt ngay!') }}`;
       schoolSelect.value = String(data.truong_id);
       schoolSelect.disabled = true; // Khóa dropdown trường
       schoolHidden.value = String(data.truong_id);
       schoolNotice.className = 'small mt-1 text-success fw-semibold';
-      schoolNotice.innerHTML = `<i class="bi bi-lock-fill me-1"></i> Trường đã tự gán & khóa theo mã mời.`;
+      schoolNotice.innerHTML = `<i class="bi bi-lock-fill me-1"></i> {{ _('Trường đã tự gán & khóa theo mã mời.') }}`;
     } else {
       feedback.className = 'small mt-1 text-danger fw-bold';
       feedback.innerHTML = `<i class="bi bi-x-circle-fill me-1"></i> ${data.message}`;
       schoolSelect.disabled = false;
       schoolHidden.value = '';
       schoolNotice.className = 'small mt-1 text-muted';
-      schoolNotice.textContent = 'Không có mã hợp lệ: Tài khoản vào hàng chờ duyệt.';
+      schoolNotice.textContent = "{{ _('Không có mã hợp lệ: Tài khoản vào hàng chờ duyệt.') }}";
     }
   } catch (e) {
     feedback.className = 'small mt-1 text-danger';
-    feedback.textContent = 'Không thể kiểm tra mã mời lúc này.';
+    feedback.textContent = "{{ _('Không thể kiểm tra mã mời lúc này.') }}";
   }
 }
 

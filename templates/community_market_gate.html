@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Cổng Kết Nối Cộng Đồng Liên Trường — School Time Bank{% endblock %}
+{% block title %}{{ _('Cổng Kết Nối Cộng Đồng Liên Trường — School Time Bank') }}{% endblock %}
 
 {% block content %}
 <div class="container py-5">
@@ -14,8 +14,8 @@
             <div class="d-inline-flex align-items-center justify-content-center bg-white bg-opacity-20 rounded-circle p-3 mb-3 shadow-sm" style="width: 88px; height: 88px;">
               <i class="bi bi-shield-lock-fill text-warning display-5"></i>
             </div>
-            <h2 class="fw-bold mb-2">Cổng Kiểm Chuẩn Cộng Đồng Liên Trường</h2>
-            <p class="mb-0 text-white-50 fs-6">Không Gian Chia Sẻ Tri Thức & Kỹ Năng Liên Trường Học Đường</p>
+            <h2 class="fw-bold mb-2">{{ _('Cổng Kiểm Chuẩn Cộng Đồng Liên Trường') }}</h2>
+            <p class="mb-0 text-white-50 fs-6">{{ _('Không Gian Chia Sẻ Tri Thức & Kỹ Năng Liên Trường Học Đường') }}</p>
           </div>
         </div>
 
@@ -26,10 +26,10 @@
               <i class="bi bi-info-circle-fill text-warning fs-3 mt-1"></i>
               <div>
                 <h5 class="fw-bold text-dark mb-1">
-                  Bạn cần <span class="text-primary fw-extrabold fs-4">{{ remaining_display }}</span> giờ dạy nữa để mở khóa Cộng đồng liên trường
+                  {{ _('Bạn cần') }}<span class="text-primary fw-extrabold fs-4">{{ remaining_display }}</span> {{ _('giờ dạy nữa để mở khóa Cộng đồng liên trường') }}
                 </h5>
                 <p class="text-muted small mb-0">
-                  Triết lý giáo dục: Cộng đồng liên trường là không gian giao lưu tri thức uy tín. Học sinh cần chứng minh năng lực sẻ chia bằng các buổi dạy thực tế hoàn thành trước khi mở rộng kết nối ra ngoài trường học.
+                  {{ _('Triết lý giáo dục: Cộng đồng liên trường là không gian giao lưu tri thức uy tín. Học sinh cần chứng minh năng lực sẻ chia bằng các buổi dạy thực tế hoàn thành trước khi mở rộng kết nối ra ngoài trường học.') }}
                 </p>
               </div>
             </div>
@@ -39,10 +39,10 @@
           <div class="bg-light p-4 rounded-4 mb-4 text-start border">
             <div class="d-flex justify-content-between align-items-center mb-2">
               <span class="fw-semibold text-secondary small">
-                <i class="bi bi-bar-chart-steps text-primary me-1"></i> Tiến độ tích lũy giờ dạy thực tế:
+                <i class="bi bi-bar-chart-steps text-primary me-1"></i> {{ _('Tiến độ tích lũy giờ dạy thực tế:') }}
               </span>
               <span class="fw-bold text-primary">
-                {{ teaching_hours_display }} / {{ threshold_display }} giờ dạy
+                {{ teaching_hours_display }} / {{ threshold_display }} {{ _('giờ dạy') }}
               </span>
             </div>
             <div class="progress rounded-pill shadow-sm" style="height: 18px; background-color: #e2e8f0;">
@@ -57,8 +57,8 @@
               </div>
             </div>
             <div class="d-flex justify-content-between small text-muted mt-2">
-              <span>Khởi đầu (0h)</span>
-              <span>Ngưỡng mở khóa: {{ threshold_display }}h dạy thật</span>
+              <span>{{ _('Khởi đầu (0h)') }}</span>
+              <span>{{ _('Ngưỡng mở khóa:') }} {{ threshold_display }}h {{ _('dạy thật') }}</span>
             </div>
           </div>
 
@@ -68,10 +68,10 @@
               <div class="p-3 rounded-4 border bg-white h-100">
                 <div class="d-flex align-items-center gap-2 mb-2 text-success">
                   <i class="bi bi-check-circle-fill fs-5"></i>
-                  <strong class="text-dark">Tín dụng dạy thật</strong>
+                  <strong class="text-dark">{{ _('Tín dụng dạy thật') }}</strong>
                 </div>
                 <p class="text-muted small mb-0">
-                  Chỉ tính tổng thời lượng các buổi học bạn làm <strong>Người dạy</strong> và có trạng thái <strong>'hoàn thành'</strong>. Không tính 2 giờ tặng ban đầu.
+                  {{ _('Chỉ tính tổng thời lượng các buổi học bạn làm') }}<strong>{{ _('Người dạy') }}</strong> {{ _('và có trạng thái') }}<strong>{{ _('\'hoàn thành\'') }}</strong>{{ _('. Không tính 2 giờ tặng ban đầu.') }}
                 </p>
               </div>
             </div>
@@ -79,10 +79,10 @@
               <div class="p-3 rounded-4 border bg-white h-100">
                 <div class="d-flex align-items-center gap-2 mb-2 text-warning">
                   <i class="bi bi-award-fill fs-5"></i>
-                  <strong class="text-dark">Đặc quyền Thành viên</strong>
+                  <strong class="text-dark">{{ _('Đặc quyền Thành viên') }}</strong>
                 </div>
                 <p class="text-muted small mb-0">
-                  Khi đạt ngưỡng, bạn nhận ngay huy hiệu <strong>"Thành viên Cộng đồng"</strong> trên hồ sơ và được đăng kỹ năng giao lưu với học sinh các trường bạn.
+                  {{ _('Khi đạt ngưỡng, bạn nhận ngay huy hiệu') }}<strong>{{ _('"Thành viên Cộng đồng"') }}</strong> {{ _('trên hồ sơ và được đăng kỹ năng giao lưu với học sinh các trường bạn.') }}
                 </p>
               </div>
             </div>
@@ -91,10 +91,10 @@
           <!-- Các nút hành động gợi ý -->
           <div class="d-flex flex-wrap justify-content-center gap-3">
             <a href="{{ url_for('skills_market') }}" class="btn btn-primary rounded-pill px-4 py-2 shadow-sm">
-              <i class="bi bi-shop me-1"></i> Đến Kho kỹ năng nội trường để dạy kèm
+              <i class="bi bi-shop me-1"></i> {{ _('Đến Kho kỹ năng nội trường để dạy kèm') }}
             </a>
             <a href="{{ url_for('profile') }}" class="btn btn-outline-secondary rounded-pill px-4 py-2">
-              <i class="bi bi-person-circle me-1"></i> Xem hồ sơ của tôi
+              <i class="bi bi-person-circle me-1"></i> {{ _('Xem hồ sơ của tôi') }}
             </a>
           </div>
         </div>

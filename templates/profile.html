@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Hồ sơ cá nhân - {{ user.ho_ten }} - {{ config.ten_truong }}{% endblock %}
+{% block title %}{{ _('Hồ sơ cá nhân - {{ user.ho_ten }} - {{ config.ten_truong }}') }}{% endblock %}
 
 {% block content %}
 <div class="container py-4">
@@ -14,7 +14,7 @@
               {{ user.ho_ten[0] | upper }}
             </div>
             <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-success border border-white p-1">
-              <span class="visually-hidden">Trực tuyến</span>
+              <span class="visually-hidden">{{ _('Trực tuyến') }}</span>
             </span>
           </div>
 
@@ -22,36 +22,36 @@
             <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
               <h3 class="fw-bold mb-0 text-dark">{{ user.ho_ten }}</h3>
               {% if user.vai_tro == 'admin' %}
-                <span class="badge bg-danger"><i class="bi bi-shield-fill-check me-1"></i> Quản trị viên</span>
+                <span class="badge bg-danger"><i class="bi bi-shield-fill-check me-1"></i> {{ _('Quản trị viên') }}</span>
               {% elif user.vai_tro == 'giao_vien' %}
-                <span class="badge bg-primary"><i class="bi bi-mortarboard-fill me-1"></i> Giáo viên</span>
+                <span class="badge bg-primary"><i class="bi bi-mortarboard-fill me-1"></i> {{ _('Giáo viên') }}</span>
               {% else %}
-                <span class="badge bg-success"><i class="bi bi-person-fill me-1"></i> Học sinh</span>
+                <span class="badge bg-success"><i class="bi bi-person-fill me-1"></i> {{ _('Học sinh') }}</span>
               {% endif %}
               {% if is_community_member %}
-                <span class="badge bg-warning text-dark"><i class="bi bi-award-fill me-1"></i>Thành viên Cộng đồng</span>
+                <span class="badge bg-warning text-dark"><i class="bi bi-award-fill me-1"></i>{{ _('Thành viên Cộng đồng') }}</span>
               {% endif %}
             </div>
             
             <p class="text-muted small mb-2">
-              <i class="bi bi-person-vcard me-1"></i>Mã định danh: <code>{{ user.ma_hoc_sinh }}</code>
-              {% if user.lop %} • <i class="bi bi-building me-1"></i>Lớp/Đơn vị: <strong>{{ user.lop }}</strong>{% endif %}
+              <i class="bi bi-person-vcard me-1"></i>{{ _('Mã định danh:') }}<code>{{ user.ma_hoc_sinh }}</code>
+              {% if user.lop %} • <i class="bi bi-building me-1"></i>{{ _('Lớp/Đơn vị:') }}<strong>{{ user.lop }}</strong>{% endif %}
               • <i class="bi bi-geo-alt me-1"></i>{{ config.ten_truong }}
             </p>
 
             <div class="small text-secondary">
-              <i class="bi bi-clock-history me-1 text-primary"></i>Khung giờ rảnh: 
-              <strong>{{ user.gio_ranh if user.gio_ranh else 'Chưa cập nhật' }}</strong>
+              <i class="bi bi-clock-history me-1 text-primary"></i>{{ _('Khung giờ rảnh:') }}
+              <strong>{{ user.gio_ranh if user.gio_ranh else _('Chưa cập nhật') }}</strong>
             </div>
 
             <div class="mt-3 d-flex flex-wrap align-items-center gap-2">
               {% if is_demo_user(user.ma_hoc_sinh) %}
                 <span class="badge bg-warning-subtle text-warning border border-warning-subtle py-2 px-3 rounded-pill" style="font-size: 0.8rem;">
-                  <i class="bi bi-shield-lock-fill me-1"></i>Tài khoản Demo (Không thể đổi mật khẩu)
+                  <i class="bi bi-shield-lock-fill me-1"></i>{{ _('Tài khoản Demo (Không thể đổi mật khẩu)') }}
                 </span>
               {% else %}
                 <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#changePasswordModal" id="btnChangePassword">
-                  <i class="bi bi-key-fill me-1"></i>Đổi mật khẩu
+                  <i class="bi bi-key-fill me-1"></i>{{ _('Đổi mật khẩu') }}
                 </button>
               {% endif %}
             </div>
@@ -64,23 +64,23 @@
     <div class="col-lg-4">
       <div class="card border-0 shadow-sm rounded-4 p-4 h-100 text-white" style="background: linear-gradient(135deg, var(--brand-color), #3b82f6);">
         <div class="d-flex justify-content-between align-items-start mb-2">
-          <span class="small text-white-50 text-uppercase fw-semibold"><i class="bi bi-wallet2 me-1"></i> Sổ dư Tín dụng Thời gian</span>
-          <span class="badge bg-white bg-opacity-25 text-white">1h dạy = 1 credit</span>
+          <span class="small text-white-50 text-uppercase fw-semibold"><i class="bi bi-wallet2 me-1"></i> {{ _('Sổ dư Tín dụng Thời gian') }}</span>
+          <span class="badge bg-white bg-opacity-25 text-white">{{ _('1h dạy = 1 credit') }}</span>
         </div>
 
         <div class="d-flex align-items-baseline gap-2 my-2">
           <span class="display-4 fw-extrabold">{{ "%.1f"|format(user.so_du_gio) }}</span>
-          <span class="fs-5 text-white-50">giờ</span>
+          <span class="fs-5 text-white-50">{{ _('giờ') }}</span>
         </div>
 
         <div class="mt-2 mb-3">
           <a href="{{ url_for('wallet') }}" class="btn btn-light btn-sm fw-semibold text-primary">
-            <i class="bi bi-wallet2 me-1"></i> Xem chi tiết Ví của tôi
+            <i class="bi bi-wallet2 me-1"></i> {{ _('Xem chi tiết Ví của tôi') }}
           </a>
         </div>
 
         <div class="small text-white-50 mt-auto pt-2 border-top border-white border-opacity-25">
-          <i class="bi bi-shield-lock me-1"></i> Được bảo chứng bởi Ví tín dụng minh bạch
+          <i class="bi bi-shield-lock me-1"></i> {{ _('Được bảo chứng bởi Ví tín dụng minh bạch') }}
         </div>
       </div>
     </div>
@@ -93,12 +93,12 @@
       <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
         <div class="d-flex align-items-center justify-content-between">
           <div>
-            <span class="text-muted small">Tổng giờ đã dạy</span>
+            <span class="text-muted small">{{ _('Tổng giờ đã dạy') }}</span>
             <div class="d-flex align-items-baseline gap-1">
               <h3 class="fw-bold mb-0 text-primary">{{ "%.1f"|format(hours_taught) }}</h3>
-              <span class="text-muted small">giờ</span>
+              <span class="text-muted small">{{ _('giờ') }}</span>
             </div>
-            <small class="text-muted">Kèm cặp & sẻ chia</small>
+            <small class="text-muted">{{ _('Kèm cặp & sẻ chia') }}</small>
           </div>
           <div class="p-3 bg-primary bg-opacity-10 text-primary rounded-3">
             <i class="bi bi-person-video3 fs-4"></i>
@@ -112,12 +112,12 @@
       <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
         <div class="d-flex align-items-center justify-content-between">
           <div>
-            <span class="text-muted small">Tổng giờ đã học</span>
+            <span class="text-muted small">{{ _('Tổng giờ đã học') }}</span>
             <div class="d-flex align-items-baseline gap-1">
               <h3 class="fw-bold mb-0 text-success">{{ "%.1f"|format(hours_learned) }}</h3>
-              <span class="text-muted small">giờ</span>
+              <span class="text-muted small">{{ _('giờ') }}</span>
             </div>
-            <small class="text-muted">Tiếp thu tri thức</small>
+            <small class="text-muted">{{ _('Tiếp thu tri thức') }}</small>
           </div>
           <div class="p-3 bg-success bg-opacity-10 text-success rounded-3">
             <i class="bi bi-book-half fs-4"></i>
@@ -131,12 +131,12 @@
       <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
         <div class="d-flex align-items-center justify-content-between">
           <div>
-            <span class="text-muted small">Đánh giá trung bình</span>
+            <span class="text-muted small">{{ _('Đánh giá trung bình') }}</span>
             <div class="d-flex align-items-baseline gap-1">
               <h3 class="fw-bold mb-0 text-warning">{{ "%.1f"|format(avg_rating) }}</h3>
               <span class="text-warning fs-5">★</span>
             </div>
-            <small class="text-muted">Từ {{ rating_count }} lượt đánh giá</small>
+            <small class="text-muted">{{ _('Từ') }} {{ rating_count }} {{ _('lượt đánh giá') }}</small>
           </div>
           <div class="p-3 bg-warning bg-opacity-10 text-warning rounded-3">
             <i class="bi bi-star-fill fs-4"></i>
@@ -150,12 +150,12 @@
       <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
         <div class="d-flex align-items-center justify-content-between">
           <div>
-            <span class="text-muted small">Kỹ năng sẵn sàng</span>
+            <span class="text-muted small">{{ _('Kỹ năng sẵn sàng') }}</span>
             <div class="d-flex align-items-baseline gap-1">
               <h3 class="fw-bold mb-0 text-info">{{ my_skills|length }}</h3>
-              <span class="text-muted small">kỹ năng</span>
+              <span class="text-muted small">{{ _('kỹ năng') }}</span>
             </div>
-            <small class="text-muted">Đóng góp cho trường</small>
+            <small class="text-muted">{{ _('Đóng góp cho trường') }}</small>
           </div>
           <div class="p-3 bg-info bg-opacity-10 text-info rounded-3">
             <i class="bi bi-lightbulb-fill fs-4"></i>
@@ -172,22 +172,22 @@
       <div>
         <div class="d-flex align-items-center gap-2">
           <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-2 py-1">
-            <i class="bi bi-compass-fill me-1"></i> Gợi ý cho bạn hôm nay
+            <i class="bi bi-compass-fill me-1"></i> {{ _('Gợi ý cho bạn hôm nay') }}
           </span>
           {% if is_live_rec %}
-            <span class="badge-ai" style="font-size: 0.72rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Trí tuệ nhân tạo)</span>
+            <span class="badge-ai" style="font-size: 0.72rem;"><i class="bi bi-stars"></i> {{ _('Hỗ trợ bởi AI (Trí tuệ nhân tạo)') }}</span>
           {% else %}
             <span class="badge bg-secondary bg-opacity-25 text-secondary border" style="font-size: 0.72rem;">
-              <i class="bi bi-cpu me-1"></i> Hỗ trợ bởi AI (Chế độ cơ bản)
+              <i class="bi bi-cpu me-1"></i> {{ _('Hỗ trợ bởi AI (Chế độ cơ bản)') }}
             </span>
           {% endif %}
         </div>
-        <h5 class="fw-bold mb-0 text-dark mt-1">Gia sư phù hợp nhất cho môn {{ target_subject }}</h5>
+        <h5 class="fw-bold mb-0 text-dark mt-1">{{ _('Gia sư phù hợp nhất cho môn') }} {{ target_subject }}</h5>
       </div>
       <div class="d-flex align-items-center gap-2">
-        <small class="text-muted"><i class="bi bi-clock-history me-1"></i>Tự động khớp theo lịch sử học & giờ rảnh</small>
+        <small class="text-muted"><i class="bi bi-clock-history me-1"></i>{{ _('Tự động khớp theo lịch sử học & giờ rảnh') }}</small>
         <a href="{{ url_for('ai_matchmake_view') }}" class="btn btn-outline-brand btn-sm">
-          <i class="bi bi-sliders me-1"></i> Tùy chỉnh tìm kiếm
+          <i class="bi bi-sliders me-1"></i> {{ _('Tùy chỉnh tìm kiếm') }}
         </a>
       </div>
     </div>
@@ -206,10 +206,10 @@
               </div>
               <h6 class="fw-bold text-dark mb-1">{{ match.tieu_de }}</h6>
               <div class="small text-muted mb-2">
-                <i class="bi bi-person-circle me-1 text-primary"></i><strong>{{ match.ho_ten }}</strong> (Lớp {{ match.lop }})
+                <i class="bi bi-person-circle me-1 text-primary"></i><strong>{{ match.ho_ten }}</strong> ({{ _('Lớp') }} {{ match.lop }})
               </div>
               <div class="small text-secondary mb-2">
-                <i class="bi bi-clock me-1 text-info"></i>Rảnh: <strong>{{ match.gio_ranh if match.gio_ranh else 'Linh hoạt' }}</strong>
+                <i class="bi bi-clock me-1 text-info"></i>{{ _('Rảnh:') }}<strong>{{ match.gio_ranh if match.gio_ranh else _('Linh hoạt') }}</strong>
               </div>
               <div class="p-2 bg-white rounded-3 border small mb-3 text-secondary fst-italic">
                 <i class="bi bi-chat-quote me-1 text-primary"></i>{{ match.ai_ly_do }}
@@ -217,7 +217,7 @@
             </div>
             <div>
               <a href="{{ url_for('book_skill_page', skill_id=match.id) }}" class="btn btn-brand btn-sm w-100 fw-bold">
-                <i class="bi bi-calendar-plus me-1"></i> Đặt lịch ngay
+                <i class="bi bi-calendar-plus me-1"></i> {{ _('Đặt lịch ngay') }}
               </a>
             </div>
           </div>
@@ -233,8 +233,8 @@
     <div class="col-lg-8">
       <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
         <div class="d-flex justify-content-between align-items-center mb-3">
-          <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-journal-text text-primary me-2"></i>Nhật ký Biến động Ví</h5>
-          <span class="badge bg-light text-muted border">Chỉ ghi tăng/giảm</span>
+          <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-journal-text text-primary me-2"></i>{{ _('Nhật ký Biến động Ví') }}</h5>
+          <span class="badge bg-light text-muted border">{{ _('Chỉ ghi tăng/giảm') }}</span>
         </div>
 
         {% if ledger_entries %}
@@ -242,9 +242,9 @@
           <table class="table table-hover align-middle mb-0">
             <thead class="table-light small text-muted">
               <tr>
-                <th scope="col">Thời gian</th>
-                <th scope="col">Nội dung / Lý do</th>
-                <th scope="col" class="text-end">Biến động</th>
+                <th scope="col">{{ _('Thời gian') }}</th>
+                <th scope="col">{{ _('Nội dung / Lý do') }}</th>
+                <th scope="col" class="text-end">{{ _('Biến động') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -254,7 +254,7 @@
                 <td>
                   <span class="small fw-medium text-dark">{{ item.ly_do }}</span>
                   {% if item.session_id %}
-                    <span class="badge bg-light text-secondary border ms-1">Phiên #{{ item.session_id }}</span>
+                    <span class="badge bg-light text-secondary border ms-1">{{ _('Phiên #') }}{{ item.session_id }}</span>
                   {% endif %}
                 </td>
                 <td class="text-end fw-bold text-nowrap">
@@ -272,7 +272,7 @@
         {% else %}
         <div class="text-center py-4 text-muted small">
           <i class="bi bi-inbox fs-3 d-block mb-1"></i>
-          Chưa có biến động tín dụng nào được ghi nhận.
+          {{ _('Chưa có biến động tín dụng nào được ghi nhận.') }}
         </div>
         {% endif %}
       </div>
@@ -282,7 +282,7 @@
     <div class="col-lg-4">
       <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
-          <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-stars text-warning me-2"></i>Kỹ năng của tôi</h6>
+          <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-stars text-warning me-2"></i>{{ _('Kỹ năng của tôi') }}</h6>
           <span class="badge bg-primary bg-opacity-10 text-primary">{{ my_skills|length }}</span>
         </div>
 
@@ -293,30 +293,30 @@
               <div class="d-flex justify-content-between align-items-start mb-1">
                 <span class="fw-semibold small text-dark">{{ sk.tieu_de }}</span>
                 {% if sk.trang_thai_duyet == 'da_duyet' %}
-                  <span class="badge-status-approved small"><i class="bi bi-patch-check-fill me-1"></i>Đã duyệt</span>
+                  <span class="badge-status-approved small"><i class="bi bi-patch-check-fill me-1"></i>{{ _('Đã duyệt') }}</span>
                 {% elif sk.trang_thai_duyet == 'tu_choi' %}
-                  <span class="badge bg-danger-subtle text-danger small">Từ chối</span>
+                  <span class="badge bg-danger-subtle text-danger small">{{ _('Từ chối') }}</span>
                 {% else %}
-                  <span class="badge bg-warning-subtle text-warning small">Chờ duyệt</span>
+                  <span class="badge bg-warning-subtle text-warning small">{{ _('Chờ duyệt') }}</span>
                 {% endif %}
               </div>
               <div class="d-flex justify-content-between align-items-center mt-1">
                 <small class="text-muted">{{ sk.linh_vuc }}</small>
                 {% if is_community_member %}
                   {% if sk.hien_thi_cong_dong == 1 or sk.trang_thai_cong_dong == 'da_duyet' %}
-                    <span class="badge bg-success-subtle text-success small" title="Đã có mặt trên Cộng đồng liên trường"><i class="bi bi-globe me-1"></i>Liên trường: Đã duyệt</span>
+                    <span class="badge bg-success-subtle text-success small" title="{{ _('Đã có mặt trên Cộng đồng liên trường') }}"><i class="bi bi-globe me-1"></i>{{ _('Liên trường: Đã duyệt') }}</span>
                   {% elif sk.trang_thai_cong_dong == 'cho_duyet' %}
-                    <span class="badge bg-info-subtle text-info-emphasis small" title="Đang chờ Quản trị viên duyệt"><i class="bi bi-hourglass-split me-1"></i>Liên trường: Chờ duyệt</span>
+                    <span class="badge bg-info-subtle text-info-emphasis small" title="{{ _('Đang chờ Quản trị viên duyệt') }}"><i class="bi bi-hourglass-split me-1"></i>{{ _('Liên trường: Chờ duyệt') }}</span>
                   {% elif sk.trang_thai_cong_dong == 'tu_choi' %}
                     <form action="{{ url_for('publish_community_skill', skill_id=sk.id) }}" method="POST" class="d-inline">
-                      <button type="submit" class="btn btn-sm btn-outline-warning py-0 px-2" style="font-size: 0.75rem;" title="Gửi lại yêu cầu">
-                        <i class="bi bi-arrow-repeat me-1"></i>Đăng lại liên trường
+                      <button type="submit" class="btn btn-sm btn-outline-warning py-0 px-2" style="font-size: 0.75rem;" title="{{ _('Gửi lại yêu cầu') }}">
+                        <i class="bi bi-arrow-repeat me-1"></i>{{ _('Đăng lại liên trường') }}
                       </button>
                     </form>
                   {% else %}
                     <form action="{{ url_for('publish_community_skill', skill_id=sk.id) }}" method="POST" class="d-inline">
-                      <button type="submit" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 0.75rem;" title="Đăng lên cộng đồng liên trường">
-                        <i class="bi bi-globe me-1"></i>Đăng lên cộng đồng liên trường
+                      <button type="submit" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 0.75rem;" title="{{ _('Đăng lên cộng đồng liên trường') }}">
+                        <i class="bi bi-globe me-1"></i>{{ _('Đăng lên cộng đồng liên trường') }}
                       </button>
                     </form>
                   {% endif %}
@@ -326,18 +326,18 @@
             {% endfor %}
           </div>
         {% else %}
-          <p class="text-muted small mb-3">Bạn chưa đăng ký kỹ năng nào để chia sẻ cùng bạn bè.</p>
+          <p class="text-muted small mb-3">{{ _('Bạn chưa đăng ký kỹ năng nào để chia sẻ cùng bạn bè.') }}</p>
         {% endif %}
 
         <div class="mt-3 pt-2 border-top">
           {% if user.vai_tro in ('giao_vien', 'admin') %}
             <a href="{{ url_for('skills_approval') }}" class="btn btn-outline-primary btn-sm w-100 mb-2">
-              <i class="bi bi-check2-circle me-1"></i> Khu vực Duyệt Kỹ Năng
+              <i class="bi bi-check2-circle me-1"></i> {{ _('Khu vực Duyệt Kỹ Năng') }}
             </a>
           {% endif %}
           {% if user.vai_tro == 'admin' %}
             <a href="{{ url_for('admin_dashboard') }}" class="btn btn-danger btn-sm w-100">
-              <i class="bi bi-gear-fill me-1"></i> Bảng điều khiển Quản trị (Admin)
+              <i class="bi bi-gear-fill me-1"></i> {{ _('Bảng điều khiển Quản trị (Admin)') }}
             </a>
           {% endif %}
         </div>
@@ -346,16 +346,16 @@
       <!-- Khối AI Tóm tắt phản hồi học sinh (Điểm chạm 4) -->
       <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
         <div class="d-flex justify-content-between align-items-center mb-2">
-          <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-chat-heart-fill text-danger me-2"></i>AI Tóm Tắt Phản Hồi</h6>
-          <span class="badge-ai" style="font-size: 0.7rem;"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Trí tuệ nhân tạo)</span>
+          <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-chat-heart-fill text-danger me-2"></i>{{ _('AI Tóm Tắt Phản Hồi') }}</h6>
+          <span class="badge-ai" style="font-size: 0.7rem;"><i class="bi bi-stars"></i> {{ _('Hỗ trợ bởi AI (Trí tuệ nhân tạo)') }}</span>
         </div>
-        <small class="text-muted d-block mb-3">Đúc kết từ các nhận xét thực tế của bạn bè sau các buổi bạn kèm cặp</small>
+        <small class="text-muted d-block mb-3">{{ _('Đúc kết từ các nhận xét thực tế của bạn bè sau các buổi bạn kèm cặp') }}</small>
 
         {% if ai_feedback %}
           <!-- Điểm mạnh -->
           <div class="mb-3">
             <span class="badge bg-success bg-opacity-10 text-success fw-semibold mb-1">
-              <i class="bi bi-hand-thumbs-up-fill me-1"></i> Điểm mạnh nổi bật
+              <i class="bi bi-hand-thumbs-up-fill me-1"></i> {{ _('Điểm mạnh nổi bật') }}
             </span>
             <ul class="list-unstyled small text-secondary mb-0 ps-1">
               {% for dm in ai_feedback.diem_manh %}
@@ -367,7 +367,7 @@
           <!-- Gợi ý cải thiện -->
           <div class="mb-3">
             <span class="badge bg-warning bg-opacity-10 text-dark fw-semibold mb-1">
-              <i class="bi bi-lightbulb-fill text-warning me-1"></i> Gợi ý hoàn thiện kỹ năng
+              <i class="bi bi-lightbulb-fill text-warning me-1"></i> {{ _('Gợi ý hoàn thiện kỹ năng') }}
             </span>
             <ul class="list-unstyled small text-secondary mb-0 ps-1">
               {% for ct in ai_feedback.cai_thien %}
@@ -385,7 +385,7 @@
         {% else %}
           <div class="text-center py-3 text-muted small">
             <i class="bi bi-chat-square-text fs-3 d-block mb-1"></i>
-            Bạn chưa nhận được đánh giá nào từ học sinh để AI tổng hợp.
+            {{ _('Bạn chưa nhận được đánh giá nào từ học sinh để AI tổng hợp.') }}
           </div>
         {% endif %}
       </div>
@@ -401,28 +401,28 @@
     <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
       <div class="modal-header bg-primary text-white">
         <h5 class="modal-title fw-bold" id="changePasswordModalLabel">
-          <i class="bi bi-key-fill me-2"></i>Đổi Mật Khẩu
+          <i class="bi bi-key-fill me-2"></i>{{ _('Đổi Mật Khẩu') }}
         </h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="{{ _('Đóng') }}"></button>
       </div>
       <form action="{{ url_for('change_password') }}" method="POST">
         <div class="modal-body p-4">
           <div class="mb-3">
-            <label for="mat_khau_cu" class="form-label small fw-bold">Mật khẩu hiện tại <span class="text-danger">*</span></label>
+            <label for="mat_khau_cu" class="form-label small fw-bold">{{ _('Mật khẩu hiện tại') }}<span class="text-danger">*</span></label>
             <input type="password" class="form-control rounded-3" id="mat_khau_cu" name="mat_khau_cu" required>
           </div>
           <div class="mb-3">
-            <label for="mat_khau_moi" class="form-label small fw-bold">Mật khẩu mới <span class="text-danger">*</span></label>
+            <label for="mat_khau_moi" class="form-label small fw-bold">{{ _('Mật khẩu mới') }}<span class="text-danger">*</span></label>
             <input type="password" class="form-control rounded-3" id="mat_khau_moi" name="mat_khau_moi" minlength="6" required>
           </div>
           <div class="mb-3">
-            <label for="mat_khau_xac_nhan" class="form-label small fw-bold">Xác nhận mật khẩu mới <span class="text-danger">*</span></label>
+            <label for="mat_khau_xac_nhan" class="form-label small fw-bold">{{ _('Xác nhận mật khẩu mới') }}<span class="text-danger">*</span></label>
             <input type="password" class="form-control rounded-3" id="mat_khau_xac_nhan" name="mat_khau_xac_nhan" minlength="6" required>
           </div>
         </div>
         <div class="modal-footer bg-light p-3">
-          <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Hủy</button>
-          <button type="submit" class="btn btn-primary rounded-pill px-4 fw-semibold">Lưu Mật Khẩu</button>
+          <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">{{ _('Hủy') }}</button>
+          <button type="submit" class="btn btn-primary rounded-pill px-4 fw-semibold">{{ _('Lưu Mật Khẩu') }}</button>
         </div>
       </form>
     </div>

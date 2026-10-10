@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-09 21:37+0700\n"
+"POT-Creation-Date: 2026-10-10 14:14+0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,88 +17,2649 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: app.py:324
+#: app.py:328
 msgid "Vui lòng đăng nhập để tiếp tục truy cập."
 msgstr ""
 
-#: app.py:338
+#: app.py:342
 msgid "Vui lòng đăng nhập bằng tài khoản Quản trị viên."
 msgstr ""
 
-#: app.py:353
+#: app.py:357
 msgid "Vui lòng đăng nhập bằng tài khoản Tổng quản trị."
 msgstr ""
 
-#: app.py:369
+#: app.py:373
 msgid "Vui lòng đăng nhập với quyền Giáo viên hoặc Quản trị viên."
 msgstr ""
 
-#: app.py:2052
+#: app.py:2191
 msgid "Vui lòng điền đầy đủ các thông tin bắt buộc (*)."
 msgstr ""
 
-#: app.py:2056
+#: app.py:2195
 msgid "Mật khẩu phải có độ dài tối thiểu từ 6 ký tự trở lên."
 msgstr ""
 
-#: app.py:2060
+#: app.py:2199
 msgid "Mật khẩu xác nhận không khớp với mật khẩu đã nhập."
 msgstr ""
 
-#: app.py:2066
+#: app.py:2205
 msgid "Mã học sinh đã tồn tại trong hệ thống. Vui lòng kiểm tra lại!"
 msgstr ""
 
-#: app.py:2083
+#: app.py:2222
 msgid "Mã mời không tồn tại trên hệ thống. Vui lòng kiểm tra lại!"
 msgstr ""
 
-#: app.py:2086
+#: app.py:2225
 msgid ""
 "Trường học gắn với mã mời này hiện đang tạm dừng hoạt động hoặc đã bị ẩn "
 "/ vô hiệu hóa!"
 msgstr ""
 
-#: app.py:2089
+#: app.py:2228
 msgid "Mã mời này đã hết số lượt sử dụng!"
 msgstr ""
 
-#: app.py:2106
+#: app.py:2245
 msgid ""
 "Trường học bạn chọn hiện đang tạm dừng hoạt động hoặc đã bị ẩn / vô hiệu "
 "hóa!"
 msgstr ""
 
-#: app.py:2156
+#: app.py:2295
 msgid ""
 "Chúc mừng bạn đã kích hoạt mở sổ thành công bằng mã mời và nhận ngay 2.0 "
 "giờ tín dụng!"
 msgstr ""
 
-#: app.py:2158
+#: app.py:2297
 msgid ""
 "Đăng ký thành công! Tài khoản của bạn đang ở trạng thái 'Chờ duyệt' bởi "
 "Quản trị viên nhà trường. Bạn chưa thể đăng kỹ năng hoặc đặt lịch học cho"
 " đến khi được duyệt."
 msgstr ""
 
-#: app.py:2190
+#: app.py:2329
 msgid "Mã đăng nhập hoặc mật khẩu không chính xác!"
 msgstr ""
 
-#: app.py:2196
+#: app.py:2335
 msgid ""
 "Tài khoản của bạn đã bị khóa do vi phạm nội quy học đường. Vui lòng liên "
 "hệ ban quản trị nhà trường để được hỗ trợ giải quyết."
 msgstr ""
 
-#: app.py:2216
+#: app.py:2355
 #, python-format
 msgid "Đăng nhập thành công! Xin chào %(name)s."
 msgstr ""
 
-#: app.py:2236
+#: app.py:2375
 msgid "Bạn đã đăng xuất khỏi hệ thống thành công."
+msgstr ""
+
+#: app.py:2392
+msgid "Tài khoản demo không được phép đổi mật khẩu!"
+msgstr ""
+
+#: app.py:2400
+msgid "Vui lòng điền đầy đủ thông tin đổi mật khẩu!"
+msgstr ""
+
+#: app.py:2404 app.py:2575
+msgid "Mật khẩu mới và xác nhận mật khẩu không khớp!"
+msgstr ""
+
+#: app.py:2408 app.py:2579
+msgid "Mật khẩu mới phải có tối thiểu 6 ký tự!"
+msgstr ""
+
+#: app.py:2416
+msgid "Mật khẩu hiện tại không chính xác!"
+msgstr ""
+
+#: app.py:2422
+msgid "Đổi mật khẩu thành công! Hãy ghi nhớ mật khẩu mới của bạn."
+msgstr ""
+
+#: app.py:2503
+msgid "Vui lòng nhập địa chỉ email của bạn!"
+msgstr ""
+
+#: app.py:2516
+msgid ""
+"Không tìm thấy tài khoản quản trị hoặc giáo viên với email này. Vui lòng "
+"liên hệ Tổng Quản trị viên (mshuyenuka@gmail.com) để được hỗ trợ."
+msgstr ""
+
+#: app.py:2536
+#, python-format
+msgid ""
+"Đã gửi liên kết đặt lại mật khẩu đến email %(email)s. Vui lòng kiểm tra "
+"hộp thư (liên kết có hiệu lực trong 60 phút)."
+msgstr ""
+
+#: app.py:2563
+msgid ""
+"Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn (chỉ dùng được 1 "
+"lần trong 60 phút). Vui lòng gửi lại yêu cầu mới."
+msgstr ""
+
+#: app.py:2571
+msgid "Vui lòng nhập đầy đủ mật khẩu mới và xác nhận mật khẩu!"
+msgstr ""
+
+#: app.py:2587
+msgid "Đặt lại mật khẩu thành công! Bạn có thể đăng nhập bằng mật khẩu mới."
+msgstr ""
+
+#: app.py:3118 app.py:3153
+msgid "Chức năng chỉ dành riêng cho Tổng Quản trị viên (Super Admin)!"
+msgstr ""
+
+#: app.py:3165
+msgid ""
+"Vui lòng điền đầy đủ các thông tin bắt buộc (Mã đăng nhập, Họ tên, Trường"
+" học, Mật khẩu)!"
+msgstr ""
+
+#: app.py:3169
+msgid "Vai trò không hợp lệ (chỉ được tạo Quản trị trường hoặc Giáo viên)!"
+msgstr ""
+
+#: app.py:3175
+msgid "ID trường học không hợp lệ!"
+msgstr ""
+
+#: app.py:3182
+#, python-format
+msgid "Mã đăng nhập '%(ma)s' đã tồn tại trong hệ thống!"
+msgstr ""
+
+#: app.py:3195
+#, python-format
+msgid ""
+"Đã tạo thành công tài khoản '%(ho_ten)s' (%(vai_tro)s) gắn với trường học"
+" ID %(tid)s!"
+msgstr ""
+
+#: app.py:3210
+msgid "Bạn không có quyền khôi phục dữ liệu Trường Demo!"
+msgstr ""
+
+#: app.py:3215
+msgid "Đã khôi phục toàn bộ dữ liệu Trường Demo về trạng thái ban đầu thành công!"
+msgstr ""
+
+#: app.py:3398
+msgid "Quản trị trường chỉ có quyền nhập danh sách cho trường của mình!"
+msgstr ""
+
+#: app.py:3410
+msgid "Vui lòng chọn file Excel (.xlsx) hoặc CSV (.csv) để nhập danh sách!"
+msgstr ""
+
+#: app.py:3422
+#, python-format
+msgid "Lỗi khi đọc file Excel: %(err)s"
+msgstr ""
+
+#: app.py:3435
+msgid "Không thể giải mã file CSV. Vui lòng lưu file với định dạng UTF-8!"
+msgstr ""
+
+#: app.py:3440
+#, python-format
+msgid "Lỗi khi đọc file CSV: %(err)s"
+msgstr ""
+
+#: app.py:3443
+msgid "Định dạng file không được hỗ trợ. Vui lòng tải lên file .xlsx hoặc .csv!"
+msgstr ""
+
+#: app.py:3447
+msgid "File tải lên không có dữ liệu để nhập!"
+msgstr ""
+
+#: app.py:3470
+msgid ""
+"File thiếu cột bắt buộc 'họ_tên' hoặc 'vai_trò'. Vui lòng tải file mẫu để"
+" kiểm tra đúng cấu trúc!"
+msgstr ""
+
+#: app.py:3640
+#, python-format
+msgid ""
+"Nhập danh sách thành công! Đã tạo %(count)s tài khoản cho trường "
+"'%(school)s'. Vui lòng tải file Excel kết quả để phát thông tin đăng nhập"
+" cho từng người."
+msgstr ""
+
+#: app.py:3642
+#, python-format
+msgid ""
+"Đã tạo thành công %(sc)s tài khoản; %(ec)s dòng bị lỗi/bỏ qua. Xem bảng "
+"tổng kết chi tiết bên dưới."
+msgstr ""
+
+#: app.py:3644
+#, python-format
+msgid ""
+"Không có tài khoản nào được tạo. Toàn bộ %(ec)s dòng trong danh sách đều "
+"có lỗi."
+msgstr ""
+
+#: app.py:3658
+msgid ""
+"Chưa có kết quả nhập tài khoản nào trong phiên làm việc hiện tại để tải "
+"về!"
+msgstr ""
+
+#: app.py:3866
+#, python-format
+msgid "Đã sinh thành công %(count)s mã mời dạng TBEDU-XXXX-XXXX!"
+msgstr ""
+
+#: app.py:3882 app.py:3907 app.py:3976
+msgid "Không tìm thấy người dùng."
+msgstr ""
+
+#: app.py:3886
+msgid "Bạn chỉ có quyền phê duyệt học sinh thuộc trường của mình!"
+msgstr ""
+
+#: app.py:3891
+#, python-format
+msgid "Đã phê duyệt tài khoản %(name)s (%(code)s) thành công!"
+msgstr ""
+
+#: app.py:3911
+msgid "Bạn chỉ có quyền thao tác trên học sinh thuộc trường của mình!"
+msgstr ""
+
+#: app.py:3916
+#, python-format
+msgid "Đã từ chối đăng ký của học sinh %(name)s."
+msgstr ""
+
+#: app.py:3945
+#, python-format
+msgid "Đã phê duyệt %(count)s học sinh được chọn thành công!"
+msgstr ""
+
+#: app.py:3956
+#, python-format
+msgid "Đã duyệt toàn bộ %(count)s học sinh trong hàng chờ thành công!"
+msgstr ""
+
+#: app.py:3980
+msgid "Bạn chỉ có quyền khóa tài khoản thuộc trường của mình!"
+msgstr ""
+
+#: app.py:3985
+#, python-format
+msgid ""
+"Đã xác nhận KHÓA VĨNH VIỄN tài khoản của học sinh %(name)s (%(code)s) "
+"theo quy chế xử lý vi phạm."
+msgstr ""
+
+#: app.py:4000
+msgid "Đã xử lý / hủy đề xuất kỷ luật."
+msgstr ""
+
+#: app.py:4014
+msgid ""
+"Trường Demo (ID 99) là dữ liệu mẫu của hệ thống, không được phép chỉnh "
+"sửa logo!"
+msgstr ""
+
+#: app.py:4018
+msgid "Bạn không có quyền cập nhật logo cho trường này."
+msgstr ""
+
+#: app.py:4034
+msgid "Đã cập nhật logo trường thành công!"
+msgstr ""
+
+#: app.py:4036
+msgid "Vui lòng chọn file ảnh hợp lệ (PNG, JPG, WEBP)."
+msgstr ""
+
+#: app.py:4056 app.py:4142
+msgid "Tên trường học không được để trống!"
+msgstr ""
+
+#: app.py:4076
+#, python-format
+msgid "Trường học '%(name)s' đã tồn tại trong hệ thống!"
+msgstr ""
+
+#: app.py:4115
+#, python-format
+msgid "Đã thêm trường học mới '%(name)s' (Mã trường ID #%(id)s) thành công!"
+msgstr ""
+
+#: app.py:4127
+msgid ""
+"Trường Demo (ID 99) là trường mẫu của hệ thống, không được phép chỉnh sửa"
+" hoặc xóa!"
+msgstr ""
+
+#: app.py:4135
+msgid "Không tìm thấy trường học cần sửa!"
+msgstr ""
+
+#: app.py:4157
+#, python-format
+msgid "Tên trường '%(name)s' trùng với một trường học khác đã có!"
+msgstr ""
+
+#: app.py:4179
+#, python-format
+msgid "Đã cập nhật thông tin trường '%(name)s' thành công!"
+msgstr ""
+
+#: app.py:4193
+msgid ""
+"Trường Demo (ID 99) là trường mẫu của hệ thống, không được phép vô hiệu "
+"hóa!"
+msgstr ""
+
+#: app.py:4201
+msgid "Không tìm thấy trường học!"
+msgstr ""
+
+#: app.py:4242
+msgid "Vui lòng nhập tên chương trình cộng đồng."
+msgstr ""
+
+#: app.py:4298 app.py:4368
+msgid "Chương trình cộng đồng không tồn tại."
+msgstr ""
+
+#: app.py:4303
+msgid "Bạn không có quyền chỉnh sửa chương trình của trường khác."
+msgstr ""
+
+#: app.py:4314
+msgid "Tên chương trình không được để trống."
+msgstr ""
+
+#: app.py:4373
+msgid "Bạn không có quyền xóa chương trình của trường khác."
+msgstr ""
+
+#: app.py:4384 app.py:4389
+msgid "tieu_de"
+msgstr ""
+
+#: app.py:4569
+msgid "Hành động không hợp lệ."
+msgstr ""
+
+#: app.py:4578
+#, python-format
+msgid "Đã %(action)s kỹ năng #%(id)s thành công."
+msgstr ""
+
+#: app.py:4602
+msgid "Kỹ năng không tồn tại!"
+msgstr ""
+
+#: app.py:4606
+msgid "Bạn chỉ có thể đăng kỹ năng của chính mình lên Cộng đồng liên trường!"
+msgstr ""
+
+#: app.py:4614
+#, python-format
+msgid "Bạn cần %(rem)s giờ dạy nữa để mở khóa Cộng đồng liên trường!"
+msgstr ""
+
+#: app.py:4625
+msgid ""
+"Đã gửi yêu cầu đăng kỹ năng lên Cộng đồng liên trường. Vui lòng chờ Ban "
+"quản trị duyệt!"
+msgstr ""
+
+#: app.py:4648 app.py:4679
+msgid "Không tìm thấy kỹ năng!"
+msgstr ""
+
+#: app.py:4664
+#, python-format
+msgid ""
+"Đã duyệt kỹ năng '%(title)s' (%(school)s) lên Cộng đồng liên trường thành"
+" công!"
+msgstr ""
+
+#: app.py:4693
+#, python-format
+msgid "Đã từ chối đưa kỹ năng '%(title)s' lên Cộng đồng liên trường."
+msgstr ""
+
+#: app.py:4714
+msgid "Vui lòng đăng nhập để truy cập Cộng đồng liên trường."
+msgstr ""
+
+#: app.py:4926
+msgid ""
+"Tài khoản của bạn đang trong hàng chờ duyệt bởi Quản trị viên nhà trường."
+" Bạn chưa thể đăng kỹ năng cho đến khi tài khoản được kích hoạt."
+msgstr ""
+
+#: app.py:4935
+msgid "Vui lòng điền đầy đủ lĩnh vực, tiêu đề và mô tả kỹ năng."
+msgstr ""
+
+#: app.py:4939
+msgid "Lĩnh vực đã chọn không hợp lệ."
+msgstr ""
+
+#: app.py:4961
+#, python-format
+msgid ""
+"Đăng ký thành công! %(reason)s. Kỹ năng đã sẵn sàng trên Kho kỹ năng học "
+"đường."
+msgstr ""
+
+#: app.py:4963
+#, python-format
+msgid ""
+"Kỹ năng đang ở trạng thái 'Chờ duyệt' để Giáo viên thẩm định thêm. "
+"%(reason)s"
+msgstr ""
+
+#: app.py:4990
+msgid "Kỹ năng này chưa sẵn sàng để đặt lịch học!"
+msgstr ""
+
+#: app.py:5017
+msgid "Không tìm thấy thông tin tài khoản người học."
+msgstr ""
+
+#: app.py:5020
+msgid ""
+"Tài khoản của bạn đang trong hàng chờ duyệt bởi Quản trị viên nhà trường."
+" Bạn chưa thể đặt lịch học cho đến khi tài khoản được kích hoạt."
+msgstr ""
+
+#: app.py:5026
+msgid "Kỹ năng không hợp lệ."
+msgstr ""
+
+#: app.py:5036
+msgid "Vui lòng chọn thời gian hẹn học."
+msgstr ""
+
+#: app.py:5041
+msgid "Thời lượng mỗi buổi học tối đa là 2.0 giờ (và tối thiểu 0.5 giờ)!"
+msgstr ""
+
+#: app.py:5048
+msgid "Kỹ năng này chưa sẵn sàng hoặc chưa được phê duyệt sư phạm!"
+msgstr ""
+
+#: app.py:5053
+msgid "Bạn không thể tự đặt lịch kỹ năng của chính mình!"
+msgstr ""
+
+#: app.py:5058
+#, python-format
+msgid ""
+"Số dư tín dụng của bạn không đủ để đặt lịch buổi học này! (Hiện có: "
+"%(cur).1fh, Cần: %(need).1fh). Hãy dạy kèm bạn bè để tích thêm giờ nhé!"
+msgstr ""
+
+#: app.py:5086
+#, python-format
+msgid ""
+"Đặt lịch học thành công với %(tutor)s (%(hrs).1f giờ)! Cả hai bạn đều có "
+"thể theo dõi trong 'Lịch của tôi'."
+msgstr ""
+
+#: app.py:5205
+msgid "Không tìm thấy thông tin người dùng!"
+msgstr ""
+
+#: app.py:5269
+msgid "Phiên học không tồn tại trong hệ thống!"
+msgstr ""
+
+#: app.py:5278
+msgid "Bạn không có quyền truy cập thông tin phiên học này!"
+msgstr ""
+
+#: app.py:5348 app.py:5394 app.py:5456 app.py:5546 app.py:5628 app.py:5689
+#: app.py:5749 app.py:6220 app.py:6469 app.py:6534
+msgid "Phiên học không tồn tại!"
+msgstr ""
+
+#: app.py:5353
+msgid "Chỉ người dạy (Gia sư) của phiên học này mới có thể nhờ AI soạn dàn ý!"
+msgstr ""
+
+#: app.py:5369
+msgid "AI (Gemini Pro) đã soạn xong dàn ý buổi học 4 bước chuẩn 60 phút!"
+msgstr ""
+
+#: app.py:5371
+msgid ""
+"Đã tạo dàn ý buổi học 4 bước chuẩn 60 phút (Hỗ trợ bởi AI - Chế độ cơ "
+"bản)!"
+msgstr ""
+
+#: app.py:5398
+#, python-format
+msgid "Phiên học hiện đang ở trạng thái '%(st)s', không thể điểm danh check-in!"
+msgstr ""
+
+#: app.py:5408
+msgid "Người dạy (Gia sư) đã check-in xác nhận thành công!"
+msgstr ""
+
+#: app.py:5410
+msgid "Bạn không phải người dạy trong phiên học này!"
+msgstr ""
+
+#: app.py:5418
+msgid "Người học (Học sinh) đã check-in xác nhận thành công!"
+msgstr ""
+
+#: app.py:5420
+msgid "Bạn không phải người học trong phiên học này!"
+msgstr ""
+
+#: app.py:5423
+msgid "Thông tin vai trò điểm danh không hợp lệ!"
+msgstr ""
+
+#: app.py:5463
+msgid ""
+"Chỉ bạn gia sư (người dạy) hoặc Quản trị viên mới có quyền xác nhận hoàn "
+"thành buổi học!"
+msgstr ""
+
+#: app.py:5467
+#, python-format
+msgid ""
+"Phiên học này hiện đang ở trạng thái '%(st)s', không thể xác nhận hoàn "
+"thành lại!"
+msgstr ""
+
+#: app.py:5472
+msgid ""
+"Chưa thể hoàn thành! Yêu cầu cả hai bên (Người dạy và Người học) đều phải"
+" check-in."
+msgstr ""
+
+#: app.py:5520
+#, python-format
+msgid ""
+"Buổi học đã hoàn thành xuất sắc! Đã cộng +%(hrs).1fh cho người dạy và trừ"
+" -%(hrs).1fh của người học."
+msgstr ""
+
+#: app.py:5524
+#, python-format
+msgid "Có lỗi xảy ra trong quá trình hoàn thành phiên học: %(err)s"
+msgstr ""
+
+#: app.py:5550
+msgid "Chỉ có thể đánh giá sau khi buổi học đã hoàn thành!"
+msgstr ""
+
+#: app.py:5558
+msgid "Bạn không phải thành viên tham gia phiên học này!"
+msgstr ""
+
+#: app.py:5577
+msgid ""
+"Bạn đã đánh giá buổi học này rồi! Mỗi thành viên chỉ được đánh giá 1 lần "
+"duy nhất để bảo đảm tính khách quan."
+msgstr ""
+
+#: app.py:5597
+msgid ""
+"Cảm ơn bạn đã gửi đánh giá tương hỗ! Phản hồi của bạn giúp cộng đồng học "
+"tập ngày càng gắn kết và tiến bộ."
+msgstr ""
+
+#: app.py:5633
+msgid ""
+"Chỉ bạn gia sư (người dạy) hoặc Giáo viên mới có thể nhờ AI tạo bộ câu "
+"hỏi quiz!"
+msgstr ""
+
+#: app.py:5637
+msgid "Buổi học cần được xác nhận hoàn thành trước khi tạo Quiz lượng giá!"
+msgstr ""
+
+#: app.py:5647
+msgid ""
+"Trợ lý AI (Gemini Pro) đã thiết kế thành công bộ 5 câu hỏi trắc nghiệm "
+"lượng giá vui nhộn!"
+msgstr ""
+
+#: app.py:5649
+msgid ""
+"Đã khởi tạo bộ 5 câu hỏi trắc nghiệm chuẩn sư phạm (Hỗ trợ bởi AI - Chế "
+"độ cơ bản)!"
+msgstr ""
+
+#: app.py:5697
+msgid "Bạn không có quyền truy cập bài kiểm tra của phiên học này!"
+msgstr ""
+
+#: app.py:5756
+msgid "Chỉ người học trong phiên mới có quyền nộp bài làm Quiz!"
+msgstr ""
+
+#: app.py:5766
+msgid ""
+"Bạn đã hoàn thành bài quiz này rồi! Mỗi học sinh chỉ được làm bài 1 lần "
+"duy nhất để đảm bảo tính khách quan sư phạm."
+msgstr ""
+
+#: app.py:5773
+msgid "Chưa có bộ câu hỏi nào được tạo cho buổi học này!"
+msgstr ""
+
+#: app.py:5808
+#, python-format
+msgid ""
+"Chúc mừng em! Em đã làm đúng %(c)s/%(t)s câu (%(pct).0f%%) — ĐẠT CHUẨN "
+"KIẾN THỨC!"
+msgstr ""
+
+#: app.py:5811
+#, python-format
+msgid ""
+"Em đã hoàn thành bài quiz: đúng %(c)s/%(t)s câu (%(pct).0f%%). Hãy ôn lại"
+" các đáp án giải thích để nắm vững kiến thức hơn nhé!"
+msgstr ""
+
+#: app.py:6228
+msgid "Bạn không có quyền tham gia phòng học ảo của phiên này!"
+msgstr ""
+
+#: app.py:6477
+msgid "Bạn không có quyền thao tác trên phiên học này!"
+msgstr ""
+
+#: app.py:6510
+#, python-format
+msgid ""
+"Buổi học đã hoàn thành xuất sắc! Thời lượng cùng học online đạt "
+"%(rate).1f%% (≥ 80%%), giờ tín dụng đã được tự động chuyển thành công."
+msgstr ""
+
+#: app.py:6516
+#, python-format
+msgid ""
+"Thời lượng cùng học trực tuyến chưa đạt 80%% quy định (chỉ đạt "
+"%(rate).1f%% / 80%%). Phiên học đã chuyển sang trạng thái 'Cần xác minh' "
+"để Thầy/Cô kiểm tra và phê duyệt tay."
+msgstr ""
+
+#: app.py:6556
+#, python-format
+msgid ""
+"Đã duyệt tay thành công phiên #%(id)s! Giờ tín dụng đã được chuyển cho "
+"hai học sinh."
+msgstr ""
+
+#: app.py:6570
+#, python-format
+msgid "Đã hủy phiên học #%(id)s."
+msgstr ""
+
+#: app.py:6787
+msgid "Vui lòng nhập tiêu đề cho nhiệm vụ cộng đồng."
+msgstr ""
+
+#: app.py:6812
+#, python-format
+msgid "Đã tạo thành công nhiệm vụ: '%(title)s' (+%(hrs)sh thưởng)!"
+msgstr ""
+
+#: app.py:6830
+msgid "Nhiệm vụ cộng đồng không tồn tại."
+msgstr ""
+
+#: app.py:6834
+msgid "Nhiệm vụ này hiện đã đóng hoặc kết thúc đăng ký."
+msgstr ""
+
+#: app.py:6840
+msgid "Rất tiếc! Đã quá hạn đăng ký cho nhiệm vụ này."
+msgstr ""
+
+#: app.py:6850
+#, python-format
+msgid "Nhiệm vụ đã đủ số lượng người đăng ký (%(max)s bạn)."
+msgstr ""
+
+#: app.py:6858
+msgid "Bạn đã đăng ký nhiệm vụ này rồi!"
+msgstr ""
+
+#: app.py:6863
+msgid "Đã kích hoạt lại đăng ký tham gia nhiệm vụ thành công!"
+msgstr ""
+
+#: app.py:6874
+#, python-format
+msgid "Đăng ký tham gia '%(title)s' thành công! Hãy có mặt đúng giờ nhé."
+msgstr ""
+
+#: app.py:6898
+msgid "Không tìm thấy nhiệm vụ cộng đồng."
+msgstr ""
+
+#: app.py:6956
+#, python-format
+msgid ""
+"Điểm danh thành công! Đã ghi nhận %(done)s bạn hoàn thành (+%(hrs)sh vào "
+"ví) và %(absent)s bạn vắng mặt."
+msgstr ""
+
+#: app.py:7139
+msgid "Phiên học không tồn tại."
+msgstr ""
+
+#: app.py:7144
+msgid "Bạn không có quyền báo cáo trong phiên học này."
+msgstr ""
+
+#: app.py:7162
+msgid ""
+"Đã gửi báo cáo vi phạm tới Ban Quản trị và Giáo viên phụ trách. Cảm ơn "
+"bạn đã giữ gìn môi trường học tập văn minh."
+msgstr ""
+
+#: app.py:7285 app.py:7337
+msgid "Vui lòng nhập đầy đủ tiêu đề và nội dung bài viết."
+msgstr ""
+
+#: app.py:7308
+msgid "Bài viết đã được tạo thành công!"
+msgstr ""
+
+#: app.py:7357
+msgid "Cập nhật bài viết thành công!"
+msgstr ""
+
+#: app.py:7373
+msgid "Đã xóa bài viết thành công."
+msgstr ""
+
+#: app.py:7394
+msgid "Duyệt thành công! Bài viết đã được đăng công khai trên Bảng tin học đường."
+msgstr ""
+
+#: app.py:7546
+msgid "Vui lòng nhập đầy đủ tiêu đề và nội dung chủ đề."
+msgstr ""
+
+#: app.py:7575
+#, python-format
+msgid ""
+"⚠️ Bài viết của bạn bị AI từ chối đăng do vi phạm quy chuẩn ngôn ngữ học "
+"đường (%(reason)s). Hệ thống đã ghi nhận vi phạm vào Sổ kỷ luật."
+msgstr ""
+
+#: app.py:7587
+msgid "✨ Tạo chủ đề thảo luận mới thành công!"
+msgstr ""
+
+#: app.py:7617
+msgid "Chủ đề không tồn tại hoặc đã bị xóa."
+msgstr ""
+
+#: app.py:7622
+msgid "Bạn không có quyền xem diễn đàn của trường khác."
+msgstr ""
+
+#: app.py:7665 app.py:7728 app.py:7764
+msgid "Chủ đề không tồn tại."
+msgstr ""
+
+#: app.py:7669
+msgid "Bạn không có quyền bình luận trong diễn đàn trường khác."
+msgstr ""
+
+#: app.py:7673
+msgid "Chủ đề này đã bị khóa bình luận bởi Giáo viên / Quản trị viên."
+msgstr ""
+
+#: app.py:7678
+msgid "Nội dung bình luận không được để trống."
+msgstr ""
+
+#: app.py:7701
+#, python-format
+msgid ""
+"⚠️ Bình luận bị AI chặn do vi phạm quy chuẩn ngôn ngữ (%(reason)s). Vi "
+"phạm đã được ghi nhận vào Sổ kỷ luật."
+msgstr ""
+
+#: app.py:7712
+msgid "💬 Đã gửi bình luận thành công!"
+msgstr ""
+
+#: app.py:7733
+msgid "Bạn không có quyền quản lý chủ đề của trường khác."
+msgstr ""
+
+#: app.py:7768
+msgid "Bạn không có quyền can thiệp vào chủ đề của trường khác."
+msgstr ""
+
+#: app.py:7772
+msgid "Bạn không có quyền xóa chủ đề này."
+msgstr ""
+
+#: app.py:7780
+msgid "Đã xóa chủ đề thảo luận."
+msgstr ""
+
+#: app.py:7809
+msgid "Bình luận không tồn tại."
+msgstr ""
+
+#: app.py:7815
+msgid "Bạn không có quyền can thiệp vào bình luận của trường khác."
+msgstr ""
+
+#: app.py:7819
+msgid "Bạn không có quyền xóa bình luận này."
+msgstr ""
+
+#: app.py:7825
+msgid "Đã xóa bình luận."
+msgstr ""
+
+#: app.py:7872
+msgid "Không nhận được mã xác thực từ Google."
+msgstr ""
+
+#: app.py:7906
+msgid ""
+"Mã Refresh Token chỉ hiển thị 1 lần duy nhất và đã được xóa khỏi phiên "
+"làm việc để đảm bảo an toàn."
+msgstr ""
+
+#: app.py:8003
+msgid "Vui lòng chọn môn học cho tài liệu."
+msgstr ""
+
+#: app.py:8007
+msgid "Vui lòng chọn ít nhất một tệp đính kèm."
+msgstr ""
+
+#: app.py:8042
+#, python-format
+msgid "Tệp '%(name)s' vượt quá dung lượng tối đa cho phép (500MB), đã bị bỏ qua."
+msgstr ""
+
+#: app.py:8079
+#, python-format
+msgid "Lỗi khi tải tệp '%(name)s' lên hệ thống: %(err)s"
+msgstr ""
+
+#: app.py:8089
+#, python-format
+msgid ""
+"Tải lên kho tạm (chưa kết nối hệ thống), vui lòng liên hệ quản trị viên. "
+"Tài liệu '%(title)s' đã được lưu tạm. Đã tải 1/1 thành công."
+msgstr ""
+
+#: app.py:8091
+#, python-format
+msgid ""
+"🎉 Tải lên tài liệu '%(title)s' thành công vào thư mục %(folder)s trên hệ "
+"thống! Đã tải 1/1 thành công."
+msgstr ""
+
+#: app.py:8094
+#, python-format
+msgid ""
+"Tải lên kho tạm (chưa kết nối hệ thống), vui lòng liên hệ quản trị viên. "
+"Đã tải %(sc)s/%(tf)s thành công."
+msgstr ""
+
+#: app.py:8096
+#, python-format
+msgid "🎉 Đã tải %(sc)s/%(tf)s thành công vào thư mục %(folder)s trên hệ thống!"
+msgstr ""
+
+#: app.py:8100
+#, python-format
+msgid "Không có tài liệu nào được tải lên thành công (0/%(tf)s)."
+msgstr ""
+
+#: app.py:8123
+msgid "Tài liệu không tồn tại hoặc đã bị xóa."
+msgstr ""
+
+#: app.py:8128
+msgid "Bạn không có quyền tải tài liệu của trường khác."
+msgstr ""
+
+#: app.py:8155
+#, python-format
+msgid "Không thể tải tài liệu từ hệ thống: %(err)s"
+msgstr ""
+
+#: app.py:8174 app.py:8210
+msgid "Tài liệu không tồn tại."
+msgstr ""
+
+#: app.py:8188
+msgid "Đã gửi báo cáo vi phạm tới Ban Quản trị nhà trường để kiểm tra và xử lý."
+msgstr ""
+
+#: app.py:8214
+msgid "Bạn không có quyền thao tác trên tài liệu của trường khác."
+msgstr ""
+
+#: app.py:8218
+msgid "Bạn không có quyền xóa tài liệu này."
+msgstr ""
+
+#: app.py:8230
+#, python-format
+msgid "Đã xóa tài liệu '%(title)s' khỏi hệ thống thành công."
+msgstr ""
+
+#: app.py:8327
+msgid "Vui lòng nhập đầy đủ Tên trường, Họ tên và Số điện thoại!"
+msgstr ""
+
+#: app.py:8350
+msgid "Có lỗi khi lưu thông tin. Vui lòng thử lại!"
+msgstr ""
+
+#: templates/admin.html:3
+msgid "Bảng điều khiển Quản trị - School Time Bank"
+msgstr ""
+
+#: templates/admin.html:33
+msgid "TỔNG QUẢN TRỊ (SUPER ADMIN)"
+msgstr ""
+
+#: templates/admin.html:36
+msgid "QUẢN TRỊ VIÊN TRƯỜNG (SCHOOL ADMIN)"
+msgstr ""
+
+#: templates/admin.html:40
+msgid "Hệ thống Quản trị Đa trường học"
+msgstr ""
+
+#: templates/admin.html:41
+msgid "School Time Bank — Phân quyền & Giám sát Giáo dục Toàn diện"
+msgstr ""
+
+#: templates/admin.html:48 templates/documents_index.html:12
+msgid "Trường:"
+msgstr ""
+
+#: templates/admin.html:50
+msgid "Tất cả các trường"
+msgstr ""
+
+#: templates/admin.html:50 templates/admin.html:1285
+msgid "trường"
+msgstr ""
+
+#: templates/admin.html:53 templates/admin.html:499 templates/admin.html:1339
+msgid "Đã ẩn"
+msgstr ""
+
+#: templates/admin.html:62 templates/base.html:280
+msgid "Quản lý Tài khoản"
+msgstr ""
+
+#: templates/admin.html:67
+msgid "Khôi phục dữ liệu Trường Demo về trạng thái ban đầu?"
+msgstr ""
+
+#: templates/admin.html:75
+msgid "Xuất CSV"
+msgstr ""
+
+#: templates/admin.html:78
+msgid "Giám sát Phòng học ảo"
+msgstr ""
+
+#: templates/admin.html:81
+msgid "Duyệt Kỹ Năng"
+msgstr ""
+
+#: templates/admin.html:84
+msgid "Tải Logo Trường"
+msgstr ""
+
+#: templates/admin.html:93
+msgid "Tổng quan & Báo cáo"
+msgstr ""
+
+#: templates/admin.html:98
+msgid "Hàng chờ duyệt học sinh"
+msgstr ""
+
+#: templates/admin.html:106
+msgid "Quản lý Mã mời"
+msgstr ""
+
+#: templates/admin.html:112
+msgid "Xử lý Vi phạm & Báo cáo"
+msgstr ""
+
+#: templates/admin.html:120
+msgid "Danh sách Tài khoản"
+msgstr ""
+
+#: templates/admin.html:126
+msgid "Duyệt Liên Trường"
+msgstr ""
+
+#: templates/admin.html:134
+msgid "Chương trình Cộng đồng"
+msgstr ""
+
+#: templates/admin.html:141
+msgid "Quản lý Trường học"
+msgstr ""
+
+#: templates/admin.html:162
+msgid "Tổng phiên học"
+msgstr ""
+
+#: templates/admin.html:164
+msgid "Đang quản trị"
+msgstr ""
+
+#: templates/admin.html:169
+msgid "Tổng giờ lưu thông"
+msgstr ""
+
+#: templates/admin.html:171 templates/community_attendance.html:94
+#: templates/my_schedule.html:111 templates/my_schedule.html:181
+#: templates/session_detail.html:31 templates/virtual_rooms_dashboard.html:236
+msgid "Hoàn thành"
+msgstr ""
+
+#: templates/admin.html:176 templates/index.html:352
+msgid "Học sinh thành viên"
+msgstr ""
+
+#: templates/admin.html:178
+msgid "Đã mở sổ tín dụng"
+msgstr ""
+
+#: templates/admin.html:183
+msgid "Tổng tài khoản"
+msgstr ""
+
+#: templates/admin.html:185
+msgid "HS + GV + Quản trị"
+msgstr ""
+
+#: templates/admin.html:190
+msgid "Giờ trong ví"
+msgstr ""
+
+#: templates/admin.html:192
+msgid "Vốn khả dụng"
+msgstr ""
+
+#: templates/admin.html:197
+msgid "Kỹ năng chờ duyệt"
+msgstr ""
+
+#: templates/admin.html:199
+msgid "Cần GV duyệt tay"
+msgstr ""
+
+#: templates/admin.html:210
+msgid "CẢNH BÁO SỚM SƯ PHẠM"
+msgstr ""
+
+#: templates/admin.html:211 templates/admin.html:284
+#: templates/ai_matchmake.html:14 templates/base.html:455
+#: templates/blog_detail.html:47 templates/blog_list.html:20
+#: templates/blog_list.html:70 templates/community.html:99
+#: templates/index.html:231 templates/profile.html:178
+#: templates/profile.html:350 templates/register.html:92
+#: templates/session_detail.html:83 templates/session_detail.html:119
+#: templates/session_quiz.html:15 templates/skills_new.html:53
+#: templates/virtual_room.html:142 templates/virtual_room.html:197
+#: templates/virtual_rooms_dashboard.html:18
+msgid "Hỗ trợ bởi AI (Trí tuệ nhân tạo)"
+msgstr ""
+
+#: templates/admin.html:213
+msgid "Phát Hiện Nguy Cơ Học Đường Cần Can Thiệp"
+msgstr ""
+
+#: templates/admin.html:215
+msgid "Quét học sinh ngưng hoạt động (>7 ngày) và cặp đôi xung đột (≤2★)"
+msgstr ""
+
+#: templates/admin.html:222
+msgid "Học sinh > 7 ngày không tham gia phiên"
+msgstr ""
+
+#: templates/admin.html:230 templates/admin.html:354 templates/admin.html:434
+#: templates/admin.html:642 templates/ai_matchmake.html:85
+#: templates/community_attendance.html:67 templates/my_schedule.html:99
+#: templates/my_schedule.html:169 templates/profile.html:209
+#: templates/session_quiz.html:39 templates/session_quiz.html:42
+#: templates/skills_market.html:146 templates/virtual_rooms_dashboard.html:89
+#: templates/virtual_rooms_dashboard.html:93
+msgid "Lớp"
+msgstr ""
+
+#: templates/admin.html:238
+msgid "Mọi học sinh đều duy trì hoạt động đều đặn."
+msgstr ""
+
+#: templates/admin.html:245
+msgid "Cặp đôi đánh giá ≤ 2★ từ 2 lần trở lên"
+msgstr ""
+
+#: templates/admin.html:258
+msgid "Không ghi nhận cặp đôi nào có xung đột đánh giá thấp lặp lại."
+msgstr ""
+
+#: templates/admin.html:267
+msgid "Đề xuất can thiệp sư phạm nhân văn từ AI:"
+msgstr ""
+
+#: templates/admin.html:282
+msgid "KẾT QUẢ HỌC TẬP"
+msgstr ""
+
+#: templates/admin.html:286
+msgid "Đo Lường Chất Lượng & Tiến Bộ Năng Lực Học Sinh"
+msgstr ""
+
+#: templates/admin.html:289
+msgid "Quiz xác nhận kết quả cho giáo viên, không chặn chuyển giờ."
+msgstr ""
+
+#: templates/admin.html:297
+msgid "Phiên đạt chuẩn Quiz (≥60%)"
+msgstr ""
+
+#: templates/admin.html:299 templates/admin.html:381
+#: templates/virtual_rooms_dashboard.html:135
+msgid "phiên"
+msgstr ""
+
+#: templates/admin.html:304
+msgid "Tỷ lệ xuất sắc (≥4/5)"
+msgstr ""
+
+#: templates/admin.html:306
+msgid "bài làm"
+msgstr ""
+
+#: templates/admin.html:311
+msgid "So sánh Trước vs Sau"
+msgstr ""
+
+#: templates/admin.html:317
+msgid "Tiến bộ:"
+msgstr ""
+
+#: templates/admin.html:317 templates/session_detail.html:134
+msgid "điểm"
+msgstr ""
+
+#: templates/admin.html:322
+msgid "Tổng lượt hoàn thành"
+msgstr ""
+
+#: templates/admin.html:324
+msgid "Lượt làm trắc nghiệm"
+msgstr ""
+
+#: templates/admin.html:338
+msgid "BẢNG VINH DANH SƯ PHẠM"
+msgstr ""
+
+#: templates/admin.html:341
+msgid "Top Học Sinh Tích Cực Trao Đổi Tri Thức Nhất"
+msgstr ""
+
+#: templates/admin.html:343
+msgid "Vinh danh gương sáng học tập & chia sẻ kỹ năng"
+msgstr ""
+
+#: templates/admin.html:351
+msgid "Xếp hạng"
+msgstr ""
+
+#: templates/admin.html:352 templates/admin.html:432
+#: templates/community_attendance.html:65
+msgid "Mã HS"
+msgstr ""
+
+#: templates/admin.html:353 templates/admin.html:433 templates/admin.html:772
+#: templates/admin.html:800 templates/admin_accounts.html:71
+#: templates/community_attendance.html:66
+msgid "Họ và tên"
+msgstr ""
+
+#: templates/admin.html:355
+msgid "Giờ đã dạy"
+msgstr ""
+
+#: templates/admin.html:356
+msgid "Giờ đã học"
+msgstr ""
+
+#: templates/admin.html:357 templates/index.html:360
+msgid "Phiên hoàn thành"
+msgstr ""
+
+#: templates/admin.html:359
+msgid "Số dư hiện tại"
+msgstr ""
+
+#: templates/admin.html:401
+msgid "Hàng Chờ Duyệt Mở Sổ Học Sinh"
+msgstr ""
+
+#: templates/admin.html:404
+msgid ""
+"Tổng quản trị thấy toàn bộ hàng chờ các trường. Quản trị trường chỉ duyệt"
+" học sinh trường mình."
+msgstr ""
+
+#: templates/admin.html:406
+msgid "Danh sách học sinh trường"
+msgstr ""
+
+#: templates/admin.html:406
+msgid "chưa có mã mời đang chờ duyệt."
+msgstr ""
+
+#: templates/admin.html:412
+msgid "Bạn có chắc chắn muốn DUYỆT TẤT CẢ học sinh đang chờ trong danh sách này?"
+msgstr ""
+
+#: templates/admin.html:417
+msgid "Duyệt tất cả"
+msgstr ""
+
+#: templates/admin.html:435 templates/admin.html:802 templates/admin.html:879
+#: templates/admin.html:951 templates/admin.html:1488
+#: templates/community_market.html:97
+msgid "Trường học"
+msgstr ""
+
+#: templates/admin.html:436 templates/admin.html:806
+msgid "Khung giờ rảnh"
+msgstr ""
+
+#: templates/admin.html:437 templates/admin.html:804 templates/admin.html:1012
+#: templates/admin.html:1083 templates/admin.html:1169
+#: templates/admin.html:1296 templates/admin_accounts.html:139
+#: templates/blog_manage.html:109 templates/my_schedule.html:85
+#: templates/my_schedule.html:155 templates/skills_approval.html:34
+#: templates/virtual_rooms_dashboard.html:224
+msgid "Trạng thái"
+msgstr ""
+
+#: templates/admin.html:438 templates/admin.html:1299
+#: templates/blog_manage.html:111 templates/my_schedule.html:86
+#: templates/my_schedule.html:156
+msgid "Thao tác"
+msgstr ""
+
+#: templates/admin.html:455 templates/admin.html:834 templates/profile.html:300
+#: templates/skills_approval.html:66 templates/skills_new.html:52
+msgid "Chờ duyệt"
+msgstr ""
+
+#: templates/admin.html:459 templates/blog_manage.html:169
+#: templates/skills_approval.html:73
+msgid "Duyệt"
+msgstr ""
+
+#: templates/admin.html:461
+msgid "Bạn có chắc muốn từ chối đăng ký này?"
+msgstr ""
+
+#: templates/admin.html:474
+msgid "Hàng chờ trống!"
+msgstr ""
+
+#: templates/admin.html:475
+msgid "Tất cả tài khoản học sinh đã được duyệt hoặc đăng ký hợp lệ qua mã mời."
+msgstr ""
+
+#: templates/admin.html:488
+msgid "Sinh Mã Mời Trường Học Ngẫu Nhiên"
+msgstr ""
+
+#: templates/admin.html:489
+msgid ""
+"Hệ thống tạo mã định dạng chuẩn TBEDU-XXXX-XXXX chống mạo danh học sinh "
+"trường khác."
+msgstr ""
+
+#: templates/admin.html:495
+msgid "Áp dụng cho trường"
+msgstr ""
+
+#: templates/admin.html:509
+msgid "Loại mã mời"
+msgstr ""
+
+#: templates/admin.html:511
+msgid "Mã cá nhân (Nhiều mã, mỗi mã 1 lượt)"
+msgstr ""
+
+#: templates/admin.html:512
+msgid "Mã lớp (1 mã, dùng chung cho cả lớp)"
+msgstr ""
+
+#: templates/admin.html:517
+msgid "Số lượng mã cần tạo"
+msgstr ""
+
+#: templates/admin.html:522
+msgid "Số lượt dùng tối đa / mã"
+msgstr ""
+
+#: templates/admin.html:528
+msgid "Sinh mã ngay"
+msgstr ""
+
+#: templates/admin.html:538
+msgid "Danh Sách Mã Mời Đã Phát Hành"
+msgstr ""
+
+#: templates/admin.html:539
+msgid "Cập nhật tự động"
+msgstr ""
+
+#: templates/admin.html:548
+msgid "Mã mời"
+msgstr ""
+
+#: templates/admin.html:549 templates/admin.html:1031 templates/admin.html:1081
+#: templates/admin.html:1186
+msgid "Trường áp dụng"
+msgstr ""
+
+#: templates/admin.html:550
+msgid "Loại mã"
+msgstr ""
+
+#: templates/admin.html:551
+msgid "Tối đa"
+msgstr ""
+
+#: templates/admin.html:552
+msgid "Đã dùng"
+msgstr ""
+
+#: templates/admin.html:553
+msgid "Còn lại"
+msgstr ""
+
+#: templates/admin.html:554
+msgid "Học sinh đã dùng"
+msgstr ""
+
+#: templates/admin.html:555 templates/admin.html:1298
+msgid "Ngày tạo"
+msgstr ""
+
+#: templates/admin.html:567
+msgid "Mã lớp"
+msgstr ""
+
+#: templates/admin.html:569
+msgid "Cá nhân"
+msgstr ""
+
+#: templates/admin.html:592
+msgid "Chưa có ai dùng"
+msgstr ""
+
+#: templates/admin.html:602
+msgid "Chưa có mã mời nào được tạo. Hãy tạo mã mời ở form phía trên."
+msgstr ""
+
+#: templates/admin.html:615
+msgid "Sổ Theo Dõi & Xử Lý Vi Phạm Nội Quy"
+msgstr ""
+
+#: templates/admin.html:616
+msgid ""
+"Ghi nhận vi phạm từ AI lọc chat realtime và báo cáo trực tiếp từ phòng "
+"học ảo."
+msgstr ""
+
+#: templates/admin.html:618
+msgid "vụ việc"
+msgstr ""
+
+#: templates/admin.html:627 templates/admin.html:825 templates/profile.html:29
+#: templates/virtual_rooms_dashboard.html:222
+msgid "Học sinh"
+msgstr ""
+
+#: templates/admin.html:628 templates/index.html:564 templates/index.html:598
+msgid "Trường"
+msgstr ""
+
+#: templates/admin.html:629
+msgid "Loại vi phạm"
+msgstr ""
+
+#: templates/admin.html:630
+msgid "Mô tả chi tiết"
+msgstr ""
+
+#: templates/admin.html:631
+msgid "Mức độ"
+msgstr ""
+
+#: templates/admin.html:632 templates/blog_manage.html:110
+#: templates/profile.html:245 templates/wallet.html:106
+msgid "Thời gian"
+msgstr ""
+
+#: templates/admin.html:633
+msgid "Tình trạng TK"
+msgstr ""
+
+#: templates/admin.html:634
+msgid "Xử lý kỷ luật"
+msgstr ""
+
+#: templates/admin.html:648
+msgid "Phòng học"
+msgstr ""
+
+#: templates/admin.html:654
+msgid "Mức 1: Nhắc nhở"
+msgstr ""
+
+#: templates/admin.html:656
+msgid "Mức 2: Cảnh cáo"
+msgstr ""
+
+#: templates/admin.html:658
+msgid "Mức 3: Đề xuất khóa"
+msgstr ""
+
+#: templates/admin.html:664
+msgid "ĐÃ KHÓA"
+msgstr ""
+
+#: templates/admin.html:666
+msgid "CHỜ QUẢN TRỊ XÁC NHẬN"
+msgstr ""
+
+#: templates/admin.html:668 templates/admin.html:836
+#: templates/admin_accounts.html:177 templates/base.html:90
+msgid "Hoạt động"
+msgstr ""
+
+#: templates/admin.html:674
+msgid ""
+"CẢNH BÁO: Bạn có chắc chắn muốn XÁC NHẬN KHÓA VĨNH VIỄN tài khoản của học"
+" sinh này không?"
+msgstr ""
+
+#: templates/admin.html:676
+msgid "Xác nhận khóa thật"
+msgstr ""
+
+#: templates/admin.html:681
+msgid "Hủy đề xuất"
+msgstr ""
+
+#: templates/admin.html:685
+msgid "Đã xử lý khóa"
+msgstr ""
+
+#: templates/admin.html:689
+msgid "Đã nhắc nhở"
+msgstr ""
+
+#: templates/admin.html:702
+msgid "Không có vi phạm nào!"
+msgstr ""
+
+#: templates/admin.html:703
+msgid ""
+"Môi trường học tập và phòng học ảo đang duy trì văn minh, an toàn tuyệt "
+"đối."
+msgstr ""
+
+#: templates/admin.html:717
+msgid "Danh sách Tài khoản Người dùng"
+msgstr ""
+
+#: templates/admin.html:718
+msgid "Cập nhật theo CSDL"
+msgstr ""
+
+#: templates/admin.html:722
+msgid "Nhập danh sách (Excel/CSV)"
+msgstr ""
+
+#: templates/admin.html:740
+msgid "Kết quả nhập danh sách gần nhất"
+msgstr ""
+
+#: templates/admin.html:741
+msgid "Đơn vị trường:"
+msgstr ""
+
+#: templates/admin.html:741
+msgid "Đã xử lý:"
+msgstr ""
+
+#: templates/admin.html:741 templates/admin.html:765
+msgid "dòng"
+msgstr ""
+
+#: templates/admin.html:747
+msgid "Tải file Excel kết quả (Tên đăng nhập & Mật khẩu)"
+msgstr ""
+
+#: templates/admin.html:750
+msgid "Đóng bảng kết quả"
+msgstr ""
+
+#: templates/admin.html:757
+msgid "Thành công:"
+msgstr ""
+
+#: templates/admin.html:758
+msgid "Lỗi / Bỏ qua:"
+msgstr ""
+
+#: templates/admin.html:764
+msgid "Chi tiết các dòng bị lỗi / bỏ qua:"
+msgstr ""
+
+#: templates/admin.html:771
+msgid "Dòng"
+msgstr ""
+
+#: templates/admin.html:773
+msgid "Lý do lỗi / Bỏ qua"
+msgstr ""
+
+#: templates/admin.html:799
+msgid "Mã định danh"
+msgstr ""
+
+#: templates/admin.html:801
+msgid "Lớp / Bộ môn"
+msgstr ""
+
+#: templates/admin.html:803 templates/admin_accounts.html:45
+#: templates/admin_accounts.html:137
+msgid "Vai trò"
+msgstr ""
+
+#: templates/admin.html:805
+msgid "Số dư giờ"
+msgstr ""
+
+#: templates/admin.html:819
+msgid "Tổng Quản trị"
+msgstr ""
+
+#: templates/admin.html:821
+msgid "Quản trị trường"
+msgstr ""
+
+#: templates/admin.html:823 templates/admin_accounts.html:56
+#: templates/admin_accounts.html:165 templates/blog_list.html:82
+#: templates/profile.html:27
+msgid "Giáo viên"
+msgstr ""
+
+#: templates/admin.html:830 templates/forum_index.html:79
+#: templates/forum_topic.html:41
+msgid "Đã khóa"
+msgstr ""
+
+#: templates/admin.html:832
+msgid "Đề xuất khóa"
+msgstr ""
+
+#: templates/admin.html:861
+msgid "Kỹ Năng Chờ Duyệt Lên Cộng Đồng Liên Trường"
+msgstr ""
+
+#: templates/admin.html:864
+msgid ""
+"Tổng quản trị hoặc Quản trị viên bất kỳ trường nào đều có quyền duyệt. "
+"Một người duyệt là đủ; hệ thống tự động ghi nhận nhật ký người duyệt."
+msgstr ""
+
+#: templates/admin.html:868
+msgid "yêu cầu chờ duyệt"
+msgstr ""
+
+#: templates/admin.html:877
+msgid "Kỹ năng đề xuất"
+msgstr ""
+
+#: templates/admin.html:878 templates/admin.html:1084
+#: templates/skills_approval.html:31
+msgid "Học sinh đăng ký"
+msgstr ""
+
+#: templates/admin.html:880
+msgid "Giờ dạy thật"
+msgstr ""
+
+#: templates/admin.html:881
+msgid "Hành động duyệt"
+msgstr ""
+
+#: templates/admin.html:894 templates/community_market.html:116
+#: templates/index.html:416 templates/my_schedule.html:14
+#: templates/session_detail.html:48 templates/session_detail.html:59
+#: templates/skills_approval.html:44 templates/skills_market.html:92
+#: templates/wallet.html:14
+msgid "Mã:"
+msgstr ""
+
+#: templates/admin.html:894 templates/book_session_page.html:41
+#: templates/community_market.html:116 templates/index.html:416
+#: templates/session_detail.html:48 templates/session_detail.html:59
+#: templates/skills_approval.html:44 templates/skills_market.html:92
+#: templates/virtual_room.html:159 templates/virtual_room.html:169
+msgid "Lớp:"
+msgstr ""
+
+#: templates/admin.html:910
+msgid "Duyệt lên Liên trường"
+msgstr ""
+
+#: templates/admin.html:915 templates/profile.html:298
+#: templates/skills_approval.html:64 templates/skills_approval.html:78
+msgid "Từ chối"
+msgstr ""
+
+#: templates/admin.html:928
+msgid "Hiện không có kỹ năng nào chờ duyệt lên Cộng đồng liên trường"
+msgstr ""
+
+#: templates/admin.html:929
+msgid "Tất cả yêu cầu đăng kỹ năng liên trường đã được xử lý hoàn tất."
+msgstr ""
+
+#: templates/admin.html:940
+msgid "Kỹ Năng Đang Hoạt Động Trên Cộng Đồng Liên Trường"
+msgstr ""
+
+#: templates/admin.html:942
+msgid "Nhật ký các kỹ năng đã được quản trị viên phê duyệt"
+msgstr ""
+
+#: templates/admin.html:949
+msgid "Kỹ năng"
+msgstr ""
+
+#: templates/admin.html:950
+msgid "Chủ kỹ năng"
+msgstr ""
+
+#: templates/admin.html:952
+msgid "Người phê duyệt"
+msgstr ""
+
+#: templates/admin.html:953
+msgid "Thời gian duyệt"
+msgstr ""
+
+#: templates/admin.html:964 templates/profile.html:25
+msgid "Quản trị viên"
+msgstr ""
+
+#: templates/admin.html:987
+msgid "Thêm Chương Trình Giờ Công Ích Mới"
+msgstr ""
+
+#: templates/admin.html:989
+msgid ""
+"Quản trị viên chủ động phát động các chương trình thiện nguyện, lao động "
+"công ích, hỗ trợ thư viện để học sinh cống hiến và nhận giờ tín dụng."
+msgstr ""
+
+#: templates/admin.html:992
+msgid "Giờ Công Ích Học Đường"
+msgstr ""
+
+#: templates/admin.html:999
+msgid "Tên chương trình cộng đồng"
+msgstr ""
+
+#: templates/admin.html:1000
+msgid "Ví dụ: Trồng cây xanh khuôn viên trường, Thăm mái ấm..."
+msgstr ""
+
+#: templates/admin.html:1004 templates/admin.html:1162
+msgid "Số giờ thưởng (*)"
+msgstr ""
+
+#: templates/admin.html:1007 templates/admin.html:1165
+msgid "giờ (h)"
+msgstr ""
+
+#: templates/admin.html:1014 templates/admin.html:1120
+#: templates/admin.html:1171 templates/community.html:209
+msgid "Sắp diễn ra"
+msgstr ""
+
+#: templates/admin.html:1015 templates/admin.html:1122
+#: templates/admin.html:1172
+msgid "Đang diễn ra"
+msgstr ""
+
+#: templates/admin.html:1016 templates/admin.html:1124
+#: templates/admin.html:1173
+msgid "Đã kết thúc"
+msgstr ""
+
+#: templates/admin.html:1021 templates/admin.html:1177
+msgid "Ngày bắt đầu"
+msgstr ""
+
+#: templates/admin.html:1026 templates/admin.html:1181
+msgid "Ngày kết thúc"
+msgstr ""
+
+#: templates/admin.html:1045
+msgid "Mô tả chi tiết chương trình"
+msgstr ""
+
+#: templates/admin.html:1046
+msgid "Nội dung công việc, kế hoạch tổ chức, ý nghĩa cộng đồng..."
+msgstr ""
+
+#: templates/admin.html:1051
+msgid "Lưu & Phát động chương trình"
+msgstr ""
+
+#: templates/admin.html:1063
+msgid "Danh Sách Chương Trình Giờ Công Ích Học Đường"
+msgstr ""
+
+#: templates/admin.html:1065
+msgid ""
+"Quản trị viên có thể theo dõi số lượng đăng ký, chỉnh sửa thông tin hoặc "
+"kết thúc chương trình."
+msgstr ""
+
+#: templates/admin.html:1067
+msgid "chương trình"
+msgstr ""
+
+#: templates/admin.html:1077
+msgid "Tên chương trình & Mô tả"
+msgstr ""
+
+#: templates/admin.html:1078
+msgid "Số giờ thưởng"
+msgstr ""
+
+#: templates/admin.html:1079
+msgid "Thời gian bắt đầu / kết thúc"
+msgstr ""
+
+#: templates/admin.html:1085 templates/virtual_rooms_dashboard.html:76
+msgid "Hành động"
+msgstr ""
+
+#: templates/admin.html:1109
+msgid "Hạn:"
+msgstr ""
+
+#: templates/admin.html:1109 templates/community.html:244
+msgid "Không giới hạn"
+msgstr ""
+
+#: templates/admin.html:1115
+msgid "Toàn hệ thống"
+msgstr ""
+
+#: templates/admin.html:1129 templates/community.html:77
+#: templates/community.html:121 templates/community.html:257
+#: templates/community_attendance.html:32 templates/index.html:499
+msgid "bạn"
+msgstr ""
+
+#: templates/admin.html:1134 templates/admin.html:1359
+#: templates/blog_detail.html:109
+msgid "Sửa"
+msgstr ""
+
+#: templates/admin.html:1136
+msgid ""
+"Chương trình này đã có học sinh đăng ký tham gia. Hệ thống sẽ chuyển "
+"trạng thái sang Đã kết thúc thay vì xóa vĩnh viễn để bảo toàn lịch sử học"
+" tập. Bạn có đồng ý không?"
+msgstr ""
+
+#: templates/admin.html:1136
+msgid "Bạn có chắc chắn muốn xóa vĩnh viễn chương trình cộng đồng này không?"
+msgstr ""
+
+#: templates/admin.html:1137
+msgid "Chuyển sang Đã kết thúc"
+msgstr ""
+
+#: templates/admin.html:1137
+msgid "Xóa vĩnh viễn"
+msgstr ""
+
+#: templates/admin.html:1138 templates/blog_detail.html:112
+#: templates/blog_manage.html:178
+msgid "Xóa"
+msgstr ""
+
+#: templates/admin.html:1150
+msgid "Chỉnh Sửa Chương Trình Cộng Đồng"
+msgstr ""
+
+#: templates/admin.html:1158
+msgid "Tên chương trình"
+msgstr ""
+
+#: templates/admin.html:1195
+msgid "Địa điểm tổ chức"
+msgstr ""
+
+#: templates/admin.html:1196
+msgid "Ví dụ: Thư viện tầng 2, Sân trường..."
+msgstr ""
+
+#: templates/admin.html:1199
+msgid "Mô tả nội dung"
+msgstr ""
+
+#: templates/admin.html:1205 templates/admin.html:1547
+#: templates/admin.html:1640 templates/documents_upload.html:95
+#: templates/profile.html:424 templates/skills_market.html:173
+#: templates/virtual_room.html:243
+msgid "Hủy"
+msgstr ""
+
+#: templates/admin.html:1207 templates/admin.html:1549
+msgid "Lưu thay đổi"
+msgstr ""
+
+#: templates/admin.html:1221
+msgid "Chưa có chương trình cộng đồng nào"
+msgstr ""
+
+#: templates/admin.html:1222
+msgid ""
+"Hãy sử dụng biểu mẫu phía trên để phát động chương trình giờ công ích đầu"
+" tiên cho học sinh!"
+msgstr ""
+
+#: templates/admin.html:1239
+msgid "Thêm Trường Học Mới Vào Hệ Thống"
+msgstr ""
+
+#: templates/admin.html:1241
+msgid ""
+"Hệ thống sẽ tự động cấp phát ID mới, cho phép tạo mã mời riêng và cách ly"
+" dữ liệu học sinh theo trường."
+msgstr ""
+
+#: templates/admin.html:1251 templates/admin.html:1295
+#: templates/admin.html:1525
+msgid "Tên trường học"
+msgstr ""
+
+#: templates/admin.html:1252
+msgid "Ví dụ: THPT Chuyên Hạ Long"
+msgstr ""
+
+#: templates/admin.html:1256
+msgid "Trạng thái ban đầu"
+msgstr ""
+
+#: templates/admin.html:1258 templates/admin.html:1328
+#: templates/admin.html:1531 templates/index.html:562
+msgid "Chuẩn bị triển khai"
+msgstr ""
+
+#: templates/admin.html:1259 templates/admin.html:1324
+#: templates/admin.html:1532 templates/index.html:562 templates/index.html:597
+msgid "Đang thí điểm"
+msgstr ""
+
+#: templates/admin.html:1260 templates/admin.html:1320
+#: templates/admin.html:1533
+msgid "Đang hoạt động"
+msgstr ""
+
+#: templates/admin.html:1261 templates/admin.html:1332
+#: templates/admin.html:1534
+msgid "Tạm ngưng"
+msgstr ""
+
+#: templates/admin.html:1266
+msgid "Logo trường (Tùy chọn tải lên)"
+msgstr ""
+
+#: templates/admin.html:1272
+msgid "Thêm Trường Mới"
+msgstr ""
+
+#: templates/admin.html:1283
+msgid "Danh Sách Trường Học Đang Quản Trị"
+msgstr ""
+
+#: templates/admin.html:1285
+msgid "Tổng cộng"
+msgstr ""
+
+#: templates/admin.html:1293
+msgid "Mã trường"
+msgstr ""
+
+#: templates/admin.html:1297
+msgid "Số tài khoản"
+msgstr ""
+
+#: templates/admin.html:1306 templates/admin_accounts.html:172
+msgid "Trường #"
+msgstr ""
+
+#: templates/admin.html:1314
+msgid "Trường dữ liệu mẫu demo hệ thống"
+msgstr ""
+
+#: templates/admin.html:1354
+msgid "Cố định (Không sửa/xóa)"
+msgstr ""
+
+#: templates/admin.html:1358
+msgid "Sửa tên / logo / trạng thái"
+msgstr ""
+
+#: templates/admin.html:1361
+msgid ""
+"Bạn có chắc chắn muốn hiện lại trường này? Trường sẽ xuất hiện trở lại "
+"trên hệ thống."
+msgstr ""
+
+#: templates/admin.html:1361
+msgid "Bạn có chắc chắn muốn ẩn trường này khỏi hệ thống? Dữ liệu không bị xóa."
+msgstr ""
+
+#: templates/admin.html:1363
+msgid "Hiện lại trường trên hệ thống"
+msgstr ""
+
+#: templates/admin.html:1364
+msgid "Hiện lại"
+msgstr ""
+
+#: templates/admin.html:1367
+msgid "Ẩn trường (không xóa)"
+msgstr ""
+
+#: templates/admin.html:1368
+msgid "Ẩn trường"
+msgstr ""
+
+#: templates/admin.html:1392
+msgid "Kho Lưu Trữ Đám Mây Google Drive 5TB Toàn Hệ Thống"
+msgstr ""
+
+#: templates/admin.html:1395
+msgid ""
+"Tài khoản Google Drive 5TB của Thầy phụ trách chung toàn hệ thống — Tự "
+"động phân cấp thư mục theo trường và môn học."
+msgstr ""
+
+#: templates/admin.html:1401
+msgid "Google Drive: Đã Kết Nối (OAuth2)"
+msgstr ""
+
+#: templates/admin.html:1405
+msgid "Chế độ Fallback / Chưa nạp Token"
+msgstr ""
+
+#: templates/admin.html:1415
+msgid "Xác thực OAuth2 & Biến Môi Trường (Render)"
+msgstr ""
+
+#: templates/admin.html:1418
+msgid ""
+"Nhấn nút bên dưới để đăng nhập bằng tài khoản Google Drive 5TB của Thầy. "
+"Sau khi cấp quyền 1 lần duy nhất, mã Refresh Token sẽ được cấp để lưu vào"
+" GOOGLE_REFRESH_TOKEN trên Dashboard Render."
+msgstr ""
+
+#: templates/admin.html:1423
+msgid "TUYỆT ĐỐI BẢO MẬT:"
+msgstr ""
+
+#: templates/admin.html:1423
+msgid ""
+"Refresh token và Client Secret không bao giờ được hardcode trong mã nguồn"
+" hoặc commit lên GitHub. Mọi xác thực đều được đọc trực tiếp từ biến môi "
+"trường của máy chủ Render."
+msgstr ""
+
+#: templates/admin.html:1428
+msgid "Kết Nối Google Drive (OAuth2)"
+msgstr ""
+
+#: templates/admin.html:1431
+msgid "Xem Kho Tài Liệu"
+msgstr ""
+
+#: templates/admin.html:1440
+msgid "Cấu Trúc Thư Mục Tự Động"
+msgstr ""
+
+#: templates/admin.html:1442
+msgid "Hệ thống tự động khởi tạo cấu trúc thư mục phân cấp trên Google Drive:"
+msgstr ""
+
+#: templates/admin.html:1446
+msgid "Toán"
+msgstr ""
+
+#: templates/admin.html:1447 templates/skills_new.html:27
+msgid "Ngữ văn"
+msgstr ""
+
+#: templates/admin.html:1448 templates/skills_new.html:28
+msgid "Tiếng Anh"
+msgstr ""
+
+#: templates/admin.html:1454
+msgid "Dung lượng tối đa:"
+msgstr ""
+
+#: templates/admin.html:1454 templates/documents_upload.html:168
+msgid "tệp"
+msgstr ""
+
+#: templates/admin.html:1455
+msgid "Stream tải lên & tải về trực tiếp từ Drive (không lưu trên đĩa Render)."
+msgstr ""
+
+#: templates/admin.html:1456
+msgid "Học sinh chỉ xem & tải tài liệu của trường mình."
+msgstr ""
+
+#: templates/admin.html:1472
+msgid "Tải Logo Thật cho Trường học"
+msgstr ""
+
+#: templates/admin.html:1479
+msgid "Chọn trường học"
+msgstr ""
+
+#: templates/admin.html:1493
+msgid "Chọn file ảnh Logo thật"
+msgstr ""
+
+#: templates/admin.html:1495
+msgid ""
+"Định dạng hỗ trợ: PNG, JPG, WEBP. Ảnh sẽ được cập nhật hiển thị tại thẻ "
+"trường học."
+msgstr ""
+
+#: templates/admin.html:1499 templates/ai_matchmake.html:132
+#: templates/documents_index.html:146 templates/profile.html:406
+msgid "Đóng"
+msgstr ""
+
+#: templates/admin.html:1501
+msgid "Tải lên Logo"
+msgstr ""
+
+#: templates/admin.html:1518
+msgid "Sửa Thông Tin Trường"
+msgstr ""
+
+#: templates/admin.html:1529
+msgid "Trạng thái hoạt động"
+msgstr ""
+
+#: templates/admin.html:1538
+msgid "Logo trường học"
+msgstr ""
+
+#: templates/admin.html:1543
+msgid "Để trống nếu không muốn đổi ảnh logo."
+msgstr ""
+
+#: templates/admin.html:1572
+msgid "Nhập Danh Sách Tài Khoản Hàng Loạt"
+msgstr ""
+
+#: templates/admin.html:1573
+msgid ""
+"Tạo nhanh tài khoản Quản trị trường, Giáo viên và Học sinh từ file "
+"Excel/CSV"
+msgstr ""
+
+#: templates/admin.html:1585
+msgid "Tải file mẫu chuẩn định dạng"
+msgstr ""
+
+#: templates/admin.html:1586
+msgid ""
+"Cột mẫu: họ_tên | vai_trò (quantruong/giaovien/hocsinh) | lớp | email | "
+"số_điện_thoại | ghi_chú"
+msgstr ""
+
+#: templates/admin.html:1589
+msgid "Tải file Excel mẫu"
+msgstr ""
+
+#: templates/admin.html:1597
+msgid "Chọn trường học áp dụng"
+msgstr ""
+
+#: templates/admin.html:1605
+msgid ""
+"Tổng quản trị (Super Admin) có quyền chỉ định trường nhận danh sách tài "
+"khoản."
+msgstr ""
+
+#: templates/admin.html:1609 templates/register.html:41
+msgid "Đơn vị trường học"
+msgstr ""
+
+#: templates/admin.html:1613
+msgid "Trường của bạn"
+msgstr ""
+
+#: templates/admin.html:1621
+msgid "Chọn file Excel (.xlsx) hoặc CSV (.csv)"
+msgstr ""
+
+#: templates/admin.html:1623
+msgid "Hỗ trợ các định dạng bảng tính thông dụng (.xlsx, .csv định dạng UTF-8)."
+msgstr ""
+
+#: templates/admin.html:1628
+msgid "Cơ chế bảo mật & Tự động hóa hệ thống:"
+msgstr ""
+
+#: templates/admin.html:1630
+msgid "Tên đăng nhập & Mật khẩu riêng:"
+msgstr ""
+
+#: templates/admin.html:1630
+msgid ""
+"Hệ thống tự sinh mã đăng nhập duy nhất và mật khẩu ngẫu nhiên riêng cho "
+"từng người (không dùng chung mật khẩu mặc định)."
+msgstr ""
+
+#: templates/admin.html:1631
+msgid "Mật khẩu băm an toàn:"
+msgstr ""
+
+#: templates/admin.html:1631
+msgid "Mật khẩu được mã hóa một chiều bằng Werkzeug trước khi lưu CSDL."
+msgstr ""
+
+#: templates/admin.html:1632
+msgid "Trạng thái hoạt động:"
+msgstr ""
+
+#: templates/admin.html:1632
+msgid "Tài khoản được kích hoạt ngay, học sinh tự động nhận +2.0 giờ ban đầu."
+msgstr ""
+
+#: templates/admin.html:1633
+msgid "Bỏ qua dòng lỗi:"
+msgstr ""
+
+#: templates/admin.html:1633
+msgid "Dòng sai sót sẽ được bỏ qua và ghi rõ lý do, không chặn các dòng đúng."
+msgstr ""
+
+#: templates/admin.html:1634
+msgid "Xuất file kết quả:"
+msgstr ""
+
+#: templates/admin.html:1634
+msgid ""
+"Ngay sau khi nhập, bạn có thể tải file Excel kết quả chứa thông tin đăng "
+"nhập để bàn giao cho từng cá nhân."
+msgstr ""
+
+#: templates/admin.html:1642
+msgid "Bắt đầu Nhập danh sách"
+msgstr ""
+
+#: templates/admin.html:1661
+msgid "Số lượng mã lớp"
+msgstr ""
+
+#: templates/admin.html:1665
+msgid "Số lượng mã cá nhân"
+msgstr ""
+
+#: templates/admin_accounts.html:3
+msgid "Quản lý Tài khoản & Phân quyền - School Time Bank"
+msgstr ""
+
+#: templates/admin_accounts.html:11
+msgid "KHU VỰC TỔNG QUẢN TRỊ"
+msgstr ""
+
+#: templates/admin_accounts.html:14
+msgid "Quản lý Tài khoản Hệ thống"
+msgstr ""
+
+#: templates/admin_accounts.html:15
+msgid ""
+"Cấp phát tài khoản Quản trị trường (School Admin), Giáo viên và Khôi phục"
+" môi trường Demo"
+msgstr ""
+
+#: templates/admin_accounts.html:20 templates/book_session_page.html:12
+msgid "Quay lại Dashboard"
+msgstr ""
+
+#: templates/admin_accounts.html:23
+msgid ""
+"Bạn có chắc chắn muốn đưa Trường Demo về trạng thái ban đầu? Toàn bộ giao"
+" dịch và kỹ năng thử nghiệm trong Trường Demo sẽ được hoàn tác sạch sẽ."
+msgstr ""
+
+#: templates/admin_accounts.html:25 templates/admin_accounts.html:114
+msgid "Reset Trường Demo"
+msgstr ""
+
+#: templates/admin_accounts.html:37
+msgid "Tạo tài khoản Quản lý / Giáo viên"
+msgstr ""
+
+#: templates/admin_accounts.html:39
+msgid "Tài khoản được tạo sẽ lập tức kích hoạt với đầy đủ quyền hạn theo vai trò."
+msgstr ""
+
+#: templates/admin_accounts.html:50
+msgid "Quản trị trường (School Admin)"
+msgstr ""
+
+#: templates/admin_accounts.html:64
+msgid "Tên đăng nhập (Username)"
+msgstr ""
+
+#: templates/admin_accounts.html:66
+msgid "Dùng để đăng nhập vào hệ thống."
+msgstr ""
+
+#: templates/admin_accounts.html:72
+msgid "vd: Thầy Trần Minh Tuấn"
+msgstr ""
+
+#: templates/admin_accounts.html:77
+msgid "Địa chỉ Email"
+msgstr ""
+
+#: templates/admin_accounts.html:79
+msgid "Dùng để khôi phục mật khẩu khi quên qua hệ thống email."
+msgstr ""
+
+#: templates/admin_accounts.html:84
+msgid "Trực thuộc Trường"
+msgstr ""
+
+#: templates/admin_accounts.html:87
+msgid "Khu vực Demo"
+msgstr ""
+
+#: templates/admin_accounts.html:94
+msgid "Mật khẩu khởi tạo"
+msgstr ""
+
+#: templates/admin_accounts.html:95 templates/register.html:100
+#: templates/reset_password.html:24
+msgid "Tối thiểu 6 ký tự"
+msgstr ""
+
+#: templates/admin_accounts.html:99
+msgid "Khởi tạo Tài khoản"
+msgstr ""
+
+#: templates/admin_accounts.html:108
+msgid "Trường Demo & Tài khoản Giám Khảo"
+msgstr ""
+
+#: templates/admin_accounts.html:111
+msgid "Hệ thống đã cách ly hoàn toàn"
+msgstr ""
+
+#: templates/admin_accounts.html:111
+msgid "Trường Demo (ID 99)"
+msgstr ""
+
+#: templates/admin_accounts.html:111
+msgid ""
+"Giám khảo đăng nhập vào các tài khoản demo sẽ được trải nghiệm đầy đủ "
+"tính năng mà không ảnh hưởng tới dữ liệu của 4 trường thật."
+msgstr ""
+
+#: templates/admin_accounts.html:114
+msgid "Khi cần dọn dẹp sau các bài kiểm tra hoặc thuyết trình, nhấn nút"
+msgstr ""
+
+#: templates/admin_accounts.html:114
+msgid "để hoàn nguyên dữ liệu chuẩn ban đầu."
+msgstr ""
+
+#: templates/admin_accounts.html:125
+msgid "Danh sách Tài khoản Quản lý & Giáo viên"
+msgstr ""
+
+#: templates/admin_accounts.html:127 templates/blog_list.html:48
+#: templates/blog_manage.html:97 templates/skills_approval.html:21
+msgid "Tổng số:"
+msgstr ""
+
+#: templates/admin_accounts.html:127
+msgid "tài khoản"
+msgstr ""
+
+#: templates/admin_accounts.html:135
+msgid "Tài khoản"
+msgstr ""
+
+#: templates/admin_accounts.html:136
+msgid "Họ tên & Email"
+msgstr ""
+
+#: templates/admin_accounts.html:138
+msgid "Trường trực thuộc"
+msgstr ""
+
+#: templates/admin_accounts.html:156
+msgid "Chưa có email"
+msgstr ""
+
+#: templates/admin_accounts.html:186
+msgid "Chưa có tài khoản quản lý nào được tạo."
+msgstr ""
+
+#: templates/admin_drive_token_display.html:3
+msgid "Mã Refresh Token Google Drive 5TB - School Time Bank"
+msgstr ""
+
+#: templates/admin_drive_token_display.html:20
+msgid "XÁC THỰC GOOGLE DRIVE 5TB THÀNH CÔNG"
+msgstr ""
+
+#: templates/admin_drive_token_display.html:22
+msgid "Mã Refresh Token Đầy Đủ"
+msgstr ""
+
+#: templates/admin_drive_token_display.html:32
+msgid "Lưu ý bảo mật quan trọng:"
+msgstr ""
+
+#: templates/admin_drive_token_display.html:34
+msgid "Mã Refresh Token dưới đây"
+msgstr ""
+
+#: templates/admin_drive_token_display.html:34
+msgid "chỉ hiển thị 1 lần duy nhất"
+msgstr ""
+
+#: templates/admin_drive_token_display.html:34
+msgid ""
+"trên trang này và sẽ tự động bị xóa khỏi phiên làm việc ngay khi thầy/cô "
+"tải lại trang hoặc rời đi. Hệ thống không lưu trữ mã này trong mã nguồn "
+"hay cơ sở dữ liệu."
+msgstr ""
+
+#: templates/admin_drive_token_display.html:43
+msgid "Sẵn sàng sao chép"
+msgstr ""
+
+#: templates/admin_drive_token_display.html:62
+#: templates/admin_drive_token_display.html:123
+msgid "Sao chép Token đầy đủ"
+msgstr ""
+
+#: templates/admin_drive_token_display.html:70
+msgid "Hướng dẫn thêm vào Render (Để lưu trữ vĩnh viễn):"
+msgstr ""
+
+#: templates/admin_drive_token_display.html:73
+msgid "Nhấn nút"
+msgstr ""
+
+#: templates/admin_drive_token_display.html:73
+msgid "\"Sao chép Token đầy đủ\""
+msgstr ""
+
+#: templates/admin_drive_token_display.html:73
+msgid "ở trên."
+msgstr ""
+
+#: templates/admin_drive_token_display.html:74
+msgid "Truy cập"
+msgstr ""
+
+#: templates/admin_drive_token_display.html:74
+msgid "&rarr; Chọn Web Service"
+msgstr ""
+
+#: templates/admin_drive_token_display.html:74
+msgid "&rarr; Chọn tab"
+msgstr ""
+
+#: templates/admin_drive_token_display.html:75
+msgid "Thêm biến môi trường mới:"
+msgstr ""
+
+#: templates/admin_drive_token_display.html:78
+msgid "[Dán mã vừa copy vào đây]"
+msgstr ""
+
+#: templates/admin_drive_token_display.html:81
+msgid "Nhấn"
+msgstr ""
+
+#: templates/admin_drive_token_display.html:81
+msgid "để hệ thống tự động duy trì kết nối Google Drive 5TB vĩnh viễn."
+msgstr ""
+
+#: templates/admin_drive_token_display.html:88
+msgid "Sau khi bấm nút bên dưới, trang sẽ chuyển về Trang Quản Trị."
+msgstr ""
+
+#: templates/admin_drive_token_display.html:95
+msgid "Đã copy xong"
+msgstr ""
+
+#: templates/admin_drive_token_display.html:117
+msgid "Đã sao chép vào bộ nhớ tạm! ✓"
+msgstr ""
+
+#: templates/admin_drive_token_display.html:129
+msgid ""
+"Không thể tự động sao chép, vui lòng chọn toàn bộ văn bản trong ô và nhấn"
+" Ctrl+C!"
+msgstr ""
+
+#: templates/ai_matchmake.html:3
+msgid "AI Gợi ý ghép cặp bạn học - {{ config.ten_truong }}"
+msgstr ""
+
+#: templates/ai_matchmake.html:11
+msgid "Quay lại Kho kỹ năng học đường"
+msgstr ""
+
+#: templates/ai_matchmake.html:16
+msgid "Chế độ cơ bản"
+msgstr ""
+
+#: templates/ai_matchmake.html:19
+msgid "Trợ Lý AI Ghép Cặp Bạn Học"
+msgstr ""
+
+#: templates/ai_matchmake.html:20
+msgid ""
+"Hệ thống phân tích nhu cầu, phong cách học tập và lịch rảnh để gợi ý 3 "
+"bạn gia sư tương thích nhất"
+msgstr ""
+
+#: templates/ai_matchmake.html:29
+msgid "Nhu Cầu Học Tập Của Bạn"
+msgstr ""
+
+#: templates/ai_matchmake.html:34
+msgid "1. Môn học / Kỹ năng cần tìm gia sư"
+msgstr ""
+
+#: templates/ai_matchmake.html:35
+msgid "Ví dụ: Hình học không gian, Tiếng Anh giao tiếp, Python..."
+msgstr ""
+
+#: templates/ai_matchmake.html:39
+msgid "2. Trình độ hiện tại của bạn"
+msgstr ""
+
+#: templates/ai_matchmake.html:41
+msgid "Mất gốc / Bắt đầu từ đầu"
+msgstr ""
+
+#: templates/ai_matchmake.html:42
+msgid "Cơ bản (Cần luyện thêm bài tập)"
+msgstr ""
+
+#: templates/ai_matchmake.html:43
+msgid "Khá (Muốn nâng cao tư duy)"
+msgstr ""
+
+#: templates/ai_matchmake.html:44
+msgid "Ôn thi học kỳ / Kỳ thi quan trọng"
+msgstr ""
+
+#: templates/ai_matchmake.html:49
+msgid "3. Khung giờ bạn rảnh rỗi"
+msgstr ""
+
+#: templates/ai_matchmake.html:50
+msgid "Ví dụ: Chiều thứ 3, sáng thứ 7, tối thứ 6..."
+msgstr ""
+
+#: templates/ai_matchmake.html:51
+msgid ""
+"AI sẽ đối soát với giờ rảnh của các bạn gia sư để tìm người trùng lịch "
+"nhất."
+msgstr ""
+
+#: templates/ai_matchmake.html:55
+msgid "Nhờ AI Ghép Cặp Ngay"
+msgstr ""
+
+#: templates/ai_matchmake.html:66
+msgid "3 Bạn Gia Sư Phù Hợp Nhất Từ AI"
+msgstr ""
+
+#: templates/ai_matchmake.html:68
+msgid "Tìm thấy"
+msgstr ""
+
+#: templates/ai_matchmake.html:68
+msgid "gợi ý"
+msgstr ""
+
+#: templates/ai_matchmake.html:85 templates/session_quiz.html:39
+msgid "Gia sư:"
+msgstr ""
+
+#: templates/ai_matchmake.html:86 templates/profile.html:212
+msgid "Rảnh:"
+msgstr ""
+
+#: templates/ai_matchmake.html:92 templates/profile.html:220
+msgid "Đặt lịch ngay"
+msgstr ""
+
+#: templates/ai_matchmake.html:98
+msgid "Đánh giá AI"
+msgstr ""
+
+#: templates/ai_matchmake.html:108
+msgid "Đặt Lịch Học Kèm Với"
+msgstr ""
+
+#: templates/ai_matchmake.html:115
+msgid "Chuyên đề học tập"
+msgstr ""
+
+#: templates/ai_matchmake.html:119 templates/book_session_page.html:69
+#: templates/skills_market.html:151
+msgid "Thời gian hẹn học"
+msgstr ""
+
+#: templates/ai_matchmake.html:123
+msgid "Thời lượng học (Tối đa 2.0h/phiên)"
+msgstr ""
+
+#: templates/ai_matchmake.html:125 templates/skills_market.html:159
+msgid "1.0 giờ (1 tín dụng)"
+msgstr ""
+
+#: templates/ai_matchmake.html:126
+msgid "1.5 giờ (1.5 tín dụng)"
+msgstr ""
+
+#: templates/ai_matchmake.html:127
+msgid "2.0 giờ (2 tín dụng)"
+msgstr ""
+
+#: templates/ai_matchmake.html:133 templates/skills_market.html:175
+msgid "Xác nhận đặt lịch"
+msgstr ""
+
+#: templates/ai_matchmake.html:144
+msgid ""
+"Chưa tìm thấy gia sư phù hợp với môn học này. Hãy thử tìm kiếm với từ "
+"khóa rộng hơn nhé!"
+msgstr ""
+
+#: templates/ai_matchmake.html:153
+msgid "Hãy Nhập Nhu Cầu Của Bạn"
+msgstr ""
+
+#: templates/ai_matchmake.html:155
+msgid ""
+"Trợ lý AI sẽ duyệt qua hàng chục chuyên đề trên Kho kỹ năng học đường, "
+"đánh giá số sao và thời gian rảnh để chọn ra 3 người bạn gia sư lý tưởng "
+"nhất cho bạn."
 msgstr ""
 
 #: templates/base.html:6 templates/base.html:49 templates/base.html:336
@@ -106,7 +2667,7 @@ msgstr ""
 msgid "Ngân hàng Thời gian Học đường"
 msgstr ""
 
-#: templates/base.html:66 templates/base.html:381
+#: templates/base.html:66 templates/base.html:381 templates/noi_quy.html:27
 msgid "Mô hình"
 msgstr ""
 
@@ -122,19 +2683,18 @@ msgstr ""
 msgid "Số liệu vận hành"
 msgstr ""
 
-#: templates/base.html:90
-msgid "Hoạt động"
-msgstr ""
-
 #: templates/base.html:95 templates/base.html:377
-msgid "Chợ kỹ năng"
+#: templates/my_schedule.html:208 templates/skills_market.html:3
+#: templates/skills_new.html:52
+msgid "Kho kỹ năng học đường"
 msgstr ""
 
 #: templates/base.html:100
-msgid "Sàn cộng đồng"
+msgid "Cộng đồng liên trường"
 msgstr ""
 
 #: templates/base.html:105 templates/base.html:379
+#: templates/community_attendance.html:11
 msgid "Vì cộng đồng"
 msgstr ""
 
@@ -210,7 +2770,8 @@ msgstr ""
 msgid "Hoạt động Vì cộng đồng"
 msgstr ""
 
-#: templates/base.html:256
+#: templates/base.html:256 templates/blog_form.html:11
+#: templates/blog_list.html:31
 msgid "Quản lý Bảng tin"
 msgstr ""
 
@@ -226,15 +2787,11 @@ msgstr ""
 msgid "Bảng điều khiển Admin"
 msgstr ""
 
-#: templates/base.html:280
-msgid "Quản lý Tài khoản"
-msgstr ""
-
 #: templates/base.html:287
 msgid "Đăng xuất"
 msgstr ""
 
-#: templates/base.html:296 templates/index.html:54 templates/login.html:3
+#: templates/base.html:296 templates/index.html:63 templates/login.html:3
 msgid "Đăng nhập"
 msgstr ""
 
@@ -322,6 +2879,16 @@ msgstr ""
 msgid "Tiếp tục vào hệ thống"
 msgstr ""
 
+#: templates/base.html:423
+msgid "Xin chào học sinh mang mã ["
+msgstr ""
+
+#: templates/base.html:423
+msgid ""
+"]! Hệ thống đã ghi nhận. Tính năng dashboard cá nhân sẽ mở đầy đủ tại các"
+" milestone tiếp theo."
+msgstr ""
+
 #: templates/base.html:437
 msgid "Trò chuyện cùng Trợ lý Học đường AI"
 msgstr ""
@@ -332,10 +2899,6 @@ msgstr ""
 
 #: templates/base.html:453
 msgid "Trợ lý Học đường AI"
-msgstr ""
-
-#: templates/base.html:455 templates/index.html:222 templates/register.html:92
-msgid "Hỗ trợ bởi AI (Trí tuệ nhân tạo)"
 msgstr ""
 
 #: templates/base.html:461
@@ -358,19 +2921,19 @@ msgstr ""
 msgid "Gợi ý câu hỏi nhanh:"
 msgstr ""
 
-#: templates/base.html:499
+#: templates/base.html:498 templates/base.html:499
 msgid "Tôi còn bao nhiêu giờ?"
 msgstr ""
 
-#: templates/base.html:502
+#: templates/base.html:501 templates/base.html:502
 msgid "Lịch học sắp tới của tôi?"
 msgstr ""
 
-#: templates/base.html:505
+#: templates/base.html:504 templates/base.html:505
 msgid "Làm sao đăng kỹ năng?"
 msgstr ""
 
-#: templates/base.html:508
+#: templates/base.html:507 templates/base.html:508
 msgid "Gợi ý lộ trình học Toán trong 4 tuần?"
 msgstr ""
 
@@ -378,291 +2941,1924 @@ msgstr ""
 msgid "Hỏi trợ lý (số dư, lịch học, kỹ năng...)"
 msgstr ""
 
-#: templates/index.html:23
-msgid "Chào mừng bạn đã đến với công cụ giáo dục TIME BANK EDU."
+#: templates/base.html:707
+msgid "Rất tiếc, đã có lỗi xảy ra: "
 msgstr ""
 
-#: templates/index.html:32
+#: templates/base.html:707
+msgid "Vui lòng thử lại."
+msgstr ""
+
+#: templates/base.html:711
+msgid "Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng!"
+msgstr ""
+
+#: templates/base.html:722
+msgid "Bạn có muốn làm mới cuộc trò chuyện với Trợ lý AI không?"
+msgstr ""
+
+#: templates/blog_detail.html:10 templates/blog_form.html:10
+#: templates/errors/403.html:24
+msgid "Trang chủ"
+msgstr ""
+
+#: templates/blog_detail.html:11
+msgid "Bảng tin"
+msgstr ""
+
+#: templates/blog_detail.html:22
+msgid "CHẾ ĐỘ XEM TRƯỚC (BẢN NHÁP)"
+msgstr ""
+
+#: templates/blog_detail.html:25
+msgid "Bài viết này hiện đang ở trạng thái"
+msgstr ""
+
+#: templates/blog_detail.html:25
+msgid "Bản nháp (Chưa duyệt)"
+msgstr ""
+
+#: templates/blog_detail.html:25
+msgid "và"
+msgstr ""
+
+#: templates/blog_detail.html:25
+msgid "KHÔNG"
+msgstr ""
+
+#: templates/blog_detail.html:25
+msgid ""
+"hiển thị công khai trên trang Bảng tin. Học sinh sẽ không thể thấy bài "
+"viết này cho đến khi Thầy/Cô bấm duyệt."
+msgstr ""
+
+#: templates/blog_detail.html:30
+msgid "Duyệt & Đăng ngay (1-Click)"
+msgstr ""
+
+#: templates/blog_detail.html:33
+msgid "Sửa nội dung"
+msgstr ""
+
+#: templates/blog_detail.html:51
+msgid "Tác giả: Thầy Cô giáo"
+msgstr ""
+
+#: templates/blog_detail.html:61 templates/blog_manage.html:54
+msgid "Đã đăng công khai"
+msgstr ""
+
+#: templates/blog_detail.html:65 templates/blog_manage.html:158
+msgid "Bản nháp"
+msgstr ""
+
+#: templates/blog_detail.html:92
+msgid "Quay lại Bảng tin"
+msgstr ""
+
+#: templates/blog_detail.html:96
+msgid "Quản lý bài viết"
+msgstr ""
+
+#: templates/blog_detail.html:105
+msgid "Duyệt & Đăng bài"
+msgstr ""
+
+#: templates/blog_detail.html:111 templates/blog_manage.html:178
+msgid "Thầy/Cô có chắc chắn muốn xóa bài viết này?"
+msgstr ""
+
+#: templates/blog_form.html:3
+#, python-brace-format, python-format
+msgid ""
+"{% if action == 'create' %}Viết bài mới — Bảng tin Học đường{% else "
+"%}Chỉnh sửa bài viết — Bảng tin Học đường{% endif %}"
+msgstr ""
+
+#: templates/blog_form.html:13 templates/blog_list.html:52
+#: templates/blog_list.html:125 templates/blog_manage.html:23
+msgid "Viết bài mới"
+msgstr ""
+
+#: templates/blog_form.html:13
+msgid "Chỉnh sửa bài #"
+msgstr ""
+
+#: templates/blog_form.html:24
+msgid "Viết bài mới cho Bảng tin học đường"
+msgstr ""
+
+#: templates/blog_form.html:26
+msgid "Chỉnh sửa bài viết:"
+msgstr ""
+
+#: templates/blog_form.html:36 templates/blog_manage.html:107
+msgid "Tiêu đề bài viết"
+msgstr ""
+
+#: templates/blog_form.html:39
+msgid "Ví dụ: Bản tin Tuần TimeBank EDU: Lan tỏa tri thức học đường..."
+msgstr ""
+
+#: templates/blog_form.html:46
+msgid "Trạng thái bài viết"
+msgstr ""
+
+#: templates/blog_form.html:50
+msgid "📝 Bản nháp (Chưa công khai - chỉ Giáo viên xem được)"
+msgstr ""
+
+#: templates/blog_form.html:53
+msgid "🚀 Đã đăng (Công khai cho toàn thể học sinh trên trang /blog)"
+msgstr ""
+
+#: templates/blog_form.html:56
+msgid "✅ Đã duyệt (Chờ lịch phát hành)"
+msgstr ""
+
+#: templates/blog_form.html:59
+msgid "Lưu ý: Chỉ các bài viết có trạng thái"
+msgstr ""
+
+#: templates/blog_form.html:59
+msgid "\"Đã đăng\""
+msgstr ""
+
+#: templates/blog_form.html:59
+msgid "mới xuất hiện trên trang Bảng tin công khai."
+msgstr ""
+
+#: templates/blog_form.html:65
+msgid "Ảnh minh họa (Banner bài viết)"
+msgstr ""
+
+#: templates/blog_form.html:73
+msgid "Ảnh hiện tại đang sử dụng. Chọn file mới bên dưới nếu muốn thay đổi."
+msgstr ""
+
+#: templates/blog_form.html:77
+msgid ""
+"Hỗ trợ các định dạng ảnh: PNG, JPG, JPEG, WEBP, GIF. Kích thước khuyến "
+"nghị: 1200x630px. Nếu để trống sẽ sử dụng ảnh mặc định của nhà trường."
+msgstr ""
+
+#: templates/blog_form.html:83
+msgid "Nội dung bài viết"
+msgstr ""
+
+#: templates/blog_form.html:86
+msgid "Nhập nội dung bài viết..."
+msgstr ""
+
+#: templates/blog_form.html:87
+msgid "Hỗ trợ định dạng phân đoạn, tiêu đề theo chuẩn cấu trúc bản tin sư phạm."
+msgstr ""
+
+#: templates/blog_form.html:93 templates/book_session_page.html:89
+#: templates/community.html:421
+msgid "Hủy bỏ"
+msgstr ""
+
+#: templates/blog_form.html:98
+msgid "Lưu bài viết"
+msgstr ""
+
+#: templates/blog_form.html:98
+msgid "Cập nhật bài viết"
+msgstr ""
+
+#: templates/blog_list.html:3
+msgid "Bảng tin Học đường & Bản tin Tuần — TimeBank EDU"
+msgstr ""
+
+#: templates/blog_list.html:12
+msgid "BẢNG TIN HỌC ĐƯỜNG"
+msgstr ""
+
+#: templates/blog_list.html:14
+msgid "Bản tin & Câu chuyện Học tập"
+msgstr ""
+
+#: templates/blog_list.html:16
+#, python-format
+msgid ""
+"Nơi lan tỏa các câu chuyện tương trợ tri thức, vinh danh gia sư tiêu biểu"
+" và cập nhật nhịp đập hoạt động tại %(ten_truong)s."
+msgstr ""
+
+#: templates/blog_list.html:23
+msgid "100% Nội bộ nhà trường"
+msgstr ""
+
+#: templates/blog_list.html:34 templates/blog_list.html:122
+#: templates/blog_manage.html:20
+msgid "Nhờ AI soạn bản tin tuần"
+msgstr ""
+
+#: templates/blog_list.html:46
+msgid "Bài viết & Bản tin mới nhất"
+msgstr ""
+
+#: templates/blog_list.html:48
+msgid "bài viết đã công khai"
+msgstr ""
+
+#: templates/blog_list.html:82
+msgid "Bản tin AI"
+msgstr ""
+
+#: templates/blog_list.html:98
+msgid "Đọc bài viết"
+msgstr ""
+
+#: templates/blog_list.html:101 templates/blog_manage.html:175
+msgid "Chỉnh sửa"
+msgstr ""
+
+#: templates/blog_list.html:115
+msgid "Chưa có bài viết nào được công khai"
+msgstr ""
+
+#: templates/blog_list.html:117
+msgid ""
+"Các bản tin hoặc bài viết sẽ hiển thị tại đây sau khi được Thầy Cô giáo "
+"duyệt và đăng tải chính thức."
+msgstr ""
+
+#: templates/blog_manage.html:3
+msgid "Quản lý Bảng tin & Bản tin Tuần — TimeBank EDU"
+msgstr ""
+
+#: templates/blog_manage.html:11
+msgid "DÀNH CHO GIÁO VIÊN & QUẢN TRỊ VIÊN"
+msgstr ""
+
+#: templates/blog_manage.html:14
+msgid "Quản lý Bảng tin & Bản tin tuần"
+msgstr ""
+
+#: templates/blog_manage.html:16
+msgid ""
+"Biên tập tin tức, kiểm duyệt bài viết và sử dụng Trợ lý AI (Trí tuệ nhân "
+"tạo) để tự động soạn bản tin học đường."
+msgstr ""
+
+#: templates/blog_manage.html:26
+msgid "Xem trang công khai"
+msgstr ""
+
+#: templates/blog_manage.html:40
+msgid "Tổng bài viết"
+msgstr ""
+
+#: templates/blog_manage.html:68
+msgid "Bản nháp (Chờ duyệt)"
+msgstr ""
+
+#: templates/blog_manage.html:82
+msgid "Do AI (Trí tuệ nhân tạo) soạn"
+msgstr ""
+
+#: templates/blog_manage.html:94
+msgid "Danh sách bài viết trong hệ thống"
+msgstr ""
+
+#: templates/blog_manage.html:97
+msgid "mục"
+msgstr ""
+
+#: templates/blog_manage.html:106
+msgid "Ảnh"
+msgstr ""
+
+#: templates/blog_manage.html:108
+msgid "Tác giả / Nguồn"
+msgstr ""
+
+#: templates/blog_manage.html:139
+msgid "AI (Trí tuệ nhân tạo)"
+msgstr ""
+
+#: templates/blog_manage.html:143
+msgid "Thầy Cô"
+msgstr ""
+
+#: templates/blog_manage.html:150
+msgid "Đã đăng"
+msgstr ""
+
+#: templates/blog_manage.html:154 templates/profile.html:296
+#: templates/skills_approval.html:62 templates/skills_market.html:77
+msgid "Đã duyệt"
+msgstr ""
+
+#: templates/blog_manage.html:168
+msgid "Duyệt 1-click & Đăng ngay"
+msgstr ""
+
+#: templates/blog_manage.html:172
+msgid "Xem trước / Chi tiết"
+msgstr ""
+
+#: templates/blog_manage.html:188
+msgid "Chưa có bài viết nào trong hệ thống. Hãy bấm"
+msgstr ""
+
+#: templates/blog_manage.html:188
+msgid "\"Nhờ AI soạn bản tin tuần\""
+msgstr ""
+
+#: templates/blog_manage.html:188
+msgid "hoặc"
+msgstr ""
+
+#: templates/blog_manage.html:188
+msgid "\"Viết bài mới\""
+msgstr ""
+
+#: templates/book_session_page.html:3
+msgid "Đặt lịch học kèm - {{ skill.tieu_de }} - {{ config.ten_truong }}"
+msgstr ""
+
+#: templates/book_session_page.html:25
+msgid "Gợi ý tự động từ AI"
+msgstr ""
+
+#: templates/book_session_page.html:42
+msgid "Mã HS:"
+msgstr ""
+
+#: templates/book_session_page.html:45
+msgid "Khung giờ rảnh của gia sư:"
+msgstr ""
+
+#: templates/book_session_page.html:46 templates/profile.html:212
+msgid "Linh hoạt"
+msgstr ""
+
+#: templates/book_session_page.html:55
+msgid "Số dư giờ tín dụng của bạn:"
+msgstr ""
+
+#: templates/book_session_page.html:56 templates/community.html:205
+#: templates/index.html:424 templates/my_schedule.html:14
+#: templates/profile.html:73 templates/profile.html:99
+#: templates/profile.html:118 templates/session_detail.html:76
+#: templates/session_quiz.html:45 templates/skills_market.html:147
+#: templates/virtual_room.html:179 templates/wallet.html:42
+msgid "giờ"
+msgstr ""
+
+#: templates/book_session_page.html:59
+msgid "Quy tắc: 1 giờ học = 1 tín dụng thời gian."
+msgstr ""
+
+#: templates/book_session_page.html:72
+msgid "Vui lòng chọn khung giờ phù hợp với lịch rảnh của bạn và gia sư."
+msgstr ""
+
+#: templates/book_session_page.html:77
+msgid "Thời lượng buổi học"
+msgstr ""
+
+#: templates/book_session_page.html:80
+msgid "1.0 giờ (1 tín dụng - Khuyến nghị chuẩn)"
+msgstr ""
+
+#: templates/book_session_page.html:81 templates/skills_market.html:160
+msgid "0.5 giờ (30 phút - 0.5 tín dụng)"
+msgstr ""
+
+#: templates/book_session_page.html:82 templates/skills_market.html:161
+msgid "1.5 giờ (90 phút - 1.5 tín dụng)"
+msgstr ""
+
+#: templates/book_session_page.html:83 templates/skills_market.html:162
+msgid "2.0 giờ (Tối đa 2h / phiên - 2.0 tín dụng)"
+msgstr ""
+
+#: templates/book_session_page.html:85
+msgid "Hệ thống giới hạn tối đa 2.0 giờ/phiên học để đảm bảo hiệu quả tiếp thu."
+msgstr ""
+
+#: templates/book_session_page.html:91
+msgid "Xác nhận đặt lịch học ngay"
+msgstr ""
+
+#: templates/community.html:3
+msgid "Vì cộng đồng & Giờ công ích - {{ config.ten_truong }}"
+msgstr ""
+
+#: templates/community.html:15
+msgid "HOẠT ĐỘNG VÌ CỘNG ĐỒNG"
+msgstr ""
+
+#: templates/community.html:18
+msgid "TÍN DỤNG CÔNG ÍCH"
+msgstr ""
+
+#: templates/community.html:21
+msgid "Chương trình Giờ Công ích Học đường"
+msgstr ""
+
+#: templates/community.html:23
+msgid ""
+"Mở rộng mô hình ngân hàng thời gian: Tham gia dọn dẹp bãi biển, hỗ trợ số"
+" hóa sách thư viện,"
+msgstr ""
+
+#: templates/community.html:24
+msgid "dạy tin học cho đàn em... để nhận thêm tín dụng thời gian vào ví học tập!"
+msgstr ""
+
+#: templates/community.html:31
+msgid "Tạo nhiệm vụ mới"
+msgstr ""
+
+#: templates/community.html:48 templates/index.html:464
+msgid "Tổng giờ công ích toàn trường"
+msgstr ""
+
+#: templates/community.html:62
+msgid "Nhiệm vụ đang mở đăng ký"
+msgstr ""
+
+#: templates/community.html:76
+msgid "Học sinh hoàn thành hoạt động"
+msgstr ""
+
+#: templates/community.html:93
+msgid "VIỆC PHÙ HỢP VỚI BẠN"
+msgstr ""
+
+#: templates/community.html:95
+msgid "Trợ lý AI Đề xuất Riêng cho"
+msgstr ""
+
+#: templates/community.html:102
+msgid "Chế độ cơ bản (Rule-based)"
+msgstr ""
+
+#: templates/community.html:108
+msgid ""
+"Dựa trên kỹ năng thế mạnh, môn học yêu thích và lịch sử trao đổi của bạn,"
+" AI chọn ra 3 nhiệm vụ phù hợp nhất để bạn cống hiến và nhận thưởng tín "
+"dụng:"
+msgstr ""
+
+#: templates/community.html:118 templates/community.html:340
+#: templates/index.html:496
+msgid "h thưởng"
+msgstr ""
+
+#: templates/community.html:127
+msgid "Trong khuôn viên trường"
+msgstr ""
+
+#: templates/community.html:133
+msgid "Lý do AI gợi ý:"
+msgstr ""
+
+#: templates/community.html:143 templates/community.html:279
+#: templates/community.html:339 templates/community_attendance.html:83
+msgid "Đã hoàn thành"
+msgstr ""
+
+#: templates/community.html:147
+msgid "Bạn đã đăng ký"
+msgstr ""
+
+#: templates/community.html:151 templates/community.html:287
+msgid "Đã đủ số lượng"
+msgstr ""
+
+#: templates/community.html:155
+msgid "Đã hết hạn đăng ký"
+msgstr ""
+
+#: templates/community.html:160
+msgid "Đăng ký tham gia ngay"
+msgstr ""
+
+#: templates/community.html:178
+msgid "Nhiệm vụ cộng đồng đang mở"
+msgstr ""
+
+#: templates/community.html:180
+msgid "Cập nhật theo thời gian thực"
+msgstr ""
+
+#: templates/community.html:195 templates/index.html:487
+msgid "Hoạt động vì cộng đồng"
+msgstr ""
+
+#: templates/community.html:205 templates/community_attendance.html:22
+msgid "Thưởng"
+msgstr ""
+
+#: templates/community.html:213
+msgid "Đã đủ người"
+msgstr ""
+
+#: templates/community.html:217
+msgid "Đã hết hạn"
+msgstr ""
+
+#: templates/community.html:221 templates/forum_index.html:75
+#: templates/forum_topic.html:37 templates/index.html:512
+msgid "Đang mở"
+msgstr ""
+
+#: templates/community.html:228
+msgid ""
+"Tham gia cùng thầy cô và bạn bè để chung tay xây dựng trường học thân "
+"thiện và môi trường xanh sạch đẹp."
+msgstr ""
+
+#: templates/community.html:232 templates/community_attendance.html:30
+msgid "Địa điểm:"
+msgstr ""
+
+#: templates/community.html:232 templates/community.html:343
+#: templates/community_attendance.html:30
+msgid "Tại trường"
+msgstr ""
+
+#: templates/community.html:237
+msgid "Thời gian:"
+msgstr ""
+
+#: templates/community.html:243 templates/community_attendance.html:31
+#: templates/index.html:512
+msgid "Hạn đăng ký:"
+msgstr ""
+
+#: templates/community.html:248
+msgid "Người phụ trách:"
+msgstr ""
+
+#: templates/community.html:255
+msgid "Đã đăng ký:"
+msgstr ""
+
+#: templates/community.html:273
+msgid "Danh sách & Điểm danh"
+msgstr ""
+
+#: templates/community.html:283
+msgid "Bạn đã đăng ký tham gia"
+msgstr ""
+
+#: templates/community.html:291
+msgid "Quá hạn đăng ký"
+msgstr ""
+
+#: templates/community.html:296
+msgid "Đăng ký tham gia"
+msgstr ""
+
+#: templates/community.html:303
+msgid "Đăng nhập để đăng ký"
+msgstr ""
+
+#: templates/community.html:314
+msgid "Hiện chưa có nhiệm vụ cộng đồng nào đang mở"
+msgstr ""
+
+#: templates/community.html:315
+msgid ""
+"Thầy cô và Đoàn trường sẽ sớm cập nhật các hoạt động mới. Hãy quay lại "
+"sau nhé!"
+msgstr ""
+
+#: templates/community.html:319
+msgid "Tạo nhiệm vụ đầu tiên"
+msgstr ""
+
+#: templates/community.html:332
+msgid "Nhiệm vụ đã hoàn thành gần đây"
+msgstr ""
+
+#: templates/community.html:345
+msgid "bạn đã nhận tín dụng"
+msgstr ""
+
+#: templates/community.html:365
+msgid "Tạo nhiệm vụ Vì cộng đồng mới"
+msgstr ""
+
+#: templates/community.html:373
+msgid "Nhiệm vụ sau khi tạo sẽ có trạng thái"
+msgstr ""
+
+#: templates/community.html:373
+msgid "để học sinh đăng ký tham gia."
+msgstr ""
+
+#: templates/community.html:374
+msgid ""
+"Sau khi hoạt động kết thúc, Thầy/Cô điểm danh để cộng giờ thưởng vào ví "
+"học sinh."
+msgstr ""
+
+#: templates/community.html:378
+msgid "Tiêu đề nhiệm vụ"
+msgstr ""
+
+#: templates/community.html:379
+msgid "Ví dụ: Dọn rác bãi biển Hạ Long sáng Chủ nhật"
+msgstr ""
+
+#: templates/community.html:383
+msgid "Ảnh bìa hoạt động (Tải ảnh thật)"
+msgstr ""
+
+#: templates/community.html:385
+msgid ""
+"Tùy chọn tải ảnh thật của nhiệm vụ/sự kiện. Nếu không tải sẽ hiện "
+"placeholder trang nhã."
+msgstr ""
+
+#: templates/community.html:389
+msgid "Mô tả công việc & Yêu cầu"
+msgstr ""
+
+#: templates/community.html:390
+msgid ""
+"Nội dung công việc, trang phục, dụng cụ cần mang theo hoặc kỹ năng hỗ "
+"trợ..."
+msgstr ""
+
+#: templates/community.html:395
+msgid "Địa điểm diễn ra"
+msgstr ""
+
+#: templates/community.html:396
+msgid "Ví dụ: Bãi tắm Bãi Cháy, TP. Hạ Long"
+msgstr ""
+
+#: templates/community.html:400
+msgid "Hạn đăng ký (YYYY-MM-DD)"
+msgstr ""
+
+#: templates/community.html:407
+msgid "Số giờ thưởng (+giờ vào ví)"
+msgstr ""
+
+#: templates/community.html:409
+msgid "Cộng đúng số giờ này cho mỗi học sinh hoàn thành."
+msgstr ""
+
+#: templates/community.html:413
+msgid "Số lượng học sinh tối đa"
+msgstr ""
+
+#: templates/community.html:415
+msgid "Hệ thống tự động khóa đăng ký khi đủ số lượng."
+msgstr ""
+
+#: templates/community.html:423
+msgid "Tạo & Mở đăng ký"
+msgstr ""
+
+#: templates/community_attendance.html:3
+msgid "Điểm danh hoạt động Vì cộng đồng - {{ config.ten_truong }}"
+msgstr ""
+
+#: templates/community_attendance.html:12
+msgid "Điểm danh hoạt động"
+msgstr ""
+
+#: templates/community_attendance.html:22
+msgid "giờ / bạn"
+msgstr ""
+
+#: templates/community_attendance.html:25
+msgid "Trạng thái:"
+msgstr ""
+
+#: templates/community_attendance.html:31
+msgid "Không có"
+msgstr ""
+
+#: templates/community_attendance.html:32
+msgid "Đăng ký:"
+msgstr ""
+
+#: templates/community_attendance.html:41
+msgid "Quay lại danh sách"
+msgstr ""
+
+#: templates/community_attendance.html:51
+msgid "Danh sách học sinh đăng ký tham gia"
+msgstr ""
+
+#: templates/community_attendance.html:54
+msgid "Điểm danh 'Hoàn thành' sẽ cộng đúng"
+msgstr ""
+
+#: templates/community_attendance.html:54
+msgid "vào ví học sinh"
+msgstr ""
+
+#: templates/community_attendance.html:68
+msgid "Số dư ví"
+msgstr ""
+
+#: templates/community_attendance.html:69
+msgid "Trạng thái hiện tại"
+msgstr ""
+
+#: templates/community_attendance.html:70
+msgid "Kết quả điểm danh"
+msgstr ""
+
+#: templates/community_attendance.html:85
+msgid "Vắng mặt (0h)"
+msgstr ""
+
+#: templates/community_attendance.html:87
+msgid "Đã đăng ký (Chờ điểm danh)"
+msgstr ""
+
+#: templates/community_attendance.html:99
+msgid "Vắng mặt"
+msgstr ""
+
+#: templates/community_attendance.html:113
+msgid "Đánh dấu kết thúc toàn bộ hoạt động (chuyển trạng thái sang 'hoan_thanh')"
+msgstr ""
+
+#: templates/community_attendance.html:119
+msgid "Lưu kết quả & Cộng giờ thưởng"
+msgstr ""
+
+#: templates/community_attendance.html:127
+msgid "Chưa có học sinh nào đăng ký tham gia nhiệm vụ này"
+msgstr ""
+
+#: templates/community_attendance.html:128
+msgid "Học sinh có thể đăng ký tại trang 'Vì cộng đồng'."
+msgstr ""
+
+#: templates/community_market.html:3
+msgid "Cộng Đồng Liên Trường — School Time Bank"
+msgstr ""
+
+#: templates/community_market.html:12
+msgid "KHÔNG GIAN GIAO LƯU LIÊN TRƯỜNG"
+msgstr ""
+
+#: templates/community_market.html:15
+msgid "Cổng kiểm chuẩn"
+msgstr ""
+
+#: templates/community_market.html:15
+msgid "h dạy"
+msgstr ""
+
+#: templates/community_market.html:18
+msgid "Cộng Đồng Liên Trường"
+msgstr ""
+
+#: templates/community_market.html:19
+msgid ""
+"Nơi học sinh các trường trao đổi tri thức, sẻ chia kỹ năng bằng ví tín "
+"dụng thời gian hợp nhất."
+msgstr ""
+
+#: templates/community_market.html:24
+msgid "Hồ sơ & Kỹ năng của tôi"
+msgstr ""
+
+#: templates/community_market.html:27
+msgid "Kho nội trường"
+msgstr ""
+
+#: templates/community_market.html:39
+msgid "Tìm kiếm kỹ năng, môn học, trường..."
+msgstr ""
+
+#: templates/community_market.html:46
+msgid "Tất cả trường học"
+msgstr ""
+
+#: templates/community_market.html:58
+msgid "Lĩnh vực"
+msgstr ""
+
+#: templates/community_market.html:64
+msgid "Lọc dữ liệu"
+msgstr ""
+
+#: templates/community_market.html:68 templates/documents_index.html:47
+#: templates/skills_market.html:57
+msgid "Xóa bộ lọc"
+msgstr ""
+
+#: templates/community_market.html:89
+msgid "Liên trường"
+msgstr ""
+
+#: templates/community_market.html:121
+msgid "Đánh giá uy tín:"
+msgstr ""
+
+#: templates/community_market.html:134 templates/skills_market.html:111
+msgid "Kỹ năng của bạn"
+msgstr ""
+
+#: templates/community_market.html:138
+msgid "Đặt lịch học liên trường"
+msgstr ""
+
+#: templates/community_market.html:151
+msgid "Chưa có kỹ năng nào trên Cộng đồng liên trường"
+msgstr ""
+
+#: templates/community_market.html:152
+msgid ""
+"Các kỹ năng đang chờ học sinh ưu tú đăng ký và Ban quản trị nhà trường "
+"phê duyệt."
+msgstr ""
+
+#: templates/community_market.html:154
+msgid "Khám phá Kho kỹ năng nội trường"
+msgstr ""
+
+#: templates/community_market_gate.html:3
+msgid "Cổng Kết Nối Cộng Đồng Liên Trường — School Time Bank"
+msgstr ""
+
+#: templates/community_market_gate.html:17
+msgid "Cổng Kiểm Chuẩn Cộng Đồng Liên Trường"
+msgstr ""
+
+#: templates/community_market_gate.html:18
+msgid "Không Gian Chia Sẻ Tri Thức & Kỹ Năng Liên Trường Học Đường"
+msgstr ""
+
+#: templates/community_market_gate.html:29
+msgid "Bạn cần"
+msgstr ""
+
+#: templates/community_market_gate.html:29
+msgid "giờ dạy nữa để mở khóa Cộng đồng liên trường"
+msgstr ""
+
+#: templates/community_market_gate.html:32
+msgid ""
+"Triết lý giáo dục: Cộng đồng liên trường là không gian giao lưu tri thức "
+"uy tín. Học sinh cần chứng minh năng lực sẻ chia bằng các buổi dạy thực "
+"tế hoàn thành trước khi mở rộng kết nối ra ngoài trường học."
+msgstr ""
+
+#: templates/community_market_gate.html:42
+msgid "Tiến độ tích lũy giờ dạy thực tế:"
+msgstr ""
+
+#: templates/community_market_gate.html:45
+msgid "giờ dạy"
+msgstr ""
+
+#: templates/community_market_gate.html:60
+msgid "Khởi đầu (0h)"
+msgstr ""
+
+#: templates/community_market_gate.html:61
+msgid "Ngưỡng mở khóa:"
+msgstr ""
+
+#: templates/community_market_gate.html:61
+msgid "dạy thật"
+msgstr ""
+
+#: templates/community_market_gate.html:71
+msgid "Tín dụng dạy thật"
+msgstr ""
+
+#: templates/community_market_gate.html:74
+msgid "Chỉ tính tổng thời lượng các buổi học bạn làm"
+msgstr ""
+
+#: templates/community_market_gate.html:74 templates/session_detail.html:211
+msgid "Người dạy"
+msgstr ""
+
+#: templates/community_market_gate.html:74
+msgid "và có trạng thái"
+msgstr ""
+
+#: templates/community_market_gate.html:74
+msgid "'hoàn thành'"
+msgstr ""
+
+#: templates/community_market_gate.html:74
+msgid ". Không tính 2 giờ tặng ban đầu."
+msgstr ""
+
+#: templates/community_market_gate.html:82
+msgid "Đặc quyền Thành viên"
+msgstr ""
+
+#: templates/community_market_gate.html:85
+msgid "Khi đạt ngưỡng, bạn nhận ngay huy hiệu"
+msgstr ""
+
+#: templates/community_market_gate.html:85
+msgid "\"Thành viên Cộng đồng\""
+msgstr ""
+
+#: templates/community_market_gate.html:85
+msgid "trên hồ sơ và được đăng kỹ năng giao lưu với học sinh các trường bạn."
+msgstr ""
+
+#: templates/community_market_gate.html:94
+msgid "Đến Kho kỹ năng nội trường để dạy kèm"
+msgstr ""
+
+#: templates/community_market_gate.html:97
+msgid "Xem hồ sơ của tôi"
+msgstr ""
+
+#: templates/documents_index.html:3
+msgid "Kho Tài Liệu Học Tập - TimeBank EDU"
+msgstr ""
+
+#: templates/documents_index.html:9
+msgid "Kho Tài Liệu Học Tập"
+msgstr ""
+
+#: templates/documents_index.html:13
+msgid "&bull; Hệ thống lưu trữ đám mây tốc độ cao"
+msgstr ""
+
+#: templates/documents_index.html:18
+msgid "Tải Lên Tài Liệu (≤500MB)"
+msgstr ""
+
+#: templates/documents_index.html:31
+msgid "Tìm tài liệu, bài giảng, đề thi..."
+msgstr ""
+
+#: templates/documents_index.html:36
+msgid "-- Tất cả môn học --"
+msgstr ""
+
+#: templates/documents_index.html:44 templates/skills_market.html:54
+msgid "Lọc"
+msgstr ""
+
+#: templates/documents_index.html:77
+msgid "Không có mô tả chi tiết."
+msgstr ""
+
+#: templates/documents_index.html:88
+msgid "lượt tải"
+msgstr ""
+
+#: templates/documents_index.html:94
+msgid "Tải về"
+msgstr ""
+
+#: templates/documents_index.html:106
+msgid "Báo cáo vi phạm"
+msgstr ""
+
+#: templates/documents_index.html:113
+msgid "Bạn có chắc chắn muốn xóa tài liệu này khỏi hệ thống?"
+msgstr ""
+
+#: templates/documents_index.html:115
+msgid "Xóa tài liệu"
+msgstr ""
+
+#: templates/documents_index.html:135
+msgid "Báo Cáo Tài Liệu"
+msgstr ""
+
+#: templates/documents_index.html:140
+msgid "Tài liệu:"
+msgstr ""
+
+#: templates/documents_index.html:141
+msgid "Lý do báo cáo:"
+msgstr ""
+
+#: templates/documents_index.html:143
+msgid "Mô tả vi phạm: nội dung không phù hợp, bản quyền, độc hại, spam..."
+msgstr ""
+
+#: templates/documents_index.html:147
+msgid "Gửi Báo Cáo"
+msgstr ""
+
+#: templates/documents_index.html:160
+msgid "Chưa có tài liệu nào"
+msgstr ""
+
+#: templates/documents_index.html:161
+msgid ""
+"Trường của bạn chưa có tài liệu học tập nào trong môn học này hoặc theo "
+"từ khóa tìm kiếm."
+msgstr ""
+
+#: templates/documents_index.html:163
+msgid "Tải lên tài liệu đầu tiên"
+msgstr ""
+
+#: templates/documents_upload.html:3
+msgid "Tải Lên Tài Liệu - Kho tài liệu"
+msgstr ""
+
+#: templates/documents_upload.html:14
+msgid "Tải Lên Tài Liệu Học Tập"
+msgstr ""
+
+#: templates/documents_upload.html:16
+msgid "Lưu trữ đám mây hệ thống &bull; Thư mục trường:"
+msgstr ""
+
+#: templates/documents_upload.html:26
+msgid "Môn học"
+msgstr ""
+
+#: templates/documents_upload.html:29
+msgid "-- Chọn môn học --"
+msgstr ""
+
+#: templates/documents_upload.html:33
+msgid "Khác / Ngoại khóa"
+msgstr ""
+
+#: templates/documents_upload.html:35
+msgid "Tài liệu sẽ được lưu tự động vào thư mục môn học tương ứng trên hệ thống."
+msgstr ""
+
+#: templates/documents_upload.html:41
+msgid "Tiêu đề tài liệu"
+msgstr ""
+
+#: templates/documents_upload.html:41
+msgid "Tùy chọn"
+msgstr ""
+
+#: templates/documents_upload.html:44
+msgid "Để trống: tự lấy tên file; hoặc điền làm tiền tố chung (VD: [Toán 10])..."
+msgstr ""
+
+#: templates/documents_upload.html:45
+msgid ""
+"Để trống: tự động lấy tên file làm tiêu đề. Điền tiêu đề: dùng làm tiền "
+"tố chung cho các tệp tải lên."
+msgstr ""
+
+#: templates/documents_upload.html:51
+msgid "Mô tả tóm tắt (không bắt buộc)"
+msgstr ""
+
+#: templates/documents_upload.html:54
+msgid "Nêu ngắn gọn nội dung tài liệu, dành cho khối nào, lưu ý khi ôn tập..."
+msgstr ""
+
+#: templates/documents_upload.html:60
+msgid "Tệp đính kèm (Hỗ trợ chọn nhiều tệp cùng lúc)"
+msgstr ""
+
+#: templates/documents_upload.html:65
+msgid "Tối đa 500MB/tệp &bull; Tải trực tiếp lên hệ thống"
+msgstr ""
+
+#: templates/documents_upload.html:73
+msgid "Danh sách tệp đã chọn ("
+msgstr ""
+
+#: templates/documents_upload.html:73
+msgid "tệp):"
+msgstr ""
+
+#: templates/documents_upload.html:85 templates/documents_upload.html:176
+msgid "Đang tải tệp lên hệ thống..."
+msgstr ""
+
+#: templates/documents_upload.html:86
+msgid "Vui lòng chờ..."
+msgstr ""
+
+#: templates/documents_upload.html:98
+msgid "Bắt Đầu Tải Lên"
+msgstr ""
+
+#: templates/documents_upload.html:160
+msgid "Tổng:"
+msgstr ""
+
+#: templates/documents_upload.html:164
+msgid "Có tệp vượt quá giới hạn 500MB!"
+msgstr ""
+
+#: templates/documents_upload.html:168
+msgid "Hợp lệ"
+msgstr ""
+
+#: templates/forgot_password.html:3
+msgid "Quên mật khẩu - School Time Bank"
+msgstr ""
+
+#: templates/forgot_password.html:14
+msgid "Khôi phục Mật khẩu"
+msgstr ""
+
+#: templates/forgot_password.html:15
+msgid "Hệ thống gửi liên kết đặt lại mật khẩu an toàn qua Email"
+msgstr ""
+
+#: templates/forgot_password.html:20
+msgid ""
+"Nhập địa chỉ email liên kết với tài khoản Quản trị viên hoặc Giáo viên "
+"của bạn. Chúng tôi sẽ gửi một liên kết bảo mật có hiệu lực trong"
+msgstr ""
+
+#: templates/forgot_password.html:20
+msgid "1 giờ"
+msgstr ""
+
+#: templates/forgot_password.html:20
+msgid "để bạn thiết lập mật khẩu mới."
+msgstr ""
+
+#: templates/forgot_password.html:25
+msgid "Địa chỉ Email đã đăng ký"
+msgstr ""
+
+#: templates/forgot_password.html:33
+msgid "Gửi liên kết đặt lại mật khẩu"
+msgstr ""
+
+#: templates/forgot_password.html:39 templates/virtual_room.html:91
+msgid "Lưu ý:"
+msgstr ""
+
+#: templates/forgot_password.html:39
+msgid ""
+"Tính năng này áp dụng cho tài khoản Tổng quản trị (Super Admin), Quản trị"
+" trường (School Admin) và Giáo viên có lưu email trong hệ thống. Đối với "
+"học sinh hoặc tài khoản chưa có email, xin vui lòng liên hệ Tổng quản trị"
+" để được hỗ trợ."
+msgstr ""
+
+#: templates/forgot_password.html:44
+msgid "Quay lại trang Đăng nhập"
+msgstr ""
+
+#: templates/forum_index.html:3
+msgid "Diễn đàn Học đường - Góc Trò Chuyện - School Time Bank"
+msgstr ""
+
+#: templates/forum_index.html:13
+msgid "GÓC TRÒ CHUYỆN HỌC ĐƯỜNG"
+msgstr ""
+
+#: templates/forum_index.html:19
+msgid "Diễn Đàn Trao Đổi & Kết Nối Tri Thức"
+msgstr ""
+
+#: templates/forum_index.html:21
+msgid ""
+"Không gian thảo luận tích cực, giải đáp thắc mắc học tập và sẻ chia kinh "
+"nghiệm giữa các bạn học sinh."
+msgstr ""
+
+#: templates/forum_index.html:22
+msgid "Mọi nội dung đều được kiểm duyệt văn hóa sư phạm theo 6 Điều Quy tắc Vàng."
+msgstr ""
+
+#: templates/forum_index.html:26
+msgid "Tạo chủ đề mới"
+msgstr ""
+
+#: templates/forum_index.html:29
+msgid "Xem nội quy trao đổi"
+msgstr ""
+
+#: templates/forum_index.html:49
+msgid "Tìm kiếm chủ đề, câu hỏi, kiến thức..."
+msgstr ""
+
+#: templates/forum_index.html:54
+msgid "Tìm kiếm"
+msgstr ""
+
+#: templates/forum_index.html:57
+msgid "Xóa lọc"
+msgstr ""
+
+#: templates/forum_index.html:104 templates/forum_topic.html:56
+msgid "Khóa chủ đề"
+msgstr ""
+
+#: templates/forum_index.html:106 templates/forum_topic.html:58
+msgid "Mở khóa chủ đề"
+msgstr ""
+
+#: templates/forum_index.html:112 templates/forum_topic.html:64
+msgid "Bạn có chắc chắn muốn xóa chủ đề này không?"
+msgstr ""
+
+#: templates/forum_index.html:114 templates/forum_topic.html:66
+msgid "Xóa chủ đề"
+msgstr ""
+
+#: templates/forum_index.html:149
+msgid "phản hồi"
+msgstr ""
+
+#: templates/forum_index.html:152
+msgid "Xem chi tiết"
+msgstr ""
+
+#: templates/forum_index.html:166
+msgid "Chưa có chủ đề nào được đăng tải"
+msgstr ""
+
+#: templates/forum_index.html:168
+msgid ""
+"Hãy là người đầu tiên khơi nguồn cuộc thảo luận bổ ích cho học sinh "
+"trường bạn!"
+msgstr ""
+
+#: templates/forum_index.html:172
+msgid "Tạo chủ đề ngay"
+msgstr ""
+
+#: templates/forum_new.html:3
+msgid "Tạo chủ đề thảo luận mới - Diễn đàn School Time Bank"
+msgstr ""
+
+#: templates/forum_new.html:11
+msgid "BÀI VIẾT MỚI"
+msgstr ""
+
+#: templates/forum_new.html:17
+msgid "Tạo Chủ Đề Thảo Luận Mới"
+msgstr ""
+
+#: templates/forum_new.html:18
+msgid "Chia sẻ câu hỏi, kinh nghiệm học tập hoặc ý tưởng học đường tích cực."
+msgstr ""
+
+#: templates/forum_new.html:26
+msgid "Lưu ý an toàn văn hóa học đường:"
+msgstr ""
+
+#: templates/forum_new.html:27
+msgid "Mọi bài viết trên diễn đàn được"
+msgstr ""
+
+#: templates/forum_new.html:27
+msgid "Trợ lý AI kiểm duyệt tự động realtime"
+msgstr ""
+
+#: templates/forum_new.html:27
+msgid ""
+". Tuyệt đối không chửi bới, xúc phạm bạn học, dùng từ ngữ nhạy cảm hoặc "
+"chia sẻ nội dung độc hại (theo"
+msgstr ""
+
+#: templates/forum_new.html:27
+msgid "Nội quy Điều 3 & Điều 4"
+msgstr ""
+
+#: templates/forum_new.html:27
+msgid "). Hành vi vi phạm sẽ bị ghi nhận vào Sổ kỷ luật của trường."
+msgstr ""
+
+#: templates/forum_new.html:34
+msgid "Tiêu đề chủ đề"
+msgstr ""
+
+#: templates/forum_new.html:37
+msgid "VD: Hỏi cách giải nhanh câu hình không gian đề thi thử..."
+msgstr ""
+
+#: templates/forum_new.html:39
+msgid "Tiêu đề ngắn gọn, rõ ràng, nêu đúng trọng tâm vấn đề cần thảo luận."
+msgstr ""
+
+#: templates/forum_new.html:44
+msgid "Nội dung chi tiết"
+msgstr ""
+
+#: templates/forum_new.html:47
+msgid ""
+"Mô tả cụ thể thắc mắc, bối cảnh bài toán, hoặc ý tưởng của bạn để các bạn"
+" học sinh và thầy cô dễ dàng tương trợ..."
+msgstr ""
+
+#: templates/forum_new.html:52 templates/forum_topic.html:10
+msgid "Quay lại Diễn đàn"
+msgstr ""
+
+#: templates/forum_new.html:55
+msgid "Đăng chủ đề"
+msgstr ""
+
+#: templates/forum_topic.html:3
+msgid "Diễn đàn School Time Bank"
+msgstr ""
+
+#: templates/forum_topic.html:87
+msgid "Ý kiến thảo luận"
+msgstr ""
+
+#: templates/forum_topic.html:89
+msgid "Kiểm duyệt realtime bởi AI"
+msgstr ""
+
+#: templates/forum_topic.html:112
+msgid "Bạn có muốn xóa bình luận này không?"
+msgstr ""
+
+#: templates/forum_topic.html:113
+msgid "Xóa bình luận"
+msgstr ""
+
+#: templates/forum_topic.html:129
+msgid "Chưa có ý kiến phản hồi nào. Hãy là người đầu tiên tham gia thảo luận!"
+msgstr ""
+
+#: templates/forum_topic.html:137
+msgid "Gửi ý kiến phản hồi"
+msgstr ""
+
+#: templates/forum_topic.html:143
+msgid ""
+"Viết phản hồi tích cực, giải đáp bài toán hoặc chia sẻ quan điểm của "
+"bạn..."
+msgstr ""
+
+#: templates/forum_topic.html:145
+msgid "Ngôn từ được AI kiểm duyệt tự động để bảo đảm văn hóa học đường văn minh."
+msgstr ""
+
+#: templates/forum_topic.html:150
+msgid "Gửi bình luận"
+msgstr ""
+
+#: templates/forum_topic.html:159
+msgid ""
+"Chủ đề này đã bị khóa bởi Ban Quản trị. Không thể gửi thêm ý kiến bình "
+"luận."
+msgstr ""
+
+#: templates/index.html:25
+msgid "Chào mừng bạn đến với Hệ sinh thái Giáo dục số TIME BANK EDU"
+msgstr ""
+
+#: templates/index.html:28
+msgid ""
+"Tác giả phát triển & Thiết kế hệ thống: Cô giáo Nguyễn Thị Huyền (Giáo "
+"viên Tin học — Trường Quốc tế Song ngữ UK Academy)"
+msgstr ""
+
+#: templates/index.html:31
+msgid ""
+"Bản quyền toàn vẹn về mô hình sư phạm và giải pháp kiến trúc công nghệ "
+"School Time Bank"
+msgstr ""
+
+#: templates/index.html:41
 msgid "“Một giờ bạn dạy — một giờ bạn được học.”"
 msgstr ""
 
-#: templates/index.html:36
+#: templates/index.html:45
 msgid "Học thầy không tày học bạn."
 msgstr ""
 
-#: templates/index.html:40
+#: templates/index.html:49
 msgid ""
 "Mô hình giáo dục sáng tạo đa trường học. Mỗi học sinh vừa là người học, "
 "vừa là người thầy. Không dùng tiền mặt, mọi tri thức đều được trân trọng "
 "công bằng thông qua tín dụng thời gian."
 msgstr ""
 
-#: templates/index.html:47
+#: templates/index.html:56
 msgid "Vào ví tín dụng"
 msgstr ""
 
-#: templates/index.html:51
+#: templates/index.html:60
 msgid "Tham gia ngay (+2.0h)"
 msgstr ""
 
-#: templates/index.html:58
+#: templates/index.html:67
 msgid "Khám phá mô hình"
 msgstr ""
 
-#: templates/index.html:67
+#: templates/index.html:76
 msgid "Không gian trao đổi kỹ năng đa trường thế hệ mới"
 msgstr ""
 
-#: templates/index.html:71
+#: templates/index.html:80
 msgid "Định giá"
 msgstr ""
 
-#: templates/index.html:72
+#: templates/index.html:81
 msgid "1 giờ = 1 tín dụng"
 msgstr ""
 
-#: templates/index.html:76
+#: templates/index.html:85
 msgid "Vốn ban đầu"
 msgstr ""
 
-#: templates/index.html:77
+#: templates/index.html:86
 msgid "+2.0 giờ trải nghiệm"
 msgstr ""
 
-#: templates/index.html:96
+#: templates/index.html:105
 msgid "LỚP HỌC ẢO TRỰC TUYẾN THẾ HỆ MỚI"
 msgstr ""
 
-#: templates/index.html:99
+#: templates/index.html:108
 msgid "Không Gian Trao Đổi Kỹ Năng Trực Tuyến Chuẩn Sư Phạm"
 msgstr ""
 
-#: templates/index.html:102
+#: templates/index.html:111
 msgid ""
 "Trải nghiệm lớp học ảo hiện đại, kết nối người dạy và người học không "
 "khoảng cách với 4 ưu điểm vượt trội:"
 msgstr ""
 
-#: templates/index.html:114
+#: templates/index.html:123
 msgid "Học ngay trên trình duyệt"
 msgstr ""
 
-#: templates/index.html:116
+#: templates/index.html:125
 msgid "Không cần cài app:"
 msgstr ""
 
-#: templates/index.html:116
+#: templates/index.html:125
 msgid ""
 "Mở trực tiếp trên mọi trình duyệt web (Chrome, Edge, Safari) từ máy tính,"
 " laptop đến điện thoại. Tham gia buổi học chỉ với một cú nhấp chuột."
 msgstr ""
 
-#: templates/index.html:127
+#: templates/index.html:136
 msgid "Không giới hạn thời lượng"
 msgstr ""
 
-#: templates/index.html:129
+#: templates/index.html:138
 msgid "Buổi học không gián đoạn:"
 msgstr ""
 
-#: templates/index.html:129
+#: templates/index.html:138
 msgid ""
 "Tự do trao đổi, giải đáp bài tập khó và thảo luận chuyên sâu mà không lo "
 "bị ngắt quãng thời gian hay giới hạn 40 phút."
 msgstr ""
 
-#: templates/index.html:140
+#: templates/index.html:149
 msgid "Đăng ký 1 lần tham gia"
 msgstr ""
 
-#: templates/index.html:142
+#: templates/index.html:151
 msgid "Tham gia mọi buổi:"
 msgstr ""
 
-#: templates/index.html:142
+#: templates/index.html:151
 msgid ""
 "Định danh học đường an toàn qua tài khoản và mã học sinh. Đăng ký một lần"
 " là có thể truy cập tất cả các buổi học kỹ năng liên trường."
 msgstr ""
 
-#: templates/index.html:153
+#: templates/index.html:162
 msgid "Đầy đủ chức năng sư phạm"
 msgstr ""
 
-#: templates/index.html:155
+#: templates/index.html:164
 msgid "Hình ảnh rõ nét:"
 msgstr ""
 
-#: templates/index.html:155
+#: templates/index.html:164
 msgid ""
 "Video HD mượt mà, tích hợp điểm danh tự động 2 chiều, trợ lý dàn ý AI, "
 "bài tập trắc nghiệm quiz và nút báo cáo an toàn."
 msgstr ""
 
-#: templates/index.html:166
+#: templates/index.html:175
 msgid "Chuẩn Sư Phạm 4.0"
 msgstr ""
 
-#: templates/index.html:167
+#: templates/index.html:176
 msgid "Bảo vệ an toàn học sinh"
 msgstr ""
 
-#: templates/index.html:169
+#: templates/index.html:178
 msgid "Môi trường kèm bạn tích cực — Tự động tính tín dụng thời gian"
 msgstr ""
 
-#: templates/index.html:171
+#: templates/index.html:180
 msgid ""
 "Phòng học tích hợp thuật toán đo lường thời gian tương tác online đồng "
 "thời (80% Online Overlap), cộng giờ dạy và trừ giờ học vào ví hoàn toàn "
 "tự động, minh bạch."
 msgstr ""
 
-#: templates/index.html:177
+#: templates/index.html:186
 msgid "Lịch học của tôi"
 msgstr ""
 
-#: templates/index.html:181
+#: templates/index.html:190
 msgid "Khám phá lớp kỹ năng"
 msgstr ""
 
-#: templates/index.html:197
+#: templates/index.html:206
 msgid "QUY TRÌNH SƯ PHẠM 4 BƯỚC"
 msgstr ""
 
-#: templates/index.html:198
+#: templates/index.html:207
 msgid "Mô hình hoạt động của Ngân hàng Thời gian"
 msgstr ""
 
-#: templates/index.html:199
+#: templates/index.html:208
 msgid ""
 "Một vòng tuần hoàn học tập tích cực, giúp học sinh chủ động sẻ chia thế "
 "mạnh và hoàn thiện kỹ năng còn thiếu."
 msgstr ""
 
-#: templates/index.html:208
+#: templates/index.html:217 templates/skills_new.html:62
 msgid "Đăng kỹ năng"
 msgstr ""
 
-#: templates/index.html:209
+#: templates/index.html:218
 msgid ""
 "Học sinh đăng ký thế mạnh của mình: Toán, Ngữ văn, Lập trình, Vẽ tranh, "
 "Đàn guitar, Cờ vua..."
 msgstr ""
 
-#: templates/index.html:220
+#: templates/index.html:229
 msgid "AI gợi ý ghép cặp"
 msgstr ""
 
-#: templates/index.html:221
+#: templates/index.html:230
 msgid ""
 "Trợ lý AI (Trí tuệ nhân tạo) tự động phân tích nhu cầu, kiểm duyệt nội "
 "dung và ghép cặp đôi bạn cùng tiến tối ưu."
 msgstr ""
 
-#: templates/index.html:233
+#: templates/index.html:242
 msgid "Học & Check-in QR"
 msgstr ""
 
-#: templates/index.html:234
+#: templates/index.html:243
 msgid ""
 "Hai bạn gặp gỡ trực tiếp hoặc online. Cùng quét mã QR xác thực 2 chiều để"
 " ghi nhận thời gian học chuẩn xác."
 msgstr ""
 
-#: templates/index.html:245
+#: templates/index.html:254
 msgid "Tích giờ & Đổi kỹ năng"
 msgstr ""
 
-#: templates/index.html:246
+#: templates/index.html:255
 msgid ""
 "Người dạy nhận ngay tín dụng thời gian vào ví; dùng giờ này để \"mua\" "
 "buổi học kỹ năng mới từ bạn khác."
 msgstr ""
 
-#: templates/index.html:333
+#: templates/index.html:264
+msgid "VÍ DỤ VẬN HÀNH THỰC TẾ"
+msgstr ""
+
+#: templates/index.html:265
+msgid "Vòng tròn tuần hoàn thời gian"
+msgstr ""
+
+#: templates/index.html:267
+msgid "Minh chứng sống động cho nguyên lý:"
+msgstr ""
+
+#: templates/index.html:267
+msgid "Bất kỳ ai cũng có điều gì đó để dạy, và luôn có điều gì đó cần học hỏi."
+msgstr ""
+
+#: templates/index.html:271
+msgid "Vòng lặp khép kín:"
+msgstr ""
+
+#: templates/index.html:271
+msgid "An → Bình → Chi → An"
+msgstr ""
+
+#: templates/index.html:271
+msgid ""
+"Không một đồng tiền mặt nào phát sinh, chỉ có tri thức và tình bạn lan "
+"tỏa!"
+msgstr ""
+
+#: templates/index.html:277
+msgid "Sơ đồ vòng tròn trao đổi kỹ năng An Bình Chi"
+msgstr ""
+
+#: templates/index.html:294
+msgid "Dạy Toán ➔ Nhận +1.0h"
+msgstr ""
+
+#: templates/index.html:299
+msgid "Dạy Guitar ➔ Nhận +1.0h"
+msgstr ""
+
+#: templates/index.html:304
+msgid "Dạy IELTS ➔ Nhận +1.0h"
+msgstr ""
+
+#: templates/index.html:308
+msgid "0đ TIỀN MẶT"
+msgstr ""
+
+#: templates/index.html:309
+msgid "100% TRI THỨC"
+msgstr ""
+
+#: templates/index.html:310
+msgid "VÒNG KHÉP KÍN"
+msgstr ""
+
+#: templates/index.html:315
+msgid "Toán Hình học"
+msgstr ""
+
+#: templates/index.html:316 templates/index.html:322 templates/index.html:328
+msgid "+1.0 giờ"
+msgstr ""
+
+#: templates/index.html:321
+msgid "Đàn Guitar"
+msgstr ""
+
+#: templates/index.html:327
+msgid "Tiếng Anh IELTS"
+msgstr ""
+
+#: templates/index.html:342
 msgid "DỮ LIỆU THỜI GIAN THỰC"
 msgstr ""
 
-#: templates/index.html:334
+#: templates/index.html:343
 msgid "Chỉ số vận hành tại"
 msgstr ""
 
-#: templates/index.html:335
+#: templates/index.html:344
 msgid "Cập nhật trực tiếp từ hệ thống ví tín dụng và phiên học"
 msgstr ""
 
-#: templates/index.html:343
-msgid "Học sinh thành viên"
-msgstr ""
-
-#: templates/index.html:351
-msgid "Phiên hoàn thành"
-msgstr ""
-
-#: templates/index.html:359
+#: templates/index.html:368
 msgid "Giờ lưu thông"
 msgstr ""
 
-#: templates/index.html:367
+#: templates/index.html:376 templates/profile.html:153
 msgid "Kỹ năng sẵn sàng"
 msgstr ""
 
-#: templates/index.html:380
+#: templates/index.html:389
 msgid "BẢNG VÀNG THÁNG & TUẦN"
 msgstr ""
 
-#: templates/index.html:381
+#: templates/index.html:390
 msgid "Vinh danh Gia sư Học đường Tích cực"
 msgstr ""
 
-#: templates/index.html:382
+#: templates/index.html:391
 msgid ""
 "Ghi nhận những tấm gương học sinh nhiệt huyết cống hiến thời gian giảng "
 "dạy cho bạn bè"
 msgstr ""
 
-#: templates/index.html:395
+#: templates/index.html:404
 msgid "Hạng"
 msgstr ""
 
-#: templates/index.html:407
-msgid "Lớp:"
-msgstr ""
-
-#: templates/index.html:407
-msgid "Mã:"
-msgstr ""
-
-#: templates/index.html:414
+#: templates/index.html:423
 msgid "Số giờ đã dạy:"
 msgstr ""
 
-#: templates/index.html:415
-msgid "giờ"
-msgstr ""
-
-#: templates/index.html:418
+#: templates/index.html:427
 msgid "Đánh giá trung bình:"
 msgstr ""
 
-#: templates/index.html:428
+#: templates/index.html:437
 msgid "\"Sẵn sàng chia sẻ tri thức cùng bạn bè\""
 msgstr ""
 
-#: templates/index.html:445
+#: templates/index.html:454
 msgid "VÌ CỘNG ĐỒNG & GIỜ CÔNG ÍCH"
 msgstr ""
 
-#: templates/index.html:447
+#: templates/index.html:456
 msgid "Lan tỏa trách nhiệm xã hội cùng TimeBank EDU"
 msgstr ""
 
-#: templates/index.html:449
+#: templates/index.html:458
 msgid ""
 "Không chỉ trao đổi kiến thức giữa học sinh, Ngân hàng Thời gian mở rộng "
 "sang các hoạt động công ích học đường: thu gom rác bãi biển, hỗ trợ thư "
 "viện, phụ đạo tin học cho thiếu nhi để nhận tín dụng thời gian."
+msgstr ""
+
+#: templates/index.html:467
+msgid "Tham gia ngay"
+msgstr ""
+
+#: templates/index.html:505
+msgid ""
+"Cùng thầy cô và bạn bè tham gia hoạt động cống hiến cho nhà trường và xã "
+"hội."
+msgstr ""
+
+#: templates/index.html:509
+msgid "Tại trường học"
+msgstr ""
+
+#: templates/index.html:518
+msgid "Chi tiết & Đăng ký"
+msgstr ""
+
+#: templates/index.html:527
+msgid "Hiện chưa có nhiệm vụ nào được mở. Vui lòng quay lại sau."
+msgstr ""
+
+#: templates/index.html:534
+msgid "Khám phá tất cả nhiệm vụ Vì cộng đồng"
+msgstr ""
+
+#: templates/index.html:549
+msgid "HỆ THỐNG ĐA TRƯỜNG HỌC"
+msgstr ""
+
+#: templates/index.html:550
+msgid "Các Trường Học Tham Gia Thí Điểm & Triển Khai"
+msgstr ""
+
+#: templates/index.html:551
+msgid ""
+"Không gian trao đổi kỹ năng học đường được cá nhân hóa và quản trị độc "
+"lập cho từng trường."
+msgstr ""
+
+#: templates/index.html:583
+msgid ""
+"Trường Quốc tế Song ngữ UKA Academy Hạ Long — Tiên phong thí điểm trao "
+"đổi tín dụng thời gian học đường."
+msgstr ""
+
+#: templates/index.html:584
+msgid "Đơn vị giáo dục kết nối phong trào Đôi bạn cùng tiến và kèm cặp môn học."
+msgstr ""
+
+#: templates/index.html:585
+msgid ""
+"Đơn vị trường học tiếp nhận chuyển giao mô hình chia sẻ năng khiếu và kỹ "
+"năng số."
+msgstr ""
+
+#: templates/index.html:586
+msgid ""
+"Lan tỏa tri thức và ngân hàng thời gian tới học sinh vùng hải đảo Quảng "
+"Ninh."
+msgstr ""
+
+#: templates/index.html:604
+msgid "Tiên phong thí điểm trao đổi tín dụng thời gian học đường."
+msgstr ""
+
+#: templates/index.html:613
+msgid "Dành cho nhà trường"
+msgstr ""
+
+#: templates/index.html:614
+msgid "Giải pháp sư phạm độc lập cho từng trường học"
+msgstr ""
+
+#: templates/index.html:616
+msgid ""
+"TimeBank EDU được thiết kế theo kiến trúc vận hành độc lập — Mỗi trường "
+"học sở hữu một không gian riêng biệt, cơ sở dữ liệu an toàn tại chỗ, "
+"tuyệt đối bảo vệ dữ liệu học sinh theo quy định của Bộ GD&ĐT."
+msgstr ""
+
+#: templates/index.html:623
+msgid "Chuyển giao và cài đặt dữ liệu cho các trường chỉ 5 phút"
+msgstr ""
+
+#: templates/index.html:624
+msgid ""
+"Dễ dàng tùy chỉnh logo, màu sắc và thông điệp riêng để biến hệ thống "
+"thành phiên bản độc quyền của trường bạn."
+msgstr ""
+
+#: templates/index.html:631
+msgid "Phòng chống bạo lực học đường qua kết nối bạn bè"
+msgstr ""
+
+#: templates/index.html:632
+msgid ""
+"Học sinh tăng cường tương tác lành mạnh, xóa bỏ rào cản khối lớp qua các "
+"buổi trao đổi kỹ năng tích cực."
+msgstr ""
+
+#: templates/index.html:639
+msgid "Tích hợp Trợ lý AI (Trí tuệ nhân tạo) sư phạm"
+msgstr ""
+
+#: templates/index.html:640
+msgid ""
+"Hỗ trợ kiểm duyệt nội dung kỹ năng, soạn dàn ý bài học chuẩn kiến thức và"
+" tạo câu hỏi lượng giá tự động."
+msgstr ""
+
+#: templates/index.html:648
+msgid "Đăng ký tư vấn triển khai"
+msgstr ""
+
+#: templates/index.html:649
+msgid ""
+"Dành cho Ban Giám hiệu, Đoàn Thanh niên hoặc Giáo viên chủ nhiệm muốn áp "
+"dụng mô hình tại trường."
+msgstr ""
+
+#: templates/index.html:653
+msgid "Tên trường học / Đơn vị"
+msgstr ""
+
+#: templates/index.html:654
+msgid "Ví dụ: THPT Lê Quý Đôn"
+msgstr ""
+
+#: templates/index.html:659
+msgid "Họ tên đại diện"
+msgstr ""
+
+#: templates/index.html:660
+msgid "Thầy/Cô..."
+msgstr ""
+
+#: templates/index.html:663
+msgid "Số điện thoại / Zalo"
+msgstr ""
+
+#: templates/index.html:669
+msgid "Email công vụ / Liên hệ"
+msgstr ""
+
+#: templates/index.html:674
+msgid "Nhu cầu triển khai"
+msgstr ""
+
+#: templates/index.html:675
+msgid "Mong muốn tổ chức CLB Ngân hàng Thời gian hoặc thử nghiệm tại khối lớp..."
+msgstr ""
+
+#: templates/index.html:679
+msgid "Gửi thông tin liên hệ"
+msgstr ""
+
+#: templates/index.html:685
+msgid "Gửi thành công!"
+msgstr ""
+
+#: templates/index.html:685
+msgid ""
+"Ban đề án TimeBank EDU đã tiếp nhận thông tin và sẽ liên hệ hỗ trợ nhà "
+"trường trong 24 giờ."
+msgstr ""
+
+#: templates/index.html:709
+msgid "Vui lòng điền đầy đủ Tên trường, Họ tên đại diện và Số điện thoại!"
+msgstr ""
+
+#: templates/index.html:714
+msgid "Đang gửi thông tin..."
+msgstr ""
+
+#: templates/index.html:741
+msgid "Đã tiếp nhận thành công!"
+msgstr ""
+
+#: templates/index.html:742
+msgid "Cảm ơn Thầy/Cô"
+msgstr ""
+
+#: templates/index.html:742
+msgid ""
+"Ban đề án TimeBank EDU đã lưu thông tin và sẽ liên hệ hỗ trợ phương án "
+"chuyển giao trong thời gian sớm nhất!"
+msgstr ""
+
+#: templates/index.html:747
+msgid "Có lỗi xảy ra khi gửi thông tin liên hệ. Vui lòng thử lại!"
+msgstr ""
+
+#: templates/index.html:755
+msgid "Không thể kết nối máy chủ. Vui lòng kiểm tra lại kết nối mạng!"
 msgstr ""
 
 #: templates/login.html:12
@@ -706,47 +4902,656 @@ msgid "Đăng ký tài khoản mới (+2.0 giờ)"
 msgstr ""
 
 #: templates/login.html:58
-msgid "Tài khoản demo cho giám khảo"
+msgid "Tài khoản demo đăng nhập nhanh để trải nghiệm."
 msgstr ""
 
-#: templates/login.html:60
-msgid "Mật khẩu:"
-msgstr ""
-
-#: templates/login.html:63
-msgid "Dành riêng cho Ban Giám Khảo trải nghiệm trong môi trường"
-msgstr ""
-
-#: templates/login.html:63
-msgid "Trường Demo"
-msgstr ""
-
-#: templates/login.html:63
-msgid "độc lập (không chạm dữ liệu thật):"
-msgstr ""
-
-#: templates/login.html:68
+#: templates/login.html:64
 msgid "(Quản trị trường)"
 msgstr ""
 
-#: templates/login.html:70 templates/login.html:76 templates/login.html:82
+#: templates/login.html:66 templates/login.html:72 templates/login.html:78
 msgid "Điền nhanh"
 msgstr ""
 
-#: templates/login.html:74
+#: templates/login.html:70
 msgid "(Giáo viên)"
 msgstr ""
 
-#: templates/login.html:80
+#: templates/login.html:76
 msgid "(Học sinh)"
 msgstr ""
 
-#: templates/login.html:86
+#: templates/login.html:82
 msgid "Hoặc tài khoản"
 msgstr ""
 
-#: templates/login.html:87
+#: templates/login.html:83
 msgid "Điền admin"
+msgstr ""
+
+#: templates/my_schedule.html:3
+msgid "Lịch của tôi - {{ config.ten_truong }}"
+msgstr ""
+
+#: templates/my_schedule.html:11
+msgid "QUẢN LÝ PHIÊN HỌC 2 CHIỀU"
+msgstr ""
+
+#: templates/my_schedule.html:13
+msgid "Lịch Của Tôi"
+msgstr ""
+
+#: templates/my_schedule.html:14
+msgid ") — Số dư:"
+msgstr ""
+
+#: templates/my_schedule.html:19
+msgid "Đặt thêm buổi học mới"
+msgstr ""
+
+#: templates/my_schedule.html:28
+msgid "Buổi tôi dạy (Gia sư)"
+msgstr ""
+
+#: templates/my_schedule.html:34
+msgid "Buổi tôi học (Người học)"
+msgstr ""
+
+#: templates/my_schedule.html:40
+msgid "Phiên đã đặt (Sắp tới)"
+msgstr ""
+
+#: templates/my_schedule.html:46
+msgid "Số dư giờ khả dụng"
+msgstr ""
+
+#: templates/my_schedule.html:58
+msgid "Phiên Tôi Dạy (Gia sư)"
+msgstr ""
+
+#: templates/my_schedule.html:64
+msgid "Phiên Tôi Học (Người học)"
+msgstr ""
+
+#: templates/my_schedule.html:80 templates/my_schedule.html:150
+#: templates/virtual_rooms_dashboard.html:70
+#: templates/virtual_rooms_dashboard.html:144
+#: templates/virtual_rooms_dashboard.html:219
+msgid "Mã phiên"
+msgstr ""
+
+#: templates/my_schedule.html:81
+msgid "Kỹ năng giảng dạy"
+msgstr ""
+
+#: templates/my_schedule.html:82
+msgid "Bạn học (Học sinh)"
+msgstr ""
+
+#: templates/my_schedule.html:83 templates/my_schedule.html:153
+msgid "Thời gian hẹn"
+msgstr ""
+
+#: templates/my_schedule.html:84 templates/my_schedule.html:154
+#: templates/virtual_rooms_dashboard.html:74
+#: templates/virtual_rooms_dashboard.html:223
+msgid "Thời lượng"
+msgstr ""
+
+#: templates/my_schedule.html:109 templates/my_schedule.html:179
+#: templates/session_detail.html:29
+msgid "Đã đặt lịch"
+msgstr ""
+
+#: templates/my_schedule.html:113 templates/my_schedule.html:183
+#: templates/session_detail.html:33
+msgid "Đã hủy"
+msgstr ""
+
+#: templates/my_schedule.html:115 templates/my_schedule.html:185
+#: templates/session_detail.html:35
+msgid "Cần xác minh"
+msgstr ""
+
+#: templates/my_schedule.html:121 templates/my_schedule.html:191
+msgid "Vào phòng học trực tuyến"
+msgstr ""
+
+#: templates/my_schedule.html:122 templates/my_schedule.html:192
+msgid "Phòng ảo"
+msgstr ""
+
+#: templates/my_schedule.html:126 templates/my_schedule.html:196
+msgid "Chi tiết & QR"
+msgstr ""
+
+#: templates/my_schedule.html:138
+msgid "Chưa có bạn học nào đặt lịch học với bạn. Hãy"
+msgstr ""
+
+#: templates/my_schedule.html:138
+msgid "đăng thêm kỹ năng"
+msgstr ""
+
+#: templates/my_schedule.html:138
+msgid "để nhận các lượt đặt lịch!"
+msgstr ""
+
+#: templates/my_schedule.html:151
+msgid "Chuyên đề học"
+msgstr ""
+
+#: templates/my_schedule.html:152
+msgid "Gia sư (Người dạy)"
+msgstr ""
+
+#: templates/my_schedule.html:208
+msgid "Bạn chưa đặt lịch học buổi nào. Hãy ghé"
+msgstr ""
+
+#: templates/my_schedule.html:208
+msgid "để chọn môn học thú vị!"
+msgstr ""
+
+#: templates/noi_quy.html:3
+msgid "Nội quy Học đường - School Time Bank"
+msgstr ""
+
+#: templates/noi_quy.html:10
+msgid "BẢO VỆ MÔI TRƯỜNG HỌC ĐƯỜNG"
+msgstr ""
+
+#: templates/noi_quy.html:13
+msgid "Quy Chế & Nội Quy Học Đường"
+msgstr ""
+
+#: templates/noi_quy.html:14
+msgid "\"Ngân hàng Thời gian Học đường — Văn minh, Bình đẳng, Nhân văn\""
+msgstr ""
+
+#: templates/noi_quy.html:25
+msgid "Triết Lý & Nguyên Tắc Cốt Lõi"
+msgstr ""
+
+#: templates/noi_quy.html:27
+msgid "School Time Bank (Ngân hàng Thời gian Học đường)"
+msgstr ""
+
+#: templates/noi_quy.html:27
+msgid "được sáng lập dựa trên triết lý sư phạm:"
+msgstr ""
+
+#: templates/noi_quy.html:28
+msgid ""
+"\"Mỗi học sinh vừa là người học, vừa là người dạy — Mọi tri thức đều bình"
+" đẳng\""
+msgstr ""
+
+#: templates/noi_quy.html:29
+msgid ""
+"Để đảm bảo một không gian giáo dục an toàn, tích cực, không bạo lực học "
+"đường và tôn trọng lẫn nhau, mọi học sinh và cán bộ giáo viên tham gia hệ"
+" thống phải tuân thủ nghiêm ngặt"
+msgstr ""
+
+#: templates/noi_quy.html:29
+msgid "6 Điều Nội quy"
+msgstr ""
+
+#: templates/noi_quy.html:29
+msgid "dưới đây."
+msgstr ""
+
+#: templates/noi_quy.html:43
+msgid "1. Trung thực"
+msgstr ""
+
+#: templates/noi_quy.html:45
+msgid "Dạy thật, học thật."
+msgstr ""
+
+#: templates/noi_quy.html:47
+msgid "Cả người dạy và người học phải tham dự ít nhất"
+msgstr ""
+
+#: templates/noi_quy.html:47
+msgid "80% thời lượng buổi học"
+msgstr ""
+
+#: templates/noi_quy.html:47
+msgid ""
+"thì tín dụng thời gian mới được hệ thống tự động đối soát và chuyển vào "
+"ví. Không gian lận điểm danh hoặc khai báo khống giờ học."
+msgstr ""
+
+#: templates/noi_quy.html:58
+msgid "2. Trang phục"
+msgstr ""
+
+#: templates/noi_quy.html:60
+msgid "Lịch sự, kín đáo khi trực tuyến."
+msgstr ""
+
+#: templates/noi_quy.html:62
+msgid ""
+"Khi tham gia phòng học ảo và bật camera, học sinh phải ăn mặc chỉnh tề, "
+"lịch sự, kín đáo phù hợp môi trường học đường."
+msgstr ""
+
+#: templates/noi_quy.html:62
+msgid "Nghiêm cấm tuyệt đối"
+msgstr ""
+
+#: templates/noi_quy.html:62
+msgid "ăn mặc hở hang, phản cảm hoặc có hành vi thiếu chuẩn mực trước ống kính."
+msgstr ""
+
+#: templates/noi_quy.html:73
+msgid "3. Ngôn ngữ"
+msgstr ""
+
+#: templates/noi_quy.html:75
+msgid "Chuẩn mực, văn minh học đường."
+msgstr ""
+
+#: templates/noi_quy.html:77
+msgid "Không chửi bới, chửi tục, chửi thề dưới mọi hình thức;"
+msgstr ""
+
+#: templates/noi_quy.html:77
+msgid "nghiêm cấm từ ngữ nhạy cảm, thô tục"
+msgstr ""
+
+#: templates/noi_quy.html:77
+msgid ""
+"trong lớp học, phòng học ảo và khung chat. Trợ lý AI và hệ thống kiểm "
+"duyệt hoạt động realtime để ngăn chặn các vi phạm."
+msgstr ""
+
+#: templates/noi_quy.html:88
+msgid "4. Lành mạnh"
+msgstr ""
+
+#: templates/noi_quy.html:90
+msgid "Nội dung qua kiểm duyệt sư phạm."
+msgstr ""
+
+#: templates/noi_quy.html:92
+msgid ""
+"Mọi kỹ năng, tài liệu và hoạt động chia sẻ đều phải được kiểm duyệt tự "
+"động qua AI và giáo viên thẩm định."
+msgstr ""
+
+#: templates/noi_quy.html:92
+msgid "Nghiêm cấm chia sẻ nội dung độc hại"
+msgstr ""
+
+#: templates/noi_quy.html:92
+msgid ", bạo lực, quảng cáo thương mại hoặc lôi kéo trái phép."
+msgstr ""
+
+#: templates/noi_quy.html:103
+msgid "5. Công bằng"
+msgstr ""
+
+#: templates/noi_quy.html:105
+msgid "1 giờ dạy = 1 tín dụng thời gian."
+msgstr ""
+
+#: templates/noi_quy.html:107
+msgid "Mọi tri thức đều có giá trị ngang nhau bất kể môn văn hóa hay năng khiếu."
+msgstr ""
+
+#: templates/noi_quy.html:107
+msgid "Tuyệt đối không dùng tiền mặt"
+msgstr ""
+
+#: templates/noi_quy.html:107
+msgid ""
+", quà cáp hoặc bất kỳ hình thức quy đổi vật chất nào khác ngoài tín dụng "
+"thời gian của hệ thống."
+msgstr ""
+
+#: templates/noi_quy.html:118
+msgid "6. Tôn trọng"
+msgstr ""
+
+#: templates/noi_quy.html:120
+msgid "Bảo mật & không quấy rối."
+msgstr ""
+
+#: templates/noi_quy.html:122
+msgid "Tuyệt đối tôn trọng quyền riêng tư và"
+msgstr ""
+
+#: templates/noi_quy.html:122
+msgid "bảo mật thông tin cá nhân của bạn học"
+msgstr ""
+
+#: templates/noi_quy.html:122
+msgid ""
+"(số điện thoại, địa chỉ, hình ảnh). Nghiêm cấm hành vi đe dọa, xúc phạm "
+"hoặc quấy rối dưới bất kỳ hình thức nào."
+msgstr ""
+
+#: templates/noi_quy.html:133
+msgid "CHẾ TÀI XỬ LÝ VI PHẠM (3 CẤP ĐỘ)"
+msgstr ""
+
+#: templates/noi_quy.html:134
+msgid "Áp dụng nghiêm minh trên toàn bộ hệ thống các trường"
+msgstr ""
+
+#: templates/noi_quy.html:143
+msgid "MỨC ĐỘ 1"
+msgstr ""
+
+#: templates/noi_quy.html:144
+msgid "Lần 1 — Nhắc nhở"
+msgstr ""
+
+#: templates/noi_quy.html:146
+msgid "Hệ thống Bot và Trợ lý AI tự động phát hiện và"
+msgstr ""
+
+#: templates/noi_quy.html:146
+msgid "nhắc nhở tức thời ngay trong khung chat"
+msgstr ""
+
+#: templates/noi_quy.html:146
+msgid ""
+". Tin nhắn vi phạm bị chặn hiển thị để người học kịp thời điều chỉnh ngôn"
+" phong và nhận thức."
+msgstr ""
+
+#: templates/noi_quy.html:154
+msgid "MỨC ĐỘ 2"
+msgstr ""
+
+#: templates/noi_quy.html:155
+msgid "Lần 2 — Cảnh cáo"
+msgstr ""
+
+#: templates/noi_quy.html:157
+msgid "Hệ thống ghi nhận"
+msgstr ""
+
+#: templates/noi_quy.html:157
+msgid "CẢNH CÁO CHÍNH THỨC"
+msgstr ""
+
+#: templates/noi_quy.html:157
+msgid ", lập biên bản điện tử và gửi thông báo khẩn tới"
+msgstr ""
+
+#: templates/noi_quy.html:157
+msgid "Ban Quản trị nhà trường"
+msgstr ""
+
+#: templates/noi_quy.html:157
+msgid "và Giáo viên chủ nhiệm để mời học sinh làm việc, nhắc nhở."
+msgstr ""
+
+#: templates/noi_quy.html:165
+msgid "MỨC ĐỘ 3"
+msgstr ""
+
+#: templates/noi_quy.html:166
+msgid "Lần 3 — Đưa ra khỏi lớp học và khóa tài khoản vĩnh viễn"
+msgstr ""
+
+#: templates/noi_quy.html:168
+msgid "Đưa ngay ra khỏi lớp học / phòng học ảo. Hệ thống tự động"
+msgstr ""
+
+#: templates/noi_quy.html:168
+msgid "đề xuất khóa tài khoản"
+msgstr ""
+
+#: templates/noi_quy.html:168
+msgid "và chuyển hồ sơ chờ Quản trị viên trường bấm xác nhận để"
+msgstr ""
+
+#: templates/noi_quy.html:168
+msgid "khóa tài khoản vĩnh viễn"
+msgstr ""
+
+#: templates/noi_quy.html:176
+msgid "Mọi học sinh khi tham gia lớp học có quyền bấm nút"
+msgstr ""
+
+#: templates/noi_quy.html:176
+msgid "\"Báo cáo vi phạm\""
+msgstr ""
+
+#: templates/noi_quy.html:176
+msgid ""
+"trong phòng học ảo để gửi thông tin trực tiếp đến thầy cô giám sát sư "
+"phạm."
+msgstr ""
+
+#: templates/noi_quy.html:183
+msgid "Khám phá Kho kỹ năng học đường"
+msgstr ""
+
+#: templates/noi_quy.html:186
+msgid "Trở về Trang chủ"
+msgstr ""
+
+#: templates/profile.html:3
+msgid "Hồ sơ cá nhân - {{ user.ho_ten }} - {{ config.ten_truong }}"
+msgstr ""
+
+#: templates/profile.html:17 templates/virtual_rooms_dashboard.html:29
+msgid "Trực tuyến"
+msgstr ""
+
+#: templates/profile.html:32
+msgid "Thành viên Cộng đồng"
+msgstr ""
+
+#: templates/profile.html:37
+msgid "Mã định danh:"
+msgstr ""
+
+#: templates/profile.html:38
+msgid "Lớp/Đơn vị:"
+msgstr ""
+
+#: templates/profile.html:43
+msgid "Khung giờ rảnh:"
+msgstr ""
+
+#: templates/profile.html:44
+msgid "Chưa cập nhật"
+msgstr ""
+
+#: templates/profile.html:50
+msgid "Tài khoản Demo (Không thể đổi mật khẩu)"
+msgstr ""
+
+#: templates/profile.html:54
+msgid "Đổi mật khẩu"
+msgstr ""
+
+#: templates/profile.html:67
+msgid "Sổ dư Tín dụng Thời gian"
+msgstr ""
+
+#: templates/profile.html:68
+msgid "1h dạy = 1 credit"
+msgstr ""
+
+#: templates/profile.html:78
+msgid "Xem chi tiết Ví của tôi"
+msgstr ""
+
+#: templates/profile.html:83
+msgid "Được bảo chứng bởi Ví tín dụng minh bạch"
+msgstr ""
+
+#: templates/profile.html:96
+msgid "Tổng giờ đã dạy"
+msgstr ""
+
+#: templates/profile.html:101
+msgid "Kèm cặp & sẻ chia"
+msgstr ""
+
+#: templates/profile.html:115 templates/wallet.html:76
+msgid "Tổng giờ đã học"
+msgstr ""
+
+#: templates/profile.html:120
+msgid "Tiếp thu tri thức"
+msgstr ""
+
+#: templates/profile.html:134
+msgid "Đánh giá trung bình"
+msgstr ""
+
+#: templates/profile.html:139
+msgid "Từ"
+msgstr ""
+
+#: templates/profile.html:139
+msgid "lượt đánh giá"
+msgstr ""
+
+#: templates/profile.html:156
+msgid "kỹ năng"
+msgstr ""
+
+#: templates/profile.html:158
+msgid "Đóng góp cho trường"
+msgstr ""
+
+#: templates/profile.html:175
+msgid "Gợi ý cho bạn hôm nay"
+msgstr ""
+
+#: templates/profile.html:181
+msgid "Hỗ trợ bởi AI (Chế độ cơ bản)"
+msgstr ""
+
+#: templates/profile.html:185
+msgid "Gia sư phù hợp nhất cho môn"
+msgstr ""
+
+#: templates/profile.html:188
+msgid "Tự động khớp theo lịch sử học & giờ rảnh"
+msgstr ""
+
+#: templates/profile.html:190
+msgid "Tùy chỉnh tìm kiếm"
+msgstr ""
+
+#: templates/profile.html:236
+msgid "Nhật ký Biến động Ví"
+msgstr ""
+
+#: templates/profile.html:237
+msgid "Chỉ ghi tăng/giảm"
+msgstr ""
+
+#: templates/profile.html:246
+msgid "Nội dung / Lý do"
+msgstr ""
+
+#: templates/profile.html:247 templates/wallet.html:109
+msgid "Biến động"
+msgstr ""
+
+#: templates/profile.html:257 templates/wallet.html:123
+msgid "Phiên #"
+msgstr ""
+
+#: templates/profile.html:275
+msgid "Chưa có biến động tín dụng nào được ghi nhận."
+msgstr ""
+
+#: templates/profile.html:285
+msgid "Kỹ năng của tôi"
+msgstr ""
+
+#: templates/profile.html:307
+msgid "Đã có mặt trên Cộng đồng liên trường"
+msgstr ""
+
+#: templates/profile.html:307
+msgid "Liên trường: Đã duyệt"
+msgstr ""
+
+#: templates/profile.html:309
+msgid "Đang chờ Quản trị viên duyệt"
+msgstr ""
+
+#: templates/profile.html:309
+msgid "Liên trường: Chờ duyệt"
+msgstr ""
+
+#: templates/profile.html:312
+msgid "Gửi lại yêu cầu"
+msgstr ""
+
+#: templates/profile.html:313
+msgid "Đăng lại liên trường"
+msgstr ""
+
+#: templates/profile.html:318 templates/profile.html:319
+msgid "Đăng lên cộng đồng liên trường"
+msgstr ""
+
+#: templates/profile.html:329
+msgid "Bạn chưa đăng ký kỹ năng nào để chia sẻ cùng bạn bè."
+msgstr ""
+
+#: templates/profile.html:335
+msgid "Khu vực Duyệt Kỹ Năng"
+msgstr ""
+
+#: templates/profile.html:340
+msgid "Bảng điều khiển Quản trị (Admin)"
+msgstr ""
+
+#: templates/profile.html:349
+msgid "AI Tóm Tắt Phản Hồi"
+msgstr ""
+
+#: templates/profile.html:352
+msgid "Đúc kết từ các nhận xét thực tế của bạn bè sau các buổi bạn kèm cặp"
+msgstr ""
+
+#: templates/profile.html:358
+msgid "Điểm mạnh nổi bật"
+msgstr ""
+
+#: templates/profile.html:370
+msgid "Gợi ý hoàn thiện kỹ năng"
+msgstr ""
+
+#: templates/profile.html:388
+msgid "Bạn chưa nhận được đánh giá nào từ học sinh để AI tổng hợp."
+msgstr ""
+
+#: templates/profile.html:404
+msgid "Đổi Mật Khẩu"
+msgstr ""
+
+#: templates/profile.html:411
+msgid "Mật khẩu hiện tại"
+msgstr ""
+
+#: templates/profile.html:415 templates/reset_password.html:21
+msgid "Mật khẩu mới"
+msgstr ""
+
+#: templates/profile.html:419 templates/reset_password.html:29
+msgid "Xác nhận mật khẩu mới"
+msgstr ""
+
+#: templates/profile.html:425
+msgid "Lưu Mật Khẩu"
 msgstr ""
 
 #: templates/register.html:3
@@ -773,19 +5578,15 @@ msgstr ""
 msgid "Kiểm tra"
 msgstr ""
 
-#: templates/register.html:35
+#: templates/register.html:35 templates/register.html:145
 msgid "Có mã mời: Tự gán trường & kích hoạt ngay."
-msgstr ""
-
-#: templates/register.html:41
-msgid "Đơn vị trường học"
 msgstr ""
 
 #: templates/register.html:44
 msgid "-- Chọn trường của bạn --"
 msgstr ""
 
-#: templates/register.html:53
+#: templates/register.html:53 templates/register.html:149
 msgid "Không mã: Vào hàng chờ quản trị trường duyệt."
 msgstr ""
 
@@ -825,10 +5626,6 @@ msgstr ""
 msgid "để tự động đề xuất lịch học thích hợp."
 msgstr ""
 
-#: templates/register.html:100
-msgid "Tối thiểu 6 ký tự"
-msgstr ""
-
 #: templates/register.html:105
 msgid "Xác nhận mật khẩu"
 msgstr ""
@@ -845,7 +5642,7 @@ msgstr ""
 msgid "Ngay sau khi mở ví, hệ thống tự động cấp vốn"
 msgstr ""
 
-#: templates/register.html:116
+#: templates/register.html:116 templates/wallet.html:38
 msgid "giờ tín dụng"
 msgstr ""
 
@@ -863,5 +5660,1339 @@ msgstr ""
 
 #: templates/register.html:126
 msgid "Đăng nhập tại đây"
+msgstr ""
+
+#: templates/register.html:154
+msgid "Đang kiểm tra mã mời..."
+msgstr ""
+
+#: templates/register.html:161
+msgid "Mã hợp lệ! Tự gán:"
+msgstr ""
+
+#: templates/register.html:161
+msgid "Còn"
+msgstr ""
+
+#: templates/register.html:161
+msgid "lượt"
+msgstr ""
+
+#: templates/register.html:161
+msgid "Kích hoạt ngay!"
+msgstr ""
+
+#: templates/register.html:166
+msgid "Trường đã tự gán & khóa theo mã mời."
+msgstr ""
+
+#: templates/register.html:173
+msgid "Không có mã hợp lệ: Tài khoản vào hàng chờ duyệt."
+msgstr ""
+
+#: templates/register.html:177
+msgid "Không thể kiểm tra mã mời lúc này."
+msgstr ""
+
+#: templates/reset_password.html:3
+msgid "Đặt lại mật khẩu - School Time Bank"
+msgstr ""
+
+#: templates/reset_password.html:14
+msgid "Thiết lập Mật khẩu Mới"
+msgstr ""
+
+#: templates/reset_password.html:15
+msgid "Tài khoản:"
+msgstr ""
+
+#: templates/reset_password.html:32
+msgid "Nhập lại mật khẩu mới"
+msgstr ""
+
+#: templates/reset_password.html:37
+msgid "Lưu mật khẩu mới & Đăng nhập"
+msgstr ""
+
+#: templates/reset_password.html:43
+msgid "Hủy bỏ và quay lại Đăng nhập"
+msgstr ""
+
+#: templates/session_detail.html:3
+msgid "Chi tiết phiên học #{{ session_data.id }} - {{ config.ten_truong }}"
+msgstr ""
+
+#: templates/session_detail.html:10
+msgid "Quay lại Lịch của tôi"
+msgstr ""
+
+#: templates/session_detail.html:24
+msgid "Mã phiên:"
+msgstr ""
+
+#: templates/session_detail.html:46
+msgid "Người dạy (Gia sư)"
+msgstr ""
+
+#: templates/session_detail.html:50
+msgid "Nhận"
+msgstr ""
+
+#: templates/session_detail.html:50 templates/session_detail.html:61
+msgid "giờ khi xong"
+msgstr ""
+
+#: templates/session_detail.html:57
+msgid "Người học (Học sinh)"
+msgstr ""
+
+#: templates/session_detail.html:61
+msgid "Đổi"
+msgstr ""
+
+#: templates/session_detail.html:70
+msgid "Thời gian hẹn:"
+msgstr ""
+
+#: templates/session_detail.html:75 templates/session_quiz.html:45
+msgid "Thời lượng:"
+msgstr ""
+
+#: templates/session_detail.html:76 templates/virtual_room.html:179
+#: templates/virtual_room.html:184
+msgid "phút"
+msgstr ""
+
+#: templates/session_detail.html:87
+msgid "Soạn lại dàn ý"
+msgstr ""
+
+#: templates/session_detail.html:92
+msgid "Dàn ý buổi học 4 bước chuẩn 60 phút:"
+msgstr ""
+
+#: templates/session_detail.html:99
+msgid "Chưa có dàn ý bài học"
+msgstr ""
+
+#: templates/session_detail.html:100
+msgid ""
+"Hệ thống AI sẽ tạo cấu trúc 60 phút: Mở đầu 5', Trọng tâm 25', Luyện tập "
+"20', Tổng kết 10'."
+msgstr ""
+
+#: templates/session_detail.html:104
+msgid "Nhờ AI soạn dàn ý"
+msgstr ""
+
+#: templates/session_detail.html:117
+msgid "Quiz Trắc Nghiệm AI"
+msgstr ""
+
+#: templates/session_detail.html:123
+msgid "Đạt chuẩn (≥60%)"
+msgstr ""
+
+#: templates/session_detail.html:131
+msgid "Bộ câu hỏi trắc nghiệm"
+msgstr ""
+
+#: templates/session_detail.html:131
+msgid "câu"
+msgstr ""
+
+#: templates/session_detail.html:134
+msgid "Học sinh đã hoàn thành:"
+msgstr ""
+
+#: templates/session_detail.html:134
+msgid "Tự tin trước:"
+msgstr ""
+
+#: templates/session_detail.html:136
+msgid "Đã sẵn sàng. Đang chờ học sinh làm bài lượng giá kiến thức."
+msgstr ""
+
+#: templates/session_detail.html:143
+msgid "Làm bài Quiz ngay"
+msgstr ""
+
+#: templates/session_detail.html:145
+msgid "Xem chi tiết Quiz"
+msgstr ""
+
+#: templates/session_detail.html:150
+msgid "Tạo lại bộ câu hỏi khác"
+msgstr ""
+
+#: templates/session_detail.html:161
+msgid "Chưa có câu hỏi lượng giá"
+msgstr ""
+
+#: templates/session_detail.html:162
+msgid "Hệ thống AI sẽ đọc dàn ý & tạo 5 câu trắc nghiệm 4 lựa chọn cho học sinh."
+msgstr ""
+
+#: templates/session_detail.html:166
+msgid "Nhờ AI tạo quiz"
+msgstr ""
+
+#: templates/session_detail.html:172
+msgid "Đang chờ bạn gia sư tạo bài Quiz trắc nghiệm cho buổi học này."
+msgstr ""
+
+#: templates/session_detail.html:185 templates/session_detail.html:190
+msgid "Mã QR Phiên Học"
+msgstr ""
+
+#: templates/session_detail.html:186
+msgid "Cả hai bạn cùng xác thực check-in qua mã định danh này"
+msgstr ""
+
+#: templates/session_detail.html:192
+msgid "Không tạo được ảnh QR"
+msgstr ""
+
+#: templates/session_detail.html:205
+msgid "Xác Thực Check-in 2 Chiều"
+msgstr ""
+
+#: templates/session_detail.html:215 templates/session_detail.html:228
+#: templates/virtual_room.html:156 templates/virtual_room.html:166
+msgid "Đã Check-in"
+msgstr ""
+
+#: templates/session_detail.html:217 templates/session_detail.html:230
+msgid "Chưa Check-in"
+msgstr ""
+
+#: templates/session_detail.html:224
+msgid "Người học"
+msgstr ""
+
+#: templates/session_detail.html:241
+msgid "Vào Phòng Học Ảo (Jitsi Meet)"
+msgstr ""
+
+#: templates/session_detail.html:244
+msgid "Tự động điểm danh check-in & tính giờ học online (≥ 80%)"
+msgstr ""
+
+#: templates/session_detail.html:256
+msgid "Tôi xác nhận Check-in (Người dạy)"
+msgstr ""
+
+#: templates/session_detail.html:261
+msgid "Bạn (Người dạy) đã check-in thành công!"
+msgstr ""
+
+#: templates/session_detail.html:269
+msgid "Tôi xác nhận Check-in (Người học)"
+msgstr ""
+
+#: templates/session_detail.html:274
+msgid "Bạn (Người học) đã check-in thành công!"
+msgstr ""
+
+#: templates/session_detail.html:284
+msgid "Xác nhận hoàn thành buổi học & Chuyển giờ"
+msgstr ""
+
+#: templates/session_detail.html:290
+msgid "Chưa đủ điều kiện:"
+msgstr ""
+
+#: templates/session_detail.html:290
+msgid "Yêu cầu"
+msgstr ""
+
+#: templates/session_detail.html:290
+msgid "CẢ HAI BÊN"
+msgstr ""
+
+#: templates/session_detail.html:290
+msgid ""
+"cùng check-in xác thực trước khi người dạy có thể bấm hoàn thành và "
+"chuyển giờ tín dụng."
+msgstr ""
+
+#: templates/session_detail.html:295
+msgid ""
+"Sau khi cả 2 bạn cùng check-in, bạn gia sư sẽ bấm xác nhận để hoàn tất "
+"chuyển giờ tín dụng."
+msgstr ""
+
+#: templates/session_detail.html:301
+msgid "Phiên học Cần Xác Minh"
+msgstr ""
+
+#: templates/session_detail.html:303
+msgid ""
+"Thời gian cùng học trực tuyến chưa đạt 80% thời lượng quy định. Phiên học"
+" đang chờ Thầy/Cô kiểm tra nhật ký đối soát để duyệt tay."
+msgstr ""
+
+#: templates/session_detail.html:309
+msgid "Duyệt tay & Chuyển giờ"
+msgstr ""
+
+#: templates/session_detail.html:314 templates/virtual_rooms_dashboard.html:186
+msgid "Hủy phiên"
+msgstr ""
+
+#: templates/session_detail.html:324
+msgid "Phiên học đã hoàn thành thành công!"
+msgstr ""
+
+#: templates/session_detail.html:326
+msgid "Đã ghi nhận 2 giao dịch vào Ví: +"
+msgstr ""
+
+#: templates/session_detail.html:326
+msgid "h cho"
+msgstr ""
+
+#: templates/session_detail.html:326
+msgid "và -"
+msgstr ""
+
+#: templates/session_detail.html:330
+msgid "Xem biến động trong Ví"
+msgstr ""
+
+#: templates/session_detail.html:339
+msgid "Đánh Giá Tương Hỗ (1 Lần Duy Nhất)"
+msgstr ""
+
+#: templates/session_detail.html:341
+msgid "Mỗi chiều 1 lần"
+msgstr ""
+
+#: templates/session_detail.html:349
+msgid "Bạn đã hoàn tất đánh giá:"
+msgstr ""
+
+#: templates/session_detail.html:356 templates/session_detail.html:408
+msgid "Không có nhận xét thêm"
+msgstr ""
+
+#: templates/session_detail.html:364
+msgid "Bạn hãy đánh giá thái độ học tập và mức độ tương tác của bạn học"
+msgstr ""
+
+#: templates/session_detail.html:366
+msgid "Bạn hãy đánh giá kỹ năng truyền đạt và sự nhiệt tình của bạn gia sư"
+msgstr ""
+
+#: templates/session_detail.html:371
+msgid "Mức độ hài lòng (1 - 5 sao):"
+msgstr ""
+
+#: templates/session_detail.html:385
+msgid "Nhận xét, góp ý chân thành:"
+msgstr ""
+
+#: templates/session_detail.html:386
+msgid "Ví dụ: Giảng bài rất kiên nhẫn, chuẩn bị tài liệu chu đáo..."
+msgstr ""
+
+#: templates/session_detail.html:390
+msgid "Gửi đánh giá tương hỗ"
+msgstr ""
+
+#: templates/session_detail.html:401
+msgid "nhận xét về bạn:"
+msgstr ""
+
+#: templates/session_quiz.html:3
+msgid "Quiz Trắc Nghiệm - {{ session_data.tieu_de }} - {{ config.ten_truong }}"
+msgstr ""
+
+#: templates/session_quiz.html:12
+msgid "Quay lại Chi tiết Phiên học"
+msgstr ""
+
+#: templates/session_quiz.html:26
+msgid "Phiên học Đạt Chuẩn Quiz (≥60%)"
+msgstr ""
+
+#: templates/session_quiz.html:30
+msgid "Trạng thái: Chưa đạt chuẩn / Chờ làm bài"
+msgstr ""
+
+#: templates/session_quiz.html:42
+msgid "Người học:"
+msgstr ""
+
+#: templates/session_quiz.html:59
+msgid "Xuất Sắc Đạt Chuẩn Sư Phạm!"
+msgstr ""
+
+#: templates/session_quiz.html:60
+msgid "Bạn đã hoàn thành bài lượng giá đạt tiêu chuẩn kiến thức (≥60%)."
+msgstr ""
+
+#: templates/session_quiz.html:65
+msgid "Cần Cố Gắng Ôn Luyện Thêm!"
+msgstr ""
+
+#: templates/session_quiz.html:66
+msgid "Hãy xem lại các câu trả lời chi tiết bên dưới để bổ sung kiến thức nhé."
+msgstr ""
+
+#: templates/session_quiz.html:73
+msgid "Điểm số đạt được"
+msgstr ""
+
+#: templates/session_quiz.html:84
+msgid "Tự tin trước buổi học"
+msgstr ""
+
+#: templates/session_quiz.html:87
+msgid "Thang điểm 1 - 5 sao"
+msgstr ""
+
+#: templates/session_quiz.html:93
+msgid "Mức độ tiến bộ"
+msgstr ""
+
+#: templates/session_quiz.html:98
+msgid "So với tự đánh giá trước"
+msgstr ""
+
+#: templates/session_quiz.html:104
+msgid "Quy tắc sư phạm nhân văn:"
+msgstr ""
+
+#: templates/session_quiz.html:104
+msgid "Kết quả quiz dùng để xác nhận mức độ tiếp thu cho giáo viên theo dõi,"
+msgstr ""
+
+#: templates/session_quiz.html:104
+msgid "không chặn"
+msgstr ""
+
+#: templates/session_quiz.html:104
+msgid "việc chuyển giờ tín dụng cho người dạy và người học."
+msgstr ""
+
+#: templates/session_quiz.html:107
+msgid "Bài làm đã hoàn tất vào lúc:"
+msgstr ""
+
+#: templates/session_quiz.html:107
+msgid ". Form đã được khóa (chỉ làm 1 lần duy nhất)."
+msgstr ""
+
+#: templates/session_quiz.html:112
+msgid "Chi Tiết Câu Hỏi & Đáp Án Ôn Tập"
+msgstr ""
+
+#: templates/session_quiz.html:117 templates/session_quiz.html:190
+#: templates/session_quiz.html:254
+msgid "Câu"
+msgstr ""
+
+#: templates/session_quiz.html:118 templates/session_quiz.html:255
+msgid "Đáp án đúng:"
+msgstr ""
+
+#: templates/session_quiz.html:152
+msgid "1. Tự Đánh Giá Mức Độ Tự Tin Trước Buổi Học"
+msgstr ""
+
+#: templates/session_quiz.html:154
+msgid ""
+"Trước khi học cùng bạn gia sư, em tự tin ở mức nào về chuyên đề này? "
+"(Thang 1-5 sao)"
+msgstr ""
+
+#: templates/session_quiz.html:159
+msgid "1★ Rất bỡ ngỡ"
+msgstr ""
+
+#: templates/session_quiz.html:163
+msgid "2★ Chưa tự tin"
+msgstr ""
+
+#: templates/session_quiz.html:167
+msgid "3★ Tạm ổn"
+msgstr ""
+
+#: templates/session_quiz.html:171
+msgid "4★ Khá tự tin"
+msgstr ""
+
+#: templates/session_quiz.html:175
+msgid "5★ Rất tự tin"
+msgstr ""
+
+#: templates/session_quiz.html:182
+msgid "2. Bộ Câu Hỏi Trắc Nghiệm (5 Câu)"
+msgstr ""
+
+#: templates/session_quiz.html:183
+msgid "Tiêu chuẩn: Đạt ≥60% (3/5 câu)"
+msgstr ""
+
+#: templates/session_quiz.html:191
+msgid "Chọn 1 phương án đúng nhất"
+msgstr ""
+
+#: templates/session_quiz.html:229
+msgid ""
+"Lưu ý: Bạn chỉ được nộp bài 1 lần duy nhất. Hãy kiểm tra kỹ các câu trả "
+"lời trước khi bấm hoàn tất."
+msgstr ""
+
+#: templates/session_quiz.html:232
+msgid "Nộp Bài & Chấm Điểm Ngay"
+msgstr ""
+
+#: templates/session_quiz.html:242
+msgid "Học sinh chưa hoàn thành bài Quiz"
+msgstr ""
+
+#: templates/session_quiz.html:243
+msgid "Bạn học"
+msgstr ""
+
+#: templates/session_quiz.html:243
+msgid "chưa tham gia làm bài lượng giá cho phiên này."
+msgstr ""
+
+#: templates/session_quiz.html:244
+#, python-format
+msgid "Bộ Quiz gồm %(count)s câu hỏi do AI biên soạn đã sẵn sàng"
+msgstr ""
+
+#: templates/session_quiz.html:249
+msgid "Nội Dung Bộ Câu Hỏi Lượng Giá (Tham khảo)"
+msgstr ""
+
+#: templates/skills_approval.html:3
+msgid "Duyệt kỹ năng học sinh - {{ config.ten_truong }}"
+msgstr ""
+
+#: templates/skills_approval.html:9
+msgid "Quyền Giáo viên & Quản trị viên"
+msgstr ""
+
+#: templates/skills_approval.html:10
+msgid "Kiểm duyệt Kỹ năng Học đường"
+msgstr ""
+
+#: templates/skills_approval.html:11
+msgid "Thầy/Cô thẩm định nội dung học sinh đăng ký chia sẻ trước khi kết nối"
+msgstr ""
+
+#: templates/skills_approval.html:14
+msgid "Kiểm duyệt sơ bộ bởi AI (Trí tuệ nhân tạo)"
+msgstr ""
+
+#: templates/skills_approval.html:20
+msgid "Danh sách Kỹ năng Đăng ký"
+msgstr ""
+
+#: templates/skills_approval.html:32
+msgid "Lĩnh vực & Tiêu đề"
+msgstr ""
+
+#: templates/skills_approval.html:33
+msgid "Lý do gợi ý từ AI"
+msgstr ""
+
+#: templates/skills_approval.html:35
+msgid "Thao tác duyệt"
+msgstr ""
+
+#: templates/skills_approval.html:57
+msgid "Chưa có đánh giá"
+msgstr ""
+
+#: templates/skills_approval.html:91
+msgid "Hiện tại không có kỹ năng nào trong danh sách."
+msgstr ""
+
+#: templates/skills_market.html:11
+msgid "KHÔNG GIAN TRAO ĐỔI TRI THỨC"
+msgstr ""
+
+#: templates/skills_market.html:13
+msgid "Kho Kỹ Năng Học Đường"
+msgstr ""
+
+#: templates/skills_market.html:14
+msgid "Chỉ hiển thị các chuyên đề đã qua kiểm duyệt sư phạm bởi giáo viên"
+msgstr ""
+
+#: templates/skills_market.html:19
+msgid "AI Gợi Ý Ghép Cặp"
+msgstr ""
+
+#: templates/skills_market.html:23
+msgid "Đăng kỹ năng của bạn"
+msgstr ""
+
+#: templates/skills_market.html:27
+msgid "Đăng nhập để chia sẻ & học"
+msgstr ""
+
+#: templates/skills_market.html:39
+msgid "Tìm kỹ năng theo từ khóa (Toán, Guitar, Python, IELTS...)"
+msgstr ""
+
+#: templates/skills_market.html:45
+msgid "Tất cả lĩnh vực"
+msgstr ""
+
+#: templates/skills_market.html:97
+msgid "Đánh giá:"
+msgstr ""
+
+#: templates/skills_market.html:110
+msgid "Đây là kỹ năng bạn chia sẻ"
+msgstr ""
+
+#: templates/skills_market.html:115
+msgid "Đặt lịch học ngay (Tối đa 2h)"
+msgstr ""
+
+#: templates/skills_market.html:120
+msgid "Đăng nhập để đặt lịch"
+msgstr ""
+
+#: templates/skills_market.html:135
+msgid "Đặt lịch học kỹ năng"
+msgstr ""
+
+#: templates/skills_market.html:146
+msgid "Gia sư bạn học:"
+msgstr ""
+
+#: templates/skills_market.html:147
+msgid "Số dư hiện có của bạn:"
+msgstr ""
+
+#: templates/skills_market.html:153
+msgid "Chọn ngày và giờ phù hợp với thời gian rảnh của cả hai bạn."
+msgstr ""
+
+#: templates/skills_market.html:157
+msgid "Thời lượng buổi học (giờ)"
+msgstr ""
+
+#: templates/skills_market.html:164
+msgid "Quy định hệ thống: Tối đa 2.0 giờ/phiên học."
+msgstr ""
+
+#: templates/skills_market.html:168
+msgid ""
+"Khi hoàn thành buổi học, tín dụng thời gian sẽ tự động chuyển từ bạn sang"
+" bạn gia sư theo xác nhận 2 chiều."
+msgstr ""
+
+#: templates/skills_market.html:190
+msgid "Chưa có kỹ năng phù hợp"
+msgstr ""
+
+#: templates/skills_market.html:191
+msgid "Hiện tại chưa có kỹ năng nào thuộc lĩnh vực hoặc từ khóa tìm kiếm của bạn."
+msgstr ""
+
+#: templates/skills_market.html:194
+msgid "Xem tất cả kỹ năng"
+msgstr ""
+
+#: templates/skills_new.html:3
+msgid "Đăng kỹ năng chia sẻ - {{ config.ten_truong }}"
+msgstr ""
+
+#: templates/skills_new.html:12
+msgid "LAN TỎA TRI THỨC — CHIA SẺ THẾ MẠNH"
+msgstr ""
+
+#: templates/skills_new.html:14
+msgid "Đăng ký Kỹ năng Giảng dạy"
+msgstr ""
+
+#: templates/skills_new.html:15
+msgid "1 giờ bạn dạy = 1 tín dụng nhận về"
+msgstr ""
+
+#: templates/skills_new.html:21
+msgid "Lĩnh vực kỹ năng"
+msgstr ""
+
+#: templates/skills_new.html:23
+msgid "-- Chọn lĩnh vực thế mạnh của bạn --"
+msgstr ""
+
+#: templates/skills_new.html:24
+msgid "Toán học"
+msgstr ""
+
+#: templates/skills_new.html:25
+msgid "Vật lý"
+msgstr ""
+
+#: templates/skills_new.html:26
+msgid "Hóa học"
+msgstr ""
+
+#: templates/skills_new.html:29
+msgid "Tin học & Lập trình"
+msgstr ""
+
+#: templates/skills_new.html:30
+msgid "Âm nhạc & Đàn (Guitar, Piano, Organ...)"
+msgstr ""
+
+#: templates/skills_new.html:31
+msgid "Mỹ thuật & Vẽ tranh"
+msgstr ""
+
+#: templates/skills_new.html:32
+msgid "Thể dục & Thể thao (Cờ vua, Cầu lông, Bóng rổ...)"
+msgstr ""
+
+#: templates/skills_new.html:33
+msgid "Kỹ năng khác (Thuyết trình, Kỹ năng mềm...)"
+msgstr ""
+
+#: templates/skills_new.html:38
+msgid "Tiêu đề kỹ năng / Chuyên đề"
+msgstr ""
+
+#: templates/skills_new.html:39
+msgid ""
+"Ví dụ: Luyện giải bài toán hình không gian lớp 12, Đệm hát guitar cơ "
+"bản..."
+msgstr ""
+
+#: templates/skills_new.html:40
+msgid "Đặt tiêu đề ngắn gọn, nêu rõ trọng tâm bạn muốn hướng dẫn bạn bè."
+msgstr ""
+
+#: templates/skills_new.html:44
+msgid "Mô tả nội dung & Phương pháp kèm cặp"
+msgstr ""
+
+#: templates/skills_new.html:45
+msgid ""
+"Mô tả cụ thể bạn sẽ giúp bạn học những gì (lý thuyết, bài tập mẫu, mẹo "
+"giải nhanh, thực hành nhạc cụ...)"
+msgstr ""
+
+#: templates/skills_new.html:51
+msgid "Quy trình phê duyệt sư phạm:"
+msgstr ""
+
+#: templates/skills_new.html:52
+msgid "Sau khi gửi, kỹ năng sẽ ở trạng thái"
+msgstr ""
+
+#: templates/skills_new.html:52
+msgid ""
+". Trợ lý AI (Trí tuệ nhân tạo) sẽ quét an toàn nội dung và Thầy/Cô phụ "
+"trách sẽ phê duyệt trước khi kỹ năng xuất hiện công khai trên"
+msgstr ""
+
+#: templates/skills_new.html:52
+msgid "của trường."
+msgstr ""
+
+#: templates/skills_new.html:59
+msgid "Quay lại"
+msgstr ""
+
+#: templates/virtual_room.html:3
+msgid "Phòng học ảo: {{ session_data.tieu_de }} - {{ config.ten_truong }}"
+msgstr ""
+
+#: templates/virtual_room.html:11
+msgid "Rời phòng"
+msgstr ""
+
+#: templates/virtual_room.html:16
+msgid "TRỰC TUYẾN"
+msgstr ""
+
+#: templates/virtual_room.html:20
+msgid "Chế độ Giám sát Sư phạm (GV/Admin)"
+msgstr ""
+
+#: templates/virtual_room.html:32
+msgid "Thời gian đã học"
+msgstr ""
+
+#: templates/virtual_room.html:39
+msgid "Báo cáo"
+msgstr ""
+
+#: templates/virtual_room.html:44
+msgid ""
+"Bạn có chắc chắn muốn kết thúc buổi học này? Hệ thống sẽ tự động đối soát"
+" thời lượng cùng online (yêu cầu ≥ 80%) để xử lý chuyển giờ."
+msgstr ""
+
+#: templates/virtual_room.html:46
+msgid "Kết thúc buổi học"
+msgstr ""
+
+#: templates/virtual_room.html:65
+msgid "Lớp Học Ảo Trực Tuyến Chưa Được Cấu Hình"
+msgstr ""
+
+#: templates/virtual_room.html:67
+msgid ""
+"Hệ thống lớp học ảo ứng dụng giải pháp công nghệ đa tầng an toàn để học "
+"sinh và gia sư tham gia lớp học 1 chạm mà không cần tạo tài khoản riêng."
+msgstr ""
+
+#: templates/virtual_room.html:72
+msgid "Các biến môi trường cần thiết lập trong"
+msgstr ""
+
+#: templates/virtual_room.html:75
+msgid "DAILY_API_KEY (Nòng chính Daily.co)"
+msgstr ""
+
+#: templates/virtual_room.html:84
+msgid "Tham gia phòng học dự phòng Jitsi ngay"
+msgstr ""
+
+#: templates/virtual_room.html:86
+msgid "Học tập không gián đoạn bằng phòng học công cộng dự phòng"
+msgstr ""
+
+#: templates/virtual_room.html:91
+msgid ""
+"Dữ liệu buổi học, điểm danh tự động, tiêu chuẩn thời lượng (luật 80%), "
+"dàn ý AI và báo cáo vi phạm vẫn hoạt động bình thường trên hệ thống."
+msgstr ""
+
+#: templates/virtual_room.html:100 templates/virtual_room.html:111
+#: templates/virtual_room.html:535
+msgid "Đang dùng phòng học dự phòng (Jitsi)"
+msgstr ""
+
+#: templates/virtual_room.html:102
+msgid "Chế độ dự phòng"
+msgstr ""
+
+#: templates/virtual_room.html:113
+msgid "Tự động chuyển nòng"
+msgstr ""
+
+#: templates/virtual_room.html:121
+msgid "Đang Kết Nối Phòng Học Ảo TimeBank EDU..."
+msgstr ""
+
+#: templates/virtual_room.html:122
+msgid "Đang khởi tạo mã định danh 1 chạm an toàn cho"
+msgstr ""
+
+#: templates/virtual_room.html:127
+msgid "Không Thể Khởi Tạo Phòng Học"
+msgstr ""
+
+#: templates/virtual_room.html:129
+msgid "Lỗi khởi tạo nòng chính, chuyển thủ công sang Jitsi"
+msgstr ""
+
+#: templates/virtual_room.html:130
+msgid "Chuyển sang phòng học dự phòng Jitsi"
+msgstr ""
+
+#: templates/virtual_room.html:141
+msgid "Lớp học ảo trực tuyến:"
+msgstr ""
+
+#: templates/virtual_room.html:142
+msgid "Giám sát thời lượng tự động"
+msgstr ""
+
+#: templates/virtual_room.html:150
+msgid "Thành Viên Lớp Học"
+msgstr ""
+
+#: templates/virtual_room.html:155 templates/virtual_rooms_dashboard.html:72
+msgid "Gia sư (Dạy)"
+msgstr ""
+
+#: templates/virtual_room.html:165 templates/virtual_rooms_dashboard.html:73
+msgid "Học sinh (Học)"
+msgstr ""
+
+#: templates/virtual_room.html:176
+msgid "Tiêu Chuẩn Chuyển Giờ"
+msgstr ""
+
+#: templates/virtual_room.html:179
+msgid "Quy định thời lượng:"
+msgstr ""
+
+#: templates/virtual_room.html:184
+msgid "Tiêu chí ≥ 80%:"
+msgstr ""
+
+#: templates/virtual_room.html:184
+msgid "Cả hai cần cùng online tối thiểu"
+msgstr ""
+
+#: templates/virtual_room.html:184
+msgid "để hệ thống tự động chuyển tín dụng thời gian."
+msgstr ""
+
+#: templates/virtual_room.html:189
+msgid "Nếu dưới 80%, phiên sẽ chuyển trạng thái"
+msgstr ""
+
+#: templates/virtual_room.html:189
+msgid "'Cần xác minh'"
+msgstr ""
+
+#: templates/virtual_room.html:189
+msgid "để Giáo viên duyệt tay nhằm đảm bảo chất lượng học tập thực chất."
+msgstr ""
+
+#: templates/virtual_room.html:197
+msgid "Dàn ý gợi ý"
+msgstr ""
+
+#: templates/virtual_room.html:215
+msgid "Báo cáo vi phạm cho Giáo viên"
+msgstr ""
+
+#: templates/virtual_room.html:222
+msgid ""
+"Thông tin báo cáo sẽ được gửi bảo mật trực tiếp đến Giáo viên phụ trách "
+"và Ban Quản trị trường để can thiệp kịp thời."
+msgstr ""
+
+#: templates/virtual_room.html:226
+msgid "Hành vi vi phạm nội quy"
+msgstr ""
+
+#: templates/virtual_room.html:228
+msgid "Ngôn từ thô tục, chửi thề, xúc phạm (Điều 3)"
+msgstr ""
+
+#: templates/virtual_room.html:229
+msgid "Trang phục phản cảm, không phù hợp camera (Điều 2)"
+msgstr ""
+
+#: templates/virtual_room.html:230
+msgid "Hành vi quấy rối, thiếu tôn trọng bạn học (Điều 6)"
+msgstr ""
+
+#: templates/virtual_room.html:231
+msgid "Chia sẻ nội dung độc hại, quảng cáo (Điều 4)"
+msgstr ""
+
+#: templates/virtual_room.html:232
+msgid "Gian lận điểm danh / rời phòng sớm (Điều 1)"
+msgstr ""
+
+#: templates/virtual_room.html:233
+msgid "Vi phạm khác"
+msgstr ""
+
+#: templates/virtual_room.html:238
+msgid "Mô tả chi tiết sự việc"
+msgstr ""
+
+#: templates/virtual_room.html:239
+msgid "Mô tả cụ thể hành vi hoặc lời nói vi phạm..."
+msgstr ""
+
+#: templates/virtual_room.html:245
+msgid "Gửi báo cáo vi phạm"
+msgstr ""
+
+#: templates/virtual_room.html:308
+msgid "Đang Kết Nối Phòng Học..."
+msgstr ""
+
+#: templates/virtual_room.html:308
+msgid "Đang khởi tạo mã phòng học 1 chạm cho "
+msgstr ""
+
+#: templates/virtual_room.html:327
+msgid "Không thể kết nối Daily.co. Tự động chuyển nòng dự phòng..."
+msgstr ""
+
+#: templates/virtual_room.html:335
+msgid "Thiếu URL hoặc token phòng học Daily.co. Tự động chuyển nòng dự phòng..."
+msgstr ""
+
+#: templates/virtual_room.html:342
+msgid "Không thể tải SDK Daily.co. Tự động chuyển nòng dự phòng..."
+msgstr ""
+
+#: templates/virtual_room.html:362
+msgid "Lỗi phòng học Daily.co"
+msgstr ""
+
+#: templates/virtual_room.html:362
+msgid "mất kết nối"
+msgstr ""
+
+#: templates/virtual_room.html:362 templates/virtual_room.html:378
+#: templates/virtual_room.html:399
+msgid "Tự động chuyển nòng dự phòng..."
+msgstr ""
+
+#: templates/virtual_room.html:374
+msgid "Không thể vào phòng Daily.co. Tự động chuyển nòng dự phòng..."
+msgstr ""
+
+#: templates/virtual_room.html:378
+msgid "Lỗi khởi tạo Daily.co:"
+msgstr ""
+
+#: templates/virtual_room.html:392
+msgid "Không thể tải thư viện Daily.co qua CDN. Tự động chuyển nòng dự phòng..."
+msgstr ""
+
+#: templates/virtual_room.html:399
+msgid "Lỗi mạng Daily.co:"
+msgstr ""
+
+#: templates/virtual_room.html:416
+msgid "Đang Kết Nối Lớp Học Ảo..."
+msgstr ""
+
+#: templates/virtual_room.html:416
+msgid "Đang khởi tạo mã định danh 1 chạm an toàn cho "
+msgstr ""
+
+#: templates/virtual_room.html:433
+msgid "Không thể cấp token lớp học"
+msgstr ""
+
+#: templates/virtual_room.html:433
+msgid "lỗi cấu hình"
+msgstr ""
+
+#: templates/virtual_room.html:433
+msgid "Tự động chuyển nòng dự phòng (Jitsi)..."
+msgstr ""
+
+#: templates/virtual_room.html:445
+msgid "Không thể nạp thư viện kết nối lớp học. Chuyển nòng dự phòng (Jitsi)..."
+msgstr ""
+
+#: templates/virtual_room.html:470
+msgid "Thành viên TimeBank"
+msgstr ""
+
+#: templates/virtual_room.html:482
+msgid "Không thể khởi tạo lớp học:"
+msgstr ""
+
+#: templates/virtual_room.html:482 templates/virtual_room.html:508
+msgid "Chuyển nòng dự phòng (Jitsi)..."
+msgstr ""
+
+#: templates/virtual_room.html:499
+msgid "Không thể tải thư viện lớp học ảo. Chuyển nòng dự phòng (Jitsi)..."
+msgstr ""
+
+#: templates/virtual_room.html:508
+msgid "Lỗi kết nối lớp học:"
+msgstr ""
+
+#: templates/virtual_room.html:586
+msgid "Cấu hình chọn dùng trực tiếp phòng học dự phòng Jitsi."
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:3
+msgid "Giám sát phòng học ảo - {{ config.ten_truong }}"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:11
+msgid "GIÁM SÁT SƯ PHẠM TRỰC TUYẾN"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:13
+msgid "Quản Lý Phòng Học Ảo"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:14
+msgid ""
+"Dành cho Giáo viên và Ban Giám Hiệu — Dự giờ, giám sát lớp học và phê "
+"duyệt đối soát thời lượng"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:26
+msgid "Phòng học đang diễn ra"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:36
+msgid "Phiên cần xác minh thời lượng (&lt; 80%)"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:39
+msgid "Chờ duyệt tay"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:46
+msgid "Phiên hoàn thành gần đây"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:49
+msgid "Đã chuyển giờ"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:59
+msgid "Lớp Học Đang Diễn Ra (Sẵn sàng dự giờ)"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:61
+msgid "lớp"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:71
+#: templates/virtual_rooms_dashboard.html:145
+#: templates/virtual_rooms_dashboard.html:220
+msgid "Chuyên đề"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:98
+msgid "Cả 2 đã vào"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:100
+msgid "Gia sư đã vào"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:102
+msgid "Học sinh đã vào"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:104
+msgid "Chưa check-in"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:109
+msgid "Ghé thăm phòng học"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:120
+msgid "Hiện tại không có phòng học trực tuyến nào đang hoạt động."
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:131
+msgid "Phiên Học Cần Xác Minh (&lt; 80% thời gian)"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:133
+msgid ""
+"Các phiên kết thúc sớm hoặc có gián đoạn — Thầy/Cô kiểm tra và quyết định"
+" duyệt tay hoặc hủy phiên"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:146
+msgid "Gia sư & Học sinh"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:147
+msgid "Quy định"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:148
+msgid "Trạng thái đối soát"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:149
+msgid "Thao tác duyệt tay"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:162
+msgid "Dạy:"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:163
+msgid "Học:"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:169
+msgid "Chưa đạt 80% thời lượng"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:174
+msgid "Xem chi tiết nhật ký"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:178
+msgid "Xác nhận phê duyệt chuyển giờ tín dụng cho buổi học này?"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:180
+msgid "Duyệt chuyển giờ"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:184
+msgid "Bạn có chắc chắn muốn hủy phiên học này không?"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:199
+msgid "Không có phiên học nào đang chờ xác minh."
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:209
+msgid "Phiên Học Đã Hoàn Thành Gần Đây"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:221
+msgid "Gia sư"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:225
+msgid "Chi tiết"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:239
+msgid "Xem phiên"
+msgstr ""
+
+#: templates/virtual_rooms_dashboard.html:248
+msgid "Chưa có phiên học nào hoàn thành."
+msgstr ""
+
+#: templates/wallet.html:3
+msgid "Ví tín dụng thời gian - {{ config.ten_truong }}"
+msgstr ""
+
+#: templates/wallet.html:11
+msgid "VÍ TÍN DỤNG BẤT BIẾN"
+msgstr ""
+
+#: templates/wallet.html:13
+msgid "Ví Thời Gian Của Tôi"
+msgstr ""
+
+#: templates/wallet.html:19
+msgid "Dùng giờ học kỹ năng"
+msgstr ""
+
+#: templates/wallet.html:22
+msgid "Dạy kèm để tích thêm giờ"
+msgstr ""
+
+#: templates/wallet.html:32
+msgid "Số dư khả dụng hiện tại"
+msgstr ""
+
+#: templates/wallet.html:33
+msgid "Bình đẳng tri thức"
+msgstr ""
+
+#: templates/wallet.html:42
+msgid "Tương đương quyền học"
+msgstr ""
+
+#: templates/wallet.html:42
+msgid "bất kỳ kỹ năng nào trên Kho kỹ năng học đường của trường."
+msgstr ""
+
+#: templates/wallet.html:46
+msgid "Ví bảo chứng an toàn"
+msgstr ""
+
+#: templates/wallet.html:47
+msgid "1h dạy = 1h học"
+msgstr ""
+
+#: templates/wallet.html:58
+msgid "TÍCH LŨY THỜI GIAN"
+msgstr ""
+
+#: templates/wallet.html:60
+msgid "Tổng giờ đã nhận"
+msgstr ""
+
+#: templates/wallet.html:62
+msgid "Từ việc dạy học kèm bạn bè và tham gia nhiệm vụ cộng đồng."
+msgstr ""
+
+#: templates/wallet.html:65
+msgid "Cống hiến sẻ chia tri thức"
+msgstr ""
+
+#: templates/wallet.html:74
+msgid "TRAO ĐỔI TRI THỨC"
+msgstr ""
+
+#: templates/wallet.html:78
+msgid "Thời lượng đã đổi lấy các buổi học kỹ năng từ bạn bè."
+msgstr ""
+
+#: templates/wallet.html:81
+msgid "Mở rộng năng lực bản thân"
+msgstr ""
+
+#: templates/wallet.html:93
+msgid "Lịch Sử Biến Động Ví (Mới nhất trước)"
+msgstr ""
+
+#: templates/wallet.html:94
+msgid "Nguyên tắc bất biến: Chỉ ghi nhận (INSERT), không sửa hay xóa"
+msgstr ""
+
+#: templates/wallet.html:96
+msgid "Tổng"
+msgstr ""
+
+#: templates/wallet.html:96
+msgid "giao dịch"
+msgstr ""
+
+#: templates/wallet.html:105
+msgid "Mã GD"
+msgstr ""
+
+#: templates/wallet.html:107
+msgid "Lý do / Nội dung giao dịch"
+msgstr ""
+
+#: templates/wallet.html:108
+msgid "Phiên liên kết"
+msgstr ""
+
+#: templates/wallet.html:148
+msgid "Chưa có giao dịch tín dụng nào được ghi nhận."
+msgstr ""
+
+#: templates/errors/403.html:3
+msgid "Truy cập bị từ chối (403 Forbidden) - {{ config.ten_truong }}"
+msgstr ""
+
+#: templates/errors/403.html:13
+msgid "Truy cập bị từ chối (403)"
+msgstr ""
+
+#: templates/errors/403.html:14
+msgid "Khu vực này chỉ dành riêng cho Quản trị viên (Admin) hoặc Giáo viên!"
+msgstr ""
+
+#: templates/errors/403.html:16
+msgid "Tài khoản hiện tại của bạn là"
+msgstr ""
+
+#: templates/errors/403.html:16
+msgid "Chưa đăng nhập"
+msgstr ""
+
+#: templates/errors/403.html:17
+msgid ""
+"không có thẩm quyền truy cập vào bảng điều khiển quản trị hoặc tính năng "
+"này."
+msgstr ""
+
+#: templates/errors/403.html:21
+msgid "Về trang hồ sơ"
 msgstr ""
 

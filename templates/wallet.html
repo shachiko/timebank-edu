@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Ví tín dụng thời gian - {{ config.ten_truong }}{% endblock %}
+{% block title %}{{ _('Ví tín dụng thời gian - {{ config.ten_truong }}') }}{% endblock %}
 
 {% block content %}
 <div class="container py-4">
@@ -8,18 +8,18 @@
   <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
     <div>
       <span class="badge bg-white bg-opacity-25 text-white mb-1">
-        <i class="bi bi-wallet2 me-1"></i> VÍ TÍN DỤNG BẤT BIẾN
+        <i class="bi bi-wallet2 me-1"></i> {{ _('VÍ TÍN DỤNG BẤT BIẾN') }}
       </span>
-      <h2 class="fw-bold mb-0 text-dark">Ví Thời Gian Của Tôi</h2>
-      <p class="text-muted small mb-0">{{ user.ho_ten }} (Mã: <code>{{ user.ma_hoc_sinh }}</code>) — {{ config.ten_truong }}</p>
+      <h2 class="fw-bold mb-0 text-dark">{{ _('Ví Thời Gian Của Tôi') }}</h2>
+      <p class="text-muted small mb-0">{{ user.ho_ten }} ({{ _('Mã:') }} <code>{{ user.ma_hoc_sinh }}</code>) — {{ config.ten_truong }}</p>
     </div>
 
     <div class="d-flex gap-2">
       <a href="{{ url_for('skills_market') }}" class="btn btn-brand btn-sm">
-        <i class="bi bi-shop me-1"></i> Dùng giờ học kỹ năng
+        <i class="bi bi-shop me-1"></i> {{ _('Dùng giờ học kỹ năng') }}
       </a>
       <a href="{{ url_for('new_skill') }}" class="btn btn-outline-brand btn-sm">
-        <i class="bi bi-plus-circle me-1"></i> Dạy kèm để tích thêm giờ
+        <i class="bi bi-plus-circle me-1"></i> {{ _('Dạy kèm để tích thêm giờ') }}
       </a>
     </div>
   </div>
@@ -29,22 +29,22 @@
     <div class="col-lg-5">
       <div class="card border-0 shadow rounded-4 p-4 text-white h-100" style="background: linear-gradient(135deg, var(--brand-color), #2563eb);">
         <div class="d-flex justify-content-between align-items-start mb-2">
-          <span class="small text-white-50 text-uppercase fw-semibold"><i class="bi bi-shield-check me-1"></i> Số dư khả dụng hiện tại</span>
-          <span class="badge bg-white bg-opacity-25 text-white">Bình đẳng tri thức</span>
+          <span class="small text-white-50 text-uppercase fw-semibold"><i class="bi bi-shield-check me-1"></i> {{ _('Số dư khả dụng hiện tại') }}</span>
+          <span class="badge bg-white bg-opacity-25 text-white">{{ _('Bình đẳng tri thức') }}</span>
         </div>
 
         <div class="d-flex align-items-baseline gap-2 my-2">
           <span class="display-3 fw-extrabold">{{ "%.1f"|format(user.so_du_gio) }}</span>
-          <span class="fs-4 text-white-50">giờ tín dụng</span>
+          <span class="fs-4 text-white-50">{{ _('giờ tín dụng') }}</span>
         </div>
 
         <p class="small text-white-50 mb-4">
-          Tương đương quyền học <strong>{{ "%.1f"|format(user.so_du_gio) }} giờ</strong> bất kỳ kỹ năng nào trên Kho kỹ năng học đường của trường.
+          {{ _('Tương đương quyền học') }}<strong>{{ "%.1f"|format(user.so_du_gio) }} {{ _('giờ') }}</strong> {{ _('bất kỳ kỹ năng nào trên Kho kỹ năng học đường của trường.') }}
         </p>
 
         <div class="mt-auto pt-3 border-top border-white border-opacity-25 small text-white-50 d-flex justify-content-between align-items-center">
-          <span><i class="bi bi-shield-check me-1"></i> Ví bảo chứng an toàn</span>
-          <span class="badge bg-light text-dark">1h dạy = 1h học</span>
+          <span><i class="bi bi-shield-check me-1"></i> {{ _('Ví bảo chứng an toàn') }}</span>
+          <span class="badge bg-light text-dark">{{ _('1h dạy = 1h học') }}</span>
         </div>
       </div>
     </div>
@@ -55,14 +55,14 @@
           <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100 d-flex flex-column justify-content-between">
             <div>
               <span class="badge bg-success bg-opacity-10 text-success fw-semibold mb-2">
-                <i class="bi bi-arrow-down-left me-1"></i> TÍCH LŨY THỜI GIAN
+                <i class="bi bi-arrow-down-left me-1"></i> {{ _('TÍCH LŨY THỜI GIAN') }}
               </span>
-              <h5 class="fw-bold text-dark">Tổng giờ đã nhận</h5>
+              <h5 class="fw-bold text-dark">{{ _('Tổng giờ đã nhận') }}</h5>
               <div class="display-6 fw-bold text-success my-2">+{{ "%.1f"|format(total_earned) }}h</div>
-              <p class="text-muted small mb-0">Từ việc dạy học kèm bạn bè và tham gia nhiệm vụ cộng đồng.</p>
+              <p class="text-muted small mb-0">{{ _('Từ việc dạy học kèm bạn bè và tham gia nhiệm vụ cộng đồng.') }}</p>
             </div>
             <div class="small text-success pt-2 border-top mt-3">
-              <i class="bi bi-check2-circle me-1"></i> Cống hiến sẻ chia tri thức
+              <i class="bi bi-check2-circle me-1"></i> {{ _('Cống hiến sẻ chia tri thức') }}
             </div>
           </div>
         </div>
@@ -71,14 +71,14 @@
           <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100 d-flex flex-column justify-content-between">
             <div>
               <span class="badge bg-danger bg-opacity-10 text-danger fw-semibold mb-2">
-                <i class="bi bi-arrow-up-right me-1"></i> TRAO ĐỔI TRI THỨC
+                <i class="bi bi-arrow-up-right me-1"></i> {{ _('TRAO ĐỔI TRI THỨC') }}
               </span>
-              <h5 class="fw-bold text-dark">Tổng giờ đã học</h5>
+              <h5 class="fw-bold text-dark">{{ _('Tổng giờ đã học') }}</h5>
               <div class="display-6 fw-bold text-danger my-2">-{{ "%.1f"|format(total_spent) }}h</div>
-              <p class="text-muted small mb-0">Thời lượng đã đổi lấy các buổi học kỹ năng từ bạn bè.</p>
+              <p class="text-muted small mb-0">{{ _('Thời lượng đã đổi lấy các buổi học kỹ năng từ bạn bè.') }}</p>
             </div>
             <div class="small text-danger pt-2 border-top mt-3">
-              <i class="bi bi-book me-1"></i> Mở rộng năng lực bản thân
+              <i class="bi bi-book me-1"></i> {{ _('Mở rộng năng lực bản thân') }}
             </div>
           </div>
         </div>
@@ -90,10 +90,10 @@
   <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
     <div class="card-header bg-white border-bottom py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
       <div>
-        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-journal-check me-2 text-primary"></i>Lịch Sử Biến Động Ví (Mới nhất trước)</h5>
-        <small class="text-muted">Nguyên tắc bất biến: Chỉ ghi nhận (INSERT), không sửa hay xóa</small>
+        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-journal-check me-2 text-primary"></i>{{ _('Lịch Sử Biến Động Ví (Mới nhất trước)') }}</h5>
+        <small class="text-muted">{{ _('Nguyên tắc bất biến: Chỉ ghi nhận (INSERT), không sửa hay xóa') }}</small>
       </div>
-      <span class="badge bg-light text-dark border">Tổng {{ ledger_entries|length }} giao dịch</span>
+      <span class="badge bg-light text-dark border">{{ _('Tổng') }} {{ ledger_entries|length }} {{ _('giao dịch') }}</span>
     </div>
 
     <div class="card-body p-0">
@@ -102,11 +102,11 @@
         <table class="table table-hover align-middle mb-0">
           <thead class="table-light small text-muted">
             <tr>
-              <th scope="col" class="ps-3">Mã GD</th>
-              <th scope="col">Thời gian</th>
-              <th scope="col">Lý do / Nội dung giao dịch</th>
-              <th scope="col">Phiên liên kết</th>
-              <th scope="col" class="text-end pe-3">Biến động</th>
+              <th scope="col" class="ps-3">{{ _('Mã GD') }}</th>
+              <th scope="col">{{ _('Thời gian') }}</th>
+              <th scope="col">{{ _('Lý do / Nội dung giao dịch') }}</th>
+              <th scope="col">{{ _('Phiên liên kết') }}</th>
+              <th scope="col" class="text-end pe-3">{{ _('Biến động') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -120,7 +120,7 @@
               <td>
                 {% if item.session_id %}
                   <a href="{{ url_for('session_detail', session_id=item.session_id) }}" class="badge bg-light text-primary border text-decoration-none">
-                    <i class="bi bi-box-arrow-up-right me-1"></i>Phiên #{{ item.session_id }}
+                    <i class="bi bi-box-arrow-up-right me-1"></i>{{ _('Phiên #') }}{{ item.session_id }}
                   </a>
                 {% else %}
                   <span class="text-muted small">—</span>
@@ -145,7 +145,7 @@
       {% else %}
       <div class="text-center py-5 text-muted">
         <i class="bi bi-receipt fs-1 d-block mb-2"></i>
-        Chưa có giao dịch tín dụng nào được ghi nhận.
+        {{ _('Chưa có giao dịch tín dụng nào được ghi nhận.') }}
       </div>
       {% endif %}
     </div>

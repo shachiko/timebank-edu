@@ -261,20 +261,20 @@
     <div class="circular-exchange-diagram-wrapper">
       <div class="row align-items-center g-4">
         <div class="col-lg-4 text-center text-lg-start">
-          <span class="badge bg-success text-white mb-2 px-3 py-1">VÍ DỤ VẬN HÀNH THỰC TẾ</span>
-          <h4 class="fw-bold text-dark mb-2">Vòng tròn tuần hoàn thời gian</h4>
+          <span class="badge bg-success text-white mb-2 px-3 py-1">{{ _('VÍ DỤ VẬN HÀNH THỰC TẾ') }}</span>
+          <h4 class="fw-bold text-dark mb-2">{{ _('Vòng tròn tuần hoàn thời gian') }}</h4>
           <p class="text-secondary small mb-3">
-            Minh chứng sống động cho nguyên lý: <em>"Bất kỳ ai cũng có điều gì đó để dạy, và luôn có điều gì đó cần học hỏi."</em>
+            {{ _('Minh chứng sống động cho nguyên lý:') }} <em>"{{ _('Bất kỳ ai cũng có điều gì đó để dạy, và luôn có điều gì đó cần học hỏi.') }}"</em>
           </p>
           <div class="p-3 bg-light rounded-3 small text-muted border">
             <i class="bi bi-arrow-repeat text-primary me-1 fs-6"></i>
-            Vòng lặp khép kín: <strong>An → Bình → Chi → An</strong>. Không một đồng tiền mặt nào phát sinh, chỉ có tri thức và tình bạn lan tỏa!
+            {{ _('Vòng lặp khép kín:') }} <strong>{{ _('An → Bình → Chi → An') }}</strong>. {{ _('Không một đồng tiền mặt nào phát sinh, chỉ có tri thức và tình bạn lan tỏa!') }}
           </div>
         </div>
 
         <div class="col-lg-8">
           <!-- Sơ đồ tròn SVG với mũi tên xoay vòng khép kín -->
-          <svg class="circular-flow-svg" viewBox="0 0 640 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sơ đồ vòng tròn trao đổi kỹ năng An Bình Chi">
+          <svg class="circular-flow-svg" viewBox="0 0 640 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="{{ _('Sơ đồ vòng tròn trao đổi kỹ năng An Bình Chi') }}">
             <defs>
               <marker id="arrow-orange" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                 <path d="M 0 1 L 10 5 L 0 9 z" fill="#F26522"/>
@@ -291,41 +291,41 @@
             <!-- 1. An -> Bình -->
             <path d="M 370 95 C 490 120 540 210 475 275" fill="none" stroke="#F26522" stroke-width="3.5" marker-end="url(#arrow-orange)" stroke-dasharray="8 4"/>
             <rect x="420" y="170" width="160" height="26" rx="13" fill="#FFF7ED" stroke="#FED7AA" stroke-width="1"/>
-            <text x="500" y="187" fill="#C2410C" font-size="11" font-weight="bold" text-anchor="middle">Dạy Toán ➔ Nhận +1.0h</text>
+            <text x="500" y="187" fill="#C2410C" font-size="11" font-weight="bold" text-anchor="middle">{{ _('Dạy Toán ➔ Nhận +1.0h') }}</text>
 
             <!-- 2. Bình -> Chi -->
             <path d="M 430 365 C 375 425 265 425 210 365" fill="none" stroke="#10B981" stroke-width="3.5" marker-end="url(#arrow-green)" stroke-dasharray="8 4"/>
             <rect x="240" y="405" width="160" height="26" rx="13" fill="#ECFDF5" stroke="#A7F3D0" stroke-width="1"/>
-            <text x="320" y="422" fill="#047857" font-size="11" font-weight="bold" text-anchor="middle">Dạy Guitar ➔ Nhận +1.0h</text>
+            <text x="320" y="422" fill="#047857" font-size="11" font-weight="bold" text-anchor="middle">{{ _('Dạy Guitar ➔ Nhận +1.0h') }}</text>
 
             <!-- 3. Chi -> An -->
             <path d="M 165 275 C 100 210 150 120 270 95" fill="none" stroke="#2563EB" stroke-width="3.5" marker-end="url(#arrow-blue)" stroke-dasharray="8 4"/>
             <rect x="60" y="170" width="160" height="26" rx="13" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1"/>
-            <text x="140" y="187" fill="#1D4ED8" font-size="11" font-weight="bold" text-anchor="middle">Dạy IELTS ➔ Nhận +1.0h</text>
+            <text x="140" y="187" fill="#1D4ED8" font-size="11" font-weight="bold" text-anchor="middle">{{ _('Dạy IELTS ➔ Nhận +1.0h') }}</text>
 
             <!-- Tâm vòng tròn: 0đ Tiền mặt - 100% Tri thức -->
             <circle cx="320" cy="240" r="54" fill="#FFFFFF" stroke="#1B2A6B" stroke-width="2" stroke-dasharray="4 2"/>
-            <text x="320" y="228" text-anchor="middle" font-size="11" font-weight="900" fill="#C2410C">0đ TIỀN MẶT</text>
-            <text x="320" y="245" text-anchor="middle" font-size="11" font-weight="800" fill="#1B2A6B">100% TRI THỨC</text>
-            <text x="320" y="260" text-anchor="middle" font-size="9" font-weight="600" fill="#64748B">VÒNG KHÉP KÍN</text>
+            <text x="320" y="228" text-anchor="middle" font-size="11" font-weight="900" fill="#C2410C">{{ _('0đ TIỀN MẶT') }}</text>
+            <text x="320" y="245" text-anchor="middle" font-size="11" font-weight="800" fill="#1B2A6B">{{ _('100% TRI THỨC') }}</text>
+            <text x="320" y="260" text-anchor="middle" font-size="9" font-weight="600" fill="#64748B">{{ _('VÒNG KHÉP KÍN') }}</text>
 
             <!-- Node 1: An (12A1) -->
             <circle cx="320" cy="85" r="44" fill="#EFF6FF" stroke="#2563EB" stroke-width="3"/>
             <text x="320" y="74" text-anchor="middle" font-size="13" font-weight="bold" fill="#1E40AF">An (12A1)</text>
-            <text x="320" y="91" text-anchor="middle" font-size="10.5" fill="#4B5563">Toán Hình học</text>
-            <text x="320" y="106" text-anchor="middle" font-size="10" font-weight="bold" fill="#2563EB">+1.0 giờ</text>
+            <text x="320" y="91" text-anchor="middle" font-size="10.5" fill="#4B5563">{{ _('Toán Hình học') }}</text>
+            <text x="320" y="106" text-anchor="middle" font-size="10" font-weight="bold" fill="#2563EB">{{ _('+1.0 giờ') }}</text>
 
             <!-- Node 2: Bình (11B2) -->
             <circle cx="465" cy="325" r="44" fill="#ECFDF5" stroke="#10B981" stroke-width="3"/>
             <text x="465" y="314" text-anchor="middle" font-size="13" font-weight="bold" fill="#065F46">Bình (11B2)</text>
-            <text x="465" y="331" text-anchor="middle" font-size="10.5" fill="#4B5563">Đàn Guitar</text>
-            <text x="465" y="346" text-anchor="middle" font-size="10" font-weight="bold" fill="#10B981">+1.0 giờ</text>
+            <text x="465" y="331" text-anchor="middle" font-size="10.5" fill="#4B5563">{{ _('Đàn Guitar') }}</text>
+            <text x="465" y="346" text-anchor="middle" font-size="10" font-weight="bold" fill="#10B981">{{ _('+1.0 giờ') }}</text>
 
             <!-- Node 3: Chi (10A3) -->
             <circle cx="175" cy="325" r="44" fill="#FFF7ED" stroke="#F26522" stroke-width="3"/>
             <text x="175" y="314" text-anchor="middle" font-size="13" font-weight="bold" fill="#9A3412">Chi (10A3)</text>
-            <text x="175" y="331" text-anchor="middle" font-size="10.5" fill="#4B5563">Tiếng Anh IELTS</text>
-            <text x="175" y="346" text-anchor="middle" font-size="10" font-weight="bold" fill="#F26522">+1.0 giờ</text>
+            <text x="175" y="331" text-anchor="middle" font-size="10.5" fill="#4B5563">{{ _('Tiếng Anh IELTS') }}</text>
+            <text x="175" y="346" text-anchor="middle" font-size="10" font-weight="bold" fill="#F26522">{{ _('+1.0 giờ') }}</text>
           </svg>
         </div>
       </div>
@@ -461,10 +461,10 @@
 
       <div class="col-lg-4 text-lg-end">
         <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center d-inline-block border-start border-4 border-danger">
-          <div class="text-muted small fw-medium"><i class="bi bi-clock-history text-danger me-1"></i>Tổng giờ công ích toàn trường</div>
+          <div class="text-muted small fw-medium"><i class="bi bi-clock-history text-danger me-1"></i>{{ _('Tổng giờ công ích toàn trường') }}</div>
           <div class="display-6 fw-bold text-danger my-1" id="totalCommunityHours">{{ community_stats.tong_gio_cong_ich }}h</div>
           <a href="{{ url_for('community_tasks_view') }}" class="btn btn-sm btn-outline-danger rounded-pill px-3 mt-1 fw-semibold">
-            <i class="bi bi-arrow-right me-1"></i> Tham gia ngay
+            <i class="bi bi-arrow-right me-1"></i> {{ _('Tham gia ngay') }}
           </a>
         </div>
       </div>
@@ -484,7 +484,7 @@
               {% else %}
                 <div class="task-cover-placeholder">
                   <i class="bi bi-heart-fill text-danger fs-3 mb-1"></i>
-                  <span class="task-placeholder-text">Hoạt động vì cộng đồng</span>
+                  <span class="task-placeholder-text">{{ _('Hoạt động vì cộng đồng') }}</span>
                 </div>
               {% endif %}
             </div>
@@ -493,29 +493,29 @@
               <div>
                 <div class="d-flex justify-content-between align-items-start mb-2">
                   <span class="badge bg-danger bg-opacity-10 text-danger fw-semibold px-2 py-1 rounded">
-                    <i class="bi bi-gift-fill me-1"></i>+{{ "%.1f"|format(task.so_gio_thuong) }}h thưởng
+                    <i class="bi bi-gift-fill me-1"></i>+{{ "%.1f"|format(task.so_gio_thuong) }}{{ _('h thưởng') }}
                   </span>
                   <span class="badge bg-light text-muted border small">
-                    {{ task.so_luong_da_dang_ky }}/{{ task.so_luong_toi_da }} bạn
+                    {{ task.so_luong_da_dang_ky }}/{{ task.so_luong_toi_da }} {{ _('bạn') }}
                   </span>
                 </div>
 
                 <h6 class="fw-bold text-dark mb-2">{{ task.tieu_de }}</h6>
                 <p class="text-muted small mb-2 text-truncate-2" style="min-height: 38px;">
-                  {{ task.mo_ta or 'Cùng thầy cô và bạn bè tham gia hoạt động cống hiến cho nhà trường và xã hội.' }}
+                  {{ task.mo_ta or _('Cùng thầy cô và bạn bè tham gia hoạt động cống hiến cho nhà trường và xã hội.') }}
                 </p>
 
                 <div class="small text-muted mb-1">
-                  <i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ task.dia_diem or 'Tại trường học' }}
+                  <i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ task.dia_diem or _('Tại trường học') }}
                 </div>
                 <div class="small text-muted mb-3">
-                  <i class="bi bi-calendar-event text-primary me-1"></i>Hạn đăng ký: <strong>{{ task.han_dang_ky or 'Đang mở' }}</strong>
+                  <i class="bi bi-calendar-event text-primary me-1"></i>{{ _('Hạn đăng ký:') }} <strong>{{ task.han_dang_ky or _('Đang mở') }}</strong>
                 </div>
               </div>
 
               <div class="pt-2 border-top">
                 <a href="{{ url_for('community_tasks_view') }}" class="btn btn-sm btn-outline-danger w-100 rounded-pill fw-semibold">
-                  <i class="bi bi-pencil-square me-1"></i> Chi tiết & Đăng ký
+                  <i class="bi bi-pencil-square me-1"></i> {{ _('Chi tiết & Đăng ký') }}
                 </a>
               </div>
             </div>
@@ -524,14 +524,14 @@
         {% endfor %}
       {% else %}
         <div class="col-12 text-center py-4 text-muted">
-          <p>Hiện chưa có nhiệm vụ nào được mở. Vui lòng quay lại sau.</p>
+          <p>{{ _('Hiện chưa có nhiệm vụ nào được mở. Vui lòng quay lại sau.') }}</p>
         </div>
       {% endif %}
     </div>
 
     <div class="text-center mt-4">
       <a href="{{ url_for('community_tasks_view') }}" class="btn btn-brand px-4 py-2 rounded-pill fw-semibold shadow-sm">
-        <i class="bi bi-grid-fill me-1"></i> Khám phá tất cả nhiệm vụ Vì cộng đồng
+        <i class="bi bi-grid-fill me-1"></i> {{ _('Khám phá tất cả nhiệm vụ Vì cộng đồng') }}
       </a>
     </div>
   </div>
@@ -546,9 +546,9 @@
     <!-- Danh sách các trường tham gia hệ thống từ CSDL -->
     <div class="mb-5 pb-3 border-bottom">
       <div class="text-center max-w-700 mx-auto mb-4">
-        <span class="badge bg-warning text-dark fw-bold px-3 py-2 rounded-pill mb-2"><i class="bi bi-buildings-fill me-1"></i> HỆ THỐNG ĐA TRƯỜNG HỌC</span>
-        <h3 class="fw-bold">Các Trường Học Tham Gia Thí Điểm & Triển Khai</h3>
-        <p class="text-muted small">Không gian trao đổi kỹ năng học đường được cá nhân hóa và quản trị độc lập cho từng trường.</p>
+        <span class="badge bg-warning text-dark fw-bold px-3 py-2 rounded-pill mb-2"><i class="bi bi-buildings-fill me-1"></i> {{ _('HỆ THỐNG ĐA TRƯỜNG HỌC') }}</span>
+        <h3 class="fw-bold">{{ _('Các Trường Học Tham Gia Thí Điểm & Triển Khai') }}</h3>
+        <p class="text-muted small">{{ _('Không gian trao đổi kỹ năng học đường được cá nhân hóa và quản trị độc lập cho từng trường.') }}</p>
       </div>
 
       <div class="row g-3">
@@ -559,9 +559,9 @@
               <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="badge {{ 'bg-success bg-opacity-10 text-success' if s.trang_thai == 'dang_thi_diem' else 'bg-warning bg-opacity-10 text-warning-emphasis' }} fw-bold">
                   <i class="bi {{ 'bi-broadcast' if s.trang_thai == 'dang_thi_diem' else 'bi-clock-history' }} me-1"></i>
-                  {{ 'Đang thí điểm' if s.trang_thai == 'dang_thi_diem' else 'Chuẩn bị triển khai' }}
+                  {{ _('Đang thí điểm') if s.trang_thai == 'dang_thi_diem' else _('Chuẩn bị triển khai') }}
                 </span>
-                <small class="text-muted">Trường #{{ s.id }}</small>
+                <small class="text-muted">{{ _('Trường') }} #{{ s.id }}</small>
               </div>
 
               <!-- Vị trí logo thật hoặc tên trường nổi bật trang nhã -->
@@ -580,10 +580,10 @@
                 {{ s.ten_truong }}
               </h6>
               <p class="small text-muted mb-0">
-                {% if s.id == 1 %}Trường Quốc tế Song ngữ UKA Academy Hạ Long — Tiên phong thí điểm trao đổi tín dụng thời gian học đường.
-                {% elif s.id == 2 %}Đơn vị giáo dục kết nối phong trào Đôi bạn cùng tiến và kèm cặp môn học.
-                {% elif s.id == 3 %}Đơn vị trường học tiếp nhận chuyển giao mô hình chia sẻ năng khiếu và kỹ năng số.
-                {% else %}Lan tỏa tri thức và ngân hàng thời gian tới học sinh vùng hải đảo Quảng Ninh.
+                {% if s.id == 1 %}{{ _('Trường Quốc tế Song ngữ UKA Academy Hạ Long — Tiên phong thí điểm trao đổi tín dụng thời gian học đường.') }}
+                {% elif s.id == 2 %}{{ _('Đơn vị giáo dục kết nối phong trào Đôi bạn cùng tiến và kèm cặp môn học.') }}
+                {% elif s.id == 3 %}{{ _('Đơn vị trường học tiếp nhận chuyển giao mô hình chia sẻ năng khiếu và kỹ năng số.') }}
+                {% else %}{{ _('Lan tỏa tri thức và ngân hàng thời gian tới học sinh vùng hải đảo Quảng Ninh.') }}
                 {% endif %}
               </p>
             </div>
@@ -594,14 +594,14 @@
           <div class="col-md-6 col-lg-3">
             <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100 border-top border-4 border-success">
               <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="badge bg-success bg-opacity-10 text-success fw-bold"><i class="bi bi-broadcast me-1"></i>Đang thí điểm</span>
-                <small class="text-muted">Trường #1</small>
+                <span class="badge bg-success bg-opacity-10 text-success fw-bold"><i class="bi bi-broadcast me-1"></i>{{ _('Đang thí điểm') }}</span>
+                <small class="text-muted">{{ _('Trường') }} #1</small>
               </div>
               <div class="school-logo-frame mb-3 text-center">
                 <div class="school-logo-fallback"><i class="bi bi-buildings-fill text-primary me-1"></i>UKA Academy Hạ Long</div>
               </div>
               <h6 class="fw-bold text-dark mb-2">Trường Quốc tế Song ngữ UKA Academy Hạ Long</h6>
-              <p class="small text-muted mb-0">Tiên phong thí điểm trao đổi tín dụng thời gian học đường.</p>
+              <p class="small text-muted mb-0">{{ _('Tiên phong thí điểm trao đổi tín dụng thời gian học đường.') }}</p>
             </div>
           </div>
         {% endif %}
@@ -610,35 +610,34 @@
 
     <div class="row g-5 align-items-center">
       <div class="col-lg-6">
-        <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold px-3 py-2 rounded-pill mb-3">Dành cho nhà trường</span>
-        <h2 class="fw-bold display-6 mb-3">Giải pháp sư phạm độc lập cho từng trường học</h2>
+        <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold px-3 py-2 rounded-pill mb-3">{{ _('Dành cho nhà trường') }}</span>
+        <h2 class="fw-bold display-6 mb-3">{{ _('Giải pháp sư phạm độc lập cho từng trường học') }}</h2>
         <p class="text-secondary">
-          TimeBank EDU được thiết kế theo kiến trúc vận hành độc lập — Mỗi trường học sở hữu một không gian riêng biệt, 
-          cơ sở dữ liệu an toàn tại chỗ, tuyệt đối bảo vệ dữ liệu học sinh theo quy định của Bộ GD&ĐT.
+          {{ _('TimeBank EDU được thiết kế theo kiến trúc vận hành độc lập — Mỗi trường học sở hữu một không gian riêng biệt, cơ sở dữ liệu an toàn tại chỗ, tuyệt đối bảo vệ dữ liệu học sinh theo quy định của Bộ GD&ĐT.') }}
         </p>
 
         <div class="mt-4">
           <div class="school-benefit-item">
             <div class="benefit-icon"><i class="bi bi-sliders"></i></div>
             <div>
-              <h6 class="fw-bold mb-1">Chuyển giao và cài đặt dữ liệu cho các trường chỉ 5 phút</h6>
-              <p class="small text-muted mb-0">Dễ dàng tùy chỉnh logo, màu sắc và thông điệp riêng để biến hệ thống thành phiên bản độc quyền của trường bạn.</p>
+              <h6 class="fw-bold mb-1">{{ _('Chuyển giao và cài đặt dữ liệu cho các trường chỉ 5 phút') }}</h6>
+              <p class="small text-muted mb-0">{{ _('Dễ dàng tùy chỉnh logo, màu sắc và thông điệp riêng để biến hệ thống thành phiên bản độc quyền của trường bạn.') }}</p>
             </div>
           </div>
 
           <div class="school-benefit-item">
             <div class="benefit-icon"><i class="bi bi-heart-pulse-fill text-danger"></i></div>
             <div>
-              <h6 class="fw-bold mb-1">Phòng chống bạo lực học đường qua kết nối bạn bè</h6>
-              <p class="small text-muted mb-0">Học sinh tăng cường tương tác lành mạnh, xóa bỏ rào cản khối lớp qua các buổi trao đổi kỹ năng tích cực.</p>
+              <h6 class="fw-bold mb-1">{{ _('Phòng chống bạo lực học đường qua kết nối bạn bè') }}</h6>
+              <p class="small text-muted mb-0">{{ _('Học sinh tăng cường tương tác lành mạnh, xóa bỏ rào cản khối lớp qua các buổi trao đổi kỹ năng tích cực.') }}</p>
             </div>
           </div>
 
           <div class="school-benefit-item">
             <div class="benefit-icon"><i class="bi bi-robot text-primary"></i></div>
             <div>
-              <h6 class="fw-bold mb-1">Tích hợp Trợ lý AI (Trí tuệ nhân tạo) sư phạm</h6>
-              <p class="small text-muted mb-0">Hỗ trợ kiểm duyệt nội dung kỹ năng, soạn dàn ý bài học chuẩn kiến thức và tạo câu hỏi lượng giá tự động.</p>
+              <h6 class="fw-bold mb-1">{{ _('Tích hợp Trợ lý AI (Trí tuệ nhân tạo) sư phạm') }}</h6>
+              <p class="small text-muted mb-0">{{ _('Hỗ trợ kiểm duyệt nội dung kỹ năng, soạn dàn ý bài học chuẩn kiến thức và tạo câu hỏi lượng giá tự động.') }}</p>
             </div>
           </div>
         </div>
@@ -646,44 +645,44 @@
 
       <div class="col-lg-6">
         <div class="card border-0 shadow-lg rounded-4 p-4 p-md-5">
-          <h4 class="fw-bold text-dark mb-2">Đăng ký tư vấn triển khai</h4>
-          <p class="text-muted small mb-4">Dành cho Ban Giám hiệu, Đoàn Thanh niên hoặc Giáo viên chủ nhiệm muốn áp dụng mô hình tại trường.</p>
+          <h4 class="fw-bold text-dark mb-2">{{ _('Đăng ký tư vấn triển khai') }}</h4>
+          <p class="text-muted small mb-4">{{ _('Dành cho Ban Giám hiệu, Đoàn Thanh niên hoặc Giáo viên chủ nhiệm muốn áp dụng mô hình tại trường.') }}</p>
 
           <form id="contactForm" onsubmit="handleContactSubmit(event)">
             <div class="mb-3">
-              <label class="form-label small fw-semibold">Tên trường học / Đơn vị <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" id="tenTruongInput" placeholder="Ví dụ: THPT Lê Quý Đôn" required>
+              <label class="form-label small fw-semibold">{{ _('Tên trường học / Đơn vị') }} <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="tenTruongInput" placeholder="{{ _('Ví dụ: THPT Lê Quý Đôn') }}" required>
             </div>
 
             <div class="row g-2 mb-3">
               <div class="col-md-6">
-                <label class="form-label small fw-semibold">Họ tên đại diện <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" id="hoTenInput" placeholder="Thầy/Cô..." required>
+                <label class="form-label small fw-semibold">{{ _('Họ tên đại diện') }} <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="hoTenInput" placeholder="{{ _('Thầy/Cô...') }}" required>
               </div>
               <div class="col-md-6">
-                <label class="form-label small fw-semibold">Số điện thoại / Zalo <span class="text-danger">*</span></label>
+                <label class="form-label small fw-semibold">{{ _('Số điện thoại / Zalo') }} <span class="text-danger">*</span></label>
                 <input type="tel" class="form-control" id="sdtInput" placeholder="09xxxxxxx" required>
               </div>
             </div>
 
             <div class="mb-3">
-              <label class="form-label small fw-semibold">Email công vụ / Liên hệ</label>
+              <label class="form-label small fw-semibold">{{ _('Email công vụ / Liên hệ') }}</label>
               <input type="email" class="form-control" id="emailInput" placeholder="giaovien@truong.edu.vn">
             </div>
 
             <div class="mb-4">
-              <label class="form-label small fw-semibold">Nhu cầu triển khai</label>
-              <textarea class="form-control" id="ghiChuInput" rows="3" placeholder="Mong muốn tổ chức CLB Ngân hàng Thời gian hoặc thử nghiệm tại khối lớp..."></textarea>
+              <label class="form-label small fw-semibold">{{ _('Nhu cầu triển khai') }}</label>
+              <textarea class="form-control" id="ghiChuInput" rows="3" placeholder="{{ _('Mong muốn tổ chức CLB Ngân hàng Thời gian hoặc thử nghiệm tại khối lớp...') }}"></textarea>
             </div>
 
             <button type="submit" class="btn btn-brand w-100 py-2 fw-semibold">
-              <i class="bi bi-send-fill me-1"></i> Gửi thông tin liên hệ
+              <i class="bi bi-send-fill me-1"></i> {{ _('Gửi thông tin liên hệ') }}
             </button>
           </form>
 
           <div id="contactSuccessAlert" class="alert alert-success d-none mt-3 mb-0 small" role="alert">
             <i class="bi bi-check-circle-fill me-2"></i>
-            <strong>Gửi thành công!</strong> Ban đề án TimeBank EDU đã tiếp nhận thông tin và sẽ liên hệ hỗ trợ nhà trường trong 24 giờ.
+            <strong>{{ _('Gửi thành công!') }}</strong> {{ _('Ban đề án TimeBank EDU đã tiếp nhận thông tin và sẽ liên hệ hỗ trợ nhà trường trong 24 giờ.') }}
           </div>
         </div>
       </div>
@@ -707,12 +706,12 @@
     const ghiChu = document.getElementById('ghiChuInput').value.trim();
     
     if (!tenTruong || !hoTen || !sdt) {
-      alert("Vui lòng điền đầy đủ Tên trường, Họ tên đại diện và Số điện thoại!");
+      alert("{{ _('Vui lòng điền đầy đủ Tên trường, Họ tên đại diện và Số điện thoại!') }}");
       return;
     }
 
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Đang gửi thông tin...';
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>{{ _('Đang gửi thông tin...') }}';
 
     try {
       const response = await fetch('/api/contact-consultation', {
@@ -739,13 +738,13 @@
           <div class="d-flex align-items-start gap-2">
             <i class="bi bi-check-circle-fill fs-5 text-success"></i>
             <div>
-              <strong class="d-block mb-1">Đã tiếp nhận thành công!</strong>
-              <span>Cảm ơn Thầy/Cô <strong>${hoTen}</strong> (${tenTruong}). Ban đề án TimeBank EDU đã lưu thông tin và sẽ liên hệ hỗ trợ phương án chuyển giao trong thời gian sớm nhất!</span>
+              <strong class="d-block mb-1">{{ _('Đã tiếp nhận thành công!') }}</strong>
+              <span>{{ _('Cảm ơn Thầy/Cô') }} <strong>${hoTen}</strong> (${tenTruong}). {{ _('Ban đề án TimeBank EDU đã lưu thông tin và sẽ liên hệ hỗ trợ phương án chuyển giao trong thời gian sớm nhất!') }}</span>
             </div>
           </div>
         `;
       } else {
-        alert(result.message || "Có lỗi xảy ra khi gửi thông tin liên hệ. Vui lòng thử lại!");
+        alert(result.message || "{{ _('Có lỗi xảy ra khi gửi thông tin liên hệ. Vui lòng thử lại!') }}");
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalBtnText;
       }
@@ -753,7 +752,7 @@
       console.error("Lỗi gửi thông tin tư vấn:", err);
       submitBtn.disabled = false;
       submitBtn.innerHTML = originalBtnText;
-      alert("Không thể kết nối máy chủ. Vui lòng kiểm tra lại kết nối mạng!");
+      alert("{{ _('Không thể kết nối máy chủ. Vui lòng kiểm tra lại kết nối mạng!') }}");
     }
   }
 </script>

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Điểm danh hoạt động Vì cộng đồng - {{ config.ten_truong }}{% endblock %}
+{% block title %}{{ _('Điểm danh hoạt động Vì cộng đồng - {{ config.ten_truong }}') }}{% endblock %}
 
 {% block content %}
 <div class="container py-4">
@@ -8,8 +8,8 @@
   <!-- Breadcrumb điều hướng -->
   <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb small">
-      <li class="breadcrumb-item"><a href="{{ url_for('community_tasks_view') }}" class="text-decoration-none">Vì cộng đồng</a></li>
-      <li class="breadcrumb-item active" aria-current="page">Điểm danh hoạt động</li>
+      <li class="breadcrumb-item"><a href="{{ url_for('community_tasks_view') }}" class="text-decoration-none">{{ _('Vì cộng đồng') }}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ _('Điểm danh hoạt động') }}</li>
     </ol>
   </nav>
 
@@ -19,17 +19,17 @@
       <div>
         <div class="d-flex align-items-center gap-2 mb-2">
           <span class="badge bg-danger bg-opacity-10 text-danger fw-semibold px-3 py-1 rounded-pill">
-            <i class="bi bi-gift-fill me-1"></i>Thưởng +{{ "%.1f"|format(task.so_gio_thuong) }} giờ / bạn
+            <i class="bi bi-gift-fill me-1"></i>{{ _('Thưởng') }} +{{ "%.1f"|format(task.so_gio_thuong) }} {{ _('giờ / bạn') }}
           </span>
           <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold px-3 py-1 rounded-pill">
-            Trạng thái: {{ task.trang_thai }}
+            {{ _('Trạng thái:') }} {{ task.trang_thai }}
           </span>
         </div>
         <h2 class="h3 fw-bold text-dark mb-1">{{ task.tieu_de }}</h2>
         <div class="text-muted small">
-          <i class="bi bi-geo-alt-fill text-danger me-1"></i>Địa điểm: <strong>{{ task.dia_diem or 'Tại trường' }}</strong> •
-          <i class="bi bi-calendar-event text-primary ms-2 me-1"></i>Hạn đăng ký: <strong>{{ task.han_dang_ky or 'Không có' }}</strong> •
-          <i class="bi bi-people-fill text-success ms-2 me-1"></i>Đăng ký: <strong>{{ registrations|length }} / {{ task.so_luong_toi_da }} bạn</strong>
+          <i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ _('Địa điểm:') }}<strong>{{ task.dia_diem or _('Tại trường') }}</strong> •
+          <i class="bi bi-calendar-event text-primary ms-2 me-1"></i>{{ _('Hạn đăng ký:') }}<strong>{{ task.han_dang_ky or _('Không có') }}</strong> •
+          <i class="bi bi-people-fill text-success ms-2 me-1"></i>{{ _('Đăng ký:') }}<strong>{{ registrations|length }} / {{ task.so_luong_toi_da }} {{ _('bạn') }}</strong>
         </div>
         {% if task.mo_ta %}
         <p class="text-muted small mt-2 mb-0">{{ task.mo_ta }}</p>
@@ -38,7 +38,7 @@
 
       <div>
         <a href="{{ url_for('community_tasks_view') }}" class="btn btn-outline-secondary rounded-pill px-3">
-          <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
+          <i class="bi bi-arrow-left me-1"></i> {{ _('Quay lại danh sách') }}
         </a>
       </div>
     </div>
@@ -48,10 +48,10 @@
   <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
     <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
       <h5 class="fw-bold text-dark mb-0">
-        <i class="bi bi-card-checklist text-primary me-2"></i>Danh sách học sinh đăng ký tham gia ({{ registrations|length }})
+        <i class="bi bi-card-checklist text-primary me-2"></i>{{ _('Danh sách học sinh đăng ký tham gia') }} ({{ registrations|length }})
       </h5>
       <span class="text-muted small">
-        <i class="bi bi-info-circle me-1"></i>Điểm danh 'Hoàn thành' sẽ cộng đúng <strong>+{{ "%.1f"|format(task.so_gio_thuong) }}h</strong> vào ví học sinh
+        <i class="bi bi-info-circle me-1"></i>{{ _('Điểm danh \'Hoàn thành\' sẽ cộng đúng') }}<strong>+{{ "%.1f"|format(task.so_gio_thuong) }}h</strong> {{ _('vào ví học sinh') }}
       </span>
     </div>
 
@@ -62,12 +62,12 @@
           <thead class="table-light small text-uppercase text-muted">
             <tr>
               <th class="ps-4" style="width: 50px;">STT</th>
-              <th>Mã HS</th>
-              <th>Họ và tên</th>
-              <th>Lớp</th>
-              <th>Số dư ví</th>
-              <th>Trạng thái hiện tại</th>
-              <th class="text-center" style="width: 280px;">Kết quả điểm danh</th>
+              <th>{{ _('Mã HS') }}</th>
+              <th>{{ _('Họ và tên') }}</th>
+              <th>{{ _('Lớp') }}</th>
+              <th>{{ _('Số dư ví') }}</th>
+              <th>{{ _('Trạng thái hiện tại') }}</th>
+              <th class="text-center" style="width: 280px;">{{ _('Kết quả điểm danh') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -80,23 +80,23 @@
               <td><span class="badge bg-success bg-opacity-10 text-success fw-bold">{{ "%.1f"|format(reg.so_du_gio) }}h</span></td>
               <td>
                 {% if reg.trang_thai == 'hoan_thanh' %}
-                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Đã hoàn thành (+{{ "%.1f"|format(task.so_gio_thuong) }}h)</span>
+                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>{{ _('Đã hoàn thành') }} (+{{ "%.1f"|format(task.so_gio_thuong) }}h)</span>
                 {% elif reg.trang_thai == 'vang_mat' %}
-                <span class="badge bg-secondary"><i class="bi bi-x-circle me-1"></i>Vắng mặt (0h)</span>
+                <span class="badge bg-secondary"><i class="bi bi-x-circle me-1"></i>{{ _('Vắng mặt (0h)') }}</span>
                 {% else %}
-                <span class="badge bg-info text-dark"><i class="bi bi-clock me-1"></i>Đã đăng ký (Chờ điểm danh)</span>
+                <span class="badge bg-info text-dark"><i class="bi bi-clock me-1"></i>{{ _('Đã đăng ký (Chờ điểm danh)') }}</span>
                 {% endif %}
               </td>
               <td class="text-center">
                 <div class="btn-group btn-group-sm w-100" role="group" aria-label="Attendance option">
                   <input type="radio" class="btn-check" name="status_{{ reg.id }}" id="ht_{{ reg.id }}" value="hoan_thanh" {% if reg.trang_thai == 'hoan_thanh' %}checked{% endif %}>
                   <label class="btn btn-outline-success" for="ht_{{ reg.id }}">
-                    <i class="bi bi-check-lg me-1"></i> Hoàn thành
+                    <i class="bi bi-check-lg me-1"></i> {{ _('Hoàn thành') }}
                   </label>
 
                   <input type="radio" class="btn-check" name="status_{{ reg.id }}" id="vm_{{ reg.id }}" value="vang_mat" {% if reg.trang_thai == 'vang_mat' %}checked{% endif %}>
                   <label class="btn btn-outline-secondary" for="vm_{{ reg.id }}">
-                    <i class="bi bi-x-lg me-1"></i> Vắng mặt
+                    <i class="bi bi-x-lg me-1"></i> {{ _('Vắng mặt') }}
                   </label>
                 </div>
               </td>
@@ -110,13 +110,13 @@
         <div class="form-check">
           <input class="form-check-input" type="checkbox" name="hoan_thanh_nhiem_vu" value="1" id="closeTaskCheck" {% if task.trang_thai == 'hoan_thanh' %}checked{% endif %}>
           <label class="form-check-label small text-muted" for="closeTaskCheck">
-            Đánh dấu kết thúc toàn bộ hoạt động (chuyển trạng thái sang 'hoan_thanh')
+            {{ _('Đánh dấu kết thúc toàn bộ hoạt động (chuyển trạng thái sang \'hoan_thanh\')') }}
           </label>
         </div>
 
         <div>
           <button type="submit" class="btn btn-brand px-4 py-2 fw-semibold rounded-pill">
-            <i class="bi bi-check-circle-fill me-1"></i> Lưu kết quả & Cộng giờ thưởng
+            <i class="bi bi-check-circle-fill me-1"></i> {{ _('Lưu kết quả & Cộng giờ thưởng') }}
           </button>
         </div>
       </div>
@@ -124,8 +124,8 @@
     {% else %}
     <div class="p-5 text-center text-muted">
       <i class="bi bi-people fs-1 text-muted mb-2"></i>
-      <h6 class="fw-bold">Chưa có học sinh nào đăng ký tham gia nhiệm vụ này</h6>
-      <p class="small mb-0">Học sinh có thể đăng ký tại trang 'Vì cộng đồng'.</p>
+      <h6 class="fw-bold">{{ _('Chưa có học sinh nào đăng ký tham gia nhiệm vụ này') }}</h6>
+      <p class="small mb-0">{{ _('Học sinh có thể đăng ký tại trang \'Vì cộng đồng\'.') }}</p>
     </div>
     {% endif %}
   </div>

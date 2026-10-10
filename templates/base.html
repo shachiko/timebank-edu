@@ -420,7 +420,7 @@
     function handleDemoLogin(e) {
       e.preventDefault();
       const code = document.getElementById('demoStudentId').value.trim();
-      alert(`Xin chào học sinh mang mã [${code}] của ${ {{ config.ten_truong | tojson }} }! Hệ thống đã ghi nhận. Tính năng dashboard cá nhân sẽ mở đầy đủ tại các milestone tiếp theo.`);
+      alert("{{ _('Xin chào học sinh mang mã [') }}" + code + "{{ _(']! Hệ thống đã ghi nhận. Tính năng dashboard cá nhân sẽ mở đầy đủ tại các milestone tiếp theo.') }}");
       const modal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
       if (modal) modal.hide();
     }
@@ -495,16 +495,16 @@
           <i class="bi bi-lightbulb text-warning me-1"></i>{{ _('Gợi ý câu hỏi nhanh:') }}
         </div>
         <div class="d-flex flex-wrap gap-1">
-          <button type="button" class="btn btn-outline-primary btn-sm py-0 px-2 rounded-pill" style="font-size: 0.75rem;" onclick="sendQuickPrompt('Tôi còn bao nhiêu giờ?')">
+          <button type="button" class="btn btn-outline-primary btn-sm py-0 px-2 rounded-pill" style="font-size: 0.75rem;" onclick="sendQuickPrompt('{{ _('Tôi còn bao nhiêu giờ?') }}')">
             {{ _('Tôi còn bao nhiêu giờ?') }}
           </button>
-          <button type="button" class="btn btn-outline-primary btn-sm py-0 px-2 rounded-pill" style="font-size: 0.75rem;" onclick="sendQuickPrompt('Lịch học sắp tới của tôi?')">
+          <button type="button" class="btn btn-outline-primary btn-sm py-0 px-2 rounded-pill" style="font-size: 0.75rem;" onclick="sendQuickPrompt('{{ _('Lịch học sắp tới của tôi?') }}')">
             {{ _('Lịch học sắp tới của tôi?') }}
           </button>
-          <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2 rounded-pill" style="font-size: 0.75rem;" onclick="sendQuickPrompt('Làm sao đăng kỹ năng?')">
+          <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2 rounded-pill" style="font-size: 0.75rem;" onclick="sendQuickPrompt('{{ _('Làm sao đăng kỹ năng?') }}')">
             {{ _('Làm sao đăng kỹ năng?') }}
           </button>
-          <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2 rounded-pill" style="font-size: 0.75rem;" onclick="sendQuickPrompt('Gợi ý lộ trình học Toán trong 4 tuần?')">
+          <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2 rounded-pill" style="font-size: 0.75rem;" onclick="sendQuickPrompt('{{ _('Gợi ý lộ trình học Toán trong 4 tuần?') }}')">
             {{ _('Gợi ý lộ trình học Toán trong 4 tuần?') }}
           </button>
         </div>
@@ -704,11 +704,11 @@
         if (data.success) {
           appendMessageBubble('assistant', data.reply);
         } else {
-          appendMessageBubble('assistant', 'Rất tiếc, đã có lỗi xảy ra: ' + (data.error || 'Vui lòng thử lại.'));
+          appendMessageBubble('assistant', '{{ _('Rất tiếc, đã có lỗi xảy ra: ') }}' + (data.error || '{{ _('Vui lòng thử lại.') }}'));
         }
       } catch (err) {
         typing.classList.add('d-none');
-        appendMessageBubble('assistant', 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng!');
+        appendMessageBubble('assistant', '{{ _('Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng!') }}');
       } finally {
         input.disabled = false;
         document.getElementById('aiChatSendBtn').disabled = false;
@@ -719,7 +719,7 @@
 
     // Làm mới / Xóa cuộc trò chuyện
     async function clearAiChat() {
-      if (confirm('Bạn có muốn làm mới cuộc trò chuyện với Trợ lý AI không?')) {
+      if (confirm('{{ _('Bạn có muốn làm mới cuộc trò chuyện với Trợ lý AI không?') }}')) {
         try {
           await fetch('/api/chat/clear', { method: 'POST' });
           document.getElementById('aiChatMessagesList').innerHTML = '';

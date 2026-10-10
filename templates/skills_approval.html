@@ -1,24 +1,24 @@
 {% extends "base.html" %}
 
-{% block title %}Duyệt kỹ năng học sinh - {{ config.ten_truong }}{% endblock %}
+{% block title %}{{ _('Duyệt kỹ năng học sinh - {{ config.ten_truong }}') }}{% endblock %}
 
 {% block content %}
 <div class="container py-4">
   <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
     <div>
-      <span class="badge bg-primary mb-1"><i class="bi bi-mortarboard-fill me-1"></i> Quyền Giáo viên & Quản trị viên</span>
-      <h2 class="fw-bold mb-0 text-dark">Kiểm duyệt Kỹ năng Học đường</h2>
-      <p class="text-muted small mb-0">Thầy/Cô thẩm định nội dung học sinh đăng ký chia sẻ trước khi kết nối</p>
+      <span class="badge bg-primary mb-1"><i class="bi bi-mortarboard-fill me-1"></i> {{ _('Quyền Giáo viên & Quản trị viên') }}</span>
+      <h2 class="fw-bold mb-0 text-dark">{{ _('Kiểm duyệt Kỹ năng Học đường') }}</h2>
+      <p class="text-muted small mb-0">{{ _('Thầy/Cô thẩm định nội dung học sinh đăng ký chia sẻ trước khi kết nối') }}</p>
     </div>
     <div>
-      <span class="badge-ai"><i class="bi bi-stars"></i> Kiểm duyệt sơ bộ bởi AI (Trí tuệ nhân tạo)</span>
+      <span class="badge-ai"><i class="bi bi-stars"></i> {{ _('Kiểm duyệt sơ bộ bởi AI (Trí tuệ nhân tạo)') }}</span>
     </div>
   </div>
 
   <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
     <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-      <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-list-check me-2 text-primary"></i>Danh sách Kỹ năng Đăng ký</h5>
-      <span class="badge bg-light text-dark border">Tổng số: {{ skills|length }}</span>
+      <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-list-check me-2 text-primary"></i>{{ _('Danh sách Kỹ năng Đăng ký') }}</h5>
+      <span class="badge bg-light text-dark border">{{ _('Tổng số:') }} {{ skills|length }}</span>
     </div>
 
     <div class="card-body p-0">
@@ -28,11 +28,11 @@
           <thead class="table-light small text-muted">
             <tr>
               <th scope="col" class="ps-3">ID</th>
-              <th scope="col">Học sinh đăng ký</th>
-              <th scope="col">Lĩnh vực & Tiêu đề</th>
-              <th scope="col">Lý do gợi ý từ AI</th>
-              <th scope="col">Trạng thái</th>
-              <th scope="col" class="text-end pe-3">Thao tác duyệt</th>
+              <th scope="col">{{ _('Học sinh đăng ký') }}</th>
+              <th scope="col">{{ _('Lĩnh vực & Tiêu đề') }}</th>
+              <th scope="col">{{ _('Lý do gợi ý từ AI') }}</th>
+              <th scope="col">{{ _('Trạng thái') }}</th>
+              <th scope="col" class="text-end pe-3">{{ _('Thao tác duyệt') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -41,7 +41,7 @@
               <td class="ps-3 small text-muted">#{{ item.id }}</td>
               <td>
                 <span class="fw-semibold text-dark d-block">{{ item.ho_ten }}</span>
-                <small class="text-muted">Mã: <code>{{ item.ma_hoc_sinh }}</code> • Lớp: {{ item.lop }}</small>
+                <small class="text-muted">{{ _('Mã:') }}<code>{{ item.ma_hoc_sinh }}</code> • {{ _('Lớp:') }} {{ item.lop }}</small>
               </td>
               <td>
                 <span class="badge bg-light text-secondary border mb-1">{{ item.linh_vuc }}</span>
@@ -54,28 +54,28 @@
                     <i class="bi bi-robot text-primary me-1"></i>{{ item.ly_do_ai_kiem_duyet }}
                   </div>
                 {% else %}
-                  <span class="small text-muted fst-italic">Chưa có đánh giá</span>
+                  <span class="small text-muted fst-italic">{{ _('Chưa có đánh giá') }}</span>
                 {% endif %}
               </td>
               <td>
                 {% if item.trang_thai_duyet == 'da_duyet' %}
-                  <span class="badge-status-approved small"><i class="bi bi-patch-check-fill me-1"></i>Đã duyệt</span>
+                  <span class="badge-status-approved small"><i class="bi bi-patch-check-fill me-1"></i>{{ _('Đã duyệt') }}</span>
                 {% elif item.trang_thai_duyet == 'tu_choi' %}
-                  <span class="badge bg-danger">Từ chối</span>
+                  <span class="badge bg-danger">{{ _('Từ chối') }}</span>
                 {% else %}
-                  <span class="badge bg-warning text-dark">Chờ duyệt</span>
+                  <span class="badge bg-warning text-dark">{{ _('Chờ duyệt') }}</span>
                 {% endif %}
               </td>
               <td class="text-end pe-3">
                 <div class="btn-group btn-group-sm" role="group">
                   <form method="POST" action="{{ url_for('approve_skill_action', skill_id=item.id, action='da_duyet') }}" class="d-inline">
                     <button type="submit" class="btn btn-outline-success btn-sm me-1" {% if item.trang_thai_duyet == 'da_duyet' %}disabled{% endif %}>
-                      <i class="bi bi-check-lg"></i> Duyệt
+                      <i class="bi bi-check-lg"></i> {{ _('Duyệt') }}
                     </button>
                   </form>
                   <form method="POST" action="{{ url_for('approve_skill_action', skill_id=item.id, action='tu_choi') }}" class="d-inline">
                     <button type="submit" class="btn btn-outline-danger btn-sm" {% if item.trang_thai_duyet == 'tu_choi' %}disabled{% endif %}>
-                      <i class="bi bi-x-lg"></i> Từ chối
+                      <i class="bi bi-x-lg"></i> {{ _('Từ chối') }}
                     </button>
                   </form>
                 </div>
@@ -88,7 +88,7 @@
       {% else %}
       <div class="text-center py-5 text-muted">
         <i class="bi bi-inbox fs-2 d-block mb-2"></i>
-        Hiện tại không có kỹ năng nào trong danh sách.
+        {{ _('Hiện tại không có kỹ năng nào trong danh sách.') }}
       </div>
       {% endif %}
     </div>

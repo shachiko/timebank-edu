@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Giám sát phòng học ảo - {{ config.ten_truong }}{% endblock %}
+{% block title %}{{ _('Giám sát phòng học ảo - {{ config.ten_truong }}') }}{% endblock %}
 
 {% block content %}
 <div class="container py-4">
@@ -8,14 +8,14 @@
   <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
     <div>
       <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold px-3 py-1 rounded-pill mb-1">
-        <i class="bi bi-broadcast me-1"></i> GIÁM SÁT SƯ PHẠM TRỰC TUYẾN
+        <i class="bi bi-broadcast me-1"></i> {{ _('GIÁM SÁT SƯ PHẠM TRỰC TUYẾN') }}
       </span>
-      <h2 class="fw-bold mb-0 text-dark">Quản Lý Phòng Học Ảo</h2>
-      <p class="text-muted small mb-0">Dành cho Giáo viên và Ban Giám Hiệu — Dự giờ, giám sát lớp học và phê duyệt đối soát thời lượng</p>
+      <h2 class="fw-bold mb-0 text-dark">{{ _('Quản Lý Phòng Học Ảo') }}</h2>
+      <p class="text-muted small mb-0">{{ _('Dành cho Giáo viên và Ban Giám Hiệu — Dự giờ, giám sát lớp học và phê duyệt đối soát thời lượng') }}</p>
     </div>
 
     <div>
-      <span class="badge-ai"><i class="bi bi-stars"></i> Hỗ trợ bởi AI (Trí tuệ nhân tạo)</span>
+      <span class="badge-ai"><i class="bi bi-stars"></i> {{ _('Hỗ trợ bởi AI (Trí tuệ nhân tạo)') }}</span>
     </div>
   </div>
 
@@ -23,30 +23,30 @@
   <div class="row g-3 mb-4">
     <div class="col-sm-6 col-lg-4">
       <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-primary border-4">
-        <span class="text-muted small">Phòng học đang diễn ra</span>
+        <span class="text-muted small">{{ _('Phòng học đang diễn ra') }}</span>
         <div class="d-flex align-items-baseline gap-2">
           <h2 class="fw-bold mb-0 text-primary">{{ live_rooms|length }}</h2>
-          <span class="text-success small"><i class="bi bi-broadcast me-1"></i>Trực tuyến</span>
+          <span class="text-success small"><i class="bi bi-broadcast me-1"></i>{{ _('Trực tuyến') }}</span>
         </div>
       </div>
     </div>
 
     <div class="col-sm-6 col-lg-4">
       <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-warning border-4">
-        <span class="text-muted small">Phiên cần xác minh thời lượng (&lt; 80%)</span>
+        <span class="text-muted small">{{ _('Phiên cần xác minh thời lượng (&lt; 80%)') }}</span>
         <div class="d-flex align-items-baseline gap-2">
           <h2 class="fw-bold mb-0 text-warning">{{ verification_rooms|length }}</h2>
-          <span class="text-muted small">Chờ duyệt tay</span>
+          <span class="text-muted small">{{ _('Chờ duyệt tay') }}</span>
         </div>
       </div>
     </div>
 
     <div class="col-sm-6 col-lg-4">
       <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-success border-4">
-        <span class="text-muted small">Phiên hoàn thành gần đây</span>
+        <span class="text-muted small">{{ _('Phiên hoàn thành gần đây') }}</span>
         <div class="d-flex align-items-baseline gap-2">
           <h2 class="fw-bold mb-0 text-success">{{ completed_rooms|length }}</h2>
-          <span class="text-muted small">Đã chuyển giờ</span>
+          <span class="text-muted small">{{ _('Đã chuyển giờ') }}</span>
         </div>
       </div>
     </div>
@@ -56,9 +56,9 @@
   <div class="card border-0 shadow-sm rounded-4 bg-white mb-4 overflow-hidden">
     <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
       <h5 class="fw-bold mb-0 text-dark">
-        <i class="bi bi-camera-video text-primary me-2"></i>Lớp Học Đang Diễn Ra (Sẵn sàng dự giờ)
+        <i class="bi bi-camera-video text-primary me-2"></i>{{ _('Lớp Học Đang Diễn Ra (Sẵn sàng dự giờ)') }}
       </h5>
-      <span class="badge bg-primary rounded-pill">{{ live_rooms|length }} lớp</span>
+      <span class="badge bg-primary rounded-pill">{{ live_rooms|length }} {{ _('lớp') }}</span>
     </div>
 
     <div class="card-body p-0">
@@ -67,13 +67,13 @@
         <table class="table table-hover align-middle mb-0">
           <thead class="table-light small text-muted">
             <tr>
-              <th scope="col" class="ps-3">Mã phiên</th>
-              <th scope="col">Chuyên đề</th>
-              <th scope="col">Gia sư (Dạy)</th>
-              <th scope="col">Học sinh (Học)</th>
-              <th scope="col">Thời lượng</th>
+              <th scope="col" class="ps-3">{{ _('Mã phiên') }}</th>
+              <th scope="col">{{ _('Chuyên đề') }}</th>
+              <th scope="col">{{ _('Gia sư (Dạy)') }}</th>
+              <th scope="col">{{ _('Học sinh (Học)') }}</th>
+              <th scope="col">{{ _('Thời lượng') }}</th>
               <th scope="col">Check-in</th>
-              <th scope="col" class="text-end pe-3">Hành động</th>
+              <th scope="col" class="text-end pe-3">{{ _('Hành động') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -86,27 +86,27 @@
               </td>
               <td>
                 <div class="fw-semibold text-dark">{{ s.ten_nguoi_day }}</div>
-                <small class="text-muted">Lớp {{ s.lop_nguoi_day }}</small>
+                <small class="text-muted">{{ _('Lớp') }} {{ s.lop_nguoi_day }}</small>
               </td>
               <td>
                 <div class="fw-semibold text-dark">{{ s.ten_nguoi_hoc }}</div>
-                <small class="text-muted">Lớp {{ s.lop_nguoi_hoc }}</small>
+                <small class="text-muted">{{ _('Lớp') }} {{ s.lop_nguoi_hoc }}</small>
               </td>
               <td>{{ "%.1f"|format(s.so_gio) }}h</td>
               <td>
                 {% if s.checkin_day == 1 and s.checkin_hoc == 1 %}
-                  <span class="badge bg-success"><i class="bi bi-check2-all me-1"></i>Cả 2 đã vào</span>
+                  <span class="badge bg-success"><i class="bi bi-check2-all me-1"></i>{{ _('Cả 2 đã vào') }}</span>
                 {% elif s.checkin_day == 1 %}
-                  <span class="badge bg-info text-dark">Gia sư đã vào</span>
+                  <span class="badge bg-info text-dark">{{ _('Gia sư đã vào') }}</span>
                 {% elif s.checkin_hoc == 1 %}
-                  <span class="badge bg-info text-dark">Học sinh đã vào</span>
+                  <span class="badge bg-info text-dark">{{ _('Học sinh đã vào') }}</span>
                 {% else %}
-                  <span class="badge bg-secondary">Chưa check-in</span>
+                  <span class="badge bg-secondary">{{ _('Chưa check-in') }}</span>
                 {% endif %}
               </td>
               <td class="text-end pe-3">
                 <a href="{{ url_for('virtual_room', session_id=s.id) }}" class="btn btn-brand btn-sm shadow-sm">
-                  <i class="bi bi-eye-fill me-1"></i> Ghé thăm phòng học
+                  <i class="bi bi-eye-fill me-1"></i> {{ _('Ghé thăm phòng học') }}
                 </a>
               </td>
             </tr>
@@ -117,7 +117,7 @@
       {% else %}
       <div class="text-center py-5 text-muted">
         <i class="bi bi-camera-video-off fs-1 d-block mb-2 text-secondary"></i>
-        Hiện tại không có phòng học trực tuyến nào đang hoạt động.
+        {{ _('Hiện tại không có phòng học trực tuyến nào đang hoạt động.') }}
       </div>
       {% endif %}
     </div>
@@ -128,11 +128,11 @@
     <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
       <div>
         <h5 class="fw-bold mb-0 text-warning">
-          <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>Phiên Học Cần Xác Minh (&lt; 80% thời gian)
+          <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>{{ _('Phiên Học Cần Xác Minh (&lt; 80% thời gian)') }}
         </h5>
-        <small class="text-muted">Các phiên kết thúc sớm hoặc có gián đoạn — Thầy/Cô kiểm tra và quyết định duyệt tay hoặc hủy phiên</small>
+        <small class="text-muted">{{ _('Các phiên kết thúc sớm hoặc có gián đoạn — Thầy/Cô kiểm tra và quyết định duyệt tay hoặc hủy phiên') }}</small>
       </div>
-      <span class="badge bg-warning text-dark rounded-pill">{{ verification_rooms|length }} phiên</span>
+      <span class="badge bg-warning text-dark rounded-pill">{{ verification_rooms|length }} {{ _('phiên') }}</span>
     </div>
 
     <div class="card-body p-0">
@@ -141,12 +141,12 @@
         <table class="table table-hover align-middle mb-0">
           <thead class="table-light small text-muted">
             <tr>
-              <th scope="col" class="ps-3">Mã phiên</th>
-              <th scope="col">Chuyên đề</th>
-              <th scope="col">Gia sư & Học sinh</th>
-              <th scope="col">Quy định</th>
-              <th scope="col">Trạng thái đối soát</th>
-              <th scope="col" class="text-end pe-3">Thao tác duyệt tay</th>
+              <th scope="col" class="ps-3">{{ _('Mã phiên') }}</th>
+              <th scope="col">{{ _('Chuyên đề') }}</th>
+              <th scope="col">{{ _('Gia sư & Học sinh') }}</th>
+              <th scope="col">{{ _('Quy định') }}</th>
+              <th scope="col">{{ _('Trạng thái đối soát') }}</th>
+              <th scope="col" class="text-end pe-3">{{ _('Thao tác duyệt tay') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -159,31 +159,31 @@
               </td>
               <td>
                 <div class="small">
-                  <span class="text-primary fw-semibold">Dạy:</span> {{ s.ten_nguoi_day }} • 
-                  <span class="text-success fw-semibold">Học:</span> {{ s.ten_nguoi_hoc }}
+                  <span class="text-primary fw-semibold">{{ _('Dạy:') }}</span> {{ s.ten_nguoi_day }} • 
+                  <span class="text-success fw-semibold">{{ _('Học:') }}</span> {{ s.ten_nguoi_hoc }}
                 </div>
               </td>
               <td>{{ "%.1f"|format(s.so_gio) }}h</td>
               <td>
                 <span class="badge bg-warning text-dark">
-                  <i class="bi bi-hourglass-split me-1"></i>Chưa đạt 80% thời lượng
+                  <i class="bi bi-hourglass-split me-1"></i>{{ _('Chưa đạt 80% thời lượng') }}
                 </span>
               </td>
               <td class="text-end pe-3">
                 <div class="d-inline-flex gap-2">
-                  <a href="{{ url_for('session_detail', session_id=s.id) }}" class="btn btn-outline-secondary btn-sm" title="Xem chi tiết nhật ký">
+                  <a href="{{ url_for('session_detail', session_id=s.id) }}" class="btn btn-outline-secondary btn-sm" title="{{ _('Xem chi tiết nhật ký') }}">
                     <i class="bi bi-info-circle"></i>
                   </a>
                   <!-- Duyệt tay chuyển giờ -->
-                  <form method="POST" action="{{ url_for('manual_approve_session', session_id=s.id) }}" onsubmit="return confirm('Xác nhận phê duyệt chuyển giờ tín dụng cho buổi học này?');" class="d-inline">
+                  <form method="POST" action="{{ url_for('manual_approve_session', session_id=s.id) }}" onsubmit="return confirm("{{ _('Xác nhận phê duyệt chuyển giờ tín dụng cho buổi học này?') }}");" class="d-inline">
                     <button type="submit" class="btn btn-success btn-sm">
-                      <i class="bi bi-check-lg me-1"></i> Duyệt chuyển giờ
+                      <i class="bi bi-check-lg me-1"></i> {{ _('Duyệt chuyển giờ') }}
                     </button>
                   </form>
                   <!-- Hủy phiên -->
-                  <form method="POST" action="{{ url_for('manual_reject_session', session_id=s.id) }}" onsubmit="return confirm('Bạn có chắc chắn muốn hủy phiên học này không?');" class="d-inline">
+                  <form method="POST" action="{{ url_for('manual_reject_session', session_id=s.id) }}" onsubmit="return confirm("{{ _('Bạn có chắc chắn muốn hủy phiên học này không?') }}");" class="d-inline">
                     <button type="submit" class="btn btn-outline-danger btn-sm">
-                      <i class="bi bi-x-lg me-1"></i> Hủy phiên
+                      <i class="bi bi-x-lg me-1"></i> {{ _('Hủy phiên') }}
                     </button>
                   </form>
                 </div>
@@ -196,7 +196,7 @@
       {% else %}
       <div class="text-center py-4 text-muted">
         <i class="bi bi-check-circle fs-2 d-block mb-1 text-success"></i>
-        Không có phiên học nào đang chờ xác minh.
+        {{ _('Không có phiên học nào đang chờ xác minh.') }}
       </div>
       {% endif %}
     </div>
@@ -206,7 +206,7 @@
   <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
     <div class="card-header bg-white border-bottom py-3">
       <h5 class="fw-bold mb-0 text-dark">
-        <i class="bi bi-journal-check text-success me-2"></i>Phiên Học Đã Hoàn Thành Gần Đây
+        <i class="bi bi-journal-check text-success me-2"></i>{{ _('Phiên Học Đã Hoàn Thành Gần Đây') }}
       </h5>
     </div>
 
@@ -216,13 +216,13 @@
         <table class="table table-hover align-middle mb-0">
           <thead class="table-light small text-muted">
             <tr>
-              <th scope="col" class="ps-3">Mã phiên</th>
-              <th scope="col">Chuyên đề</th>
-              <th scope="col">Gia sư</th>
-              <th scope="col">Học sinh</th>
-              <th scope="col">Thời lượng</th>
-              <th scope="col">Trạng thái</th>
-              <th scope="col" class="text-end pe-3">Chi tiết</th>
+              <th scope="col" class="ps-3">{{ _('Mã phiên') }}</th>
+              <th scope="col">{{ _('Chuyên đề') }}</th>
+              <th scope="col">{{ _('Gia sư') }}</th>
+              <th scope="col">{{ _('Học sinh') }}</th>
+              <th scope="col">{{ _('Thời lượng') }}</th>
+              <th scope="col">{{ _('Trạng thái') }}</th>
+              <th scope="col" class="text-end pe-3">{{ _('Chi tiết') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -233,10 +233,10 @@
               <td>{{ s.ten_nguoi_day }}</td>
               <td>{{ s.ten_nguoi_hoc }}</td>
               <td><span class="text-success fw-bold">+{{ "%.1f"|format(s.so_gio) }}h</span></td>
-              <td><span class="badge bg-success"><i class="bi bi-patch-check-fill me-1"></i>Hoàn thành</span></td>
+              <td><span class="badge bg-success"><i class="bi bi-patch-check-fill me-1"></i>{{ _('Hoàn thành') }}</span></td>
               <td class="text-end pe-3">
                 <a href="{{ url_for('session_detail', session_id=s.id) }}" class="btn btn-outline-brand btn-sm">
-                  <i class="bi bi-box-arrow-up-right me-1"></i> Xem phiên
+                  <i class="bi bi-box-arrow-up-right me-1"></i> {{ _('Xem phiên') }}
                 </a>
               </td>
             </tr>
@@ -245,7 +245,7 @@
         </table>
       </div>
       {% else %}
-      <div class="text-center py-4 text-muted">Chưa có phiên học nào hoàn thành.</div>
+      <div class="text-center py-4 text-muted">{{ _('Chưa có phiên học nào hoàn thành.') }}</div>
       {% endif %}
     </div>
   </div>
