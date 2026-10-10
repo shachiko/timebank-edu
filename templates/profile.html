@@ -465,155 +465,518 @@
     </div>
   </div>
 </div>
-<!-- MODAL CẬP NHẬT MÔN CẦN HỖ TRỢ & GIỜ RẢNH (VIỆC 1 & 2) -->
+{% endif %}
+
+<!-- MODAL CẬP NHẬT MÔN CẦN HỖ TRỢ & GIỜ RẢNH (REDESIGNED 2-COLUMN) -->
 <div class="modal fade" id="modalStudyNeeds" tabindex="-1" aria-labelledby="modalStudyNeedsLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
-    <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-      <div class="modal-header bg-primary text-white">
+  <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable" style="max-width: 960px;">
+    <form action="{{ url_for('update_study_needs') }}" method="POST" id="formStudyNeeds" class="modal-content border-0 shadow-lg rounded-4 overflow-hidden" style="max-height: 85vh; display: flex; flex-direction: column;">
+      
+      <!-- HEADER CỐ ĐỊNH -->
+      <div class="modal-header bg-primary text-white py-3 px-4 flex-shrink-0">
         <div class="d-flex align-items-center gap-2">
-          <i class="bi bi-mortarboard-fill fs-5"></i>
+          <div class="rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; background: rgba(255, 255, 255, 0.2);">
+            <i class="bi bi-mortarboard-fill fs-5 text-white"></i>
+          </div>
           <div>
-            <h5 class="modal-title fw-bold mb-0" id="modalStudyNeedsLabel">
+            <h5 class="modal-title fw-bold mb-0 text-white" id="modalStudyNeedsLabel">
               {{ _('Môn Cần Hỗ Trợ & Khung Giờ Rảnh') }}
             </h5>
-            <small class="text-white-50">{{ _('Dữ liệu giúp AI ghép cặp bạn học cùng tiến và gợi ý khung giờ chung') }}</small>
+            <small class="text-white-50" style="font-size: 0.8rem;">{{ _('Dữ liệu giúp AI ghép cặp bạn học cùng tiến và gợi ý khung giờ chung') }}</small>
           </div>
         </div>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="{{ _('Đóng') }}"></button>
       </div>
-      <form action="{{ url_for('update_study_needs') }}" method="POST">
-        <div class="modal-body p-4 bg-light">
-          <!-- PHẦN 1: TÔI CẦN ĐƯỢC GIÚP ĐỠ MÔN (VIỆC 1) -->
-          <div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-4">
-            <h6 class="fw-bold text-dark mb-1">
-              <i class="bi bi-check2-square text-primary me-2"></i>{{ _('1. Tôi cần được giúp đỡ môn:') }}
-            </h6>
-            <p class="text-muted small mb-3">
-              {{ _('Chọn các môn bạn muốn được bạn học kèm cặp, chọn mức độ và ghi chú phần kiến thức bạn đang gặp khó khăn.') }}
-            </p>
 
-            {% set subjects_list = ['Toán', 'Lý', 'Hóa', 'Sinh', 'Văn', 'Tiếng Anh', 'Tin học', 'Lịch sử', 'Địa lý', 'GDCD', 'Khác'] %}
-            
-            <div class="row g-3">
-              {% for sub in subjects_list %}
-                {% set matched_need = None %}
-                {% if study_needs %}
-                  {% for item in study_needs %}
-                    {% if item.mon == sub %}
-                      {% set matched_need = item %}
-                    {% endif %}
-                  {% endfor %}
-                {% endif %}
-                <div class="col-md-6">
-                  <div class="border rounded-3 p-3 bg-light h-100 study-sub-box">
-                    <div class="form-check form-switch mb-2">
-                      <input class="form-check-input sub-checkbox" type="checkbox" name="mon_hoc" value="{{ sub }}" id="chk_{{ loop.index }}" {% if matched_need %}checked{% endif %} onchange="toggleSubjectBox('{{ sub }}', this.checked)">
-                      <label class="form-check-label fw-bold text-dark" for="chk_{{ loop.index }}">
-                        {{ sub }}
+      <!-- BODY CUỘN DỌC ĐỘC LẬP (Nội dung không bao giờ đẩy trôi footer) -->
+      <div class="modal-body p-3 p-md-4 bg-light overflow-y-auto" style="flex: 1 1 auto; max-height: calc(85vh - 135px);">
+        <div class="row g-3 g-lg-4">
+          
+          <!-- KHU VỰC TRÁI: Môn cần hỗ trợ (Desktop: cột 5, Mobile: cột 12) -->
+          <div class="col-12 col-md-5">
+            <div class="card border-0 shadow-sm rounded-4 p-3 p-md-4 bg-white h-100">
+              <div class="d-flex align-items-center gap-2 mb-2 pb-2 border-bottom">
+                <i class="bi bi-book-half text-primary fs-5"></i>
+                <h6 class="fw-bold text-dark mb-0">{{ _('Môn Cần Hỗ Trợ') }}</h6>
+              </div>
+              <p class="text-muted small mb-3">
+                {{ _('Chọn các môn bạn muốn được bạn học kèm cặp hoặc giải đáp thắc mắc.') }}
+              </p>
+
+              <!-- 1. Dropdown chọn nhiều môn (dạng Tag/Chip) -->
+              <div class="mb-3">
+                <label for="selectSubjectDropdown" class="form-label small fw-semibold text-secondary mb-1">
+                  {{ _('Chọn môn học:') }}
+                </label>
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text bg-light text-primary border-end-0"><i class="bi bi-search"></i></span>
+                  <select class="form-select form-select-sm border-start-0" id="selectSubjectDropdown">
+                    <option value="" selected disabled>{{ _('+ Chọn môn để thêm vào danh sách...') }}</option>
+                    {% set subjects_list = ['Toán', 'Lý', 'Hóa', 'Sinh', 'Văn', 'Tiếng Anh', 'Tin học', 'Lịch sử', 'Địa lý', 'GDCD', 'Khác'] %}
+                    {% for sub in subjects_list %}
+                      <option value="{{ sub }}">{{ sub }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                
+                <!-- Chips container hiển thị tag môn đã chọn -->
+                <div class="mt-2 p-2 rounded-3 bg-light border d-flex flex-wrap gap-2 align-items-center" id="selectedSubjectsChips" style="min-height: 48px;">
+                  <span class="text-muted small fst-italic" id="noSubjectPrompt">
+                    <i class="bi bi-info-circle me-1"></i>{{ _('Chưa chọn môn nào. Chọn từ menu trên để thêm.') }}
+                  </span>
+                </div>
+                <!-- Container chứa hidden inputs để gửi form -->
+                <div id="hiddenSubjectsContainer"></div>
+              </div>
+
+              <!-- 2. Dropdown mức độ chung -->
+              <div class="mb-3">
+                <label for="selectStudyLevel" class="form-label small fw-semibold text-secondary mb-1">
+                  {{ _('Mức độ cần hỗ trợ:') }}
+                </label>
+                <select class="form-select form-select-sm rounded-3 shadow-none" name="muc_do" id="selectStudyLevel">
+                  <option value="co_ban">{{ _('Cơ bản (Củng cố kiến thức gốc)') }}</option>
+                  <option value="nang_cao">{{ _('Nâng cao (Nâng cao & Điểm 8+)') }}</option>
+                  <option value="luyen_thi">{{ _('Luyện thi (Luyện thi chuyên sâu & Đại học)') }}</option>
+                </select>
+                <div class="form-text text-muted" style="font-size: 0.75rem;">
+                  {{ _('Mức độ áp dụng cho các môn đã chọn') }}
+                </div>
+              </div>
+
+              <!-- 3. Ô ghi chú chung -->
+              <div class="mb-2">
+                <label for="inputStudyNote" class="form-label small fw-semibold text-secondary mb-1">
+                  {{ _('Ghi chú chi tiết:') }}
+                </label>
+                <textarea class="form-control form-control-sm rounded-3 shadow-none" name="ghi_chu" id="inputStudyNote" rows="3" placeholder="{{ _('Phần kiến thức đang gặp khó khăn (VD: Hình không gian, viết đoạn văn, phát âm...)') }}"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- KHU VỰC PHẢI: Khung giờ rảnh (Desktop: cột 7, Mobile: cột 12) -->
+          <div class="col-12 col-md-7">
+            <div class="card border-0 shadow-sm rounded-4 p-3 p-md-4 bg-white h-100">
+              <div class="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom">
+                <div class="d-flex align-items-center gap-2">
+                  <i class="bi bi-calendar3-week text-success fs-5"></i>
+                  <h6 class="fw-bold text-dark mb-0">{{ _('Khung Giờ Rảnh') }}</h6>
+                </div>
+                <span class="badge bg-success-subtle text-success small rounded-pill px-2 py-1">
+                  {{ _('T2 - Chủ Nhật') }}
+                </span>
+              </div>
+              <p class="text-muted small mb-3">
+                {{ _('Tích chọn ngày bạn rảnh và chọn giờ bắt đầu, kết thúc (có thể thêm nhiều khung giờ trong 1 ngày).') }}
+              </p>
+
+              <!-- Danh sách 7 ngày T2 - CN -->
+              {% set days_def = [
+                ('t2', 'Thứ 2', 'T2'),
+                ('t3', 'Thứ 3', 'T3'),
+                ('t4', 'Thứ 4', 'T4'),
+                ('t5', 'Thứ 5', 'T5'),
+                ('t6', 'Thứ 6', 'T6'),
+                ('t7', 'Thứ 7', 'T7'),
+                ('cn', 'Chủ Nhật', 'CN')
+              ] %}
+
+              <div class="d-flex flex-column gap-2" id="daysScheduleList">
+                {% for d_code, d_name, d_short in days_def %}
+                <div class="day-schedule-card border rounded-3 p-2 bg-light transition-all" id="dayCard_{{ d_code }}">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div class="form-check form-check-inline mb-0">
+                      <input class="form-check-input day-toggle-chk" type="checkbox" id="chk_{{ d_code }}" data-day="{{ d_code }}" onchange="handleDayToggle('{{ d_code }}', this.checked)">
+                      <label class="form-check-label fw-bold text-dark user-select-none cursor-pointer" for="chk_{{ d_code }}">
+                        <span class="badge bg-white text-primary border me-1">{{ d_short }}</span> {{ d_name }}
                       </label>
                     </div>
 
-                    <div id="sub_detail_{{ sub }}" class="{{ '' if matched_need else 'd-none' }} pt-2 border-top">
-                      <div class="mb-2">
-                        <label class="form-label small text-muted mb-1">{{ _('Mức độ cần hỗ trợ:') }}</label>
-                        <select class="form-select form-select-sm" name="muc_do_{{ sub }}">
-                          <option value="co_ban" {% if matched_need and matched_need.muc_do == 'Cơ bản' %}selected{% endif %}>{{ _('Cơ bản (Củng cố kiến thức gốc)') }}</option>
-                          <option value="nang_cao" {% if matched_need and matched_need.muc_do == 'Nâng cao' %}selected{% endif %}>{{ _('Nâng cao (Luyện thi & Chuyên sâu)') }}</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label class="form-label small text-muted mb-1">{{ _('Ghi chú chi tiết:') }}</label>
-                        <input type="text" class="form-control form-control-sm" name="ghi_chu_{{ sub }}" placeholder="{{ _('VD: Hình không gian, viết đoạn văn, phát âm...') }}" value="{{ matched_need.ghi_chu if matched_need else '' }}">
-                      </div>
-                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 rounded-pill btn-add-slot d-none" id="btnAddSlot_{{ d_code }}" onclick="addDaySlot('{{ d_code }}')" style="font-size: 0.75rem;">
+                      <i class="bi bi-plus me-1"></i>{{ _('Thêm khung giờ') }}
+                    </button>
+                  </div>
+
+                  <!-- Container chứa các dòng giờ bắt đầu - kết thúc của ngày -->
+                  <div class="slots-container mt-2 pt-2 border-top d-none" id="slots_{{ d_code }}">
+                    <!-- Sẽ được tạo động bằng JavaScript -->
                   </div>
                 </div>
-              {% endfor %}
+                {% endfor %}
+              </div>
+
+              <!-- Ghi chú thêm về giờ giấc -->
+              <div class="mt-3 pt-2">
+                <label for="inputGioRanhKhac" class="form-label small fw-semibold text-secondary mb-1">
+                  {{ _('Ghi chú thêm về giờ giấc (nếu có):') }}
+                </label>
+                <input type="text" class="form-control form-control-sm rounded-3" name="gio_ranh_khac" id="inputGioRanhKhac" placeholder="{{ _('Ví dụ: Linh hoạt buổi tối sau 20h, rảnh đột xuất cuối tuần...') }}">
+              </div>
+
             </div>
           </div>
 
-          <!-- PHẦN 2: KHUNG GIỜ RẢNH THEO TUẦN (VIỆC 2) -->
-          <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
-            <h6 class="fw-bold text-dark mb-1">
-              <i class="bi bi-calendar3-week text-success me-2"></i>{{ _('2. Khung giờ rảnh theo tuần (T2 - CN):') }}
-            </h6>
-            <p class="text-muted small mb-3">
-              {{ _('Đánh dấu các khung giờ bạn có thể tham gia học hoặc kèm bạn. AI sẽ dùng lịch này để tự động tính khung giờ chung khi gợi ý bạn học.') }}
-            </p>
-
-            {% set days = [
-              ('t2', 'Thứ 2'),
-              ('t3', 'Thứ 3'),
-              ('t4', 'Thứ 4'),
-              ('t5', 'Thứ 5'),
-              ('t6', 'Thứ 6'),
-              ('t7', 'Thứ 7'),
-              ('cn', 'Chủ Nhật')
-            ] %}
-
-            <div class="table-responsive">
-              <table class="table table-bordered table-sm align-middle text-center mb-2">
-                <thead class="table-light small">
-                  <tr>
-                    <th style="width: 25%;" class="text-start ps-3">{{ _('Thứ trong tuần') }}</th>
-                    <th>{{ _('Sáng (8h - 11h30)') }}</th>
-                    <th>{{ _('Chiều (14h - 17h30)') }}</th>
-                    <th>{{ _('Tối (19h - 21h30)') }}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for code, day_name in days %}
-                  <tr>
-                    <td class="text-start ps-3 fw-bold small text-dark">{{ day_name }}</td>
-                    <td>
-                      <input class="form-check-input" type="checkbox" name="ranh_{{ code }}_sang" value="1"
-                             {% if user.gio_ranh and day_name.lower() in user.gio_ranh.lower() and 'sáng' in user.gio_ranh.lower() %}checked{% endif %}>
-                    </td>
-                    <td>
-                      <input class="form-check-input" type="checkbox" name="ranh_{{ code }}_chieu" value="1"
-                             {% if user.gio_ranh and day_name.lower() in user.gio_ranh.lower() and 'chiều' in user.gio_ranh.lower() %}checked{% endif %}>
-                    </td>
-                    <td>
-                      <input class="form-check-input" type="checkbox" name="ranh_{{ code }}_toi" value="1"
-                             {% if user.gio_ranh and day_name.lower() in user.gio_ranh.lower() and 'tối' in user.gio_ranh.lower() %}checked{% endif %}>
-                    </td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-
-            <div class="mt-2">
-              <label for="gio_ranh_khac" class="form-label small fw-bold text-dark mb-1">{{ _('Ghi chú thêm về giờ giấc (nếu có):') }}</label>
-              <input type="text" class="form-control form-control-sm" id="gio_ranh_khac" name="gio_ranh_khac" placeholder="{{ _('Ví dụ: Linh hoạt các buổi tối cuối tuần sau 20h...') }}">
-            </div>
-          </div>
         </div>
-        <div class="modal-footer bg-white p-3 d-flex justify-content-between align-items-center">
-          <small class="text-muted"><i class="bi bi-shield-check text-success me-1"></i> {{ _('Dữ liệu được cập nhật tức thì vào thuật toán AI') }}</small>
-          <div class="d-flex gap-2">
-            <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">{{ _('Hủy') }}</button>
-            <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" id="btnSaveStudyNeeds">
-              <i class="bi bi-save me-1"></i> {{ _('Lưu Thay Đổi') }}
-            </button>
-          </div>
+      </div>
+
+      <!-- FOOTER CỐ ĐỊNH: BẮT BUỘC KHÔNG BỊ TRÔI KHI CUỘN -->
+      <div class="modal-footer bg-white py-2 px-3 py-md-3 px-md-4 d-flex justify-content-between align-items-center flex-shrink-0 border-top">
+        <small class="text-muted d-none d-sm-inline">
+          <i class="bi bi-shield-check text-success me-1"></i> {{ _('Dữ liệu cập nhật tức thì vào thuật toán AI') }}
+        </small>
+        <div class="d-flex gap-2 ms-auto">
+          <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal" id="btnCancelStudyNeeds">
+            {{ _('Hủy bỏ') }}
+          </button>
+          <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" id="btnSaveStudyNeeds">
+            <i class="bi bi-save me-1"></i> {{ _('💾 Lưu thay đổi') }}
+          </button>
         </div>
-      </form>
-    </div>
+      </div>
+
+    </form>
   </div>
 </div>
 
-<script>
-  function toggleSubjectBox(sub, isChecked) {
-    const el = document.getElementById('sub_detail_' + sub);
-    if (!el) return;
-    if (isChecked) {
-      el.classList.remove('d-none');
-    } else {
-      el.classList.add('d-none');
-    }
+<style>
+  #modalStudyNeeds .modal-content {
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
   }
+  #modalStudyNeeds .modal-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    max-height: calc(85vh - 135px);
+  }
+  #modalStudyNeeds .modal-header,
+  #modalStudyNeeds .modal-footer {
+    flex-shrink: 0;
+  }
+  .day-schedule-card {
+    transition: all 0.2s ease;
+  }
+  .day-schedule-card.active-day {
+    background-color: #ffffff !important;
+    border-color: #0d6efd !important;
+    box-shadow: 0 0.125rem 0.25rem rgba(13, 110, 253, 0.08);
+  }
+  .btn-remove-slot {
+    width: 28px;
+    height: 28px;
+    padding: 0 !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .subject-chip {
+    animation: fadeInChip 0.2s ease;
+  }
+  @keyframes fadeInChip {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+  }
+</style>
+
+<script>
+  (function() {
+    const initialStudyNeeds = {{ (study_needs or [])|tojson }};
+    const initialGioRanh = {{ (user.gio_ranh or '')|tojson }};
+    const selectedSubjects = new Set();
+
+    // 1. Quản lý Môn học (Tag/Chip)
+    const selectDropdown = document.getElementById('selectSubjectDropdown');
+    const chipsContainer = document.getElementById('selectedSubjectsChips');
+    const hiddenContainer = document.getElementById('hiddenSubjectsContainer');
+    const noPrompt = document.getElementById('noSubjectPrompt');
+
+    function renderSubjects() {
+      // Xóa chips hiện tại ngoại trừ prompt nếu rỗng
+      chipsContainer.innerHTML = '';
+      hiddenContainer.innerHTML = '';
+
+      if (selectedSubjects.size === 0) {
+        chipsContainer.appendChild(noPrompt);
+      } else {
+        selectedSubjects.forEach(sub => {
+          // Tạo Chip
+          const chip = document.createElement('span');
+          chip.className = 'badge bg-white text-primary border border-primary-subtle px-2 py-1 rounded-pill d-inline-flex align-items-center gap-1 shadow-xs subject-chip';
+          chip.innerHTML = `<strong>${escapeHtml(sub)}</strong><button type="button" class="btn-close btn-close-sm ms-1" style="font-size: 0.55rem;" aria-label="Xóa"></button>`;
+          
+          chip.querySelector('.btn-close').addEventListener('click', function(e) {
+            e.stopPropagation();
+            removeSubject(sub);
+          });
+          chipsContainer.appendChild(chip);
+
+          // Tạo hidden input cho form
+          const hiddenInput = document.createElement('input');
+          hiddenInput.type = 'hidden';
+          hiddenInput.name = 'mon_hoc';
+          hiddenInput.value = sub;
+          hiddenContainer.appendChild(hiddenInput);
+        });
+      }
+
+      // Cập nhật trạng thái disabled trong dropdown
+      if (selectDropdown) {
+        Array.from(selectDropdown.options).forEach(opt => {
+          if (opt.value) {
+            opt.disabled = selectedSubjects.has(opt.value);
+          }
+        });
+        selectDropdown.value = '';
+      }
+    }
+
+    function addSubject(sub) {
+      if (!sub) return;
+      selectedSubjects.add(sub);
+      renderSubjects();
+    }
+
+    function removeSubject(sub) {
+      selectedSubjects.delete(sub);
+      renderSubjects();
+    }
+
+    window.removeSubjectChip = removeSubject;
+
+    if (selectDropdown) {
+      selectDropdown.addEventListener('change', function() {
+        if (this.value) {
+          addSubject(this.value);
+        }
+      });
+    }
+
+    // 2. Quản lý Khung giờ theo ngày (T2 - CN)
+    const daysConfig = [
+      { code: 't2', name: 'Thứ 2' },
+      { code: 't3', name: 'Thứ 3' },
+      { code: 't4', name: 'Thứ 4' },
+      { code: 't5', name: 'Thứ 5' },
+      { code: 't6', name: 'Thứ 6' },
+      { code: 't7', name: 'Thứ 7' },
+      { code: 'cn', name: 'Chủ Nhật' }
+    ];
+
+    window.handleDayToggle = function(dayCode, isChecked) {
+      const card = document.getElementById('dayCard_' + dayCode);
+      const btnAdd = document.getElementById('btnAddSlot_' + dayCode);
+      const container = document.getElementById('slots_' + dayCode);
+      if (!card || !btnAdd || !container) return;
+
+      if (isChecked) {
+        card.classList.add('active-day');
+        btnAdd.classList.remove('d-none');
+        container.classList.remove('d-none');
+        if (container.children.length === 0) {
+          addDaySlot(dayCode, '08:00', '10:00');
+        }
+      } else {
+        card.classList.remove('active-day');
+        btnAdd.classList.add('d-none');
+        container.classList.add('d-none');
+        container.innerHTML = '';
+      }
+    };
+
+    window.addDaySlot = function(dayCode, startTime = '08:00', endTime = '10:00') {
+      const container = document.getElementById('slots_' + dayCode);
+      if (!container) return;
+
+      const slotRow = document.createElement('div');
+      slotRow.className = 'slot-row d-flex align-items-center gap-2 mb-2';
+      slotRow.innerHTML = `
+        <div class="input-group input-group-sm">
+          <span class="input-group-text bg-white text-muted"><i class="bi bi-clock"></i></span>
+          <input type="time" class="form-control slot-start" name="slot_start_${dayCode}" value="${startTime}" required>
+          <span class="input-group-text bg-light text-muted">đến</span>
+          <input type="time" class="form-control slot-end" name="slot_end_${dayCode}" value="${endTime}" required>
+        </div>
+        <button type="button" class="btn btn-outline-danger btn-sm rounded-circle btn-remove-slot" title="Xóa khung giờ này">
+          <i class="bi bi-x-lg" style="font-size: 0.7rem;"></i>
+        </button>
+      `;
+
+      slotRow.querySelector('.btn-remove-slot').addEventListener('click', function() {
+        slotRow.remove();
+        if (container.children.length === 0) {
+          const chk = document.getElementById('chk_' + dayCode);
+          if (chk) chk.checked = false;
+          window.handleDayToggle(dayCode, false);
+        }
+      });
+
+      container.appendChild(slotRow);
+    };
+
+    // 3. Khôi phục dữ liệu đã lưu
+    function populateSavedState() {
+      // Môn học
+      selectedSubjects.clear();
+      if (Array.isArray(initialStudyNeeds) && initialStudyNeeds.length > 0) {
+        initialStudyNeeds.forEach(item => {
+          if (item && item.mon) selectedSubjects.add(item.mon);
+        });
+        const first = initialStudyNeeds[0];
+        if (first && first.muc_do) {
+          const lvl = first.muc_do.toLowerCase();
+          const lvlSelect = document.getElementById('selectStudyLevel');
+          if (lvlSelect) {
+            if (lvl.includes('luyen') || lvl.includes('thi')) lvlSelect.value = 'luyen_thi';
+            else if (lvl.includes('nang') || lvl.includes('cao')) lvlSelect.value = 'nang_cao';
+            else lvlSelect.value = 'co_ban';
+          }
+        }
+        if (first && first.ghi_chu) {
+          const noteInput = document.getElementById('inputStudyNote');
+          if (noteInput) noteInput.value = first.ghi_chu;
+        }
+      }
+      renderSubjects();
+
+      // Giờ rảnh
+      daysConfig.forEach(d => {
+        const chk = document.getElementById('chk_' + d.code);
+        if (chk) {
+          chk.checked = false;
+          window.handleDayToggle(d.code, false);
+        }
+      });
+
+      const noteCustom = document.getElementById('inputGioRanhKhac');
+      if (noteCustom) noteCustom.value = '';
+
+      let text = (initialGioRanh || '').trim();
+      if (!text) return;
+
+      if (text.includes('•')) {
+        const parts = text.split('•');
+        text = parts[0].trim();
+        if (noteCustom && parts[1]) {
+          noteCustom.value = parts[1].trim();
+        }
+      }
+
+      daysConfig.forEach(d => {
+        const regex = new RegExp(d.name + '\\s*\\((.*?)\\)', 'i');
+        const match = text.match(regex);
+        if (match) {
+          const chk = document.getElementById('chk_' + d.code);
+          if (chk) {
+            chk.checked = true;
+            window.handleDayToggle(d.code, true);
+            const container = document.getElementById('slots_' + d.code);
+            if (container) container.innerHTML = ''; // reset default slot
+
+            const slotsText = match[1];
+            const parts = slotsText.split(',');
+            parts.forEach(p => {
+              p = p.trim();
+              if (p.includes('-')) {
+                const times = p.split('-');
+                if (times.length >= 2) {
+                  window.addDaySlot(d.code, times[0].trim(), times[1].trim());
+                }
+              } else if (p.toLowerCase().includes('sáng')) {
+                window.addDaySlot(d.code, '08:00', '11:30');
+              } else if (p.toLowerCase().includes('chiều')) {
+                window.addDaySlot(d.code, '14:00', '17:30');
+              } else if (p.toLowerCase().includes('tối')) {
+                window.addDaySlot(d.code, '19:00', '21:30');
+              }
+            });
+          }
+        } else if (text.toLowerCase().includes(d.name.toLowerCase())) {
+          // Ngày có tên trong chuỗi nhưng không có ngoặc
+          const chk = document.getElementById('chk_' + d.code);
+          if (chk) {
+            chk.checked = true;
+            window.handleDayToggle(d.code, true);
+          }
+        }
+      });
+    }
+
+    // 4. Validate và Gửi Form
+    const form = document.getElementById('formStudyNeeds');
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // Validate giờ bắt đầu < giờ kết thúc
+        const activeDays = form.querySelectorAll('.day-toggle-chk:checked');
+        for (const chk of activeDays) {
+          const dCode = chk.dataset.day;
+          const starts = form.querySelectorAll(`input[name="slot_start_${dCode}"]`);
+          const ends = form.querySelectorAll(`input[name="slot_end_${dCode}"]`);
+          for (let i = 0; i < starts.length; i++) {
+            const sVal = starts[i].value;
+            const eVal = ends[i].value;
+            if (!sVal || !eVal) {
+              alert('Vui lòng điền đầy đủ giờ bắt đầu và kết thúc!');
+              starts[i].focus();
+              return;
+            }
+            if (sVal >= eVal) {
+              alert(`Giờ kết thúc (${eVal}) phải sau giờ bắt đầu (${sVal})!`);
+              ends[i].focus();
+              return;
+            }
+          }
+        }
+
+        const saveBtn = document.getElementById('btnSaveStudyNeeds');
+        const origBtnContent = saveBtn.innerHTML;
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang lưu...';
+
+        const formData = new FormData(form);
+        fetch(form.action, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        })
+        .then(res => {
+          if (!res.ok) throw new Error('HTTP error ' + res.status);
+          return res.json().catch(() => ({ success: true }));
+        })
+        .then(data => {
+          const modalEl = document.getElementById('modalStudyNeeds');
+          const modalInstance = bootstrap.Modal.getInstance(modalEl);
+          if (modalInstance) {
+            modalInstance.hide();
+          }
+          alert('Đã cập nhật thành công!');
+          window.location.reload();
+        })
+        .catch(err => {
+          console.warn('Fallback standard submit:', err);
+          form.submit();
+        });
+      });
+    }
+
+    function escapeHtml(str) {
+      return (str || '').replace(/[&<>"']/g, function(m) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+      });
+    }
+
+    // Gắn sự kiện khi modal được mở
+    const modalEl = document.getElementById('modalStudyNeeds');
+    if (modalEl) {
+      modalEl.addEventListener('show.bs.modal', populateSavedState);
+    }
+    // Khởi tạo ban đầu khi trang tải xong
+    document.addEventListener('DOMContentLoaded', populateSavedState);
+  })();
 </script>
 
-{% endif %}
 {% endblock %}
+

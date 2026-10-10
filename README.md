@@ -1176,3 +1176,46 @@ Hệ thống được nâng cấp bộ tính năng thông minh hỗ trợ ghép 
 ### 3. Nghiệm Thu & Kiểm Thử:
 - **Test suite:** `test_hotfix_import_and_school_display.py` đạt **10/10 tests PASS (100%)**.
 - **Toàn bộ hệ thống:** **38/38 Test Suites ĐẠT 100% PASS** qua `run_all_tests.py`.
+
+---
+
+## 24. REDESIGN MODAL "MÔN CẦN HỖ TRỢ & KHUNG GIỜ RẢNH" (HỒ SƠ CÁ NHÂN)
+
+### 1. Vấn Đề Đã Giải Quyết (Thực tế Production):
+- **Khắc phục modal quá dài:** Trước đây mỗi môn có 1 thẻ card riêng với toggle switch (11 môn $\rightarrow$ modal dài vô tận, vượt quá chiều cao màn hình khiến chân trang chứa nút Lưu bị cắt mất).
+- **Khắc phục layout nhảy:** Bật toggle mới bung dropdown và ghi chú làm form nhảy giật khó thao tác.
+- **Header & Footer cố định 100%:** Thiết lập `max-height: 85vh`, `modal-header` và `modal-footer` luôn cố định với `flex-shrink: 0`, thanh cuộn dọc chỉ xuất hiện độc lập trong `modal-body`. Nút Lưu luôn nằm trong tầm nhìn của người dùng trên mọi kích cỡ màn hình.
+
+### 2. Thiết Kế Layout 2 Cột Gọn Gàng & Thông Minh:
+- **Khu vực Trái — "Môn cần hỗ trợ" (`col-12 col-md-5`):**
+  - **1 Dropdown chọn nhiều môn:** Menu chọn môn học (`#selectSubjectDropdown`), khi chọn sẽ tự động sinh các tag/chip dạng badge bo tròn (`#selectedSubjectsChips`) kèm nút xóa `×`.
+  - **Mức độ cần hỗ trợ chung:** Dropdown 3 mức độ rõ ràng: *Cơ bản (Củng cố kiến thức gốc)* / *Nâng cao (Nâng cao & Điểm 8+)* / *Luyện thi (Luyện thi chuyên sâu & Đại học)*.
+  - **Ô ghi chú chi tiết:** Textarea 3 dòng nhập nhanh *"Phần kiến thức đang gặp khó khăn (VD: Hình không gian, viết đoạn văn, phát âm...)"*.
+  - Gọn gàng trong 1 cột thẻ trắng duy nhất, loại bỏ hoàn toàn 11 thẻ card switch cồng kềnh.
+- **Khu vực Phải — "Khung giờ rảnh" (`col-12 col-md-7`):**
+  - **Danh sách 7 ngày (T2 - CN):** Mỗi ngày có 1 checkbox gọn gàng.
+  - **Hiển thị linh hoạt theo ngày:** Khi tích chọn ngày $\rightarrow$ card ngày chuyển sang viền xanh nổi bật, hiển thị 2 ô chọn giờ: *Giờ bắt đầu* và *Giờ kết thúc*.
+  - **Nút "+ Thêm khung giờ":** Cho phép thêm nhiều khung giờ trong 1 ngày (VD: Sáng 08:00 - 10:00, Chiều 14:00 - 16:00).
+  - **Nút xóa (`×`):** Cho từng khung giờ đã thêm; khi xóa hết khung giờ, ngày tự động bỏ chọn.
+  - **Ô ghi chú giờ giấc:** Ghi chú thêm (VD: *"Linh hoạt các buổi tối cuối tuần sau 20h"*).
+- **Nút Lưu Thay Đổi Bắt Buộc:**
+  - Footer trang bị nút **[Hủy bỏ]** (`btn-secondary`, màu xám) và nút **[💾 Lưu thay đổi]** (`btn-primary fw-bold shadow-sm`, màu xanh nổi bật).
+  - Validation client: Kiểm tra giờ kết thúc phải sau giờ bắt đầu trên từng ngày đã chọn.
+  - Lưu CSDL nguyên tử: Cập nhật `users.mon_can_ho_tro` và `users.gio_ranh`, xóa cache gợi ý AI để cập nhật tức thì.
+  - Đóng modal, hiển thị thông báo thành công *"Đã cập nhật thành công!"* và tự động refresh giao diện hồ sơ.
+- **Phục hồi dữ liệu tự động (Two-way Persistence):**
+  - Khi mở lại modal, JavaScript tự động phân tích chuỗi giờ rảnh và JSON môn học để phục hồi chính xác toàn bộ chip môn học, mức độ, ghi chú, các ngày đã chọn và từng khung giờ (tương thích 100% cả dữ liệu cũ lẫn mới).
+- **Responsive Hoàn Hảo:**
+  - **Desktop ($\ge$ 768px):** 2 cột song song (Môn bên trái 5 phần, Giờ bên phải 7 phần) nằm trọn trong 1 màn hình.
+  - **Mobile (< 768px):** Tự động xếp chồng dọc mượt mà (Khu vực môn trước, Khu vực giờ sau), footer và nút Lưu luôn ghim chắc chắn dưới cùng.
+
+### 3. Nghiệm Thu & Kiểm Thử Toàn Diện:
+- **Kiểm thử tự động:** Tạo mới bộ test `test_redesign_study_needs_modal.py` (5/5 tests PASS).
+- **Tương thích ngược:** Giữ vững `test_prompt_smart_features.py` (6/6 tests PASS) và thuật toán `find_common_time_slots` nâng cấp nhận diện tự động khung giờ `HH:MM`.
+- **Kiểm thử giao diện Playwright:** Đã tự động chụp và lưu ảnh minh chứng kiểm thử tại artifacts:
+  - `desktop_modal_redesigned.png`: Giao diện 2 cột desktop đầy đủ chip, nhiều ca học trong ngày.
+  - `mobile_modal_redesigned.png`: Giao diện responsive mobile xếp chồng dọc, nút Lưu cố định.
+  - `profile_after_save.png`: Trang hồ sơ cập nhật thành công các huy hiệu môn và khung giờ rảnh.
+  - `modal_restored_data.png`: Mở lại modal phục hồi chính xác 100% dữ liệu đã lưu.
+- **Kết quả Regression:** **39/39 Test Suites ĐẠT 100% PASS** qua `run_all_tests.py`.
+

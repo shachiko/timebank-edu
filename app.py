@@ -2798,8 +2798,10 @@ def reset_password(token):
 @login_required
 def update_study_needs():
     """
-    VIỆC 1 & 2: Cập nhật mục 'Tôi cần được giúp đỡ môn' (môn học + mức độ cơ bản/nâng cao + ghi chú)
+    VIỆC 1 & 2: Cập nhật mục 'Tôi cần được giúp đỡ môn' (môn học + mức độ cơ bản/nâng cao/luyện thi + ghi chú)
     và lịch giờ rảnh trong tuần (T2-CN) của học sinh.
+    Hỗ trợ cả giao diện mới (2 cột: chọn nhiều môn qua dropdown/chips, khung giờ bắt đầu - kết thúc)
+    lẫn format cũ (tương thích ngược 100%).
     Lưu vào users.mon_can_ho_tro và users.gio_ranh.
     """
     db = get_db()
@@ -2808,17 +2810,41 @@ def update_study_needs():
 
     # 1. Danh sách môn học được chọn
     selected_subjects = request.form.getlist("mon_hoc")
+    if len(selected_subjects) == 1 and "," in selected_subjects[0]:
+        selected_subjects = [s.strip() for s in selected_subjects[0].split(",") if s.strip()]
+
+    general_level_raw = (request.form.get("muc_do") or request.form.get("muc_do_chung") or "").strip()
+    general_note = (request.form.get("ghi_chu") or request.form.get("ghi_chu_chung") or "").strip()
+
+    def parse_level(lvl):
+        if not lvl:
+            return "Cơ bản"
+        l_low = lvl.lower()
+        if "luyen" in l_low or "thi" in l_low:
+            return "Luyện thi"
+        if "nang" in l_low or "cao" in l_low:
+            return "Nâng cao"
+        return "Cơ bản"
+
+    default_level = parse_level(general_level_raw) if general_level_raw else "Cơ bản"
+
     needs_list = []
+    seen_subs = set()
     for m in selected_subjects:
         m = m.strip()
-        if not m:
+        if not m or m in seen_subs:
             continue
-        level = request.form.get(f"muc_do_{m}", "co_ban").strip()
-        note = request.form.get(f"ghi_chu_{m}", "").strip()
+        seen_subs.add(m)
+        spec_level = request.form.get(f"muc_do_{m}", "").strip()
+        spec_note = request.form.get(f"ghi_chu_{m}", "").strip()
+
+        chosen_level = parse_level(spec_level) if spec_level else default_level
+        chosen_note = spec_note if spec_note else general_note
+
         needs_list.append({
             "mon": m,
-            "muc_do": "Nâng cao" if level in ("nang_cao", "Nâng cao") else "Cơ bản",
-            "ghi_chu": note
+            "muc_do": chosen_level,
+            "ghi_chu": chosen_note
         })
 
     # 2. Xử lý khung giờ rảnh theo tuần (T2 - CN)
@@ -2835,13 +2861,29 @@ def update_study_needs():
 
     schedule_parts = []
     for day_code, day_name, periods in days_map:
-        day_periods = []
-        for p in periods:
-            param_key = f"ranh_{day_code.lower()}_{p}"
-            if request.form.get(param_key):
-                day_periods.append(period_labels[p])
-        if day_periods:
-            schedule_parts.append(f"{day_name} ({', '.join(day_periods)})")
+        d_lower = day_code.lower()
+        # Kiểm tra slot giờ mới: slot_start_t2, slot_end_t2
+        starts = request.form.getlist(f"slot_start_{d_lower}")
+        ends = request.form.getlist(f"slot_end_{d_lower}")
+
+        slot_pairs = []
+        for s, e in zip(starts, ends):
+            s = s.strip()
+            e = e.strip()
+            if s and e:
+                slot_pairs.append(f"{s} - {e}")
+
+        if slot_pairs:
+            schedule_parts.append(f"{day_name} ({', '.join(slot_pairs)})")
+        else:
+            # Kiểm tra format legacy (ranh_t2_sang...)
+            day_periods = []
+            for p in periods:
+                param_key = f"ranh_{d_lower}_{p}"
+                if request.form.get(param_key):
+                    day_periods.append(period_labels[p])
+            if day_periods:
+                schedule_parts.append(f"{day_name} ({', '.join(day_periods)})")
 
     custom_note = request.form.get("gio_ranh_khac", "").strip()
     if schedule_parts:
@@ -2867,6 +2909,15 @@ def update_study_needs():
     DAILY_RECOMMENDATION_CACHE.pop((user_id, today_str), None)
 
     flash(_("Đã cập nhật môn cần hỗ trợ và khung giờ rảnh thành công!"), "success")
+
+    if request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return jsonify({
+            "success": True,
+            "message": _("Đã cập nhật môn cần hỗ trợ và khung giờ rảnh thành công!"),
+            "mon_can_ho_tro": needs_list,
+            "gio_ranh": gio_ranh_str
+        })
+
     return redirect(url_for("profile"))
 
 
@@ -5920,6 +5971,17 @@ def extract_day_periods(schedule_str, day_kw):
     for p_kw, p_name in [("sáng", "Sáng"), ("chiều", "Chiều"), ("tối", "Tối")]:
         if p_kw in day_text:
             periods_found.append(p_name)
+
+    # Nhận diện tự động theo khung giờ cụ thể (VD: 08:00 - 10:00 -> Sáng, 14:00 -> Chiều, 19:00 -> Tối)
+    for time_match in re.findall(r"(\d{1,2}):\d{2}", day_text):
+        hour = int(time_match)
+        if 5 <= hour < 12 and "Sáng" not in periods_found:
+            periods_found.append("Sáng")
+        elif 12 <= hour < 18 and "Chiều" not in periods_found:
+            periods_found.append("Chiều")
+        elif (18 <= hour <= 23 or 0 <= hour < 5) and "Tối" not in periods_found:
+            periods_found.append("Tối")
+
     return periods_found
 
 
