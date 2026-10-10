@@ -128,6 +128,7 @@ class TestMilestoneDeploy(unittest.TestCase):
 
         self.assertIn("gunicorn", req_content, "requirements.txt phải chứa gunicorn!")
         self.assertIn("psycopg2-binary", req_content, "requirements.txt phải chứa psycopg2-binary!")
+        self.assertIn("openpyxl", req_content, "requirements.txt phải chứa openpyxl!")
 
     def test_06_readme_contains_deploy_guide_and_cname(self):
         """
