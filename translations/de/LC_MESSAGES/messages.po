@@ -922,3 +922,6 @@ msgstr "Systemautorin & Architektin: Lehrerin Nguyen Thi Huyen (Informatiklehrer
 
 msgid "Bản quyền toàn vẹn về mô hình sư phạm và giải pháp kiến trúc công nghệ School Time Bank"
 msgstr "Vollständiges Urheberrecht für das pädagogische Modell und die architektonischen Technologielösungen von School Time Bank"
+
+msgid "Tài khoản demo đăng nhập nhanh để trải nghiệm."
+msgstr "Demo-Konten für schnelle Anmeldung zum Ausprobieren."

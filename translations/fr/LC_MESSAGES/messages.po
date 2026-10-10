@@ -927,3 +927,6 @@ msgstr "Auteure & Architecte du système: Enseignante Nguyen Thi Huyen (Professe
 
 msgid "Bản quyền toàn vẹn về mô hình sư phạm và giải pháp kiến trúc công nghệ School Time Bank"
 msgstr "Tous droits réservés sur le modèle pédagogique et la solution architecturale School Time Bank"
+
+msgid "Tài khoản demo đăng nhập nhanh để trải nghiệm."
+msgstr "Comptes de démonstration pour connexion rapide."

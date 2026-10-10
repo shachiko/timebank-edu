@@ -881,3 +881,6 @@ msgstr "系统开发与设计作者：阮氏玄老师（计算机科学教师 �
 
 msgid "Bản quyền toàn vẹn về mô hình sư phạm và giải pháp kiến trúc công nghệ School Time Bank"
 msgstr "School Time Bank 教学模型与科技架构解决方案之完整版权"
+
+msgid "Tài khoản demo đăng nhập nhanh để trải nghiệm."
+msgstr "快速登录体验演示账户。"

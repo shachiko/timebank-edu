@@ -926,3 +926,6 @@ msgstr "System Author & Architect: Teacher Nguyen Thi Huyen (Computer Science Te
 
 msgid "Bản quyền toàn vẹn về mô hình sư phạm và giải pháp kiến trúc công nghệ School Time Bank"
 msgstr "Full copyright on pedagogical model and architectural technology solutions for School Time Bank"
+
+msgid "Tài khoản demo đăng nhập nhanh để trải nghiệm."
+msgstr "Demo accounts for quick login & experience."

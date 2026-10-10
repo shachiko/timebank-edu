@@ -105,7 +105,10 @@ class TestPrompt23AccountManagement(unittest.TestCase):
         self.client.get("/logout")
         res_login_page = self.client.get("/login")
         html_login_page = res_login_page.data.decode("utf-8")
-        self.assertIn("Tài khoản demo cho giám khảo", html_login_page)
+        self.assertTrue(
+            "Tài khoản demo đăng nhập nhanh để trải nghiệm" in html_login_page or
+            "Tài khoản demo cho giám khảo" in html_login_page
+        )
         self.assertIn("demo_quantruong", html_login_page)
         self.assertIn("demo_giaovien", html_login_page)
         self.assertIn("demo_hocsinh", html_login_page)
