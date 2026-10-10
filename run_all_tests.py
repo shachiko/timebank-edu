@@ -39,7 +39,8 @@ test_files = [
     "test_prompt31_ui_wording_color.py",
     "test_prompt32_school_hide_management.py",
     "test_prompt16_multilingual.py",
-    "test_prompt_community_management.py"
+    "test_prompt_community_management.py",
+    "test_prompt_import_users.py"
 ]
 
 results = {}

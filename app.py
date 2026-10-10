@@ -18,6 +18,10 @@ import secrets
 import sqlite3
 import yaml
 import csv
+import unicodedata
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
 import qrcode
 import click
 import smtplib
@@ -31,7 +35,7 @@ import jwt
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask import (
-    Flask, render_template, request, jsonify, g, flash, redirect, url_for, session, abort, make_response, Response
+    Flask, render_template, request, jsonify, g, flash, redirect, url_for, session, abort, make_response, Response, send_file
 )
 from flask_babel import Babel, gettext as _, lazy_gettext as _l
 from ai_service import (
@@ -744,6 +748,8 @@ def migrate_postgres_schema(conn):
         ("users", "truong_id", "INTEGER DEFAULT 1"),
         ("users", "trang_thai", "TEXT DEFAULT 'hoat_dong'"),
         ("users", "email", "TEXT"),
+        ("users", "so_dien_thoai", "TEXT"),
+        ("users", "ghi_chu", "TEXT"),
         # 2. skills
         ("skills", "truong_id", "INTEGER DEFAULT 1"),
         ("skills", "hien_thi_cong_dong", "INTEGER DEFAULT 0"),
@@ -1333,11 +1339,15 @@ def init_db():
         """)
         conn.commit()
 
-        # Prompt 23: Nâng cấp cột email cho bảng users và bảng password_reset_tokens
+        # Prompt 23 & Nhập danh sách tài khoản hàng loạt: Nâng cấp cột email, so_dien_thoai, ghi_chu cho bảng users
         cur.execute("PRAGMA table_info(users)")
         u_cols = [r[1] for r in cur.fetchall()]
         if "email" not in u_cols:
             conn.execute("ALTER TABLE users ADD COLUMN email TEXT")
+        if "so_dien_thoai" not in u_cols:
+            conn.execute("ALTER TABLE users ADD COLUMN so_dien_thoai TEXT")
+        if "ghi_chu" not in u_cols:
+            conn.execute("ALTER TABLE users ADD COLUMN ghi_chu TEXT")
         conn.commit()
 
         conn.execute("""
@@ -3087,7 +3097,8 @@ def admin_dashboard():
         google_drive_configured=is_google_drive_configured(),
         community_pending_skills=community_pending_skills,
         community_approved_skills=community_approved_skills,
-        admin_community_tasks=admin_community_tasks
+        admin_community_tasks=admin_community_tasks,
+        last_import_result=session.get("last_import_result")
     )
 
 
@@ -3205,6 +3216,551 @@ def reset_demo_data_route():
     if request.referrer:
         return redirect(request.referrer)
     return redirect(url_for("admin_dashboard") if not is_super else url_for("admin_accounts"))
+
+
+# ==============================================================================
+# TÍNH NĂNG NHẬP DANH SÁCH TÀI KHOẢN HÀNG LOẠT (EXCEL/CSV) CHO /ADMIN
+# ==============================================================================
+def remove_vietnamese_accents(text):
+    """
+    Chuyển đổi chuỗi tiếng Việt có dấu thành không dấu chuẩn hóa.
+    Xử lý chuẩn chữ đ/Đ và các ký tự tổ hợp Unicode NFKD.
+    """
+    if not text:
+        return ""
+    text = str(text).strip()
+    text = text.replace("đ", "d").replace("Đ", "D")
+    nfkd = unicodedata.normalize("NFKD", text)
+    return "".join(c for c in nfkd if not unicodedata.combining(c))
+
+
+def generate_unique_username(ho_ten, db, seen_usernames):
+    """
+    Tự sinh tên đăng nhập (Mã định danh) duy nhất từ họ tên + số thứ tự nếu trùng.
+    Quy tắc: tên chính + chữ cái đầu họ đệm (VD: 'Nguyễn Văn An' -> 'an.nv', 'Nguyễn Thị Huyền' -> 'huyen.nt')
+    Nếu trùng -> 'an.nv1', 'an.nv2', v.v. Đảm bảo 100% không trùng trong batch và CSDL.
+    """
+    clean_name = remove_vietnamese_accents(ho_ten).lower()
+    raw_tokens = [re.sub(r"[^a-z0-9]", "", tok) for tok in clean_name.split() if tok]
+    tokens = [t for t in raw_tokens if t]
+
+    if not tokens:
+        base = "user"
+    elif len(tokens) == 1:
+        base = tokens[0]
+    else:
+        first_name = tokens[-1]
+        initials = "".join(t[0] for t in tokens[:-1])
+        base = f"{first_name}.{initials}" if initials else first_name
+
+    base = re.sub(r"[^a-z0-9.]", "", base)
+    if not base:
+        base = "user"
+
+    cur = db.cursor()
+    candidate = base
+    counter = 1
+    while True:
+        if candidate not in seen_usernames:
+            cur.execute("SELECT id FROM users WHERE ma_hoc_sinh = ?", (candidate,))
+            if not cur.fetchone():
+                seen_usernames.add(candidate)
+                return candidate
+        candidate = f"{base}{counter}"
+        counter += 1
+
+
+def generate_secure_random_password(length=8):
+    """
+    Tự sinh mật khẩu ngẫu nhiên RIÊNG BIỆT cho từng người dùng (không dùng chung mật khẩu).
+    Kết hợp chữ hoa, chữ thường và chữ số, loại bỏ ký tự dễ nhầm lẫn (l, 1, O, 0).
+    """
+    chars_upper = "ABCDEFGHJKLMNPQRSTUVWXYZ"
+    chars_lower = "abcdefghijkmnpqrstuvwxyz"
+    chars_digits = "23456789"
+    pwd = [
+        secrets.choice(chars_upper),
+        secrets.choice(chars_lower),
+        secrets.choice(chars_digits),
+    ]
+    all_chars = chars_upper + chars_lower + chars_digits
+    pwd += [secrets.choice(all_chars) for _ in range(max(0, length - 3))]
+    rnd = secrets.SystemRandom()
+    rnd.shuffle(pwd)
+    return "".join(pwd)
+
+
+@app.route("/admin/import-users/template")
+@admin_required
+def admin_download_import_template():
+    """
+    Tải file Excel mẫu (.xlsx) chuẩn cấu trúc để nhà trường điền danh sách học sinh / giáo viên / quản trị.
+    Các cột: họ_tên | vai_trò (quantruong/giaovien/hocsinh) | lớp | email | số_điện_thoại | ghi_chú
+    """
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Mau_Nhap_Tai_Khoan"
+
+    headers = ["họ_tên", "vai_trò", "lớp", "email", "số_điện_thoại", "ghi_chú"]
+    ws.append(headers)
+
+    sample_rows = [
+        ["Nguyễn Văn Quản", "quantruong", "Ban Giám Hiệu", "quantruong.demo@uka.edu.vn", "0901234567", "Quản trị viên nhà trường"],
+        ["Trần Thị Mai", "giaovien", "Tổ Tin học", "maitt.demo@uka.edu.vn", "0912345678", "Giáo viên phụ trách khối 10"],
+        ["Lê Hoàng Long", "hocsinh", "10A1", "longlh.demo@uka.edu.vn", "0923456789", "Học sinh lớp 10A1"],
+    ]
+    for row in sample_rows:
+        ws.append(row)
+
+    # Định dạng Header
+    header_fill = PatternFill(start_color="F97316", end_color="F97316", fill_type="solid")
+    header_font = Font(name="Segoe UI", size=11, bold=True, color="FFFFFF")
+    thin_border = Border(
+        left=Side(style="thin", color="D1D5DB"),
+        right=Side(style="thin", color="D1D5DB"),
+        top=Side(style="thin", color="D1D5DB"),
+        bottom=Side(style="thin", color="D1D5DB")
+    )
+    center_align = Alignment(horizontal="center", vertical="center")
+    left_align = Alignment(horizontal="left", vertical="center")
+
+    for col_idx in range(1, len(headers) + 1):
+        cell = ws.cell(row=1, column=col_idx)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = center_align
+        cell.border = thin_border
+
+    # Định dạng các dòng mẫu
+    data_font = Font(name="Segoe UI", size=10)
+    for r_idx in range(2, len(sample_rows) + 2):
+        for c_idx in range(1, len(headers) + 1):
+            cell = ws.cell(row=r_idx, column=c_idx)
+            cell.font = data_font
+            cell.border = thin_border
+            if c_idx in (2, 3, 5):
+                cell.alignment = center_align
+            else:
+                cell.alignment = left_align
+
+    # Tự động điều chỉnh độ rộng cột
+    for col in ws.columns:
+        max_len = 0
+        col_letter = get_column_letter(col[0].column)
+        for cell in col:
+            val_str = str(cell.value or "")
+            if len(val_str) > max_len:
+                max_len = len(val_str)
+        ws.column_dimensions[col_letter].width = max(max_len + 5, 14)
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    filename = "mau_nhap_tai_khoan_timebank_edu.xlsx"
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name=filename,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+
+@app.route("/admin/import-users", methods=["POST"])
+@admin_required
+def admin_import_users():
+    """
+    Xử lý tải lên file Excel (.xlsx) hoặc CSV để nhập danh sách tài khoản hàng loạt:
+    - Validate từng dòng: họ tên không trống, vai trò hợp lệ, email/SĐT không trùng.
+    - Dòng lỗi -> ghi lại lý do, không chặn các dòng đúng.
+    - Tự sinh tên đăng nhập + mật khẩu ngẫu nhiên riêng cho từng người.
+    - Mật khẩu băm bằng werkzeug.security.generate_password_hash.
+    - Gán đúng truong_id: Quản trị trường chỉ nhập cho trường mình; Super Admin chọn trường.
+    - Tài khoản hoạt động ngay, học sinh cấp +2.0 giờ ban đầu.
+    - Chống trùng lặp (Idempotency): chạy lại file cũ không tạo tài khoản trùng.
+    - Lưu kết quả vào session để xuất file Excel kết quả.
+    """
+    db = get_db()
+    cur = db.cursor()
+
+    is_super = is_super_admin()
+    current_school_id = session.get("truong_id", 1)
+    form_truong_id = request.form.get("truong_id", "").strip()
+
+    if is_super:
+        if form_truong_id and form_truong_id.isdigit():
+            target_school_id = int(form_truong_id)
+        else:
+            target_school_id = current_school_id
+    else:
+        # Quản trị trường chỉ được nhập cho trường của mình
+        if form_truong_id and str(form_truong_id) != str(current_school_id):
+            flash("Quản trị trường chỉ có quyền nhập danh sách cho trường của mình!", "danger")
+            return redirect(url_for("admin_dashboard") + "#tab-users")
+        target_school_id = current_school_id
+
+    # Lấy thông tin trường đích
+    cur.execute("SELECT ten_truong FROM truong WHERE id = ?", (target_school_id,))
+    s_row = cur.fetchone()
+    school_name = s_row["ten_truong"] if s_row else f"Trường #{target_school_id}"
+
+    # Kiểm tra file upload
+    file = request.files.get("file")
+    if not file or not file.filename:
+        flash("Vui lòng chọn file Excel (.xlsx) hoặc CSV (.csv) để nhập danh sách!", "warning")
+        return redirect(url_for("admin_dashboard") + "#tab-users")
+
+    filename_lower = file.filename.lower()
+    rows_data = []
+
+    if filename_lower.endswith(".xlsx") or filename_lower.endswith(".xls"):
+        try:
+            wb = openpyxl.load_workbook(io.BytesIO(file.read()), data_only=True)
+            ws = wb.active
+            rows_data = list(ws.iter_rows(values_only=True))
+        except Exception as e:
+            flash(f"Lỗi khi đọc file Excel: {str(e)}", "danger")
+            return redirect(url_for("admin_dashboard") + "#tab-users")
+    elif filename_lower.endswith(".csv"):
+        try:
+            raw_bytes = file.read()
+            decoded_text = None
+            for enc in ("utf-8-sig", "utf-8", "cp1258", "latin-1"):
+                try:
+                    decoded_text = raw_bytes.decode(enc)
+                    break
+                except Exception:
+                    continue
+            if not decoded_text:
+                flash("Không thể giải mã file CSV. Vui lòng lưu file với định dạng UTF-8!", "danger")
+                return redirect(url_for("admin_dashboard") + "#tab-users")
+            reader = csv.reader(io.StringIO(decoded_text))
+            rows_data = list(reader)
+        except Exception as e:
+            flash(f"Lỗi khi đọc file CSV: {str(e)}", "danger")
+            return redirect(url_for("admin_dashboard") + "#tab-users")
+    else:
+        flash("Định dạng file không được hỗ trợ. Vui lòng tải lên file .xlsx hoặc .csv!", "danger")
+        return redirect(url_for("admin_dashboard") + "#tab-users")
+
+    if not rows_data or len(rows_data) < 2:
+        flash("File tải lên không có dữ liệu để nhập!", "warning")
+        return redirect(url_for("admin_dashboard") + "#tab-users")
+
+    header_row = [str(cell or "").strip() for cell in rows_data[0]]
+
+    def find_col_idx(headers, keywords):
+        for idx, h in enumerate(headers):
+            if not h:
+                continue
+            norm_h = remove_vietnamese_accents(str(h)).lower().replace("_", " ").strip()
+            for kw in keywords:
+                if kw in norm_h:
+                    return idx
+        return None
+
+    idx_ho_ten = find_col_idx(header_row, ["ho ten", "ho va ten", "hoten", "fullname", "name"])
+    idx_vai_tro = find_col_idx(header_row, ["vai tro", "vaitro", "role", "chuc vu"])
+    idx_lop = find_col_idx(header_row, ["lop", "class", "don vi", "bo mon"])
+    idx_email = find_col_idx(header_row, ["email", "mail"])
+    idx_sdt = find_col_idx(header_row, ["so dien thoai", "dien thoai", "sdt", "phone", "tel"])
+    idx_ghi_chu = find_col_idx(header_row, ["ghi chu", "ghichu", "note", "mo ta"])
+
+    if idx_ho_ten is None or idx_vai_tro is None:
+        flash("File thiếu cột bắt buộc 'họ_tên' hoặc 'vai_trò'. Vui lòng tải file mẫu để kiểm tra đúng cấu trúc!", "danger")
+        return redirect(url_for("admin_dashboard") + "#tab-users")
+
+    success_list = []
+    error_list = []
+    seen_emails = set()
+    seen_phones = set()
+    seen_usernames = set()
+    total_processed_rows = 0
+
+    for i, row in enumerate(rows_data[1:]):
+        row_number = i + 2
+        if not row or all(cell is None or str(cell).strip() == "" for cell in row):
+            continue  # Bỏ qua dòng hoàn toàn trống
+
+        total_processed_rows += 1
+
+        def get_val(idx):
+            if idx is not None and idx < len(row) and row[idx] is not None:
+                return str(row[idx]).strip()
+            return ""
+
+        ho_ten = get_val(idx_ho_ten)
+        vai_tro_raw = get_val(idx_vai_tro)
+        lop = get_val(idx_lop)
+        email = get_val(idx_email)
+        sdt = get_val(idx_sdt)
+        ghi_chu = get_val(idx_ghi_chu)
+
+        # 1. Validate họ tên
+        if not ho_ten:
+            error_list.append({
+                "row": row_number,
+                "ho_ten": "(Để trống)",
+                "ly_do": "Họ và tên không được để trống"
+            })
+            continue
+
+        # 2. Validate vai trò
+        vt_norm = remove_vietnamese_accents(vai_tro_raw).lower().replace(" ", "").replace("_", "").replace("-", "")
+        if vt_norm in ("quantruong", "quan_truong", "school_admin", "schooladmin", "quantri", "quantritruong", "admin"):
+            role = "school_admin"
+        elif vt_norm in ("giaovien", "giao_vien", "teacher", "gv", "giangvien"):
+            role = "giao_vien"
+        elif vt_norm in ("hocsinh", "hoc_sinh", "student", "hs"):
+            role = "hoc_sinh"
+        else:
+            error_list.append({
+                "row": row_number,
+                "ho_ten": ho_ten,
+                "ly_do": f"Vai trò '{vai_tro_raw}' không hợp lệ (hỗ trợ: quantruong, giaovien, hocsinh)"
+            })
+            continue
+
+        # 3. Validate Email
+        if email:
+            if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
+                error_list.append({
+                    "row": row_number,
+                    "ho_ten": ho_ten,
+                    "ly_do": f"Email '{email}' không đúng định dạng"
+                })
+                continue
+            email_lower = email.lower()
+            if email_lower in seen_emails:
+                error_list.append({
+                    "row": row_number,
+                    "ho_ten": ho_ten,
+                    "ly_do": f"Email '{email}' bị trùng lặp với dòng trước trong file"
+                })
+                continue
+            cur.execute("SELECT id FROM users WHERE LOWER(email) = ?", (email_lower,))
+            if cur.fetchone():
+                error_list.append({
+                    "row": row_number,
+                    "ho_ten": ho_ten,
+                    "ly_do": f"Email '{email}' đã tồn tại trong hệ thống (tài khoản đã có)"
+                })
+                continue
+
+        # 4. Validate Số điện thoại
+        if sdt:
+            clean_sdt = re.sub(r"[^\d+]", "", sdt)
+            if len(clean_sdt) < 8 or len(clean_sdt) > 15:
+                error_list.append({
+                    "row": row_number,
+                    "ho_ten": ho_ten,
+                    "ly_do": f"Số điện thoại '{sdt}' không hợp lệ"
+                })
+                continue
+            if clean_sdt in seen_phones:
+                error_list.append({
+                    "row": row_number,
+                    "ho_ten": ho_ten,
+                    "ly_do": f"Số điện thoại '{sdt}' bị trùng lặp với dòng trước trong file"
+                })
+                continue
+            cur.execute("SELECT id FROM users WHERE so_dien_thoai = ?", (clean_sdt,))
+            if cur.fetchone():
+                error_list.append({
+                    "row": row_number,
+                    "ho_ten": ho_ten,
+                    "ly_do": f"Số điện thoại '{sdt}' đã tồn tại trong hệ thống"
+                })
+                continue
+            sdt = clean_sdt
+
+        # 5. Chống trùng lặp (Idempotency): Nếu không có email và SĐT, kiểm tra họ tên + lớp + vai trò trong trường
+        if not email and not sdt:
+            cur.execute("""
+                SELECT id FROM users 
+                WHERE truong_id = ? AND ho_ten = ? AND (lop = ? OR (lop IS NULL AND ? = '')) AND vai_tro = ?
+            """, (target_school_id, ho_ten, lop, lop, role))
+            if cur.fetchone():
+                error_list.append({
+                    "row": row_number,
+                    "ho_ten": ho_ten,
+                    "ly_do": f"Tài khoản '{ho_ten}' (Lớp: {lop or '—'}) đã tồn tại trong trường (chống tạo trùng lặp)"
+                })
+                continue
+
+        # 6. Dòng hợp lệ -> Tạo tài khoản tự động
+        username = generate_unique_username(ho_ten, db, seen_usernames)
+        plain_pwd = generate_secure_random_password(8)
+        hashed_pwd = generate_password_hash(plain_pwd)
+
+        # Cấp số dư giờ theo quy chuẩn: Học sinh được cấp +2.0 giờ ban đầu
+        so_du = 2.0 if role == "hoc_sinh" else (10.0 if role == "giao_vien" else 100.0)
+        unit_lop = lop if lop else ("Ban Giám Hiệu" if role == "school_admin" else ("Tổ Giáo Viên" if role == "giao_vien" else ""))
+
+        cur.execute("""
+            INSERT INTO users (truong_id, ma_hoc_sinh, ho_ten, lop, vai_tro, so_du_gio, gio_ranh, mat_khau, email, so_dien_thoai, ghi_chu, trang_thai)
+            VALUES (?, ?, ?, ?, ?, ?, 'Toàn thời gian', ?, ?, ?, ?, 'hoat_dong')
+        """, (target_school_id, username, ho_ten, unit_lop, role, so_du, hashed_pwd, email or None, sdt or None, ghi_chu or None))
+
+        if email:
+            seen_emails.add(email.lower())
+        if sdt:
+            seen_phones.add(sdt)
+
+        role_display = "Quản trị trường" if role == "school_admin" else ("Giáo viên" if role == "giao_vien" else "Học sinh")
+        success_list.append({
+            "ho_ten": ho_ten,
+            "vai_tro": role,
+            "vai_tro_hien_thi": role_display,
+            "lop": unit_lop,
+            "ma_hoc_sinh": username,
+            "mat_khau": plain_pwd,
+            "so_du_gio": so_du,
+            "email": email,
+            "so_dien_thoai": sdt,
+            "ghi_chu": ghi_chu,
+            "ten_truong": school_name
+        })
+
+    db.commit()
+
+    # Lưu kết quả vào session để người dùng tải file Excel kết quả
+    session["last_import_result"] = {
+        "success_count": len(success_list),
+        "error_count": len(error_list),
+        "total_rows": total_processed_rows,
+        "school_name": school_name,
+        "school_id": target_school_id,
+        "errors": error_list,
+        "success_list": success_list,
+        "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    }
+
+    if len(success_list) > 0 and len(error_list) == 0:
+        flash(f"Nhập danh sách thành công! Đã tạo {len(success_list)} tài khoản cho trường '{school_name}'. Vui lòng tải file Excel kết quả để phát thông tin đăng nhập cho từng người.", "success")
+    elif len(success_list) > 0 and len(error_list) > 0:
+        flash(f"Đã tạo thành công {len(success_list)} tài khoản; {len(error_list)} dòng bị lỗi/bỏ qua. Xem bảng tổng kết chi tiết bên dưới.", "warning")
+    else:
+        flash(f"Không có tài khoản nào được tạo. Toàn bộ {len(error_list)} dòng trong danh sách đều có lỗi.", "danger")
+
+    return redirect(url_for("admin_dashboard") + "#tab-users")
+
+
+@app.route("/admin/import-users/download-result")
+@admin_required
+def admin_download_import_result():
+    """
+    Xuất file Excel (.xlsx) kết quả nhập tài khoản gồm họ tên, tên đăng nhập, mật khẩu ban đầu
+    để nhà trường in hoặc phát gửi riêng cho từng cá nhân (học sinh/giáo viên).
+    """
+    last_import = session.get("last_import_result")
+    if not last_import or not last_import.get("success_list"):
+        flash("Chưa có kết quả nhập tài khoản nào trong phiên làm việc hiện tại để tải về!", "warning")
+        return redirect(url_for("admin_dashboard") + "#tab-users")
+
+    success_list = last_import["success_list"]
+    school_name = last_import.get("school_name", "Truong_Hoc")
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Danh_Sach_Tai_Khoan"
+
+    headers = [
+        "STT", "Họ và tên", "Vai trò", "Lớp / Đơn vị",
+        "Tên đăng nhập (Mã định danh)", "Mật khẩu ban đầu",
+        "Số dư giờ khởi tạo", "Email", "Số điện thoại", "Trường học", "Ghi chú"
+    ]
+    ws.append(headers)
+
+    for idx, item in enumerate(success_list, 1):
+        ws.append([
+            idx,
+            item.get("ho_ten", ""),
+            item.get("vai_tro_hien_thi", ""),
+            item.get("lop", ""),
+            item.get("ma_hoc_sinh", ""),
+            item.get("mat_khau", ""),
+            f"{item.get('so_du_gio', 2.0):.1f}h",
+            item.get("email", ""),
+            item.get("so_dien_thoai", ""),
+            item.get("ten_truong", ""),
+            item.get("ghi_chu", "")
+        ])
+
+    # Định dạng Header
+    header_fill = PatternFill(start_color="16A34A", end_color="16A34A", fill_type="solid")
+    header_font = Font(name="Segoe UI", size=11, bold=True, color="FFFFFF")
+    thin_border = Border(
+        left=Side(style="thin", color="D1D5DB"),
+        right=Side(style="thin", color="D1D5DB"),
+        top=Side(style="thin", color="D1D5DB"),
+        bottom=Side(style="thin", color="D1D5DB")
+    )
+    center_align = Alignment(horizontal="center", vertical="center")
+    left_align = Alignment(horizontal="left", vertical="center")
+
+    for col_idx in range(1, len(headers) + 1):
+        cell = ws.cell(row=1, column=col_idx)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = center_align
+        cell.border = thin_border
+
+    # Định dạng các dòng dữ liệu
+    data_font = Font(name="Segoe UI", size=10)
+    highlight_font = Font(name="Segoe UI", size=10, bold=True, color="1E3A8A")
+    highlight_fill = PatternFill(start_color="EFF6FF", end_color="EFF6FF", fill_type="solid")
+
+    for r_idx in range(2, len(success_list) + 2):
+        for c_idx in range(1, len(headers) + 1):
+            cell = ws.cell(row=r_idx, column=c_idx)
+            cell.font = data_font
+            cell.border = thin_border
+
+            # Cột Mã đăng nhập (cột 5) và Mật khẩu (cột 6) nổi bật
+            if c_idx in (5, 6):
+                cell.font = highlight_font
+                cell.fill = highlight_fill
+                cell.alignment = center_align
+            elif c_idx in (1, 3, 4, 7, 9):
+                cell.alignment = center_align
+            else:
+                cell.alignment = left_align
+
+    # Tự động điều chỉnh độ rộng cột
+    for col in ws.columns:
+        max_len = 0
+        col_letter = get_column_letter(col[0].column)
+        for cell in col:
+            val_str = str(cell.value or "")
+            if len(val_str) > max_len:
+                max_len = len(val_str)
+        ws.column_dimensions[col_letter].width = max(max_len + 5, 12)
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    clean_school_tag = remove_vietnamese_accents(school_name).replace(" ", "_")
+    timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+    download_filename = f"ket_qua_cap_tai_khoan_{clean_school_tag}_{timestamp_str}.xlsx"
+
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name=download_filename,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+
+@app.route("/admin/import-users/clear-result")
+@admin_required
+def admin_clear_import_result():
+    """
+    Xóa kết quả nhập danh sách khỏi phiên làm việc sau khi quản trị viên đã xem hoặc tải xong.
+    """
+    session.pop("last_import_result", None)
+    return redirect(url_for("admin_dashboard") + "#tab-users")
 
 
 @app.cli.command("create-superadmin")

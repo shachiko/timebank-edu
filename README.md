@@ -952,5 +952,44 @@ Nhằm nâng cao tính sư phạm, thuần khiết và thân thiện trong môi 
   - Kiểm thử click từng link điều hướng: Đảm bảo phản hồi mượt mà, **tuyệt đối không có link nào bị gãy**.
 - **Kiểm Thử Hồi Quy (Regression Testing):**
   - Chạy toàn bộ hệ thống test suites: `python -X utf8 run_all_tests.py`
-  - Kết quả: **33/33 Test Suites ĐẠT 100% PASS (275+ tests passed)**.
+  - Kết quả: **34/34 Test Suites ĐẠT 100% PASS (282+ tests passed)**.
+
+---
+
+## 📥 TÍNH NĂNG NHẬP DANH SÁCH HỌC SINH / GIÁO VIÊN HÀNG LOẠT (EXCEL/CSV)
+
+Phát triển tính năng quản trị quy mô lớn phục vụ các trường gửi danh sách hàng trăm người (quản trị trường, giáo viên, học sinh) để tạo tài khoản đồng loạt an toàn, tự động và dùng lâu dài ngay trong `/admin` thay vì nhập tay.
+
+### 1. Kiến trúc Kỹ thuật & Nguyên Tắc Bảo Mật:
+- **Tuyệt đối không dùng chung mật khẩu mặc định:** Mỗi tài khoản được tự sinh mật khẩu ngẫu nhiên RIÊNG BIỆT (8 ký tự kết hợp chữ hoa, chữ thường, số, loại bỏ ký tự dễ nhầm lẫn như l, 1, O, 0).
+- **Mã hóa một chiều:** Mật khẩu được băm an toàn bằng `werkzeug.security.generate_password_hash` trước khi lưu vào CSDL.
+- **Bảo mật dữ liệu học sinh:** Không lưu file danh sách chứa thông tin học sinh vào repository; mọi luồng xử lý Excel/CSV đều diễn ra in-memory thông qua thư viện `openpyxl` và `io.BytesIO`.
+- **Tự sinh Mã định danh (Tên đăng nhập):** Tự động sinh từ họ tên (ví dụ `Nguyễn Văn An` $\rightarrow$ `an.nv`), kiểm tra trùng lặp tự động với số thứ tự (`an.nv1`, `an.nv2`), đảm bảo duy nhất 100%.
+- **Cô lập Đa trường (Multi-Tenant Isolation):** 
+  - `school_admin`: Chỉ có quyền nhập danh sách cho trường của mình (`session['truong_id']`), tuyệt đối bị chặn nếu cố tình truyền `truong_id` trường khác.
+  - `super_admin`: Được phép chọn trường học cần nhập qua danh sách chọn trường.
+- **Kích hoạt & Vốn giờ ban đầu:** Tài khoản tạo ở trạng thái `hoat_dong` ngay (đăng nhập được luôn, không cần chờ duyệt); học sinh được tự động cấp `+2.0` giờ ban đầu đúng triết lý sư phạm TimeBank.
+- **Cơ chế Bỏ qua dòng lỗi (Fault Tolerance):** Validate từng dòng độc lập; dòng lỗi bị bỏ qua và ghi nhận lý do cụ thể, tuyệt đối không chặn các dòng đúng.
+- **Chống trùng lặp (Idempotency):** Chạy lại cùng file cũ sẽ phát hiện tài khoản đã tồn tại và bỏ qua, không tạo trùng lặp.
+
+### 2. Giao Diện & Quy Trình Trải Nghiệm (/admin):
+- **Tab Quản lý Tài khoản (`#tab-users`):** Nút *"Nhập danh sách (Excel/CSV)"* bo góc pill nổi bật.
+- **Modal Nhập Dữ Liệu (`#modalImportUsers`):**
+  - Nút *"Tải file Excel mẫu"* (`GET /admin/import-users/template`): Tải file mẫu 6 cột (`họ_tên`, `vai_trò`, `lớp`, `email`, `số_điện_thoại`, `ghi_chú`) có sẵn 3 dòng mẫu trực quan.
+  - Form chọn file upload hỗ trợ `.xlsx`, `.xls`, `.csv` (UTF-8).
+  - Khung hướng dẫn bảo mật và quy chuẩn tự động hóa.
+- **Bảng Tổng Kết & Xuất File Kết Quả:**
+  - Sau khi nạp, hiển thị bảng tổng kết: số dòng thành công, số dòng lỗi, bảng chi tiết từng dòng lỗi kèm số dòng và lý do.
+  - Nút *"Tải file Excel kết quả (Tên đăng nhập & Mật khẩu)"* (`GET /admin/import-users/download-result`): Xuất file Excel định dạng chuyên nghiệp để nhà trường in ấn hoặc bàn giao thông tin đăng nhập riêng cho từng người.
+
+### 3. Nghiệm Thu & Kiểm Thử Tự Động:
+- Đã xây dựng bộ kiểm thử chuyên biệt `test_prompt_import_users.py` với 7 test cases kiểm tra 100% các tiêu chí:
+  1. `test_01_download_template`: Tải file Excel mẫu đúng chuẩn 6 cột quy định.
+  2. `test_02_import_10_rows_with_2_errors`: Nạp 10 dòng (2 lỗi cố ý) $\rightarrow$ 8 thành công, 2 báo lỗi đúng lý do, 8 dòng đúng tạo bình thường.
+  3. `test_03_passwords_unique_and_immediate_login`: 100% mật khẩu ngẫu nhiên riêng biệt, đăng nhập được ngay lập tức với mật khẩu ban đầu.
+  4. `test_04_download_result_excel`: Tải file kết quả có đủ họ tên, tên đăng nhập, mật khẩu ban đầu.
+  5. `test_05_school_admin_cross_tenant_blocked`: Quản trị trường 1 bị chặn khi nhập cho trường 2 (RBAC bảo vệ dữ liệu).
+  6. `test_06_idempotency_no_duplicate_accounts`: Chạy lại file cũ không tạo tài khoản trùng.
+  7. `test_07_import_csv_format`: Hỗ trợ file CSV định dạng UTF-8.
+- **Kết quả Regression:** **34/34 Test Suites ĐẠT 100% PASS**.
 

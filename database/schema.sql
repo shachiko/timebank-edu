@@ -28,6 +28,8 @@ CREATE TABLE IF NOT EXISTS users (
     gio_ranh TEXT,
     mat_khau TEXT,
     email TEXT,
+    so_dien_thoai TEXT,
+    ghi_chu TEXT,
     trang_thai TEXT CHECK(trang_thai IN ('hoat_dong', 'cho_duyet', 'de_xuat_khoa', 'da_khoa')) DEFAULT 'hoat_dong',
     FOREIGN KEY (truong_id) REFERENCES truong(id)
 );
