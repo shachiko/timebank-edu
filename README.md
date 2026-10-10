@@ -942,6 +942,7 @@ Nhằm nâng cao tính sư phạm, thuần khiết và thân thiện trong môi 
 ### 4. Kiểm Thử Giao Diện & Phối Màu Thanh Navbar:
 - **Đổ Màu Nền Thanh Menu Ngang:** Áp dụng dải màu cam kem ấm nhẹ (`#FFFDFB` $\rightarrow$ `#FFF8F1`, viền `#FED7AA`), đổ bóng nhẹ `rgba(242, 101, 34, 0.08)`.
 - **Tương Phản Menu Pills:** Các nút menu bên trong có nền trắng bo tròn (`#FFFFFF`, viền `#FED7AA`, icon cam `#F26522`), hover cam ấm `#FFF7ED`, active gradient cam-vàng, phân tách cực kỳ rõ ràng và thẩm mỹ trên nền thanh navbar.
+- **Cố Định Header 1 Hàng Duy Nhất (Single-Row Navbar):** Khóa thuộc tính `flex-wrap: nowrap !important` trên toàn bộ container, collapse và navbar-nav trên Desktop/Laptop; tối ưu đệm padding của các nút menu và khống chế độ rộng hiển thị tên Quản trị viên (`max-width: 90px-110px`), triệt tiêu hoàn toàn hiện tượng tràn sang hàng 2, đảm bảo 100% các thành phần nằm gọn trên một hàng duy nhất đẹp mắt và chuyên nghiệp.
 - **Kiểm thử Desktop:** Mở menu "Hoạt động", các mục "Kho kỹ năng học đường" và "Cộng đồng liên trường" hiển thị sắc nét, click điều hướng chính xác 100% tới `/skills` và `/community-market`.
 - **Kiểm thử Mobile (Viewport 375px x 750px):**
   - Mở thanh điều hướng Hamburger Drawer và menu con "Hoạt động".

@@ -97,18 +97,20 @@ pre, code {
   color: #1E293B !important;
   background-color: #FFFFFF;
   border: 1px solid #FED7AA;
-  padding: 0.48rem 0.95rem !important;
+  padding: 0.38rem 0.7rem !important;
   border-radius: 9999px;
   transition: all 0.22s ease;
   display: inline-flex;
   align-items: center;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   box-shadow: 0 1px 3px rgba(242, 101, 34, 0.05);
+  white-space: nowrap !important;
 }
 
 .navbar-custom .nav-link i {
   color: #F26522;
   transition: color 0.2s ease;
+  margin-right: 4px;
 }
 
 .navbar-custom .nav-link:hover,
@@ -968,8 +970,23 @@ footer a:hover {
   }
 }
 
-/* Khi màn hình >= 1024px: Mở rộng thanh điều hướng dạng Desktop */
+/* Tiện ích flex hỗ trợ các khối thẻ và danh sách huy hiệu */
+.user-badges-wrap,
+.stat-cards-row,
+.step-cards-row {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+/* Khi màn hình >= 1024px: Mở rộng thanh điều hướng dạng Desktop - ĐẢM BẢO TẤT CẢ TRÊN 1 HÀNG */
 @media (min-width: 1024px) {
+  .navbar-custom .container-fluid {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+
   .navbar-custom .navbar-toggler {
     display: none !important;
   }
@@ -977,31 +994,52 @@ footer a:hover {
   .navbar-custom .navbar-collapse {
     display: flex !important;
     flex-basis: auto !important;
-    flex-wrap: wrap;
-    align-items: center;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
   }
 
   .navbar-custom .navbar-nav {
+    display: flex !important;
     flex-direction: row !important;
-    flex-wrap: wrap;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    margin: 0 auto !important;
+    gap: 4px !important;
+  }
+
+  .navbar-custom .user-pill-container,
+  .navbar-custom .nav-auth-buttons {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    flex-shrink: 0 !important;
+    margin-left: auto !important;
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+    border-top: none !important;
+    width: auto !important;
   }
 }
 
 /* LAPTOP MÀN HÌNH NHỎ (1024px - 1399px, đặc biệt 1280px & 1366px):
-   Thu gọn tinh tế để TOÀN BỘ Header hiển thị đủ 100%, không cắt nút tài khoản, không tràn ngang */
+   Thu gọn tinh tế để TOÀN BỘ Header hiển thị đủ 100% trên 1 hàng, không xô lệch, không tràn dòng */
 @media (min-width: 1024px) and (max-width: 1399.98px) {
   .navbar-custom .navbar-brand {
     margin-right: 0.5rem !important;
     gap: 0.4rem !important;
+    flex-shrink: 0 !important;
   }
 
   .navbar-custom .navbar-brand img {
-    height: 36px !important;
-    max-width: 125px !important;
+    height: 34px !important;
+    max-width: 115px !important;
   }
 
   .brand-title-text {
-    font-size: 0.95rem !important;
+    font-size: 0.92rem !important;
     line-height: 1.15 !important;
   }
 
@@ -1011,17 +1049,18 @@ footer a:hover {
 
   .navbar-custom .navbar-nav {
     gap: 2px !important;
+    flex-wrap: nowrap !important;
   }
 
   .navbar-custom .nav-link {
-    padding: 0.42rem 0.55rem !important;
-    font-size: 0.85rem !important;
-    white-space: nowrap;
+    padding: 0.32rem 0.48rem !important;
+    font-size: 0.8rem !important;
+    white-space: nowrap !important;
   }
 
   .navbar-custom .nav-link i {
-    font-size: 0.88rem;
-    margin-right: 3px !important;
+    font-size: 0.82rem !important;
+    margin-right: 2px !important;
   }
 
   /* Thu gọn tên người dùng & số dư trên laptop nhỏ */
@@ -1031,19 +1070,24 @@ footer a:hover {
 
   .navbar-custom .user-pill {
     padding: 2px 6px !important;
-    font-size: 0.85rem !important;
+    font-size: 0.8rem !important;
   }
 
   .user-balance-badge {
-    padding: 2px 6px !important;
-    font-size: 0.72rem !important;
+    padding: 2px 5px !important;
+    font-size: 0.7rem !important;
+  }
+
+  .navbar-custom #languageSelectorDropdown {
+    padding: 0.25rem 0.45rem !important;
+    font-size: 0.78rem !important;
   }
 
   .nav-auth-buttons .btn-auth-ghost,
   .nav-auth-buttons .btn-auth-solid {
     height: 34px !important;
-    padding: 0 0.8rem !important;
-    font-size: 0.82rem !important;
+    padding: 0 0.75rem !important;
+    font-size: 0.8rem !important;
   }
 }
 
