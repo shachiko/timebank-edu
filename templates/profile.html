@@ -979,7 +979,7 @@
 
     function escapeHtml(str) {
       return (str || '').replace(/[&<>"']/g, function(m) {
-        return { '&': '&', '<': '<', '>': '>', '"': '"', "'": ''' }[m];
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
       });
     }
 
