@@ -141,9 +141,15 @@ msgstr "Activités"
 msgid "Chợ kỹ năng"
 msgstr "Marché des Compétences"
 
+msgid "Kho kỹ năng học đường"
+msgstr "Marché des Compétences"
+
 #: templates/base.html:100
 msgid "Sàn cộng đồng"
 msgstr "Échange Communautaire"
+
+msgid "Cộng đồng liên trường"
+msgstr "Communauté Inter-Écoles"
 
 #: templates/base.html:105 templates/base.html:379
 msgid "Vì cộng đồng"

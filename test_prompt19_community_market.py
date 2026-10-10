@@ -104,10 +104,10 @@ class TestPrompt19CommunityMarket(unittest.TestCase):
 
         # Kiểm tra thông báo số giờ còn thiếu: 24 - 23 = 1
         self.assertIn("Bạn cần", text)
-        self.assertIn("giờ dạy nữa để mở khóa Sàn cộng đồng", text)
+        self.assertTrue("giờ dạy nữa để mở khóa Cộng đồng liên trường" in text or "giờ dạy nữa để mở khóa Sàn cộng đồng" in text)
         self.assertTrue("1" in text or "1.0" in text, "Phải hiển thị còn thiếu 1 hoặc 1.0 giờ dạy")
         self.assertIn("Tiến độ tích lũy", text)
-        self.assertIn("Cổng Kiểm Chuẩn Sàn Cộng Đồng", text)
+        self.assertTrue("Cổng Kiểm Chuẩn Cộng Đồng Liên Trường" in text or "Cổng Kiểm Chuẩn Sàn Cộng Đồng" in text)
 
         # Kiểm tra Profile: KHÔNG có huy hiệu "Thành viên Cộng đồng"
         resp_prof = self.client.get("/profile")
@@ -140,8 +140,8 @@ class TestPrompt19CommunityMarket(unittest.TestCase):
         resp = self.client.get("/community-market")
         self.assertEqual(resp.status_code, 200)
         text = resp.data.decode("utf-8")
-        self.assertIn("Sàn Giao Dịch Chung Liên Trường", text)
-        self.assertNotIn("Cổng Kiểm Chuẩn Sàn Cộng Đồng", text)
+        self.assertTrue("Cộng Đồng Liên Trường" in text or "Sàn Giao Dịch Chung Liên Trường" in text)
+        self.assertTrue("Cổng Kiểm Chuẩn" not in text)
 
         # Kiểm tra Profile: PHẢI có huy hiệu "Thành viên Cộng đồng"
         resp_prof = self.client.get("/profile")
@@ -191,7 +191,7 @@ class TestPrompt19CommunityMarket(unittest.TestCase):
         # User có 15h > 10h -> Tự động mở khóa ngay lập tức!
         resp2 = self.client.get("/community-market")
         text2 = resp2.data.decode("utf-8")
-        self.assertIn("Sàn Giao Dịch Chung Liên Trường", text2)
+        self.assertTrue("Cộng Đồng Liên Trường" in text2 or "Sàn Giao Dịch Chung Liên Trường" in text2)
 
         # Khôi phục về 24
         cfg["cong_dong_nguong_tin_dung"] = 24
@@ -355,11 +355,11 @@ class TestPrompt19CommunityMarket(unittest.TestCase):
             sess["vai_tro"] = "hoc_sinh"
             sess["truong_id"] = 1
 
-        # Xem profile: KHÔNG được có nút "Đăng lên sàn chung"
+        # Xem profile: KHÔNG được có nút "Đăng lên cộng đồng liên trường"
         resp = self.client.get("/profile")
         self.assertEqual(resp.status_code, 200)
         html = resp.data.decode("utf-8")
-        self.assertNotIn("Đăng lên sàn chung", html)
+        self.assertTrue("Đăng lên cộng đồng liên trường" not in html and "Đăng lên sàn chung" not in html)
 
         # Xem student với 23h: cũng KHÔNG được có nút "Đăng lên sàn chung"
         u_23 = self.create_user("P19_USER_23H", "Học sinh 23h Check Button", truong_id=1)
@@ -381,7 +381,7 @@ class TestPrompt19CommunityMarket(unittest.TestCase):
 
         resp_23 = self.client.get("/profile")
         html_23 = resp_23.data.decode("utf-8")
-        self.assertNotIn("Đăng lên sàn chung", html_23)
+        self.assertTrue("Đăng lên cộng đồng liên trường" not in html_23 and "Đăng lên sàn chung" not in html_23)
 
         # Ngược lại, user 24h PHẢI thấy nút "Đăng lên sàn chung"
         u_24 = self.create_user("P19_USER_24H", "Học sinh 24h Check Button", truong_id=1)
@@ -402,7 +402,7 @@ class TestPrompt19CommunityMarket(unittest.TestCase):
 
         resp_24 = self.client.get("/profile")
         html_24 = resp_24.data.decode("utf-8")
-        self.assertIn("Đăng lên sàn chung", html_24)
+        self.assertTrue("Đăng lên cộng đồng liên trường" in html_24 or "Đăng lên sàn chung" in html_24)
 
     def test_07_menu_and_admin_interface(self):
         """7. Giao diện: Menu có 'Sàn cộng đồng', Admin dashboard có tab 'Duyệt sàn chung'."""
@@ -417,12 +417,12 @@ class TestPrompt19CommunityMarket(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         html = resp.data.decode("utf-8")
 
-        # Menu điều hướng có "Sàn cộng đồng"
-        self.assertIn("Sàn cộng đồng", html)
+        # Menu điều hướng có "Cộng đồng liên trường"
+        self.assertTrue("Cộng đồng liên trường" in html or "Sàn cộng đồng" in html)
         self.assertIn("/community-market", html)
 
-        # Admin dashboard có tab "Duyệt Sàn Chung"
-        self.assertIn("Duyệt Sàn Chung", html)
+        # Admin dashboard có tab "Duyệt Liên Trường"
+        self.assertTrue("Duyệt Liên Trường" in html or "Duyệt Sàn Chung" in html)
         self.assertIn("tab-community", html)
 
 

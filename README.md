@@ -908,14 +908,44 @@ Hệ thống nâng cấp toàn diện phân hệ hoạt động phục vụ cộ
   8. Phân quyền Super Admin quản trị và phân bổ chương trình cho mọi trường.
 - **Toàn bộ 33/33 bộ kiểm thử hồi quy (100% PASS):** Hệ thống ổn định tuyệt đối, sẵn sàng triển khai thực tế.
 
+---
 
+## 💎 BỔ SUNG QUAN TRỌNG — CHUẨN HÓA TỪ NGỮ SƯ PHẠM & KIỂM THỬ RESPONSIVE
 
+Nhằm nâng cao tính sư phạm, thuần khiết và thân thiện trong môi trường giáo dục học đường theo định hướng của Ban Giám hiệu và các trường đối tác, hệ thống đã thực hiện đợt chuẩn hóa từ ngữ hiển thị trên toàn bộ giao diện:
 
+### 1. Nguyên Tắc Bất Di Bất Dịch:
+- **CHỈ thay đổi chuỗi text hiển thị người dùng nhìn thấy** (templates HTML, flash messages, tiêu đề trang, nhãn nút bấm).
+- **TUYỆT ĐỐI KHÔNG ĐỔI CẤU TRÚC KỸ THUẬT:**
+  - Giữ nguyên toàn bộ Routes/URLs hệ thống: `/skills`, `/community-market`, `/community`, v.v. (đảm bảo 100% không gãy liên kết hay bookmark cũ).
+  - Giữ nguyên tên biến, tên hàm, controller logic và cột CSDL.
+  - Giữ nguyên các giá trị logic lưu trong CSDL (`type='community_market'`, `hien_thi_cong_dong`, v.v.).
 
+### 2. Danh Mục Từ Ngữ Chuẩn Hóa Sư Phạm:
+| Thuật ngữ cũ | Thuật ngữ chuẩn hóa mới | Vị trí áp dụng |
+| :--- | :--- | :--- |
+| **Chợ kỹ năng** | **Kho kỹ năng học đường** | Header navbar, footer, tiêu đề `/skills`, link điều hướng từ trang ví, trang lịch học, nội quy |
+| **Sàn cộng đồng** / **Sàn chung** | **Cộng đồng liên trường** | Header navbar, tiêu đề `/community-market`, thông báo cổng kiểm chuẩn, tab admin `/admin` |
+| **Chợ nội trường** | **Kho nội trường** | Nút chuyển đổi nhanh tại `/community-market` và `/community-market-gate` |
+| **Duyệt Sàn Chung** | **Duyệt Liên Trường** | Tab `#tab-community` và tiêu đề danh sách duyệt trong Bảng điều khiển Quản trị `/admin` |
+| **Đăng lên sàn chung** | **Đăng lên cộng đồng liên trường** | Nút hành động và badge trạng thái trên trang Hồ sơ cá nhân (`/profile`) |
 
+### 3. Đồng Bộ Đa Ngôn Ngữ (Flask-Babel i18n):
+- Bổ sung chuỗi khóa `msgid "Kho kỹ năng học đường"` và `msgid "Cộng đồng liên trường"` vào toàn bộ 5 tệp ngôn ngữ:
+  - 🇻🇳 Tiếng Việt (`vi`): *Kho kỹ năng học đường* | *Cộng đồng liên trường*
+  - 🇬🇧 English (`en`): *School Skills Repository* | *Inter-School Community*
+  - 🇨🇳 中文 (`zh`): *校园技能库* | *校际互助社区*
+  - 🇫🇷 Français (`fr`): *Répertoire de compétences scolaires* | *Communauté interscolaire*
+  - 🇩🇪 Deutsch (`de`): *Schulkompetenz-Repository* | *Schulübergreifende Gemeinschaft*
+- Toàn bộ 5 tệp nhị phân `.mo` đã được tái biên dịch (`pybabel compile -d translations`).
 
-
-
-
-
+### 4. Kiểm Thử Giao Diện & Responsive Mobile Đạt Chuẩn:
+- **Kiểm thử Desktop:** Mở menu "Hoạt động", các mục "Kho kỹ năng học đường" và "Cộng đồng liên trường" hiển thị sắc nét, click điều hướng chính xác 100% tới `/skills` và `/community-market`.
+- **Kiểm thử Mobile (Viewport 375px x 750px):**
+  - Mở thanh điều hướng Hamburger Drawer và menu con "Hoạt động".
+  - Chữ hiển thị cân đối, vừa vặn, không bị tràn dòng hay vỡ khung responsive.
+  - Kiểm thử click từng link điều hướng: Đảm bảo phản hồi mượt mà, **tuyệt đối không có link nào bị gãy**.
+- **Kiểm Thử Hồi Quy (Regression Testing):**
+  - Chạy toàn bộ hệ thống test suites: `python -X utf8 run_all_tests.py`
+  - Kết quả: **33/33 Test Suites ĐẠT 100% PASS (275+ tests passed)**.
 

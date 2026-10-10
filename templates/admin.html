@@ -123,7 +123,7 @@
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link rounded-pill fw-semibold position-relative text-dark" id="tab-community-btn" data-bs-toggle="pill" data-bs-target="#tab-community" type="button" role="tab">
-        <i class="bi bi-globe2 text-warning me-1"></i> Duyệt Sàn Chung
+        <i class="bi bi-globe2 text-warning me-1"></i> Duyệt Liên Trường
         {% if community_pending_skills %}
           <span class="badge bg-warning text-dark rounded-pill ms-1">{{ community_pending_skills|length }}</span>
         {% endif %}
@@ -785,7 +785,7 @@
         <div class="card-header bg-white border-0 pt-4 px-4 pb-2 d-flex justify-content-between align-items-center">
           <div>
             <h5 class="fw-bold text-dark mb-1">
-              <i class="bi bi-globe2 text-warning me-2"></i>Kỹ Năng Chờ Duyệt Lên Sàn Chung Liên Trường
+              <i class="bi bi-globe2 text-warning me-2"></i>Kỹ Năng Chờ Duyệt Lên Cộng Đồng Liên Trường
             </h5>
             <p class="text-muted small mb-0">
               Tổng quản trị hoặc Quản trị viên bất kỳ trường nào đều có quyền duyệt. Một người duyệt là đủ; hệ thống tự động ghi nhận nhật ký người duyệt.
@@ -834,7 +834,7 @@
                     <div class="d-inline-flex gap-2">
                       <form action="{{ url_for('admin_approve_community_skill', skill_id=sk.id) }}" method="POST">
                         <button type="submit" class="btn btn-sm btn-success rounded-pill px-3 shadow-sm">
-                          <i class="bi bi-check-lg me-1"></i>Duyệt lên Sàn chung
+                          <i class="bi bi-check-lg me-1"></i>Duyệt lên Liên trường
                         </button>
                       </form>
                       <form action="{{ url_for('admin_reject_community_skill', skill_id=sk.id) }}" method="POST">
@@ -852,7 +852,7 @@
           {% else %}
           <div class="text-center py-5 text-muted">
             <i class="bi bi-check2-circle display-4 text-success mb-2 d-block"></i>
-            <h6 class="fw-bold text-dark">Hiện không có kỹ năng nào chờ duyệt lên Sàn chung</h6>
+            <h6 class="fw-bold text-dark">Hiện không có kỹ năng nào chờ duyệt lên Cộng đồng liên trường</h6>
             <p class="small mb-0">Tất cả yêu cầu đăng kỹ năng liên trường đã được xử lý hoàn tất.</p>
           </div>
           {% endif %}
@@ -864,7 +864,7 @@
       <div class="card border-0 shadow-sm rounded-4 bg-white">
         <div class="card-header bg-white border-0 pt-4 px-4 pb-2">
           <h6 class="fw-bold text-dark mb-1">
-            <i class="bi bi-clock-history text-primary me-2"></i>Kỹ Năng Đang Hoạt Động Trên Sàn Chung
+            <i class="bi bi-clock-history text-primary me-2"></i>Kỹ Năng Đang Hoạt Động Trên Cộng Đồng Liên Trường
           </h6>
           <small class="text-muted">Nhật ký các kỹ năng đã được quản trị viên phê duyệt</small>
         </div>

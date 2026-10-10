@@ -131,9 +131,15 @@ msgstr "活动"
 msgid "Chợ kỹ năng"
 msgstr "技能市集"
 
+msgid "Kho kỹ năng học đường"
+msgstr "技能市集"
+
 #: templates/base.html:100
 msgid "Sàn cộng đồng"
 msgstr "社区集市"
+
+msgid "Cộng đồng liên trường"
+msgstr "跨校社区"
 
 #: templates/base.html:105 templates/base.html:379
 msgid "Vì cộng đồng"

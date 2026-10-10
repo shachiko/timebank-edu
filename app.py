@@ -4047,7 +4047,7 @@ def publish_community_skill(skill_id):
         return redirect(url_for("profile"))
 
     if sk["user_id"] != user_id:
-        flash("Bạn chỉ có thể đăng kỹ năng của chính mình lên Sàn cộng đồng!", "danger")
+        flash("Bạn chỉ có thể đăng kỹ năng của chính mình lên Cộng đồng liên trường!", "danger")
         return redirect(url_for("profile"))
 
     threshold = get_community_threshold()
@@ -4055,7 +4055,7 @@ def publish_community_skill(skill_id):
     if hours_taught < threshold:
         remaining = max(0.0, threshold - hours_taught)
         rem_str = int(remaining) if remaining == int(remaining) else round(remaining, 1)
-        flash(f"Bạn cần {rem_str} giờ dạy nữa để mở khóa Sàn cộng đồng!", "warning")
+        flash(f"Bạn cần {rem_str} giờ dạy nữa để mở khóa Cộng đồng liên trường!", "warning")
         return redirect(url_for("profile"))
 
     cur.execute("""
@@ -4066,7 +4066,7 @@ def publish_community_skill(skill_id):
     """, (skill_id,))
     db.commit()
 
-    flash("Đã gửi yêu cầu đăng kỹ năng lên Sàn cộng đồng liên trường. Vui lòng chờ Ban quản trị duyệt!", "success")
+    flash("Đã gửi yêu cầu đăng kỹ năng lên Cộng đồng liên trường. Vui lòng chờ Ban quản trị duyệt!", "success")
     return redirect(url_for("profile"))
 
 
@@ -4105,7 +4105,7 @@ def admin_approve_community_skill(skill_id):
     db.commit()
 
     school_name = sk["ten_truong"] if sk["ten_truong"] else "Trường học"
-    flash(f"Đã duyệt kỹ năng '{sk['tieu_de']}' ({school_name}) lên Sàn cộng đồng liên trường thành công!", "success")
+    flash(f"Đã duyệt kỹ năng '{sk['tieu_de']}' ({school_name}) lên Cộng đồng liên trường thành công!", "success")
     return redirect(url_for("admin_dashboard"))
 
 
@@ -4113,7 +4113,7 @@ def admin_approve_community_skill(skill_id):
 @admin_required
 def admin_reject_community_skill(skill_id):
     """
-    Từ chối đưa kỹ năng lên Sàn cộng đồng liên trường.
+    Từ chối đưa kỹ năng lên Cộng đồng liên trường.
     """
     db = get_db()
     cur = db.cursor()
@@ -4134,16 +4134,16 @@ def admin_reject_community_skill(skill_id):
     """, (session["user_id"], now_str, skill_id))
     db.commit()
 
-    flash(f"Đã từ chối đưa kỹ năng '{sk['tieu_de']}' lên Sàn cộng đồng liên trường.", "info")
+    flash(f"Đã từ chối đưa kỹ năng '{sk['tieu_de']}' lên Cộng đồng liên trường.", "info")
     return redirect(url_for("admin_dashboard"))
 
 
 @app.route("/community-market")
 def community_market():
     """
-    Sàn Giao Dịch Chung Liên Trường (Prompt 19):
+    Cộng Đồng Liên Trường (Prompt 19):
     - Cổng kiểm chuẩn tín dụng dạy thật: Học sinh chưa đạt ngưỡng -> Chặn và hiện thông báo + thanh tiến trình.
-    - Học sinh đạt ngưỡng (hoặc Quản trị viên/Giáo viên) -> Truy cập Sàn chung.
+    - Học sinh đạt ngưỡng (hoặc Quản trị viên/Giáo viên) -> Truy cập Cộng đồng liên trường.
     - Kỹ năng hiển thị kèm TÊN TRƯỜNG của chủ kỹ năng.
     """
     db = get_db()
@@ -4155,7 +4155,7 @@ def community_market():
     is_admin_user = user_role in ("super_admin", "school_admin", "admin", "giao_vien")
 
     if not user_id:
-        flash("Vui lòng đăng nhập để truy cập Sàn cộng đồng liên trường.", "warning")
+        flash("Vui lòng đăng nhập để truy cập Cộng đồng liên trường.", "warning")
         return redirect(url_for("login", next=request.url))
 
     teaching_hours = get_user_teaching_hours(db, user_id)
@@ -4402,7 +4402,7 @@ def new_skill():
         db.commit()
         
         if is_approved:
-            flash(f"Đăng ký thành công! {ly_do_luu}. Kỹ năng đã sẵn sàng trên Chợ kỹ năng.", "success")
+            flash(f"Đăng ký thành công! {ly_do_luu}. Kỹ năng đã sẵn sàng trên Kho kỹ năng học đường.", "success")
         else:
             flash(f"Kỹ năng đang ở trạng thái 'Chờ duyệt' để Giáo viên thẩm định thêm. {ly_do_luu}", "warning")
         return redirect(url_for("profile"))

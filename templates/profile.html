@@ -304,19 +304,19 @@
                 <small class="text-muted">{{ sk.linh_vuc }}</small>
                 {% if is_community_member %}
                   {% if sk.hien_thi_cong_dong == 1 or sk.trang_thai_cong_dong == 'da_duyet' %}
-                    <span class="badge bg-success-subtle text-success small" title="Đã có mặt trên Sàn cộng đồng"><i class="bi bi-globe me-1"></i>Sàn chung: Đã duyệt</span>
+                    <span class="badge bg-success-subtle text-success small" title="Đã có mặt trên Cộng đồng liên trường"><i class="bi bi-globe me-1"></i>Liên trường: Đã duyệt</span>
                   {% elif sk.trang_thai_cong_dong == 'cho_duyet' %}
-                    <span class="badge bg-info-subtle text-info-emphasis small" title="Đang chờ Quản trị viên duyệt"><i class="bi bi-hourglass-split me-1"></i>Sàn chung: Chờ duyệt</span>
+                    <span class="badge bg-info-subtle text-info-emphasis small" title="Đang chờ Quản trị viên duyệt"><i class="bi bi-hourglass-split me-1"></i>Liên trường: Chờ duyệt</span>
                   {% elif sk.trang_thai_cong_dong == 'tu_choi' %}
                     <form action="{{ url_for('publish_community_skill', skill_id=sk.id) }}" method="POST" class="d-inline">
                       <button type="submit" class="btn btn-sm btn-outline-warning py-0 px-2" style="font-size: 0.75rem;" title="Gửi lại yêu cầu">
-                        <i class="bi bi-arrow-repeat me-1"></i>Đăng lại sàn chung
+                        <i class="bi bi-arrow-repeat me-1"></i>Đăng lại liên trường
                       </button>
                     </form>
                   {% else %}
                     <form action="{{ url_for('publish_community_skill', skill_id=sk.id) }}" method="POST" class="d-inline">
-                      <button type="submit" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 0.75rem;" title="Đăng lên sàn giao dịch chung liên trường">
-                        <i class="bi bi-globe me-1"></i>Đăng lên sàn chung
+                      <button type="submit" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 0.75rem;" title="Đăng lên cộng đồng liên trường">
+                        <i class="bi bi-globe me-1"></i>Đăng lên cộng đồng liên trường
                       </button>
                     </form>
                   {% endif %}

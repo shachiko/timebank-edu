@@ -142,9 +142,15 @@ msgstr "Hoạt động"
 msgid "Chợ kỹ năng"
 msgstr "Chợ kỹ năng"
 
+msgid "Kho kỹ năng học đường"
+msgstr "Kho kỹ năng học đường"
+
 #: templates/base.html:100
 msgid "Sàn cộng đồng"
 msgstr "Sàn cộng đồng"
+
+msgid "Cộng đồng liên trường"
+msgstr "Cộng đồng liên trường"
 
 #: templates/base.html:105 templates/base.html:379
 msgid "Vì cộng đồng"

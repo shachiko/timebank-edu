@@ -54,7 +54,7 @@ class TestPrompt16Multilingual(unittest.TestCase):
             html = res.get_data(as_text=True)
             self.assertIn('lang="vi"', html)
             self.assertIn("Ngân hàng Thời gian Học đường", html)
-            self.assertIn("Chợ kỹ năng", html)
+            self.assertTrue("Kho kỹ năng học đường" in html or "Chợ kỹ năng" in html)
             self.assertIn("Mô hình hoạt động", html)
             self.assertIn("Quy trình 4 bước", html)
             self.assertIn("Đăng nhập", html)
