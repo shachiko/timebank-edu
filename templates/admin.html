@@ -20,11 +20,47 @@
     background-color: var(--brand-color, #f26522) !important;
     color: #ffffff !important;
   }
+  #usersTable {
+    width: 100%;
+  }
+  #usersTable th, #usersTable td {
+    vertical-align: middle;
+    padding: 0.65rem 0.45rem;
+  }
+  #usersTable th.col-actions,
+  #usersTable td.col-actions {
+    position: sticky;
+    right: 0;
+    background-color: #ffffff;
+    z-index: 5;
+    box-shadow: -4px 0 8px -2px rgba(0, 0, 0, 0.08);
+  }
+  #usersTable thead th.col-actions {
+    background-color: #f8f9fa;
+    z-index: 6;
+  }
+  #usersTable tbody tr:hover td.col-actions {
+    background-color: #f8f9fa;
+  }
+  .table-responsive::-webkit-scrollbar {
+    height: 8px;
+  }
+  .table-responsive::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+  }
+  .table-responsive::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+  }
+  .table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container py-4">
+<div class="container-fluid px-3 px-xl-4 py-4" style="max-width: 1680px;">
   <!-- Thanh tiêu đề Quản trị & Thông tin vai trò -->
   <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3 bg-white p-4 rounded-4 shadow-sm border">
     <div>
@@ -782,10 +818,10 @@
             <div class="position-relative" style="min-width: 200px;">
               <input type="text" id="searchUserTableInput" class="form-control form-control-sm rounded-pill shadow-sm" placeholder="{{ _('Tìm kiếm tên, mã, lớp...') }}">
             </div>
-            <a href="{{ url_for('admin_export_users_excel', truong_id=selected_truong_id) }}" class="btn btn-outline-success rounded-pill px-3 shadow-sm fw-semibold btn-sm" id="btnExportUsersExcel">
+            <a href="{{ url_for('admin_export_users_excel', truong_id=selected_truong_id) }}" class="btn btn-outline-success rounded-pill px-3 shadow-sm fw-semibold btn-sm text-nowrap" id="btnExportUsersExcel">
               <i class="bi bi-file-earmark-excel-fill me-1"></i>{{ _('Xuất Excel Tài Khoản') }}
             </a>
-            <button type="button" class="btn btn-primary rounded-pill px-3 shadow-sm fw-semibold btn-sm" data-bs-toggle="modal" data-bs-target="#modalImportUsers" id="btnImportUsers">
+            <button type="button" class="btn btn-primary rounded-pill px-3 shadow-sm fw-semibold btn-sm text-nowrap" data-bs-toggle="modal" data-bs-target="#modalImportUsers" id="btnImportUsers">
               <i class="bi bi-file-earmark-arrow-up-fill me-1"></i>{{ _('Nhập danh sách (Excel/CSV)') }}
             </button>
           </div>
@@ -862,43 +898,48 @@
             <table class="table table-hover align-middle mb-0" id="usersTable">
               <thead class="table-light small text-muted">
                 <tr>
-                  <th scope="col" class="ps-3">ID</th>
-                  <th scope="col">{{ _('Mã định danh') }}</th>
-                  <th scope="col">{{ _('Họ và tên') }}</th>
-                  <th scope="col">{{ _('Mật khẩu ban đầu') }}</th>
-                  <th scope="col">{{ _('Lớp / Bộ môn') }}</th>
-                  <th scope="col">{{ _('Trường học') }}</th>
-                  <th scope="col">{{ _('Vai trò') }}</th>
-                  <th scope="col">{{ _('Trạng thái') }}</th>
-                  <th scope="col" class="text-end">{{ _('Số dư giờ') }}</th>
-                  <th scope="col">{{ _('Khung giờ rảnh') }}</th>
-                  <th scope="col" class="text-end pe-3" style="width: 140px;">{{ _('Thao tác') }}</th>
+                  <th scope="col" class="ps-2 text-center text-nowrap" style="width: 45px;">ID</th>
+                  <th scope="col" class="text-nowrap" style="min-width: 95px;">{{ _('Mã định danh') }}</th>
+                  <th scope="col" style="min-width: 140px; max-width: 180px;">{{ _('Họ và tên') }}</th>
+                  <th scope="col" class="text-nowrap" style="min-width: 110px;">{{ _('Mật khẩu ban đầu') }}</th>
+                  <th scope="col" style="min-width: 90px; max-width: 130px;">{{ _('Lớp / Bộ môn') }}</th>
+                  <th scope="col" style="min-width: 130px; max-width: 180px;">{{ _('Trường học') }}</th>
+                  <th scope="col" class="text-nowrap" style="min-width: 95px;">{{ _('Vai trò') }}</th>
+                  <th scope="col" class="text-nowrap" style="min-width: 85px;">{{ _('Trạng thái') }}</th>
+                  <th scope="col" class="text-end text-nowrap" style="min-width: 70px;">{{ _('Số dư') }}</th>
+                  <th scope="col" style="min-width: 110px; max-width: 140px;">{{ _('Khung giờ rảnh') }}</th>
+                  <th scope="col" class="text-center px-2 text-nowrap col-actions" style="width: 125px; min-width: 125px;">{{ _('Thao tác') }}</th>
                 </tr>
               </thead>
               <tbody id="usersTableBody">
                 {% for u in users %}
                 <tr class="user-row" data-school-id="{{ u.truong_id }}" data-school-name="{{ u.ten_truong|lower }}">
-                  <td class="ps-3 small text-muted">#{{ u.id }}</td>
-                  <td><code>{{ u.ma_hoc_sinh }}</code></td>
+                  <td class="ps-2 text-center small text-muted text-nowrap" style="width: 45px;">#{{ u.id }}</td>
+                  <td class="text-nowrap"><code class="fw-bold">{{ u.ma_hoc_sinh }}</code></td>
                   <td>
-                    <div class="fw-semibold text-dark user-name-cell">{{ u.ho_ten }}</div>
-                    <small class="text-muted d-block fw-normal" style="font-size: 0.8em;">🏫 {{ u.ten_truong if u.ten_truong else _('Chưa phân trường') }}</small>
+                    <div class="fw-semibold text-dark user-name-cell" style="max-width: 180px; line-height: 1.35;" title="{{ u.ho_ten }}">{{ u.ho_ten }}</div>
                   </td>
-                  <td>
+                  <td class="text-nowrap">
                     {% if u.mat_khau_khoi_tao %}
                       <div class="d-flex align-items-center gap-1">
-                        <span class="badge rounded-pill font-monospace" style="background-color: #f3e8ff; color: #7e22ce; font-size: 0.82rem;">{{ u.mat_khau_khoi_tao }}</span>
+                        <span class="badge rounded-pill font-monospace" style="background-color: #f3e8ff; color: #7e22ce; font-size: 0.8rem;">{{ u.mat_khau_khoi_tao }}</span>
                         <button type="button" class="btn btn-sm btn-link text-muted p-0 text-decoration-none" onclick="navigator.clipboard.writeText('{{ u.mat_khau_khoi_tao }}'); this.innerHTML='<i class=\'bi bi-check text-success\'></i>'; setTimeout(() => this.innerHTML='<i class=\'bi bi-clipboard\'></i>', 1200);" title="{{ _('Sao chép mật khẩu') }}">
                           <i class="bi bi-clipboard"></i>
                         </button>
                       </div>
                     {% else %}
-                      <span class="text-muted small fst-italic">{{ _('[Đã mã hóa]') }}</span>
+                      <span class="text-muted small fst-italic" style="font-size: 0.82rem;">{{ _('[Đã mã hóa]') }}</span>
                     {% endif %}
                   </td>
-                  <td class="small user-class-cell">{{ u.lop if u.lop else '—' }}</td>
-                  <td><span class="badge bg-light text-primary border">{{ u.ten_truong if u.ten_truong else _('Chưa phân trường') }}</span></td>
-                  <td>
+                  <td class="small user-class-cell" style="max-width: 130px;">
+                    <span class="d-inline-block text-truncate" style="max-width: 130px;" title="{{ u.lop if u.lop else '—' }}">{{ u.lop if u.lop else '—' }}</span>
+                  </td>
+                  <td class="small" style="max-width: 180px;">
+                    <span class="badge bg-light text-primary border text-wrap text-start text-break py-1 px-2 d-inline-block" style="line-height: 1.3; font-size: 0.8rem; max-width: 100%; white-space: normal !important;" title="{{ u.ten_truong if u.ten_truong else _('Chưa phân trường') }}">
+                      {{ u.ten_truong if u.ten_truong else _('Chưa phân trường') }}
+                    </span>
+                  </td>
+                  <td class="text-nowrap">
                     {% if u.vai_tro in ('super_admin', 'admin') %}
                       <span class="badge bg-danger">{{ _('Tổng Quản trị') }}</span>
                     {% elif u.vai_tro == 'school_admin' %}
@@ -909,7 +950,7 @@
                       <span class="badge bg-success">{{ _('Học sinh') }}</span>
                     {% endif %}
                   </td>
-                  <td>
+                  <td class="text-nowrap">
                     {% if u.trang_thai == 'da_khoa' %}
                       <span class="badge bg-danger">{{ _('Đã khóa') }}</span>
                     {% elif u.trang_thai == 'de_xuat_khoa' %}
@@ -923,9 +964,9 @@
                   <td class="text-end fw-bold text-nowrap">
                     <span class="text-success">{{ "%.1f"|format(u.so_du_gio) }}h</span>
                   </td>
-                  <td class="small text-muted">{{ _(u.gio_ranh) if u.gio_ranh in ['Toàn thời gian', 'Linh hoạt'] else (u.gio_ranh if u.gio_ranh else '—') }}</td>
-                  <td class="text-end pe-3">
-                    <div class="d-flex align-items-center justify-content-end gap-1">
+                  <td class="small text-muted" style="max-width: 140px; line-height: 1.3; font-size: 0.82rem;" title="{{ u.gio_ranh }}">{{ _(u.gio_ranh) if u.gio_ranh in ['Toàn thời gian', 'Linh hoạt'] else (u.gio_ranh if u.gio_ranh else '—') }}</td>
+                  <td class="text-center px-2 text-nowrap col-actions" style="width: 125px; min-width: 125px;">
+                    <div class="d-flex align-items-center justify-content-center gap-1">
                       <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2" data-bs-toggle="modal" data-bs-target="#modalResetPwd{{ u.id }}" title="{{ _('Đặt lại mật khẩu') }}">
                         <i class="bi bi-key"></i>
                       </button>
