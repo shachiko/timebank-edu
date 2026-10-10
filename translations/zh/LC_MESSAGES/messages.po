@@ -872,3 +872,12 @@ msgstr "已有账号？"
 msgid "Đăng nhập tại đây"
 msgstr "在此处登录"
 
+
+msgid "Chào mừng bạn đến với Hệ sinh thái Giáo dục số TIME BANK EDU"
+msgstr "欢迎来到 TIME BANK EDU 数字教育生态系统"
+
+msgid "Tác giả phát triển & Thiết kế hệ thống: Cô giáo Nguyễn Thị Huyền (Giáo viên Tin học — Trường Quốc tế Song ngữ UK Academy)"
+msgstr "系统开发与设计作者：阮氏玄老师（计算机科学教师 — 英国学院国际双语学校 UK Academy）"
+
+msgid "Bản quyền toàn vẹn về mô hình sư phạm và giải pháp kiến trúc công nghệ School Time Bank"
+msgstr "School Time Bank 教学模型与科技架构解决方案之完整版权"

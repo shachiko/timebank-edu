@@ -918,3 +918,12 @@ msgstr "Vous avez déjà un compte ?"
 msgid "Đăng nhập tại đây"
 msgstr "Connectez-vous ici"
 
+
+msgid "Chào mừng bạn đến với Hệ sinh thái Giáo dục số TIME BANK EDU"
+msgstr "Bienvenue dans l'écosystème éducatif numérique TIME BANK EDU"
+
+msgid "Tác giả phát triển & Thiết kế hệ thống: Cô giáo Nguyễn Thị Huyền (Giáo viên Tin học — Trường Quốc tế Song ngữ UK Academy)"
+msgstr "Auteure & Architecte du système: Enseignante Nguyen Thi Huyen (Professeur d'informatique — École bilingue internationale UK Academy)"
+
+msgid "Bản quyền toàn vẹn về mô hình sư phạm và giải pháp kiến trúc công nghệ School Time Bank"
+msgstr "Tous droits réservés sur le modèle pédagogique et la solution architecturale School Time Bank"

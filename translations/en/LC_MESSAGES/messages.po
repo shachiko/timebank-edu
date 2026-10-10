@@ -917,3 +917,12 @@ msgstr "Already have an account?"
 msgid "Đăng nhập tại đây"
 msgstr "Log in here"
 
+
+msgid "Chào mừng bạn đến với Hệ sinh thái Giáo dục số TIME BANK EDU"
+msgstr "Welcome to TIME BANK EDU Digital Educational Ecosystem"
+
+msgid "Tác giả phát triển & Thiết kế hệ thống: Cô giáo Nguyễn Thị Huyền (Giáo viên Tin học — Trường Quốc tế Song ngữ UK Academy)"
+msgstr "System Author & Architect: Teacher Nguyen Thi Huyen (Computer Science Teacher — UK Academy International Bilingual School)"
+
+msgid "Bản quyền toàn vẹn về mô hình sư phạm và giải pháp kiến trúc công nghệ School Time Bank"
+msgstr "Full copyright on pedagogical model and architectural technology solutions for School Time Bank"

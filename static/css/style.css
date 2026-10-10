@@ -336,8 +336,8 @@ pre, code {
   background: linear-gradient(135deg, #EFF6FF 0%, #FEF3C7 45%, #FFEDD5 100%);
   border: 1.5px solid #FCD34D;
   border-radius: 50px;
-  padding: 8px 20px;
-  max-width: 880px;
+  padding: 8px 24px;
+  max-width: 980px;
   margin: 1.25rem auto 0 auto;
   position: relative;
   box-shadow: 0 4px 18px rgba(27, 42, 107, 0.08), 0 1px 3px rgba(242, 101, 34, 0.12);
@@ -348,10 +348,10 @@ pre, code {
   display: inline-block;
   white-space: nowrap;
   padding-left: 100%;
-  animation: marqueeAnimation 22s linear infinite;
+  animation: marqueeAnimation 28s linear infinite;
   color: #1E293B;
-  font-weight: 800;
-  font-size: 0.98rem;
+  font-weight: 700;
+  font-size: 0.95rem;
   letter-spacing: 0.3px;
 }
 
