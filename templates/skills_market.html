@@ -15,8 +15,11 @@
     </div>
 
     <div class="d-flex flex-wrap gap-2">
-      <a href="{{ url_for('ai_matchmake_view') }}" class="btn btn-warning fw-bold shadow-sm text-dark">
-        <i class="bi bi-stars text-danger me-1"></i> {{ _('AI Gợi Ý Ghép Cặp') }}
+      <button type="button" class="btn btn-warning fw-bold shadow-sm text-dark px-3" onclick="openAiBuddySuggestions()" id="btnAiSuggestBuddies">
+        <i class="bi bi-stars text-danger me-1"></i> {{ _('AI gợi ý bạn học') }}
+      </button>
+      <a href="{{ url_for('ai_matchmake_view') }}" class="btn btn-outline-warning fw-bold text-dark">
+        <i class="bi bi-cpu me-1"></i> {{ _('AI Ghép Cặp Nâng Cao') }}
       </a>
       {% if current_user %}
         <a href="{{ url_for('new_skill') }}" class="btn btn-brand">

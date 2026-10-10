@@ -16,6 +16,7 @@ import time
 import base64
 import secrets
 import sqlite3
+import json
 import yaml
 import csv
 import unicodedata
@@ -258,6 +259,27 @@ def inject_template_globals():
     except Exception:
         all_schools = []
 
+    unread_notifications_count = 0
+    user_notifications = []
+    if current_user:
+        try:
+            cur.execute("""
+                SELECT COUNT(*) FROM notifications 
+                WHERE user_id = ? AND da_doc = 0
+            """, (current_user["id"],))
+            row = cur.fetchone()
+            unread_notifications_count = row[0] if row else 0
+
+            cur.execute("""
+                SELECT * FROM notifications 
+                WHERE user_id = ? 
+                ORDER BY id DESC LIMIT 10
+            """, (current_user["id"],))
+            user_notifications = cur.fetchall()
+        except Exception:
+            unread_notifications_count = 0
+            user_notifications = []
+
     return {
         "config": load_school_config(),
         "current_user": current_user,
@@ -265,7 +287,9 @@ def inject_template_globals():
         "is_demo_user": is_demo_user,
         "is_demo": is_demo_user(session.get("ma_hoc_sinh")) if "user_id" in session else False,
         "current_lang": get_locale(),
-        "supported_languages": SUPPORTED_LANGUAGES
+        "supported_languages": SUPPORTED_LANGUAGES,
+        "unread_notifications_count": unread_notifications_count,
+        "user_notifications": user_notifications
     }
 
 
@@ -750,6 +774,7 @@ def migrate_postgres_schema(conn):
         ("users", "email", "TEXT"),
         ("users", "so_dien_thoai", "TEXT"),
         ("users", "ghi_chu", "TEXT"),
+        ("users", "mon_can_ho_tro", "TEXT"),
         # 2. skills
         ("skills", "truong_id", "INTEGER DEFAULT 1"),
         ("skills", "hien_thi_cong_dong", "INTEGER DEFAULT 0"),
@@ -1222,6 +1247,48 @@ def migrate_postgres_schema(conn):
         except Exception:
             pass
 
+    # 10. Bảng notifications (Chuông thông báo đăng ký học & hệ thống)
+    try:
+        if is_sqlite:
+            _exec("""
+                CREATE TABLE IF NOT EXISTS notifications (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    tieu_de TEXT NOT NULL,
+                    noi_dung TEXT NOT NULL,
+                    loai TEXT DEFAULT 'dang_ky_hoc',
+                    lien_ket TEXT,
+                    da_doc INTEGER DEFAULT 0,
+                    session_id INTEGER,
+                    ngay_tao TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                    FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE SET NULL
+                )
+            """)
+        else:
+            _exec("""
+                CREATE TABLE IF NOT EXISTS notifications (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER NOT NULL,
+                    tieu_de TEXT NOT NULL,
+                    noi_dung TEXT NOT NULL,
+                    loai TEXT DEFAULT 'dang_ky_hoc',
+                    lien_ket TEXT,
+                    da_doc INTEGER DEFAULT 0,
+                    session_id INTEGER,
+                    ngay_tao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                    FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE SET NULL
+                )
+            """)
+        conn.commit()
+    except Exception as e:
+        app.logger.warning(f"Lỗi tạo bảng notifications trong migrate_postgres_schema: {e}")
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+
 
 def init_db():
     """
@@ -1348,6 +1415,26 @@ def init_db():
             conn.execute("ALTER TABLE users ADD COLUMN so_dien_thoai TEXT")
         if "ghi_chu" not in u_cols:
             conn.execute("ALTER TABLE users ADD COLUMN ghi_chu TEXT")
+        if "mon_can_ho_tro" not in u_cols:
+            conn.execute("ALTER TABLE users ADD COLUMN mon_can_ho_tro TEXT")
+        conn.commit()
+
+        # Bảng notifications (SQLite)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS notifications (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                tieu_de TEXT NOT NULL,
+                noi_dung TEXT NOT NULL,
+                loai TEXT DEFAULT 'dang_ky_hoc',
+                lien_ket TEXT,
+                da_doc INTEGER DEFAULT 0,
+                session_id INTEGER,
+                ngay_tao TEXT DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE SET NULL
+            )
+        """)
         conn.commit()
 
         conn.execute("""
@@ -2488,6 +2575,80 @@ Ban Điều Hành School Time Bank
         return False, f"Không thể gửi email do lỗi máy chủ SMTP ({str(e)}). Vui lòng liên hệ Tổng Quản trị viên."
 
 
+def send_booking_notification_email(to_email, tutor_name, learner_name, skill_title, start_time, duration_hours, session_id):
+    """
+    VIỆC 5: Gửi email thông báo cho người dạy khi có học sinh đăng ký học kỹ năng.
+    Tự động đọc từ các biến môi trường SMTP/MAIL.
+    Nếu chưa cấu hình hoặc lỗi kết nối -> ghi log cảnh báo an toàn, KHÔNG crash ứng dụng.
+    """
+    if not to_email:
+        return False, "Người nhận chưa có địa chỉ email"
+
+    smtp_host = os.getenv("SMTP_HOST") or os.getenv("MAIL_SERVER")
+    smtp_port_raw = os.getenv("SMTP_PORT") or os.getenv("MAIL_PORT") or "587"
+    try:
+        smtp_port = int(smtp_port_raw)
+    except ValueError:
+        smtp_port = 587
+    smtp_user = os.getenv("SMTP_USER") or os.getenv("MAIL_USERNAME")
+    smtp_pass = os.getenv("SMTP_PASS") or os.getenv("MAIL_PASSWORD")
+    smtp_from = os.getenv("SMTP_FROM") or os.getenv("MAIL_DEFAULT_SENDER") or (smtp_user if smtp_user else "no-reply@timebankedu.vn")
+    smtp_tls = os.getenv("SMTP_TLS", "true").lower() in ("true", "1", "yes")
+
+    if not smtp_host or not smtp_user:
+        app.logger.info(f"SMTP chưa cấu hình hoặc thiếu biến môi trường, bỏ qua gửi email đăng ký học tới {to_email}.")
+        return False, "SMTP chưa cấu hình"
+
+    try:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = f"[TimeBank Edu] Thông báo: Có bạn học đăng ký kỹ năng '{skill_title}'"
+        msg["From"] = smtp_from
+        msg["To"] = to_email
+
+        text_body = f"""Xin chào {tutor_name},
+
+Học sinh {learner_name} vừa đăng ký tham gia buổi học kỹ năng "{skill_title}" cùng bạn:
+- Thời gian dự kiến: {start_time}
+- Thời lượng: {duration_hours} giờ
+- Mã phiên học: #{session_id}
+
+Bạn có thể đăng nhập vào School Time Bank và truy cập mục 'Lịch của tôi' để xác nhận buổi học này.
+
+Trân trọng,
+Ban Điều Hành School Time Bank - Ngân hàng Thời gian Học đường
+"""
+        html_body = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+          <h2 style="color: #F26522; margin-top: 0;">School Time Bank</h2>
+          <p>Xin chào <strong>{tutor_name}</strong>,</p>
+          <p>Bạn vừa nhận được một lượt đăng ký học kỹ năng mới từ bạn <strong>{learner_name}</strong>!</p>
+          <div style="background-color: #f8fafc; border-left: 4px solid #F26522; padding: 14px 18px; margin: 16px 0; border-radius: 6px;">
+            <p style="margin: 4px 0;"><strong>Kỹ năng:</strong> {skill_title}</p>
+            <p style="margin: 4px 0;"><strong>Thời gian hẹn:</strong> {start_time}</p>
+            <p style="margin: 4px 0;"><strong>Thời lượng:</strong> {duration_hours} giờ</p>
+            <p style="margin: 4px 0;"><strong>Mã phiên:</strong> #{session_id}</p>
+          </div>
+          <p>Vui lòng đăng nhập vào hệ thống để xác nhận lịch học và chuẩn bị trao đổi kiến thức nhé.</p>
+          <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+          <p style="color: #64748b; font-size: 0.85em;">School Time Bank - Một giờ bạn dạy, một giờ bạn học.</p>
+        </div>
+        """
+        msg.attach(MIMEText(text_body, "plain", "utf-8"))
+        msg.attach(MIMEText(html_body, "html", "utf-8"))
+
+        server = smtplib.SMTP(smtp_host, smtp_port, timeout=8)
+        if smtp_tls:
+            server.starttls()
+        if smtp_pass:
+            server.login(smtp_user, smtp_pass)
+        server.sendmail(smtp_from, [to_email], msg.as_string())
+        server.quit()
+        return True, None
+    except Exception as e:
+        app.logger.warning(f"Lỗi gửi email thông báo đăng ký học qua SMTP: {e}")
+        return False, str(e)
+
+
 @app.route("/forgot-password", methods=["GET", "POST"])
 def forgot_password():
     """
@@ -2590,12 +2751,88 @@ def reset_password(token):
     return render_template("reset_password.html", token=token, user=record, user_name=record["ho_ten"])
 
 
+@app.route("/profile/update-study-needs", methods=["POST"])
+@login_required
+def update_study_needs():
+    """
+    VIỆC 1 & 2: Cập nhật mục 'Tôi cần được giúp đỡ môn' (môn học + mức độ cơ bản/nâng cao + ghi chú)
+    và lịch giờ rảnh trong tuần (T2-CN) của học sinh.
+    Lưu vào users.mon_can_ho_tro và users.gio_ranh.
+    """
+    db = get_db()
+    cur = db.cursor()
+    user_id = session["user_id"]
+
+    # 1. Danh sách môn học được chọn
+    selected_subjects = request.form.getlist("mon_hoc")
+    needs_list = []
+    for m in selected_subjects:
+        m = m.strip()
+        if not m:
+            continue
+        level = request.form.get(f"muc_do_{m}", "co_ban").strip()
+        note = request.form.get(f"ghi_chu_{m}", "").strip()
+        needs_list.append({
+            "mon": m,
+            "muc_do": "Nâng cao" if level in ("nang_cao", "Nâng cao") else "Cơ bản",
+            "ghi_chu": note
+        })
+
+    # 2. Xử lý khung giờ rảnh theo tuần (T2 - CN)
+    days_map = [
+        ("T2", "Thứ 2", ["sang", "chieu", "toi"]),
+        ("T3", "Thứ 3", ["sang", "chieu", "toi"]),
+        ("T4", "Thứ 4", ["sang", "chieu", "toi"]),
+        ("T5", "Thứ 5", ["sang", "chieu", "toi"]),
+        ("T6", "Thứ 6", ["sang", "chieu", "toi"]),
+        ("T7", "Thứ 7", ["sang", "chieu", "toi"]),
+        ("CN", "Chủ Nhật", ["sang", "chieu", "toi"]),
+    ]
+    period_labels = {"sang": "Sáng", "chieu": "Chiều", "toi": "Tối"}
+
+    schedule_parts = []
+    for day_code, day_name, periods in days_map:
+        day_periods = []
+        for p in periods:
+            param_key = f"ranh_{day_code.lower()}_{p}"
+            if request.form.get(param_key):
+                day_periods.append(period_labels[p])
+        if day_periods:
+            schedule_parts.append(f"{day_name} ({', '.join(day_periods)})")
+
+    custom_note = request.form.get("gio_ranh_khac", "").strip()
+    if schedule_parts:
+        gio_ranh_str = ", ".join(schedule_parts)
+        if custom_note:
+            gio_ranh_str += f" • {custom_note}"
+    elif custom_note:
+        gio_ranh_str = custom_note
+    else:
+        gio_ranh_str = request.form.get("gio_ranh", "Linh hoạt").strip() or "Linh hoạt"
+
+    mon_json_str = json.dumps(needs_list, ensure_ascii=False) if needs_list else None
+
+    cur.execute(
+        "UPDATE users SET mon_can_ho_tro = ?, gio_ranh = ? WHERE id = ?",
+        (mon_json_str, gio_ranh_str, user_id)
+    )
+    db.commit()
+
+    # Xóa cache gợi ý hôm nay để cập nhật ngay theo nhu cầu mới
+    global DAILY_RECOMMENDATION_CACHE
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    DAILY_RECOMMENDATION_CACHE.pop((user_id, today_str), None)
+
+    flash(_("Đã cập nhật môn cần hỗ trợ và khung giờ rảnh thành công!"), "success")
+    return redirect(url_for("profile"))
+
+
 @app.route("/profile")
 @login_required
 def profile():
     """
     Trang hồ sơ cá nhân của người dùng:
-    - Hiển thị họ tên, lớp, vai trò, thời gian rảnh
+    - Hiển thị họ tên, lớp, vai trò, thời gian rảnh, môn cần hỗ trợ
     - Hiển thị số dư giờ thời gian thực
     - Liệt kê lịch sử biến động từ Sổ cái tín dụng (credits_ledger)
     - Liệt kê các kỹ năng học sinh đã đăng ký
@@ -2613,6 +2850,16 @@ def profile():
         
     # Cập nhật lại số dư trong session
     session["so_du_gio"] = user["so_du_gio"]
+
+    # Đọc nhu cầu môn học cần hỗ trợ
+    study_needs = []
+    if "mon_can_ho_tro" in user.keys() and user["mon_can_ho_tro"]:
+        try:
+            parsed = json.loads(user["mon_can_ho_tro"])
+            if isinstance(parsed, list):
+                study_needs = parsed
+        except Exception:
+            study_needs = []
 
     # Lấy lịch sử biến động tín dụng (credits_ledger)
     cur.execute(
@@ -2645,32 +2892,34 @@ def profile():
     if cache_key in DAILY_RECOMMENDATION_CACHE:
         daily_matches, is_live_rec, target_subject = DAILY_RECOMMENDATION_CACHE[cache_key]
     else:
-        # 1. Tự suy ra môn HS đang cần học: từ lịch sử các phiên đã học (lĩnh vực kỹ năng)
-        cur.execute("""
-            SELECT sk.linh_vuc, COUNT(*) AS so_luong
-            FROM sessions s
-            JOIN skills sk ON s.skill_id = sk.id
-            WHERE s.nguoi_hoc_id = ?
-            GROUP BY sk.linh_vuc
-            ORDER BY so_luong DESC, MAX(s.id) DESC
-            LIMIT 1
-        """, (user["id"],))
-        learned_sub = cur.fetchone()
-
-        if learned_sub and learned_sub["linh_vuc"]:
-            target_subject = learned_sub["linh_vuc"]
+        # 1. Tự suy ra môn HS đang cần học: ưu tiên từ mục 'mon_can_ho_tro', sau đó từ lịch sử học
+        if study_needs:
+            target_subject = study_needs[0]["mon"]
         else:
-            # Chưa có lịch sử học -> Lấy lĩnh vực phổ biến nhất trên sàn
             cur.execute("""
-                SELECT linh_vuc, COUNT(*) AS so_luong
-                FROM skills
-                WHERE trang_thai_duyet = 'da_duyet'
-                GROUP BY linh_vuc
-                ORDER BY so_luong DESC, MAX(id) DESC
+                SELECT sk.linh_vuc, COUNT(*) AS so_luong
+                FROM sessions s
+                JOIN skills sk ON s.skill_id = sk.id
+                WHERE s.nguoi_hoc_id = ?
+                GROUP BY sk.linh_vuc
+                ORDER BY so_luong DESC, MAX(s.id) DESC
                 LIMIT 1
-            """)
-            pop_sub = cur.fetchone()
-            target_subject = pop_sub["linh_vuc"] if pop_sub else "Toán học"
+            """, (user["id"],))
+            learned_sub = cur.fetchone()
+
+            if learned_sub and learned_sub["linh_vuc"]:
+                target_subject = learned_sub["linh_vuc"]
+            else:
+                cur.execute("""
+                    SELECT linh_vuc, COUNT(*) AS so_luong
+                    FROM skills
+                    WHERE trang_thai_duyet = 'da_duyet'
+                    GROUP BY linh_vuc
+                    ORDER BY so_luong DESC, MAX(id) DESC
+                    LIMIT 1
+                """)
+                pop_sub = cur.fetchone()
+                target_subject = pop_sub["linh_vuc"] if pop_sub else "Toán học"
 
         # 2. Lọc ứng viên có kỹ năng 'da_duyet' thuộc lĩnh vực đó + người khác chia sẻ
         search_kw = "Toán" if "toán" in target_subject.lower() else target_subject
@@ -2716,7 +2965,7 @@ def profile():
                 if len(chosen_candidates) >= 3:
                     break
 
-        # 4. Gọi ai_matchmake có sẵn (hỗ trợ cả Gemini và Rule-based fallback, tự ghi ai_logs)
+        # 4. Gọi ai_matchmake có sẵn
         if chosen_candidates:
             daily_matches, is_live_rec = ai_matchmake(
                 db, user["id"], target_subject, "Cần củng cố", user_ranh, chosen_candidates
@@ -2727,7 +2976,6 @@ def profile():
         DAILY_RECOMMENDATION_CACHE[cache_key] = (daily_matches, is_live_rec, target_subject)
 
     # Milestone M4-lite: Thống kê cá nhân học sinh: Giờ đã dạy, Giờ đã học, Sao trung bình
-    # 1. Tổng giờ đã dạy (các phiên hoàn thành đóng vai trò người dạy)
     cur.execute(
         """SELECT COALESCE(SUM(so_gio), 0.0) 
            FROM sessions 
@@ -2736,7 +2984,6 @@ def profile():
     )
     hours_taught = cur.fetchone()[0]
 
-    # 2. Tổng giờ đã học (các phiên hoàn thành đóng vai trò người học)
     cur.execute(
         """SELECT COALESCE(SUM(so_gio), 0.0) 
            FROM sessions 
@@ -2745,7 +2992,6 @@ def profile():
     )
     hours_learned = cur.fetchone()[0]
 
-    # 3. Số sao đánh giá trung bình nhận được từ bạn bè
     cur.execute(
         """SELECT ROUND(AVG(so_sao)::numeric, 1), COUNT(*) 
            FROM ratings 
@@ -2756,7 +3002,6 @@ def profile():
     avg_rating = rating_row[0] if rating_row and rating_row[0] is not None else 5.0
     rating_count = rating_row[1] if rating_row else 0
 
-    # Ngưỡng tín dụng dạy thật mở khóa Sàn cộng đồng liên trường (Prompt 19)
     community_threshold = get_community_threshold()
     is_community_member = (hours_taught >= community_threshold)
     hours_needed = max(0.0, community_threshold - hours_taught)
@@ -2764,6 +3009,7 @@ def profile():
     return render_template(
         "profile.html",
         user=user,
+        study_needs=study_needs,
         ledger_entries=ledger_entries,
         my_skills=my_skills,
         ai_feedback=ai_feedback,
@@ -5017,6 +5263,203 @@ def skills_market():
     )
 
 
+def extract_day_periods(schedule_str, day_kw):
+    """Trích xuất các buổi (Sáng, Chiều, Tối) của một ngày cụ thể từ chuỗi giờ rảnh."""
+    if not schedule_str:
+        return []
+    s = schedule_str.lower()
+    idx = s.find(day_kw)
+    if idx == -1:
+        return []
+    sub = s[idx + len(day_kw):]
+    if "(" in sub and ")" in sub:
+        open_p = sub.find("(")
+        close_p = sub.find(")")
+        if open_p < 5 and close_p > open_p:
+            day_text = sub[open_p + 1:close_p]
+        else:
+            day_text = sub[:close_p]
+    else:
+        end_idx = len(sub)
+        for sep in [",", ";", "•", "\n"]:
+            pos = sub.find(sep)
+            if pos != -1 and pos < end_idx:
+                end_idx = pos
+        day_text = sub[:end_idx]
+
+    periods_found = []
+    for p_kw, p_name in [("sáng", "Sáng"), ("chiều", "Chiều"), ("tối", "Tối")]:
+        if p_kw in day_text:
+            periods_found.append(p_name)
+    return periods_found
+
+
+def find_common_time_slots(user_ranh, tutor_ranh):
+    """
+    Tìm khung giờ chung giữa 2 học sinh dựa trên chuỗi giờ rảnh.
+    Trả về chuỗi khung giờ chung nếu có, ví dụ: 'Thứ 2 (Tối), Thứ 4 (Chiều)', hoặc 'Linh hoạt sắp xếp'.
+    """
+    if not user_ranh or not tutor_ranh:
+        return "Linh hoạt sắp xếp"
+    u_l = user_ranh.lower()
+    t_l = tutor_ranh.lower()
+
+    days_kw = [
+        ("thứ 2", "Thứ 2"), ("thứ 3", "Thứ 3"), ("thứ 4", "Thứ 4"),
+        ("thứ 5", "Thứ 5"), ("thứ 6", "Thứ 6"), ("thứ 7", "Thứ 7"),
+        ("chủ nhật", "Chủ Nhật")
+    ]
+
+    common = []
+    for d_kw, d_name in days_kw:
+        if d_kw in u_l and d_kw in t_l:
+            u_periods = extract_day_periods(user_ranh, d_kw)
+            t_periods = extract_day_periods(tutor_ranh, d_kw)
+            common_p = [p for p in ["Sáng", "Chiều", "Tối"] if p in u_periods and p in t_periods]
+            if common_p:
+                common.append(f"{d_name} ({', '.join(common_p)})")
+            elif not u_periods and not t_periods:
+                common.append(d_name)
+
+    if common:
+        return ", ".join(common[:3])
+
+    periods = [("sáng", "Sáng"), ("chiều", "Chiều"), ("tối", "Tối")]
+    p_matched = [p_name for p_kw, p_name in periods if p_kw in u_l and p_kw in t_l]
+    if p_matched:
+        return f"{', '.join(p_matched)} trong tuần"
+    return "Linh hoạt sắp xếp"
+
+
+def get_ai_buddy_suggestions(db, user_id, limit=5):
+    """
+    VIỆC 3: AI phân tích (môn cần học + giờ rảnh + kỹ năng bạn bè đang dạy) -> 3-5 gợi ý kèm lý do.
+    """
+    cur = db.cursor()
+    cur.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+    user = cur.fetchone()
+    if not user:
+        return []
+
+    needed_subjects = []
+    if "mon_can_ho_tro" in user.keys() and user["mon_can_ho_tro"]:
+        try:
+            parsed = json.loads(user["mon_can_ho_tro"])
+            if isinstance(parsed, list):
+                needed_subjects = [item.get("mon", "").strip() for item in parsed if item.get("mon")]
+        except Exception:
+            pass
+
+    if not needed_subjects:
+        cur.execute("""
+            SELECT sk.linh_vuc, COUNT(*) AS so_luong
+            FROM sessions s
+            JOIN skills sk ON s.skill_id = sk.id
+            WHERE s.nguoi_hoc_id = ?
+            GROUP BY sk.linh_vuc
+            ORDER BY so_luong DESC LIMIT 3
+        """, (user_id,))
+        rows = cur.fetchall()
+        needed_subjects = [r["linh_vuc"] for r in rows if r["linh_vuc"]]
+
+    if not needed_subjects:
+        needed_subjects = ["Toán", "Tiếng Anh", "Tin học", "Lý", "Hóa", "Văn"]
+
+    user_ranh = user["gio_ranh"] or ""
+    current_school_id = user["truong_id"]
+
+    cur.execute("""
+        SELECT s.*, u.ho_ten, u.lop, u.gio_ranh, u.ma_hoc_sinh, t.ten_truong,
+               ROUND(COALESCE(AVG(r.so_sao), 5.0)::numeric, 1) AS sao_tb
+        FROM skills s
+        JOIN users u ON s.user_id = u.id
+        LEFT JOIN truong t ON u.truong_id = t.id
+        LEFT JOIN sessions ses ON s.id = ses.skill_id AND ses.trang_thai = 'hoan_thanh'
+        LEFT JOIN ratings r ON ses.id = r.session_id AND r.nguoi_duoc_danh_gia_id = u.id
+        WHERE s.trang_thai_duyet = 'da_duyet' AND s.user_id != ?
+        GROUP BY s.id, u.id, u.ho_ten, u.lop, u.gio_ranh, u.ma_hoc_sinh, t.ten_truong
+        ORDER BY s.id DESC
+    """, (user_id,))
+    all_candidates = cur.fetchall()
+
+    if not all_candidates:
+        return []
+
+    scored_candidates = []
+    for c in all_candidates:
+        c_dict = dict(c)
+        score = 0
+        c_text = f"{c_dict['linh_vuc']} {c_dict['tieu_de']} {c_dict['mo_ta'] or ''}".lower()
+
+        matched_sub = None
+        for sub in needed_subjects:
+            if sub.lower() in c_text or any(k in c_text for k in sub.lower().split()):
+                matched_sub = sub
+                score += 50
+                break
+
+        common_time = find_common_time_slots(user_ranh, c_dict["gio_ranh"])
+        has_common_time = (common_time and common_time != "Linh hoạt sắp xếp")
+        if has_common_time:
+            score += 35
+
+        s_tb = float(c_dict["sao_tb"] if c_dict["sao_tb"] is not None else 5.0)
+        score += int(s_tb * 4)
+
+        if c_dict.get("truong_id") == current_school_id:
+            score += 10
+
+        c_dict["match_score"] = score
+        c_dict["khung_gio_chung"] = common_time
+        c_dict["matched_subject"] = matched_sub or c_dict["linh_vuc"]
+
+        if matched_sub and has_common_time:
+            c_dict["ai_ly_do"] = f"Bạn {c_dict['ho_ten']} dạy tốt môn {matched_sub} ({s_tb}★) và trùng lịch rảnh vào {common_time} với bạn."
+        elif matched_sub:
+            c_dict["ai_ly_do"] = f"Bạn {c_dict['ho_ten']} có chuyên môn xuất sắc môn {matched_sub} ({s_tb}★), giờ rảnh '{c_dict['gio_ranh'] or 'Linh hoạt'}'."
+        elif has_common_time:
+            c_dict["ai_ly_do"] = f"Trùng lịch rảnh ({common_time}) với bạn {c_dict['ho_ten']} ({s_tb}★) — kỹ năng '{c_dict['tieu_de']}'."
+        else:
+            c_dict["ai_ly_do"] = f"Gia sư tích cực {c_dict['ho_ten']} ({s_tb}★) với chuyên đề '{c_dict['tieu_de']}' được nhiều bạn yêu thích."
+
+        scored_candidates.append(c_dict)
+
+    scored_candidates.sort(key=lambda x: (x["match_score"], x["sao_tb"]), reverse=True)
+
+    target_count = min(limit, len(scored_candidates))
+    target_count = max(min(3, len(scored_candidates)), target_count)
+    return scored_candidates[:target_count]
+
+
+@app.route("/api/skills/smart-suggestions", methods=["GET"])
+@login_required
+def api_smart_suggestions():
+    """VIỆC 3: API phân tích AI trả về 3-5 gợi ý bạn học kèm lý do và nút đặt lịch."""
+    db = get_db()
+    user_id = session["user_id"]
+    suggestions = get_ai_buddy_suggestions(db, user_id, limit=5)
+
+    res_list = []
+    for s in suggestions:
+        res_list.append({
+            "id": s["id"],
+            "tieu_de": s["tieu_de"],
+            "linh_vuc": s["linh_vuc"],
+            "ho_ten": s["ho_ten"],
+            "lop": s["lop"],
+            "gio_ranh": s["gio_ranh"] or "Linh hoạt",
+            "khung_gio_chung": s["khung_gio_chung"],
+            "sao_tb": s["sao_tb"],
+            "ai_ly_do": s["ai_ly_do"],
+            "book_url": url_for("book_skill_page", skill_id=s["id"])
+        })
+    return jsonify({
+        "success": True,
+        "count": len(res_list),
+        "suggestions": res_list
+    })
+
+
 @app.route("/skills/matchmake", methods=["GET", "POST"])
 @login_required
 def ai_matchmake_view():
@@ -5222,9 +5665,10 @@ def book_session():
         return redirect(url_for("skills_market"))
         
     # 4. Lấy thông tin gia sư
-    cur.execute("SELECT ho_ten FROM users WHERE id = ?", (skill["user_id"],))
+    cur.execute("SELECT ho_ten, email FROM users WHERE id = ?", (skill["user_id"],))
     tutor = cur.fetchone()
     tutor_name = tutor["ho_ten"] if tutor else "Gia sư"
+    tutor_email = tutor["email"] if (tutor and "email" in tutor.keys() and tutor["email"]) else None
     
     # 5. Tạo mã QR ngẫu nhiên và lưu phiên 'da_dat'
     ma_qr = f"TB-QR-{skill_id}-{secrets.token_hex(4).upper()}"
@@ -5238,6 +5682,31 @@ def book_session():
     )
     new_session_id = cur.lastrowid
     db.commit()
+
+    # VIỆC 5: Tạo thông báo trong chuông thông báo cho người dạy
+    try:
+        noti_title = f"Có học sinh đăng ký học: {skill['tieu_de']}"
+        noti_content = f"Bạn {learner['ho_ten']} (Lớp {learner['lop'] or 'N/A'}) vừa đăng ký học kỹ năng '{skill['tieu_de']}' vào lúc {thoi_gian_bat_dau} ({so_gio}h). Bấm để xác nhận buổi học!"
+        noti_link = url_for("session_detail", session_id=new_session_id)
+        cur.execute("""
+            INSERT INTO notifications (user_id, tieu_de, noi_dung, loai, lien_ket, da_doc, session_id)
+            VALUES (?, ?, ?, 'dang_ky_hoc', ?, 0, ?)
+        """, (skill["user_id"], noti_title, noti_content, noti_link, new_session_id))
+        db.commit()
+    except Exception as ne:
+        app.logger.warning(f"Không thể lưu thông báo đăng ký học: {ne}")
+
+    # Gửi email (nếu người dạy có cấu hình email)
+    if tutor_email:
+        send_booking_notification_email(
+            tutor_email,
+            tutor_name,
+            learner["ho_ten"],
+            skill["tieu_de"],
+            thoi_gian_bat_dau,
+            so_gio,
+            new_session_id
+        )
 
     # Prompt 22: Tạo phòng Daily.co tự động nếu có cấu hình DAILY_API_KEY
     if get_daily_config()["is_configured"]:
@@ -5673,6 +6142,23 @@ def complete_session(session_id):
             (session_id,)
         )
         
+        # VIỆC 4: Thông báo nhắc nhở đánh giá 1-5 sao cho cả hai bên
+        try:
+            cur.execute("SELECT tieu_de FROM skills WHERE id = ?", (s_row["skill_id"],))
+            sk_row = cur.fetchone()
+            sk_name = sk_row["tieu_de"] if sk_row else "Kỹ năng học đường"
+            noti_link = url_for("session_detail", session_id=session_id)
+            cur.execute("""
+                INSERT INTO notifications (user_id, tieu_de, noi_dung, loai, lien_ket, da_doc, session_id)
+                VALUES (?, ?, ?, 'danh_gia', ?, 0, ?)
+            """, (nguoi_hoc_id, f"Đánh giá buổi học: {sk_name}", f"Buổi học '{sk_name}' đã hoàn thành! Bạn hãy dành 1 phút đánh giá 1-5 sao và nhận xét cho gia sư nhé.", noti_link, session_id))
+            cur.execute("""
+                INSERT INTO notifications (user_id, tieu_de, noi_dung, loai, lien_ket, da_doc, session_id)
+                VALUES (?, ?, ?, 'danh_gia', ?, 0, ?)
+            """, (nguoi_day_id, f"Đánh giá bạn học: {sk_name}", f"Buổi học '{sk_name}' đã hoàn thành! Bạn hãy đánh giá 1-5 sao thái độ học tập của bạn học nhé.", noti_link, session_id))
+        except Exception as e_notif:
+            app.logger.warning(f"Không thể tạo thông báo đánh giá sau buổi học: {e_notif}")
+
         db.commit()
         
         # Đồng bộ số dư trong session người dùng đang đăng nhập
@@ -5759,6 +6245,100 @@ def rate_session(session_id):
 
     flash(_("Cảm ơn bạn đã gửi đánh giá tương hỗ! Phản hồi của bạn giúp cộng đồng học tập ngày càng gắn kết và tiến bộ."), "success")
     return redirect(url_for("session_detail", session_id=session_id))
+
+
+@app.route("/sessions/<int:session_id>/confirm", methods=["POST", "GET"])
+@login_required
+def confirm_session(session_id):
+    """
+    VIỆC 5: Người dạy xác nhận/đặt lịch buổi học ngay từ thông báo hoặc chi tiết phiên học.
+    Gửi thông báo xác nhận cho người học.
+    """
+    db = get_db()
+    cur = db.cursor()
+    user_id = session["user_id"]
+    user_role = session.get("vai_tro", "")
+
+    cur.execute("""
+        SELECT s.*, sk.tieu_de, u_day.ho_ten AS ten_nguoi_day, u_hoc.ho_ten AS ten_nguoi_hoc
+        FROM sessions s
+        JOIN skills sk ON s.skill_id = sk.id
+        JOIN users u_day ON s.nguoi_day_id = u_day.id
+        JOIN users u_hoc ON s.nguoi_hoc_id = u_hoc.id
+        WHERE s.id = ?
+    """, (session_id,))
+    s_row = cur.fetchone()
+    if not s_row:
+        flash(_("Phiên học không tồn tại!"), "danger")
+        return redirect(url_for("my_schedule"))
+
+    if s_row["nguoi_day_id"] != user_id and user_role not in ("admin", "giao_vien"):
+        flash(_("Chỉ người dạy mới có quyền xác nhận buổi học này!"), "danger")
+        return redirect(url_for("session_detail", session_id=session_id))
+
+    # Đánh dấu các thông báo liên quan đến session này của người dạy là đã đọc
+    cur.execute("UPDATE notifications SET da_doc = 1 WHERE user_id = ? AND session_id = ?", (user_id, session_id))
+
+    # Gửi thông báo cho người học
+    noti_title = f"Gia sư đã xác nhận: {s_row['tieu_de']}"
+    noti_content = f"Gia sư {s_row['ten_nguoi_day']} đã xác nhận buổi học '{s_row['tieu_de']}' vào lúc {s_row['thoi_gian_bat_dau']}. Bạn hãy vào lớp đúng giờ nhé!"
+    noti_link = url_for("session_detail", session_id=session_id)
+    try:
+        cur.execute("""
+            INSERT INTO notifications (user_id, tieu_de, noi_dung, loai, lien_ket, da_doc, session_id)
+            VALUES (?, ?, ?, 'xac_nhan', ?, 0, ?)
+        """, (s_row["nguoi_hoc_id"], noti_title, noti_content, noti_link, session_id))
+    except Exception as e:
+        app.logger.warning(f"Lỗi tạo thông báo xác nhận: {e}")
+
+    db.commit()
+    flash(_("Bạn đã xác nhận buổi học thành công! Học sinh đã nhận được thông báo."), "success")
+    return redirect(url_for("session_detail", session_id=session_id))
+
+
+@app.route("/notifications/mark-all-read", methods=["POST", "GET"])
+@login_required
+def mark_all_notifications_read():
+    """VIỆC 5: Đánh dấu tất cả thông báo của người dùng là đã đọc."""
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("UPDATE notifications SET da_doc = 1 WHERE user_id = ?", (session["user_id"],))
+    db.commit()
+    if request.is_json:
+        return jsonify({"success": True})
+    referrer = request.referrer
+    if referrer and request.host_url in referrer:
+        return redirect(referrer)
+    return redirect(url_for("profile"))
+
+
+@app.route("/notifications/<int:noti_id>/read", methods=["POST", "GET"])
+@login_required
+def mark_notification_read(noti_id):
+    """VIỆC 5: Đánh dấu 1 thông báo là đã đọc và chuyển hướng đến liên kết liên quan."""
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("SELECT * FROM notifications WHERE id = ? AND user_id = ?", (noti_id, session["user_id"]))
+    noti = cur.fetchone()
+    if noti:
+        cur.execute("UPDATE notifications SET da_doc = 1 WHERE id = ?", (noti_id,))
+        db.commit()
+        if noti["lien_ket"]:
+            return redirect(noti["lien_ket"])
+    if request.is_json:
+        return jsonify({"success": True})
+    return redirect(url_for("my_schedule"))
+
+
+@app.route("/api/notifications/unread-count", methods=["GET"])
+@login_required
+def api_unread_notifications_count():
+    """VIỆC 5: API đếm số lượng thông báo chưa đọc phục vụ chuông realtime."""
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("SELECT COUNT(*) FROM notifications WHERE user_id = ? AND da_doc = 0", (session["user_id"],))
+    count = cur.fetchone()[0]
+    return jsonify({"success": True, "count": count})
 
 
 # ==============================================================================

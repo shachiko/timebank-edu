@@ -39,12 +39,47 @@
               • <i class="bi bi-geo-alt me-1"></i>{{ config.ten_truong }}
             </p>
 
-            <div class="small text-secondary">
-              <i class="bi bi-clock-history me-1 text-primary"></i>{{ _('Khung giờ rảnh:') }}
-              <strong>{{ user.gio_ranh if user.gio_ranh else _('Chưa cập nhật') }}</strong>
+            <!-- VIỆC 1: Hiển thị Môn cần hỗ trợ -->
+            <div class="p-3 bg-light rounded-3 my-2 border">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="small fw-bold text-dark"><i class="bi bi-mortarboard-fill me-1 text-primary"></i>{{ _('Tôi cần được giúp đỡ môn:') }}</span>
+                <button type="button" class="btn btn-link btn-sm text-decoration-none p-0 fw-semibold" data-bs-toggle="modal" data-bs-target="#modalStudyNeeds" id="btnEditStudyNeedsQuick">
+                  <i class="bi bi-pencil me-1"></i>{{ _('Chỉnh sửa') }}
+                </button>
+              </div>
+              {% if study_needs %}
+                <div class="d-flex flex-wrap gap-1 mt-1">
+                  {% for sn in study_needs %}
+                    <span class="badge bg-white text-dark border py-1 px-2 shadow-xs d-inline-flex align-items-center gap-1">
+                      <strong class="text-primary">{{ sn.mon }}</strong>
+                      <span class="badge {{ 'bg-danger-subtle text-danger' if sn.muc_do == 'Nâng cao' else 'bg-success-subtle text-success' }}" style="font-size: 0.7rem;">{{ sn.muc_do }}</span>
+                      {% if sn.ghi_chu %}
+                        <small class="text-muted fst-italic" title="{{ sn.ghi_chu }}">({{ sn.ghi_chu|truncate(25) }})</small>
+                      {% endif %}
+                    </span>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="small text-muted fst-italic">
+                  {{ _('Chưa chọn môn cần hỗ trợ. Hãy bấm "Chỉnh sửa" để AI ghép cặp gia sư phù hợp nhất cho bạn.') }}
+                </div>
+              {% endif %}
+
+              <div class="small text-secondary mt-2 pt-2 border-top">
+                <i class="bi bi-clock-history me-1 text-success"></i>{{ _('Khung giờ rảnh trong tuần:') }}
+                <strong>{{ user.gio_ranh if user.gio_ranh else _('Chưa cập nhật lịch rảnh') }}</strong>
+              </div>
             </div>
 
             <div class="mt-3 d-flex flex-wrap align-items-center gap-2">
+              <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#modalStudyNeeds" id="btnEditStudyNeeds">
+                <i class="bi bi-calendar2-week me-1"></i>{{ _('Cập nhật Môn & Giờ rảnh') }}
+              </button>
+
+              <button type="button" class="btn btn-warning btn-sm rounded-pill px-3 fw-bold text-dark shadow-sm" onclick="openAiBuddySuggestions()" id="btnAiSuggestBuddiesProfile">
+                <i class="bi bi-stars text-danger me-1"></i>{{ _('AI gợi ý bạn học') }}
+              </button>
+
               {% if is_demo_user(user.ma_hoc_sinh) %}
                 <span class="badge bg-warning-subtle text-warning border border-warning-subtle py-2 px-3 rounded-pill" style="font-size: 0.8rem;">
                   <i class="bi bi-shield-lock-fill me-1"></i>{{ _('Tài khoản Demo (Không thể đổi mật khẩu)') }}
@@ -428,5 +463,155 @@
     </div>
   </div>
 </div>
+<!-- MODAL CẬP NHẬT MÔN CẦN HỖ TRỢ & GIỜ RẢNH (VIỆC 1 & 2) -->
+<div class="modal fade" id="modalStudyNeeds" tabindex="-1" aria-labelledby="modalStudyNeedsLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+    <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+      <div class="modal-header bg-primary text-white">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-mortarboard-fill fs-5"></i>
+          <div>
+            <h5 class="modal-title fw-bold mb-0" id="modalStudyNeedsLabel">
+              {{ _('Môn Cần Hỗ Trợ & Khung Giờ Rảnh') }}
+            </h5>
+            <small class="text-white-50">{{ _('Dữ liệu giúp AI ghép cặp bạn học cùng tiến và gợi ý khung giờ chung') }}</small>
+          </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="{{ _('Đóng') }}"></button>
+      </div>
+      <form action="{{ url_for('update_study_needs') }}" method="POST">
+        <div class="modal-body p-4 bg-light">
+          <!-- PHẦN 1: TÔI CẦN ĐƯỢC GIÚP ĐỠ MÔN (VIỆC 1) -->
+          <div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-4">
+            <h6 class="fw-bold text-dark mb-1">
+              <i class="bi bi-check2-square text-primary me-2"></i>{{ _('1. Tôi cần được giúp đỡ môn:') }}
+            </h6>
+            <p class="text-muted small mb-3">
+              {{ _('Chọn các môn bạn muốn được bạn học kèm cặp, chọn mức độ và ghi chú phần kiến thức bạn đang gặp khó khăn.') }}
+            </p>
+
+            {% set subjects_list = ['Toán', 'Lý', 'Hóa', 'Sinh', 'Văn', 'Tiếng Anh', 'Tin học', 'Lịch sử', 'Địa lý', 'GDCD', 'Khác'] %}
+            
+            <div class="row g-3">
+              {% for sub in subjects_list %}
+                {% set matched_need = None %}
+                {% if study_needs %}
+                  {% for item in study_needs %}
+                    {% if item.mon == sub %}
+                      {% set matched_need = item %}
+                    {% endif %}
+                  {% endfor %}
+                {% endif %}
+                <div class="col-md-6">
+                  <div class="border rounded-3 p-3 bg-light h-100 study-sub-box">
+                    <div class="form-check form-switch mb-2">
+                      <input class="form-check-input sub-checkbox" type="checkbox" name="mon_hoc" value="{{ sub }}" id="chk_{{ loop.index }}" {% if matched_need %}checked{% endif %} onchange="toggleSubjectBox('{{ sub }}', this.checked)">
+                      <label class="form-check-label fw-bold text-dark" for="chk_{{ loop.index }}">
+                        {{ sub }}
+                      </label>
+                    </div>
+
+                    <div id="sub_detail_{{ sub }}" class="{{ '' if matched_need else 'd-none' }} pt-2 border-top">
+                      <div class="mb-2">
+                        <label class="form-label small text-muted mb-1">{{ _('Mức độ cần hỗ trợ:') }}</label>
+                        <select class="form-select form-select-sm" name="muc_do_{{ sub }}">
+                          <option value="co_ban" {% if matched_need and matched_need.muc_do == 'Cơ bản' %}selected{% endif %}>{{ _('Cơ bản (Củng cố kiến thức gốc)') }}</option>
+                          <option value="nang_cao" {% if matched_need and matched_need.muc_do == 'Nâng cao' %}selected{% endif %}>{{ _('Nâng cao (Luyện thi & Chuyên sâu)') }}</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label class="form-label small text-muted mb-1">{{ _('Ghi chú chi tiết:') }}</label>
+                        <input type="text" class="form-control form-control-sm" name="ghi_chu_{{ sub }}" placeholder="{{ _('VD: Hình không gian, viết đoạn văn, phát âm...') }}" value="{{ matched_need.ghi_chu if matched_need else '' }}">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- PHẦN 2: KHUNG GIỜ RẢNH THEO TUẦN (VIỆC 2) -->
+          <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+            <h6 class="fw-bold text-dark mb-1">
+              <i class="bi bi-calendar3-week text-success me-2"></i>{{ _('2. Khung giờ rảnh theo tuần (T2 - CN):') }}
+            </h6>
+            <p class="text-muted small mb-3">
+              {{ _('Đánh dấu các khung giờ bạn có thể tham gia học hoặc kèm bạn. AI sẽ dùng lịch này để tự động tính khung giờ chung khi gợi ý bạn học.') }}
+            </p>
+
+            {% set days = [
+              ('t2', 'Thứ 2'),
+              ('t3', 'Thứ 3'),
+              ('t4', 'Thứ 4'),
+              ('t5', 'Thứ 5'),
+              ('t6', 'Thứ 6'),
+              ('t7', 'Thứ 7'),
+              ('cn', 'Chủ Nhật')
+            ] %}
+
+            <div class="table-responsive">
+              <table class="table table-bordered table-sm align-middle text-center mb-2">
+                <thead class="table-light small">
+                  <tr>
+                    <th style="width: 25%;" class="text-start ps-3">{{ _('Thứ trong tuần') }}</th>
+                    <th>{{ _('Sáng (8h - 11h30)') }}</th>
+                    <th>{{ _('Chiều (14h - 17h30)') }}</th>
+                    <th>{{ _('Tối (19h - 21h30)') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for code, day_name in days %}
+                  <tr>
+                    <td class="text-start ps-3 fw-bold small text-dark">{{ day_name }}</td>
+                    <td>
+                      <input class="form-check-input" type="checkbox" name="ranh_{{ code }}_sang" value="1"
+                             {% if user.gio_ranh and day_name.lower() in user.gio_ranh.lower() and 'sáng' in user.gio_ranh.lower() %}checked{% endif %}>
+                    </td>
+                    <td>
+                      <input class="form-check-input" type="checkbox" name="ranh_{{ code }}_chieu" value="1"
+                             {% if user.gio_ranh and day_name.lower() in user.gio_ranh.lower() and 'chiều' in user.gio_ranh.lower() %}checked{% endif %}>
+                    </td>
+                    <td>
+                      <input class="form-check-input" type="checkbox" name="ranh_{{ code }}_toi" value="1"
+                             {% if user.gio_ranh and day_name.lower() in user.gio_ranh.lower() and 'tối' in user.gio_ranh.lower() %}checked{% endif %}>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+            <div class="mt-2">
+              <label for="gio_ranh_khac" class="form-label small fw-bold text-dark mb-1">{{ _('Ghi chú thêm về giờ giấc (nếu có):') }}</label>
+              <input type="text" class="form-control form-control-sm" id="gio_ranh_khac" name="gio_ranh_khac" placeholder="{{ _('Ví dụ: Linh hoạt các buổi tối cuối tuần sau 20h...') }}">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer bg-white p-3 d-flex justify-content-between align-items-center">
+          <small class="text-muted"><i class="bi bi-shield-check text-success me-1"></i> {{ _('Dữ liệu được cập nhật tức thì vào thuật toán AI') }}</small>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">{{ _('Hủy') }}</button>
+            <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" id="btnSaveStudyNeeds">
+              <i class="bi bi-save me-1"></i> {{ _('Lưu Thay Đổi') }}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleSubjectBox(sub, isChecked) {
+    const el = document.getElementById('sub_detail_' + sub);
+    if (!el) return;
+    if (isChecked) {
+      el.classList.remove('d-none');
+    } else {
+      el.classList.add('d-none');
+    }
+  }
+</script>
+
 {% endif %}
 {% endblock %}

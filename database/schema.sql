@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS users (
     email TEXT,
     so_dien_thoai TEXT,
     ghi_chu TEXT,
+    mon_can_ho_tro TEXT,
     trang_thai TEXT CHECK(trang_thai IN ('hoat_dong', 'cho_duyet', 'de_xuat_khoa', 'da_khoa')) DEFAULT 'hoat_dong',
     FOREIGN KEY (truong_id) REFERENCES truong(id)
 );
@@ -333,3 +334,19 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
     ngay_tao TEXT DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+-- 24. BẢNG THÔNG BÁO (NOTIFICATIONS): Chuông thông báo học sinh đăng ký học, xác nhận buổi học
+CREATE TABLE IF NOT EXISTS notifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    tieu_de TEXT NOT NULL,
+    noi_dung TEXT NOT NULL,
+    loai TEXT DEFAULT 'dang_ky_hoc',
+    lien_ket TEXT,
+    da_doc INTEGER DEFAULT 0,
+    session_id INTEGER,
+    ngay_tao TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE SET NULL
+);
+

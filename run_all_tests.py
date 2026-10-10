@@ -41,7 +41,8 @@ test_files = [
     "test_prompt16_multilingual.py",
     "test_prompt_community_management.py",
     "test_prompt_import_users.py",
-    "test_prompt_export_invite_codes.py"
+    "test_prompt_export_invite_codes.py",
+    "test_prompt_smart_features.py"
 ]
 
 results = {}

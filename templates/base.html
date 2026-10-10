@@ -204,6 +204,64 @@
           </div>
 
           {% if current_user %}
+            <!-- CHUÔNG THÔNG BÁO (VIỆC 5) -->
+            <div class="dropdown me-1">
+              <button class="btn btn-sm btn-outline-secondary position-relative rounded-circle p-1" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="{{ _('Thông báo') }}" style="width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center;">
+                <i class="bi bi-bell-fill text-secondary"></i>
+                {% if unread_notifications_count > 0 %}
+                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white" style="font-size: 0.65rem;" id="badgeNotificationCount">
+                    {{ unread_notifications_count }}
+                    <span class="visually-hidden">thông báo mới</span>
+                  </span>
+                {% endif %}
+              </button>
+              <div class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 p-0 mt-2" aria-labelledby="notificationDropdown" style="width: 330px; max-width: 90vw;">
+                <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center rounded-top-4">
+                  <div class="fw-bold text-dark"><i class="bi bi-bell me-1 text-primary"></i> {{ _('Thông báo') }}</div>
+                  {% if unread_notifications_count > 0 %}
+                    <form method="POST" action="{{ url_for('mark_all_notifications_read') }}" class="m-0">
+                      <button type="submit" class="btn btn-link btn-sm text-decoration-none p-0 small text-muted" style="font-size: 0.78rem;">{{ _('Đánh dấu đã đọc') }}</button>
+                    </form>
+                  {% endif %}
+                </div>
+                <div class="notification-list" style="max-height: 360px; overflow-y: auto;">
+                  {% if user_notifications %}
+                    {% for n in user_notifications %}
+                      <a href="{{ url_for('mark_notification_read', noti_id=n.id) }}" class="dropdown-item p-3 border-bottom text-wrap d-flex gap-2 align-items-start {{ 'bg-light' if n.da_doc == 0 else '' }}">
+                        <div class="flex-shrink-0 mt-1">
+                          {% if n.loai == 'dang_ky_hoc' %}
+                            <span class="badge bg-primary rounded-circle p-2"><i class="bi bi-calendar-plus text-white"></i></span>
+                          {% elif n.loai == 'xac_nhan' %}
+                            <span class="badge bg-success rounded-circle p-2"><i class="bi bi-check-circle text-white"></i></span>
+                          {% else %}
+                            <span class="badge bg-warning rounded-circle p-2"><i class="bi bi-star-fill text-white"></i></span>
+                          {% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                          <div class="d-flex justify-content-between align-items-center mb-1">
+                            <strong class="small text-dark" style="font-size: 0.85rem;">{{ n.tieu_de }}</strong>
+                            {% if n.da_doc == 0 %}<span class="badge bg-danger p-1 rounded-circle" style="width: 7px; height: 7px;"></span>{% endif %}
+                          </div>
+                          <p class="small text-muted mb-1" style="font-size: 0.8rem; line-height: 1.35;">{{ n.noi_dung }}</p>
+                          <small class="text-secondary" style="font-size: 0.7rem;"><i class="bi bi-clock me-1"></i>{{ n.ngay_tao }}</small>
+                        </div>
+                      </a>
+                    {% endfor %}
+                  {% else %}
+                    <div class="p-4 text-center text-muted small">
+                      <i class="bi bi-bell-slash fs-3 d-block mb-1 text-secondary opacity-50"></i>
+                      {{ _('Bạn chưa có thông báo nào') }}
+                    </div>
+                  {% endif %}
+                </div>
+                <div class="p-2 text-center bg-light border-top rounded-bottom-4">
+                  <a href="{{ url_for('my_schedule') }}" class="small fw-semibold text-primary text-decoration-none">
+                    {{ _('Xem toàn bộ lịch học') }} <i class="bi bi-arrow-right"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+
             <!-- Menu người dùng đã đăng nhập: thu gọn tên + số dư, không tràn mép -->
             <div class="dropdown">
               <a class="nav-link dropdown-toggle d-flex align-items-center gap-1 gap-sm-2 p-1 px-2 rounded-pill user-pill text-dark fw-semibold" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="{{ current_user.ho_ten }} ({{ "%.1f"|format(current_user.so_du_gio) }}h)">
@@ -731,6 +789,167 @@
     }
   </script>
   {% endif %}
+
+  <!-- MODAL AI GỢI Ý BẠN HỌC THÔNG MINH (VIỆC 3) -->
+  <div class="modal fade" id="modalAiBuddySuggestions" tabindex="-1" aria-labelledby="modalAiBuddySuggestionsLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="modal-header text-white" style="background: linear-gradient(135deg, #F26522, #ea580c);">
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-white text-dark rounded-circle p-2 fs-6 shadow-sm"><i class="bi bi-stars text-warning"></i></span>
+            <div>
+              <h5 class="modal-title fw-bold mb-0" id="modalAiBuddySuggestionsLabel">
+                {{ _('AI Gợi Ý Bạn Học Thông Minh') }}
+              </h5>
+              <small class="text-white-50">{{ _('Phân tích môn cần hỗ trợ • Khung giờ rảnh chung • Đánh giá gia sư') }}</small>
+            </div>
+          </div>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="{{ _('Đóng') }}"></button>
+        </div>
+        <div class="modal-body p-4 bg-light" id="aiBuddySuggestionsBody">
+          <!-- Trạng thái Loading ban đầu -->
+          <div id="aiBuddyLoading" class="text-center py-5">
+            <div class="spinner-border text-warning mb-3" style="width: 3rem; height: 3rem;" role="status">
+              <span class="visually-hidden">Đang phân tích...</span>
+            </div>
+            <h6 class="fw-bold text-dark">{{ _('Trợ lý AI đang quét dữ liệu & phân tích ghép cặp...') }}</h6>
+            <p class="text-muted small mb-0">{{ _('Đang đối soát nhu cầu môn học, lịch rảnh trong tuần và điểm đánh giá của các bạn gia sư.') }}</p>
+          </div>
+          <!-- Danh sách gợi ý sau khi tải xong -->
+          <div id="aiBuddyResults" class="d-none"></div>
+        </div>
+        <div class="modal-footer bg-white border-top p-3 d-flex justify-content-between align-items-center">
+          <small class="text-muted">
+            <i class="bi bi-robot text-primary me-1"></i> {{ _('Đề xuất được cá nhân hóa theo hồ sơ học tập của bạn') }}
+          </small>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">{{ _('Đóng') }}</button>
+            <button type="button" class="btn btn-warning rounded-pill px-3 fw-bold text-dark shadow-sm" onclick="fetchAiBuddySuggestions()">
+              <i class="bi bi-arrow-repeat me-1"></i> {{ _('Làm mới gợi ý') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Hàm mở Modal AI Gợi Ý Bạn Học
+    function openAiBuddySuggestions() {
+      const modalEl = document.getElementById('modalAiBuddySuggestions');
+      if (!modalEl) return;
+      const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      modal.show();
+      fetchAiBuddySuggestions();
+    }
+
+    // Hàm gọi API /api/skills/smart-suggestions và hiển thị 3-5 gợi ý kèm lý do
+    async function fetchAiBuddySuggestions() {
+      const loadingEl = document.getElementById('aiBuddyLoading');
+      const resultsEl = document.getElementById('aiBuddyResults');
+      if (!loadingEl || !resultsEl) return;
+
+      loadingEl.classList.remove('d-none');
+      resultsEl.classList.add('d-none');
+      resultsEl.innerHTML = '';
+
+      try {
+        const res = await fetch('/api/skills/smart-suggestions');
+        if (res.status === 401) {
+          window.location.href = '/login?next=' + encodeURIComponent(window.location.pathname);
+          return;
+        }
+        const data = await res.json();
+        loadingEl.classList.add('d-none');
+        resultsEl.classList.remove('d-none');
+
+        if (!data.success || !data.suggestions || data.suggestions.length === 0) {
+          resultsEl.innerHTML = `
+            <div class="text-center py-5 bg-white rounded-4 border p-4 shadow-sm">
+              <i class="bi bi-search-heart text-warning fs-1 d-block mb-2"></i>
+              <h6 class="fw-bold text-dark mb-1">{{ _('Chưa tìm thấy bạn học phù hợp ngay lúc này') }}</h6>
+              <p class="text-muted small mb-3">{{ _('Bạn hãy vào trang Hồ sơ cá nhân để cập nhật "Môn cần hỗ trợ" và "Khung giờ rảnh", AI sẽ tìm gia sư phù hợp nhất cho bạn!') }}</p>
+              <a href="{{ url_for('profile') }}" class="btn btn-primary btn-sm rounded-pill px-4 fw-semibold">
+                <i class="bi bi-pencil-square me-1"></i> {{ _('Cập nhật hồ sơ học tập') }}
+              </a>
+            </div>
+          `;
+          return;
+        }
+
+        let html = `
+          <div class="alert alert-warning py-2 px-3 small rounded-3 border-0 mb-3 d-flex align-items-center gap-2">
+            <i class="bi bi-magic fs-5 text-warning"></i>
+            <div>
+              <strong>{{ _('AI đã tìm thấy') }} ${data.suggestions.length} {{ _('bạn học lý tưởng dành riêng cho bạn:') }}</strong>
+              <div class="text-muted" style="font-size: 0.78rem;">{{ _('Ưu tiên khớp đúng môn bạn cần, trùng lịch rảnh và có điểm đánh giá uy tín.') }}</div>
+            </div>
+          </div>
+          <div class="d-flex flex-column gap-3">
+        `;
+
+        data.suggestions.forEach((sug, idx) => {
+          html += `
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+              <div class="card-body p-3 p-md-4">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
+                  <div class="d-flex align-items-start gap-3 flex-grow-1">
+                    <div class="rounded-circle text-white d-flex align-items-center justify-content-center fw-bold fs-4 flex-shrink-0" style="width: 52px; height: 52px; background: linear-gradient(135deg, #1B2A6B, #3b82f6);">
+                      ${(sug.ho_ten || 'A')[0].toUpperCase()}
+                    </div>
+                    <div>
+                      <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                        <h6 class="fw-bold mb-0 text-dark">${sug.ho_ten}</h6>
+                        <span class="badge bg-light text-secondary border small">${sug.lop || 'Học sinh'}</span>
+                        <span class="badge bg-warning text-dark fw-bold small">
+                          ★ ${Number(sug.sao_tb).toFixed(1)}/5
+                        </span>
+                      </div>
+                      <div class="fw-semibold text-primary mb-1">
+                        <span class="badge bg-primary bg-opacity-10 text-primary me-1">${sug.linh_vuc}</span>
+                        ${sug.tieu_de}
+                      </div>
+                      <div class="d-flex flex-wrap gap-2 small text-muted mb-2">
+                        <span><i class="bi bi-clock me-1 text-primary"></i><strong>{{ _('Khung giờ chung:') }}</strong> <span class="badge bg-success-subtle text-success">${sug.khung_gio_chung}</span></span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex-shrink-0 w-100 w-md-auto text-md-end mt-2 mt-md-0">
+                    <a href="${sug.book_url}" class="btn btn-brand btn-sm fw-bold rounded-pill px-4 py-2 shadow-sm d-inline-flex align-items-center gap-1">
+                      <i class="bi bi-calendar-check-fill"></i>
+                      <span>{{ _('Đặt lịch ngay') }}</span>
+                    </a>
+                  </div>
+                </div>
+
+                <!-- Lý do AI gợi ý -->
+                <div class="mt-3 p-3 rounded-3 bg-light border border-warning border-opacity-25 d-flex align-items-start gap-2">
+                  <i class="bi bi-stars text-warning fs-5 flex-shrink-0 mt-1"></i>
+                  <div class="small text-dark" style="line-height: 1.45;">
+                    <strong class="text-secondary">{{ _('Lý do AI đề xuất:') }}</strong> ${sug.ai_ly_do}
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+
+        html += `</div>`;
+        resultsEl.innerHTML = html;
+
+      } catch (err) {
+        console.error('Lỗi khi lấy AI smart suggestions:', err);
+        loadingEl.classList.add('d-none');
+        resultsEl.classList.remove('d-none');
+        resultsEl.innerHTML = `
+          <div class="alert alert-danger p-3 rounded-3">
+            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+            {{ _('Có lỗi xảy ra khi phân tích gợi ý. Vui lòng thử lại sau.') }}
+          </div>
+        `;
+      }
+    }
+  </script>
 
   {% block scripts %}{% endblock %}
 </body>

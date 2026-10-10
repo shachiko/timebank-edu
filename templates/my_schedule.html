@@ -116,7 +116,17 @@
                       {% endif %}
                     </td>
                     <td class="text-end">
-                      <div class="d-inline-flex gap-1">
+                      <div class="d-inline-flex gap-1 flex-wrap justify-content-end">
+                        {% if s.trang_thai == 'da_dat' %}
+                        <a href="{{ url_for('confirm_session', session_id=s.id) }}" class="btn btn-outline-success btn-sm fw-semibold" title="{{ _('Xác nhận lịch học') }}">
+                          <i class="bi bi-calendar2-check me-1"></i> {{ _('Xác nhận') }}
+                        </a>
+                        {% endif %}
+                        {% if s.trang_thai == 'hoan_thanh' %}
+                        <a href="{{ url_for('session_detail', session_id=s.id) }}" class="btn btn-warning btn-sm fw-bold text-dark" title="{{ _('Đánh giá sau buổi học') }}">
+                          <i class="bi bi-star-fill me-1"></i> {{ _('Đánh giá') }}
+                        </a>
+                        {% endif %}
                         {% if s.trang_thai in ('da_dat', 'can_xac_minh') %}
                         <a href="{{ url_for('virtual_room', session_id=s.id) }}" class="btn btn-primary btn-sm" title="{{ _('Vào phòng học trực tuyến') }}">
                           <i class="bi bi-camera-video-fill me-1"></i> {{ _('Phòng ảo') }}
@@ -186,7 +196,12 @@
                       {% endif %}
                     </td>
                     <td class="text-end">
-                      <div class="d-inline-flex gap-1">
+                      <div class="d-inline-flex gap-1 flex-wrap justify-content-end">
+                        {% if s.trang_thai == 'hoan_thanh' %}
+                        <a href="{{ url_for('session_detail', session_id=s.id) }}" class="btn btn-warning btn-sm fw-bold text-dark" title="{{ _('Đánh giá sau buổi học') }}">
+                          <i class="bi bi-star-fill me-1"></i> {{ _('Đánh giá') }}
+                        </a>
+                        {% endif %}
                         {% if s.trang_thai in ('da_dat', 'can_xac_minh') %}
                         <a href="{{ url_for('virtual_room', session_id=s.id) }}" class="btn btn-primary btn-sm" title="{{ _('Vào phòng học trực tuyến') }}">
                           <i class="bi bi-camera-video-fill me-1"></i> {{ _('Phòng ảo') }}

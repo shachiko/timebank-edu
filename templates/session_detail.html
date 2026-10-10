@@ -247,6 +247,18 @@
         {% endif %}
 
         {% if session_data.trang_thai == 'da_dat' %}
+          <!-- NÚT XÁC NHẬN LỊCH HỌC DÀNH CHO GIA SƯ (VIỆC 5) -->
+          {% if is_teacher or is_admin %}
+            <div class="mb-3">
+              <form method="POST" action="{{ url_for('confirm_session', session_id=session_data.id) }}">
+                <button type="submit" class="btn btn-outline-success w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-xs" id="btnConfirmSession">
+                  <i class="bi bi-calendar2-check-fill fs-5"></i>
+                  <span>{{ _('Xác nhận lịch hẹn với học sinh') }}</span>
+                </button>
+              </form>
+            </div>
+          {% endif %}
+
           <!-- Các nút Check-in -->
           <div class="mb-3">
             {% if is_teacher and session_data.checkin_day == 0 %}

@@ -1027,5 +1027,45 @@ Sau khi sinh mã mời hàng loạt (dạng chuẩn `TBEDU-XXXX-XXXX`), quản t
   3. `test_03_copy_all_logic_and_format`: Kiểm tra định dạng sao chép clipboard mỗi mã 1 dòng.
   4. `test_04_tenant_isolation_school_admin`: Bảo vệ phân quyền dữ liệu giữa các trường.
   5. `test_05_unauthorized_access_blocked`: Chặn người dùng chưa đăng nhập.
-- **Kết quả Regression:** **35/35 Test Suites ĐẠT 100% PASS**.
+- **Kết quả Regression:** **36/36 Test Suites ĐẠT 100% PASS**.
+
+---
+
+## 🤖 BỔ SUNG TÍNH NĂNG THÔNG MINH CHO HỌC SINH (5 VIỆC)
+
+Hệ thống được nâng cấp bộ tính năng thông minh hỗ trợ ghép cặp học sinh cùng tiến, quản lý lịch rảnh cá nhân, chuông thông báo thời gian thực và đánh giá tương hỗ sư phạm:
+
+### 1. VIỆC 1 — "Môn cần hỗ trợ" (Trang hồ sơ học sinh `/profile`):
+- **Giao diện & Cấu hình:** Thêm mục *"Tôi cần được giúp đỡ môn:"* cho phép học sinh chọn nhiều môn học (Toán, Lý, Hóa, Sinh, Văn, Tiếng Anh, Tin học, v.v.), chỉ định mức độ kiến thức (*Cơ bản (Củng cố kiến thức gốc)* hoặc *Nâng cao (Luyện thi & Chuyên sâu)*) kèm ghi chú chi tiết phần kiến thức đang gặp khó khăn.
+- **Lưu trữ CSDL:** Dữ liệu lưu dưới định dạng JSON có cấu trúc trong cột `users.mon_can_ho_tro`, tự động hiển thị dưới dạng các huy hiệu trực quan trên thẻ hồ sơ cá nhân và làm dữ liệu đầu vào cốt lõi cho thuật toán ghép cặp AI.
+
+### 2. VIỆC 2 — "Khung giờ rảnh theo tuần" (Trang hồ sơ `/profile`):
+- **Lịch chọn linh hoạt:** Bảng chọn lịch tuần trực quan từ Thứ 2 đến Chủ Nhật, mỗi ngày lựa chọn được nhiều ca (Sáng: 8h-11h30, Chiều: 14h-17h30, Tối: 19h-21h30) kèm ô ghi chú linh hoạt.
+- **Lưu trữ & Tương thích:** Lưu vào cột `users.gio_ranh`, tương thích với các thuật toán ghép cặp cũ và hỗ trợ hàm `find_common_time_slots(user_ranh, tutor_ranh)` để tự động tính toán và hiển thị "Khung giờ chung" lý tưởng giữa đôi bạn học.
+
+### 3. VIỆC 3 — Nút "AI gợi ý bạn học" (Trang Kho Kỹ năng & Hồ sơ cá nhân):
+- **Giao diện nổi bật:** Nút bấm màu vàng cam với hiệu ứng sao AI (`#btnAiSuggestBuddies`) đặt tại thanh tiêu đề Kho kỹ năng học đường (`/skills`) và trên trang hồ sơ cá nhân (`/profile`).
+- **Phân tích AI:** Gọi API `/api/skills/smart-suggestions`, đối soát đa chiều (Môn cần học + Giờ rảnh + Kỹ năng gia sư đang dạy + Điểm đánh giá sao uy tín + Trường học) $\rightarrow$ Trả về 3-5 bạn học lý tưởng nhất.
+- **Lý do đề xuất & Đặt lịch:** Mỗi gợi ý đi kèm hộp giải thích lý do do AI đề xuất rõ ràng (ví dụ: *"Bạn Nguyễn Văn A dạy tốt môn Toán (5.0★) và trùng lịch rảnh vào Thứ 2 (Tối) với bạn"*) và nút **"Đặt lịch ngay"** dẫn trực tiếp tới trang đặt lịch.
+
+### 4. VIỆC 4 — Đánh giá tương hỗ sau buổi học (1-5 sao + nhận xét):
+- **Form đánh giá sau hoàn thành:** Khi buổi học chuyển sang trạng thái `hoan_thanh`, form đánh giá 1-5 sao kèm nhận xét ngắn xuất hiện nổi bật tại trang chi tiết buổi học (`/sessions/<id>`) và có nút truy cập nhanh từ trang *Lịch của tôi* (`/my-schedule`).
+- **Bảo đảm tính khách quan:** Mỗi thành viên chỉ được gửi đánh giá đúng 1 lần duy nhất cho mỗi phiên (chống spam).
+- **Hiển thị điểm uy tín:** Điểm trung bình sao (`sao_tb`) và tổng lượt đánh giá được cập nhật tức thì trên Hồ sơ cá nhân và Bảng Vinh danh Gia sư Học đường Tích cực trên trang chủ.
+
+### 5. VIỆC 5 — Chuông thông báo & Xác nhận buổi học thời gian thực:
+- **Chuông thông báo Navbar:** Biểu tượng chuông với huy hiệu đỏ đếm số lượng chưa đọc (`#notificationDropdown`), xem nhanh danh sách thông báo và nút *"Đánh dấu đã đọc"*.
+- **Thông báo khi có người đăng ký:** Khi học sinh đặt lịch học kỹ năng, hệ thống tự động ghi bản ghi vào bảng `notifications` cho người dạy, đồng thời gọi hàm `send_booking_notification_email` gửi email an toàn (tích hợp SMTP dự phòng, không crash).
+- **Xác nhận lịch học:** Người dạy có thể bấm **"Xác nhận lịch học"** trực tiếp từ thông báo hoặc trên trang chi tiết buổi học. Khi xác nhận, hệ thống gửi thông báo phản hồi ngay cho người học.
+
+### 6. Nghiệm Thu & Kiểm Thử Tự Động:
+- Bộ kiểm thử tự động `test_prompt_smart_features.py` (6/6 tests PASS):
+  1. `test_01_update_study_needs_and_weekly_schedule`: Cập nhật môn cần hỗ trợ & giờ rảnh T2-CN, lưu CSDL và hiển thị trên hồ sơ.
+  2. `test_02_find_common_time_slots`: Thuật toán tìm khung giờ chung chính xác theo từng ngày và ca học.
+  3. `test_03_api_smart_suggestions`: API `/api/skills/smart-suggestions` trả về 3-5 gợi ý kèm lý do và nút đặt lịch.
+  4. `test_04_session_rating_and_tutor_average`: Đánh giá 1-5 sao, chống lặp lại, cập nhật điểm trung bình ở hồ sơ và vinh danh.
+  5. `test_05_booking_notification_email_and_confirmation`: Chuông thông báo đặt lịch cho người dạy, xác nhận buổi học gửi thông báo cho người học.
+  6. `test_06_send_booking_email_safety`: Hàm gửi email chạy an toàn không crash khi thiếu SMTP.
+- **Kết quả Regression:** **36/36 Test Suites ĐẠT 100% PASS**.
+
 
