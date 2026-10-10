@@ -20,27 +20,37 @@
     background-color: var(--brand-color, #f26522) !important;
     color: #ffffff !important;
   }
-  #usersTable {
+  #usersTable, #communityTasksTable, #inviteCodesTable {
     width: 100%;
   }
-  #usersTable th, #usersTable td {
+  #usersTable th, #usersTable td,
+  #communityTasksTable th, #communityTasksTable td {
     vertical-align: middle;
-    padding: 0.65rem 0.45rem;
+    padding: 0.65rem 0.5rem;
   }
-  #usersTable th.col-actions,
-  #usersTable td.col-actions {
+  .table th.col-actions,
+  .table td.col-actions {
     position: sticky;
     right: 0;
     background-color: #ffffff;
     z-index: 5;
     box-shadow: -4px 0 8px -2px rgba(0, 0, 0, 0.08);
   }
-  #usersTable thead th.col-actions {
+  .table thead th.col-actions {
     background-color: #f8f9fa;
     z-index: 6;
   }
-  #usersTable tbody tr:hover td.col-actions {
+  .table tbody tr:hover td.col-actions {
     background-color: #f8f9fa;
+  }
+  .badge-school {
+    white-space: normal !important;
+    text-align: left;
+    line-height: 1.35;
+    font-size: 0.8rem;
+    max-width: 190px;
+    display: inline-block;
+    word-break: break-word;
   }
   .table-responsive::-webkit-scrollbar {
     height: 8px;
@@ -474,10 +484,10 @@
                     <th>{{ _('Mã HS') }}</th>
                     <th>{{ _('Họ và tên') }}</th>
                     <th>{{ _('Lớp') }}</th>
-                    <th>{{ _('Trường học') }}</th>
+                    <th style="min-width: 130px; max-width: 180px;">{{ _('Trường học') }}</th>
                     <th>{{ _('Khung giờ rảnh') }}</th>
                     <th>{{ _('Trạng thái') }}</th>
-                    <th class="text-end pe-3">{{ _('Thao tác') }}</th>
+                    <th class="text-center px-3 text-nowrap col-actions" style="width: 130px; min-width: 130px;">{{ _('Thao tác') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -492,20 +502,22 @@
                       <small class="text-muted d-block fw-normal" style="font-size: 0.8em;">🏫 {{ st.ten_truong if st.ten_truong else _('Chưa phân trường') }}</small>
                     </td>
                     <td>{{ st.lop if st.lop else '—' }}</td>
-                    <td>
-                      <span class="badge bg-light text-primary border">{{ st.ten_truong }}</span>
+                    <td style="max-width: 180px;">
+                      <span class="badge bg-light text-primary border badge-school" title="{{ st.ten_truong }}">{{ st.ten_truong }}</span>
                     </td>
                     <td class="small text-muted">{{ _(st.gio_ranh) if st.gio_ranh in ['Toàn thời gian', 'Linh hoạt'] else (st.gio_ranh if st.gio_ranh else '—') }}</td>
                     <td>
                       <span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i>{{ _('Chờ duyệt') }}</span>
                     </td>
-                    <td class="text-end pe-3">
-                      <button type="submit" formaction="{{ url_for('admin_approve_student', user_id=st.id) }}" class="btn btn-sm btn-success me-1">
-                        <i class="bi bi-check-lg me-1"></i>{{ _('Duyệt') }}
-                      </button>
-                      <button type="submit" formaction="{{ url_for('admin_reject_student', user_id=st.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('{{ _('Bạn có chắc muốn từ chối đăng ký này?') }}');">
-                        <i class="bi bi-x-lg"></i>
-                      </button>
+                    <td class="text-center px-3 text-nowrap col-actions" style="width: 130px; min-width: 130px;">
+                      <div class="d-flex align-items-center justify-content-center gap-1">
+                        <button type="submit" formaction="{{ url_for('admin_approve_student', user_id=st.id) }}" class="btn btn-sm btn-success rounded-pill px-2 py-1">
+                          <i class="bi bi-check-lg me-1"></i>{{ _('Duyệt') }}
+                        </button>
+                        <button type="submit" formaction="{{ url_for('admin_reject_student', user_id=st.id) }}" class="btn btn-sm btn-outline-danger rounded-pill px-2 py-1" onclick="return confirm('{{ _('Bạn có chắc muốn từ chối đăng ký này?') }}');" title="{{ _('Từ chối') }}">
+                          <i class="bi bi-x-lg"></i>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                   {% endfor %}
@@ -615,14 +627,14 @@
                     <input type="checkbox" id="selectAllInviteCodes" class="form-check-input" title="{{ _('Chọn tất cả') }}" onchange="toggleSelectAllInviteCodes(this)">
                   </th>
                   <th>{{ _('Mã mời') }}</th>
-                  <th>{{ _('Trường áp dụng') }}</th>
+                  <th style="min-width: 130px; max-width: 180px;">{{ _('Trường áp dụng') }}</th>
                   <th>{{ _('Loại mã') }}</th>
                   <th class="text-center">{{ _('Tối đa') }}</th>
                   <th class="text-center">{{ _('Đã dùng') }}</th>
                   <th class="text-center">{{ _('Còn lại') }}</th>
                   <th>{{ _('Học sinh đã dùng') }}</th>
                   <th>{{ _('Ngày tạo') }}</th>
-                  <th class="text-end pe-3" style="width: 80px;">{{ _('Thao tác') }}</th>
+                  <th class="text-center px-2 text-nowrap col-actions" style="width: 80px; min-width: 80px;">{{ _('Thao tác') }}</th>
                 </tr>
               </thead>
               <tbody id="inviteCodesTableBody">
@@ -639,7 +651,7 @@
                       </button>
                     </div>
                   </td>
-                  <td><span class="badge bg-light text-dark border">{{ c.ten_truong }}</span></td>
+                  <td style="max-width: 180px;"><span class="badge bg-light text-dark border badge-school" title="{{ c.ten_truong }}">{{ c.ten_truong }}</span></td>
                   <td>
                     {% if c.loai == 'lop' %}
                       <span class="badge bg-info-subtle text-info fw-bold">{{ _('Mã lớp') }}</span>
@@ -671,7 +683,7 @@
                     {% endif %}
                   </td>
                   <td class="small text-muted">{{ c.ngay_tao | format_date }}</td>
-                  <td class="text-end pe-3">
+                  <td class="text-center px-2 text-nowrap col-actions" style="width: 80px; min-width: 80px;">
                     <form method="POST" action="{{ url_for('admin_delete_invite_code', code_id=c.id) }}" class="d-inline" onsubmit="return confirm('{{ _('Bạn có chắc chắn muốn xóa mã mời %(code)s không?', code=c.ma_code) }}');">
                       <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-2" title="{{ _('Xóa mã mời') }}">
                         <i class="bi bi-trash"></i>
@@ -710,13 +722,13 @@
               <thead class="table-light small text-muted">
                 <tr>
                   <th class="ps-3">{{ _('Học sinh') }}</th>
-                  <th>{{ _('Trường') }}</th>
+                  <th style="min-width: 130px; max-width: 180px;">{{ _('Trường') }}</th>
                   <th>{{ _('Loại vi phạm') }}</th>
                   <th>{{ _('Mô tả chi tiết') }}</th>
                   <th class="text-center">{{ _('Mức độ') }}</th>
                   <th>{{ _('Thời gian') }}</th>
                   <th>{{ _('Tình trạng TK') }}</th>
-                  <th class="text-end pe-3">{{ _('Xử lý kỷ luật') }}</th>
+                  <th class="text-center px-3 text-nowrap col-actions" style="width: 170px; min-width: 170px;">{{ _('Xử lý kỷ luật') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -727,7 +739,7 @@
                     <small class="text-muted d-block fw-normal" style="font-size: 0.8em;">🏫 {{ v.ten_truong if v.ten_truong else _('Chưa phân trường') }}</small>
                     <small class="text-muted"><code>{{ v.ma_hoc_sinh }}</code> • {{ _('Lớp') }} {{ v.lop }}</small>
                   </td>
-                  <td><span class="badge bg-light text-dark border">{{ v.ten_truong }}</span></td>
+                  <td style="max-width: 180px;"><span class="badge bg-light text-dark border badge-school" title="{{ v.ten_truong }}">{{ v.ten_truong }}</span></td>
                   <td>
                     <span class="badge bg-danger-subtle text-danger fw-semibold">{{ v.loai_vi_pham }}</span>
                     {% if v.session_id %}
@@ -754,7 +766,7 @@
                       <span class="badge bg-success">{{ _('Hoạt động') }}</span>
                     {% endif %}
                   </td>
-                  <td class="text-end pe-3">
+                  <td class="text-center px-3 text-nowrap col-actions" style="width: 170px; min-width: 170px;">
                     {% if v.user_trang_thai == 'de_xuat_khoa' or (v.muc_do == 3 and v.user_trang_thai != 'da_khoa') %}
                       <!-- Nút xác nhận khóa vĩnh viễn (CHỜ quản trị bấm xác nhận mới khóa thật) -->
                       <form method="POST" action="{{ url_for('admin_confirm_lock_user', user_id=v.user_id) }}" class="d-inline" onsubmit="return confirm('{{ _('CẢNH BÁO: Bạn có chắc chắn muốn XÁC NHẬN KHÓA VĨNH VIỄN tài khoản của học sinh này không?') }}');">
@@ -1143,7 +1155,7 @@
                     <div class="fw-semibold text-dark">{{ sk.ho_ten }} ({{ sk.lop }})</div>
                     <small class="text-muted d-block fw-normal" style="font-size: 0.8em;">🏫 {{ sk.ten_truong if sk.ten_truong else _('Chưa phân trường') }}</small>
                   </td>
-                  <td><span class="badge bg-light text-dark border">{{ sk.ten_truong }}</span></td>
+                  <td style="max-width: 180px;"><span class="badge bg-light text-dark border badge-school" title="{{ sk.ten_truong }}">{{ sk.ten_truong }}</span></td>
                   <td>
                     <span class="badge bg-info-subtle text-info-emphasis">
                       <i class="bi bi-person-check me-1"></i>{{ sk.nguoi_duyet_ten if sk.nguoi_duyet_ten else _('Quản trị viên') }}
@@ -1252,55 +1264,59 @@
           <span class="badge bg-secondary rounded-pill px-3 py-2">{{ admin_community_tasks|length }} {{ _('chương trình') }}</span>
         </div>
 
-        <div class="card-body p-4">
+        <div class="card-body p-0">
           {% if admin_community_tasks %}
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0" id="communityTasksTable">
               <thead class="table-light small text-secondary">
                 <tr>
-                  <th style="width: 60px;">#ID</th>
-                  <th>{{ _('Tên chương trình & Mô tả') }}</th>
-                  <th style="width: 120px;">{{ _('Số giờ thưởng') }}</th>
-                  <th>{{ _('Thời gian bắt đầu / kết thúc') }}</th>
+                  <th scope="col" class="ps-3 text-center text-nowrap" style="width: 50px;">#ID</th>
+                  <th scope="col" style="min-width: 180px; max-width: 250px;">{{ _('Tên chương trình & Mô tả') }}</th>
+                  <th scope="col" class="text-center text-nowrap" style="width: 100px;">{{ _('Giờ thưởng') }}</th>
+                  <th scope="col" class="text-nowrap" style="min-width: 130px;">{{ _('Thời gian') }}</th>
                   {% if is_super_admin %}
-                  <th>{{ _('Trường áp dụng') }}</th>
+                  <th scope="col" style="min-width: 140px; max-width: 190px;">{{ _('Trường áp dụng') }}</th>
                   {% endif %}
-                  <th style="width: 130px;">{{ _('Trạng thái') }}</th>
-                  <th style="width: 120px;">{{ _('Học sinh đăng ký') }}</th>
-                  <th style="width: 160px;" class="text-end">{{ _('Hành động') }}</th>
+                  <th scope="col" class="text-center text-nowrap" style="width: 120px;">{{ _('Trạng thái') }}</th>
+                  <th scope="col" class="text-center text-nowrap" style="width: 110px;">{{ _('Đã đăng ký') }}</th>
+                  <th scope="col" class="text-center px-3 text-nowrap col-actions" style="width: 135px; min-width: 135px;">{{ _('Thao tác') }}</th>
                 </tr>
               </thead>
               <tbody>
                 {% for task in admin_community_tasks %}
                 <tr>
-                  <td class="text-muted fw-bold">#{{ task.id }}</td>
+                  <td class="ps-3 text-center text-muted fw-bold text-nowrap" style="width: 50px;">#{{ task.id }}</td>
                   <td>
-                    <div class="fw-bold text-dark">{{ task.tieu_de }}</div>
+                    <div class="fw-bold text-dark" style="max-width: 250px; line-height: 1.35;">{{ task.tieu_de }}</div>
                     {% if task.mo_ta %}
-                      <div class="small text-muted text-truncate" style="max-width: 320px;" title="{{ task.mo_ta }}">{{ task.mo_ta }}</div>
+                      <div class="small text-muted text-truncate" style="max-width: 250px;" title="{{ task.mo_ta }}">{{ task.mo_ta }}</div>
                     {% endif %}
                   </td>
-                  <td>
+                  <td class="text-center text-nowrap">
                     <span class="badge bg-danger bg-opacity-10 text-danger fw-bold px-2 py-1">
                       +{{ "%.1f"|format(task.so_gio_thuong) }}h
                     </span>
                   </td>
-                  <td>
-                    <div class="small text-secondary">
-                      <i class="bi bi-calendar-range text-primary me-1"></i>
-                      {% if task.ngay_bat_dau or task.ngay_ket_thuc %}
-                        {{ task.ngay_bat_dau or '---' }} &rarr; {{ task.ngay_ket_thuc or '---' }}
-                      {% else %}
-                        {{ _('Hạn:') }} {{ task.han_dang_ky or _('Không giới hạn') }}
-                      {% endif %}
+                  <td class="small text-secondary text-nowrap">
+                    <div class="d-flex align-items-center gap-1">
+                      <i class="bi bi-calendar-range text-primary"></i>
+                      <span>
+                        {% if task.ngay_bat_dau or task.ngay_ket_thuc %}
+                          {{ task.ngay_bat_dau or '---' }} &rarr; {{ task.ngay_ket_thuc or '---' }}
+                        {% else %}
+                          {{ _('Hạn:') }} {{ task.han_dang_ky or _('Không giới hạn') }}
+                        {% endif %}
+                      </span>
                     </div>
                   </td>
                   {% if is_super_admin %}
-                  <td>
-                    <span class="badge bg-light text-dark border">{{ task.ten_truong or _('Toàn hệ thống') }}</span>
+                  <td style="max-width: 190px;">
+                    <span class="badge bg-light text-primary border badge-school" title="{{ task.ten_truong if task.ten_truong else _('Toàn hệ thống') }}">
+                      {{ task.ten_truong or _('Toàn hệ thống') }}
+                    </span>
                   </td>
                   {% endif %}
-                  <td>
+                  <td class="text-center text-nowrap">
                     {% if task.trang_thai == 'sap_dien_ra' %}
                       <span class="badge bg-info text-dark rounded-pill px-2 py-1"><i class="bi bi-hourglass-split me-1"></i>{{ _('Sắp diễn ra') }}</span>
                     {% elif task.trang_thai in ('dang_dien_ra', 'mo_dang_ky', 'mo') %}
@@ -1309,20 +1325,22 @@
                       <span class="badge bg-secondary rounded-pill px-2 py-1"><i class="bi bi-check2-circle me-1"></i>{{ _('Đã kết thúc') }}</span>
                     {% endif %}
                   </td>
-                  <td>
+                  <td class="text-center text-nowrap">
                     <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 fw-bold">
                       <i class="bi bi-people me-1"></i>{{ task.so_luong_da_dang_ky }} {{ _('bạn') }}
                     </span>
                   </td>
-                  <td class="text-end">
-                    <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2 py-1 me-1" data-bs-toggle="modal" data-bs-target="#modalEditTask{{ task.id }}">
-                      <i class="bi bi-pencil-square me-1"></i>{{ _('Sửa') }}
-                    </button>
-                    <form method="POST" action="{{ url_for('admin_delete_community_task', task_id=task.id) }}" class="d-inline" onsubmit="return confirm('{{ _('Chương trình này đã có học sinh đăng ký tham gia. Hệ thống sẽ chuyển trạng thái sang Đã kết thúc thay vì xóa vĩnh viễn để bảo toàn lịch sử học tập. Bạn có đồng ý không?') if task.so_luong_da_dang_ky > 0 else _('Bạn có chắc chắn muốn xóa vĩnh viễn chương trình cộng đồng này không?') }}');">
-                      <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-2 py-1" title="{{ _('Chuyển sang Đã kết thúc') if task.so_luong_da_dang_ky > 0 else _('Xóa vĩnh viễn') }}">
-                        <i class="bi bi-trash me-1"></i>{{ _('Xóa') }}
+                  <td class="text-center px-3 text-nowrap col-actions" style="width: 135px; min-width: 135px;">
+                    <div class="d-flex align-items-center justify-content-center gap-1">
+                      <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2 py-1" data-bs-toggle="modal" data-bs-target="#modalEditTask{{ task.id }}" title="{{ _('Chỉnh sửa') }}">
+                        <i class="bi bi-pencil-square me-1"></i>{{ _('Sửa') }}
                       </button>
-                    </form>
+                      <form method="POST" action="{{ url_for('admin_delete_community_task', task_id=task.id) }}" class="d-inline" onsubmit="return confirm('{{ _('Chương trình này đã có học sinh đăng ký tham gia. Hệ thống sẽ chuyển trạng thái sang Đã kết thúc thay vì xóa vĩnh viễn để bảo toàn lịch sử học tập. Bạn có đồng ý không?') if task.so_luong_da_dang_ky > 0 else _('Bạn có chắc chắn muốn xóa vĩnh viễn chương trình cộng đồng này không?') }}');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-2 py-1" title="{{ _('Chuyển sang Đã kết thúc') if task.so_luong_da_dang_ky > 0 else _('Xóa vĩnh viễn') }}">
+                          <i class="bi bi-trash me-1"></i>{{ _('Xóa') }}
+                        </button>
+                      </form>
+                    </div>
                   </td>
                 </tr>
 
@@ -1481,7 +1499,7 @@
                   <th class="text-center" style="width: 200px;">{{ _('Trạng thái') }}</th>
                   <th class="text-center" style="width: 130px;">{{ _('Số tài khoản') }}</th>
                   <th style="width: 160px;">{{ _('Ngày tạo') }}</th>
-                  <th class="text-end pe-3" style="width: 220px;">{{ _('Thao tác') }}</th>
+                  <th class="text-center px-3 text-nowrap col-actions" style="width: 210px; min-width: 210px;">{{ _('Thao tác') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -1533,7 +1551,7 @@
                   <td>
                     <small class="text-muted">{{ s.ngay_tao or '—' }}</small>
                   </td>
-                  <td class="text-end pe-3">
+                  <td class="text-center px-3 text-nowrap col-actions" style="width: 210px; min-width: 210px;">
                     {% if s.id == 99 %}
                       <span class="badge bg-secondary-subtle text-secondary border px-2 py-1">
                         <i class="bi bi-shield-lock-fill me-1"></i>{{ _('Cố định (Không sửa/xóa)') }}

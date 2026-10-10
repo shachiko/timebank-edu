@@ -1217,5 +1217,41 @@ Hệ thống được nâng cấp bộ tính năng thông minh hỗ trợ ghép 
   - `mobile_modal_redesigned.png`: Giao diện responsive mobile xếp chồng dọc, nút Lưu cố định.
   - `profile_after_save.png`: Trang hồ sơ cập nhật thành công các huy hiệu môn và khung giờ rảnh.
   - `modal_restored_data.png`: Mở lại modal phục hồi chính xác 100% dữ liệu đã lưu.
-- **Kết quả Regression:** **39/39 Test Suites ĐẠT 100% PASS** qua `run_all_tests.py`.
+- **Kết quả Regression:** **40/40 Test Suites ĐẠT 100% PASS** qua `run_all_tests.py`.
+
+---
+
+## 25. TỐI ƯU RESPONSIVE & CỐ ĐỊNH CỘT THAO TÁC CÁC BẢNG QUẢN TRỊ (ADMIN DASHBOARD)
+
+### 1. Vấn Đề Đã Khắc Phục:
+- **Ẩn/Cắt nút Thao tác trên màn hình vừa và nhỏ (1366x768, 1280x800):** Tên trường dài và các cột mô tả làm bảng dạt ngang, đẩy cột Thao tác (`[Sửa] [Xóa]`) ra ngoài lề phải màn hình hoặc yêu cầu người dùng phải kéo thanh cuộn ngang mới thấy nút.
+- **Tràn viền bảng:** Thẻ badge tên trường (`ten_truong`) không có `max-width` và dùng mặc định `white-space: nowrap` khiến các trường có tên dài (VD: "Trường THCS Nguyễn Văn Thuộc") làm giãn toàn bộ bảng.
+
+### 2. Giải Pháp Triển Khai:
+- **Cố định cột Thao tác (Sticky Actions Column):**
+  - Bổ sung class `.col-actions` với `position: sticky; right: 0; background-color: #ffffff; z-index: 5; box-shadow: -4px 0 8px -2px rgba(0, 0, 0, 0.08);`.
+  - Trên header: `thead th.col-actions` có `background-color: #f8f9fa; z-index: 6;`.
+  - Khi hover dòng: `tbody tr:hover td.col-actions` giữ màu nền đồng nhất `#f8f9fa`.
+  - Đảm bảo các nút `[Sửa]` và `[Xóa]` luôn hiển thị ngay trước mắt quản trị viên, không bị che khuất hay cuộn mất trên bất kỳ kích cỡ màn hình nào.
+- **Tối ưu độ rộng Badge Trường học (`.badge-school`):**
+  - Đặt `max-width: 190px`, `white-space: normal !important`, `word-break: break-word`, `line-height: 1.35`.
+  - Áp dụng trên toàn bộ các bảng quản trị:
+    1. Bảng Chương Trình Giờ Công Ích (`#communityTasksTable`).
+    2. Bảng Danh Sách Người Dùng (`#usersTable`).
+    3. Bảng Duyệt Học Sinh Đăng Ký (`pending_students`).
+    4. Bảng Quản Lý Mã Mời (`#inviteCodesTable`).
+    5. Bảng Sổ Theo Dõi & Xử Lý Vi Phạm Nội Quy (`violations_list`).
+    6. Bảng Kỹ Năng Cộng Đồng Đã Duyệt (`community_approved_skills`).
+    7. Bảng Quản Trị Danh Sách Trường Học (`all_schools_management`).
+- **Tối ưu Bảng Chương Trình Giờ Công Ích Học Đường (`#communityTasksTable`):**
+  - Chuyển `card-body p-4` sang `card-body p-0` để mở rộng không gian hiển thị tối đa.
+  - Phân bổ kích thước hợp lý cho các cột: ID (50px), Tên & Mô tả (min 180px, max 250px), Giờ thưởng (100px), Thời gian (130px), Trường (140-190px), Trạng thái (120px), Số đăng ký (110px), Thao tác (135px).
+  - Tên chương trình hiển thị tối đa 2 dòng gọn gàng, mô tả rút gọn bằng `text-truncate`.
+
+### 3. Nghiệm Thu & Kiểm Thử:
+- **Playwright Automation:** Kiểm thử trực quan trên các độ phân giải chuẩn laptop và desktop:
+  - `admin_community_tasks_1366x768_*.png`: Bảng vừa vặn trọn vẹn màn hình 1366x768, 2 nút [Sửa] và [Xóa] hiển thị rõ ràng.
+  - `admin_community_tasks_1280x800_*.png`: Bảng hiển thị xuất sắc ở 1280x800, không bị tràn ngang, nút thao tác cố định hoàn hảo.
+- **Kiểm thử hồi quy:** **40/40 Test Suites ĐẠT 100% PASS** qua `python run_all_tests.py`.
+
 
