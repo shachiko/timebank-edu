@@ -45,7 +45,8 @@ test_files = [
     "test_prompt_smart_features.py",
     "test_prompt_role_menus.py",
     "test_hotfix_import_and_school_display.py",
-    "test_redesign_study_needs_modal.py"
+    "test_redesign_study_needs_modal.py",
+    "test_prompt_admin_enhancements.py"
 ]
 
 results = {}

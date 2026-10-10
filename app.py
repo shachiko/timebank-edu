@@ -64,7 +64,7 @@ DATABASE_PATH = BASE_DIR / "database" / "timebank.db"
 SCHEMA_PATH = BASE_DIR / "database" / "schema.sql"
 CONFIG_PATH = BASE_DIR / "config.yaml"
 UPLOAD_BLOG_FOLDER = BASE_DIR / "static" / "uploads" / "blog"
-ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "gif"}
+ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "gif", "svg", "jfif", "bmp", "ico"}
 
 # Đảm bảo thư mục upload tồn tại
 UPLOAD_BLOG_FOLDER.mkdir(parents=True, exist_ok=True)
@@ -72,6 +72,76 @@ UPLOAD_BLOG_FOLDER.mkdir(parents=True, exist_ok=True)
 def allowed_image_file(filename):
     """Kiểm tra định dạng file ảnh tải lên có hợp lệ hay không."""
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_IMAGE_EXTENSIONS
+
+
+def process_and_save_school_logo(file, school_id=None):
+    """
+    Xử lý lưu file ảnh logo trường học:
+    - Lưu file vào static/uploads/schools/{filename}
+    - Đồng thời chuyển đổi sang Base64 Data URI để lưu trực tiếp vào CSDL,
+      giúp ảnh không bao giờ bị lỗi 404 hoặc mất khi deploy trên các nền tảng container/Render.
+    - Tối ưu kích thước ảnh (nếu là ảnh raster > 400x400 thì resize vừa vặn).
+    """
+    if not file or not getattr(file, "filename", None):
+        return None
+    raw_filename = file.filename.strip()
+    if not raw_filename or not allowed_image_file(raw_filename):
+        return None
+
+    ext = raw_filename.rsplit(".", 1)[1].lower()
+    ts = int(time.time())
+    sid = str(school_id) if school_id else "new"
+    safe_name = secure_filename(raw_filename)
+    if not safe_name or len(safe_name) < 3:
+        safe_name = f"logo.{ext}"
+    filename = f"school_{sid}_{ts}_{safe_name}"
+
+    upload_dir = BASE_DIR / "static" / "uploads" / "schools"
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    save_path = upload_dir / filename
+
+    try:
+        file.seek(0)
+    except Exception:
+        pass
+    content = file.read()
+    if not content:
+        return None
+
+    # Lưu file vật lý lên đĩa
+    try:
+        with open(save_path, "wb") as f_out:
+            f_out.write(content)
+    except Exception as e:
+        app.logger.warning(f"Không thể lưu file logo vật lý: {e}")
+
+    # Chuyển đổi sang Base64 Data URI để đảm bảo ảnh luôn hiển thị, không bị 404
+    try:
+        if ext in ("svg", "svg+xml"):
+            b64_str = base64.b64encode(content).decode("utf-8")
+            return f"data:image/svg+xml;base64,{b64_str}"
+        else:
+            try:
+                from PIL import Image
+                img = Image.open(io.BytesIO(content))
+                img = img.convert("RGBA" if ext == "png" else "RGB")
+                if img.width > 400 or img.height > 400:
+                    img.thumbnail((400, 400), Image.Resampling.LANCZOS)
+                buf = io.BytesIO()
+                out_format = "PNG" if ext == "png" else "JPEG"
+                img.save(buf, format=out_format, quality=90, optimize=True)
+                opt_content = buf.getvalue()
+                mime = "image/png" if ext == "png" else "image/jpeg"
+                b64_str = base64.b64encode(opt_content).decode("utf-8")
+                return f"data:{mime};base64,{b64_str}"
+            except Exception:
+                mime = f"image/{ext}" if ext != "jpg" else "image/jpeg"
+                b64_str = base64.b64encode(content).decode("utf-8")
+                return f"data:{mime};base64,{b64_str}"
+    except Exception as e:
+        app.logger.warning(f"Lỗi encode base64 logo: {e}")
+        return f"/static/uploads/schools/{filename}"
+
 
 # Khởi tạo ứng dụng Flask
 app = Flask(__name__)
@@ -816,6 +886,7 @@ def migrate_postgres_schema(conn):
         ("users", "so_dien_thoai", "TEXT"),
         ("users", "ghi_chu", "TEXT"),
         ("users", "mon_can_ho_tro", "TEXT"),
+        ("users", "mat_khau_khoi_tao", "TEXT"),
         # 2. skills
         ("skills", "truong_id", "INTEGER DEFAULT 1"),
         ("skills", "hien_thi_cong_dong", "INTEGER DEFAULT 0"),
@@ -1447,7 +1518,7 @@ def init_db():
         """)
         conn.commit()
 
-        # Prompt 23 & Nhập danh sách tài khoản hàng loạt: Nâng cấp cột email, so_dien_thoai, ghi_chu cho bảng users
+        # Prompt 23 & Nhập danh sách tài khoản hàng loạt: Nâng cấp cột email, so_dien_thoai, ghi_chu, mat_khau_khoi_tao cho bảng users
         cur.execute("PRAGMA table_info(users)")
         u_cols = [r[1] for r in cur.fetchall()]
         if "email" not in u_cols:
@@ -1458,6 +1529,8 @@ def init_db():
             conn.execute("ALTER TABLE users ADD COLUMN ghi_chu TEXT")
         if "mon_can_ho_tro" not in u_cols:
             conn.execute("ALTER TABLE users ADD COLUMN mon_can_ho_tro TEXT")
+        if "mat_khau_khoi_tao" not in u_cols:
+            conn.execute("ALTER TABLE users ADD COLUMN mat_khau_khoi_tao TEXT")
         conn.commit()
 
         # Bảng notifications (SQLite)
@@ -4022,9 +4095,9 @@ def execute_import_job(flask_app, job_id):
                         unit_lop = lop if lop else ("Ban Giám Hiệu" if role == "school_admin" else ("Tổ Giáo Viên" if role == "giao_vien" else ""))
 
                         cur.execute("""
-                            INSERT INTO users (truong_id, ma_hoc_sinh, ho_ten, lop, vai_tro, so_du_gio, gio_ranh, mat_khau, email, so_dien_thoai, ghi_chu, trang_thai)
-                            VALUES (?, ?, ?, ?, ?, ?, 'Toàn thời gian', ?, ?, ?, ?, 'hoat_dong')
-                        """, (job["truong_id"], username, ho_ten, unit_lop, role, so_du, hashed_pwd, email, sdt, ghi_chu))
+                            INSERT INTO users (truong_id, ma_hoc_sinh, ho_ten, lop, vai_tro, so_du_gio, gio_ranh, mat_khau, email, so_dien_thoai, ghi_chu, trang_thai, mat_khau_khoi_tao)
+                            VALUES (?, ?, ?, ?, ?, ?, 'Toàn thời gian', ?, ?, ?, ?, 'hoat_dong', ?)
+                        """, (job["truong_id"], username, ho_ten, unit_lop, role, so_du, hashed_pwd, email, sdt, ghi_chu, plain_pwd))
 
                         if email:
                             seen_emails.add(email.lower())
@@ -4791,19 +4864,20 @@ def admin_generate_invite_codes():
     return redirect(url_for("admin_dashboard", _anchor="tab-invite"))
 
 
-@app.route("/admin/invite-codes/export-excel")
+@app.route("/admin/invite-codes/export-excel", methods=["GET", "POST"])
 @admin_required
 def admin_export_invite_codes_excel():
     """
     Xuất danh sách mã mời ra file Excel (.xlsx) gồm:
     Mã mời | Loại mã | Trường | Số lượt còn lại | Ngày tạo | Trạng thái
+    Hỗ trợ xuất các mã được chọn qua checkbox hoặc tất cả theo bộ lọc trường.
     """
     db = get_db()
     cur = db.cursor()
     current_user_school_id = session.get("truong_id", 1)
     is_super = is_super_admin()
 
-    selected_truong_id = request.args.get("truong_id", "").strip()
+    selected_truong_id = (request.form.get("truong_id") or request.args.get("truong_id") or "").strip()
     if not is_super:
         filter_school_id = current_user_school_id
     else:
@@ -4812,6 +4886,16 @@ def admin_export_invite_codes_excel():
         else:
             filter_school_id = None
 
+    # Lấy danh sách mã mời được chọn nếu có
+    selected_codes_raw = request.form.get("selected_codes") or request.args.get("selected_codes") or ""
+    selected_codes_list = request.form.getlist("selected_codes")
+    if selected_codes_list and len(selected_codes_list) == 1 and "," in selected_codes_list[0]:
+        selected_codes_list = [c.strip() for c in selected_codes_list[0].split(",") if c.strip()]
+    elif not selected_codes_list and selected_codes_raw:
+        selected_codes_list = [c.strip() for c in selected_codes_raw.split(",") if c.strip()]
+    else:
+        selected_codes_list = [c.strip() for c in selected_codes_list if c.strip()]
+
     school_name = "Toan_He_Thong"
     if filter_school_id:
         cur.execute("SELECT ten_truong FROM truong WHERE id = ?", (filter_school_id,))
@@ -4819,15 +4903,25 @@ def admin_export_invite_codes_excel():
         if s_row and s_row["ten_truong"]:
             school_name = s_row["ten_truong"]
 
+    where_clauses = []
+    params = []
+    if filter_school_id:
+        where_clauses.append("ic.truong_id = ?")
+        params.append(filter_school_id)
+    if selected_codes_list:
+        placeholders = ",".join("?" for _ in selected_codes_list)
+        where_clauses.append(f"ic.ma_code IN ({placeholders})")
+        params.extend(selected_codes_list)
+
     invite_sql = """
         SELECT ic.*, t.ten_truong
         FROM invite_codes ic
         JOIN truong t ON ic.truong_id = t.id
     """
-    if filter_school_id:
-        invite_sql += f" WHERE ic.truong_id = {filter_school_id}"
+    if where_clauses:
+        invite_sql += " WHERE " + " AND ".join(where_clauses)
     invite_sql += " ORDER BY ic.id DESC"
-    cur.execute(invite_sql)
+    cur.execute(invite_sql, tuple(params))
     invite_codes = cur.fetchall()
 
     wb = openpyxl.Workbook()
@@ -4952,6 +5046,336 @@ def admin_export_invite_codes_excel():
         download_name=download_filename,
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+
+
+@app.route("/admin/invite-codes/<int:code_id>/delete", methods=["POST"])
+@admin_required
+def admin_delete_invite_code(code_id):
+    """Xóa mã mời khỏi hệ thống."""
+    db = get_db()
+    cur = db.cursor()
+    current_user_school_id = session.get("truong_id", 1)
+    is_super = is_super_admin()
+
+    if is_super:
+        cur.execute("SELECT id, ma_code FROM invite_codes WHERE id = ?", (code_id,))
+    else:
+        cur.execute("SELECT id, ma_code FROM invite_codes WHERE id = ? AND truong_id = ?", (code_id, current_user_school_id))
+    code_row = cur.fetchone()
+    if not code_row:
+        flash(_("Không tìm thấy mã mời hoặc bạn không có quyền xóa!"), "danger")
+        return redirect(url_for("admin_dashboard", _anchor="tab-invite"))
+
+    cur.execute("DELETE FROM invite_codes WHERE id = ?", (code_id,))
+    db.commit()
+    flash(_("Đã xóa mã mời %(code)s thành công!", code=code_row["ma_code"]), "success")
+    return redirect(url_for("admin_dashboard", _anchor="tab-invite"))
+
+
+@app.route("/admin/users/export-excel", methods=["GET", "POST"])
+@admin_required
+def admin_export_users_excel():
+    """
+    Xuất danh sách tài khoản người dùng ra file Excel (.xlsx) gồm:
+    STT | Trường | Họ và tên | Tên đăng nhập | Mật khẩu ban đầu | Vai trò | Lớp / Đơn vị | Số dư giờ | Email | SĐT | Trạng thái
+    """
+    db = get_db()
+    cur = db.cursor()
+    current_user_school_id = session.get("truong_id", 1)
+    is_super = is_super_admin()
+
+    selected_truong_id = (request.form.get("truong_id") or request.args.get("truong_id") or "").strip()
+    role_filter = (request.form.get("vai_tro") or request.args.get("vai_tro") or "").strip()
+    status_filter = (request.form.get("trang_thai") or request.args.get("trang_thai") or "").strip()
+
+    if not is_super:
+        filter_school_id = current_user_school_id
+    else:
+        if selected_truong_id and selected_truong_id.isdigit():
+            filter_school_id = int(selected_truong_id)
+        else:
+            filter_school_id = None
+
+    where_clauses = []
+    params = []
+
+    if filter_school_id:
+        where_clauses.append("u.truong_id = ?")
+        params.append(filter_school_id)
+    if role_filter:
+        where_clauses.append("u.vai_tro = ?")
+        params.append(role_filter)
+    if status_filter:
+        where_clauses.append("u.trang_thai = ?")
+        params.append(status_filter)
+
+    school_name = "Toan_He_Thong"
+    if filter_school_id:
+        cur.execute("SELECT ten_truong FROM truong WHERE id = ?", (filter_school_id,))
+        s_row = cur.fetchone()
+        if s_row and s_row["ten_truong"]:
+            school_name = s_row["ten_truong"]
+
+    sql = """
+        SELECT u.*, t.ten_truong
+        FROM users u
+        LEFT JOIN truong t ON u.truong_id = t.id
+    """
+    if where_clauses:
+        sql += " WHERE " + " AND ".join(where_clauses)
+    sql += " ORDER BY u.id DESC"
+
+    cur.execute(sql, tuple(params))
+    users_list = cur.fetchall()
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Danh_Sach_Tai_Khoan"
+
+    headers = [
+        "STT",
+        "Trường học",
+        "Họ và tên",
+        "Mã định danh (Tên đăng nhập)",
+        "Mật khẩu ban đầu",
+        "Vai trò",
+        "Lớp / Đơn vị",
+        "Số dư giờ",
+        "Email",
+        "Số điện thoại",
+        "Trạng thái"
+    ]
+    ws.append(headers)
+
+    role_map = {
+        "hoc_sinh": "Học sinh",
+        "giao_vien": "Giáo viên",
+        "school_admin": "Quản trị trường",
+        "super_admin": "Tổng quản trị",
+        "admin": "Quản trị viên"
+    }
+
+    status_map = {
+        "hoat_dong": "Đang hoạt động",
+        "cho_duyet": "Chờ duyệt",
+        "de_xuat_khoa": "Đề xuất khóa",
+        "da_khoa": "Đã khóa"
+    }
+
+    for idx, u in enumerate(users_list, 1):
+        r_name = role_map.get(u["vai_tro"], u["vai_tro"])
+        st_name = status_map.get(u["trang_thai"], u["trang_thai"])
+        pwd_val = u["mat_khau_khoi_tao"] if ("mat_khau_khoi_tao" in u.keys() and u["mat_khau_khoi_tao"]) else "[Đã mã hóa]"
+
+        ws.append([
+            idx,
+            u["ten_truong"] or "N/A",
+            u["ho_ten"],
+            u["ma_hoc_sinh"],
+            pwd_val,
+            r_name,
+            u["lop"] or "",
+            round(float(u["so_du_gio"] or 0), 2),
+            u["email"] or "",
+            u["so_dien_thoai"] or "",
+            st_name
+        ])
+
+    header_fill = PatternFill(start_color="1E40AF", end_color="1E40AF", fill_type="solid")
+    header_font = Font(name="Segoe UI", size=11, bold=True, color="FFFFFF")
+    thin_border = Border(
+        left=Side(style="thin", color="D1D5DB"),
+        right=Side(style="thin", color="D1D5DB"),
+        top=Side(style="thin", color="D1D5DB"),
+        bottom=Side(style="thin", color="D1D5DB")
+    )
+    center_align = Alignment(horizontal="center", vertical="center")
+    left_align = Alignment(horizontal="left", vertical="center")
+
+    for col_idx in range(1, len(headers) + 1):
+        cell = ws.cell(row=1, column=col_idx)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = center_align
+        cell.border = thin_border
+
+    data_font = Font(name="Segoe UI", size=10)
+    user_font = Font(name="Consolas", size=10, bold=True, color="1E3A8A")
+    user_fill = PatternFill(start_color="EFF6FF", end_color="EFF6FF", fill_type="solid")
+    pwd_font = Font(name="Consolas", size=10, bold=True, color="9333EA")
+
+    for r_idx in range(2, len(users_list) + 2):
+        for c_idx in range(1, len(headers) + 1):
+            cell = ws.cell(row=r_idx, column=c_idx)
+            cell.font = data_font
+            cell.border = thin_border
+
+            if c_idx in [1, 6, 7, 8, 11]:
+                cell.alignment = center_align
+            elif c_idx == 4:
+                cell.alignment = center_align
+                cell.font = user_font
+                cell.fill = user_fill
+            elif c_idx == 5:
+                cell.alignment = center_align
+                cell.font = pwd_font
+            else:
+                cell.alignment = left_align
+
+    for col in ws.columns:
+        max_len = 0
+        col_letter = get_column_letter(col[0].column)
+        for cell in col:
+            val_str = str(cell.value or "")
+            if len(val_str) > max_len:
+                max_len = len(val_str)
+        ws.column_dimensions[col_letter].width = max(max_len + 4, 12)
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    clean_school_tag = remove_vietnamese_accents(school_name).replace(" ", "_")
+    timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+    download_filename = f"danh_sach_tai_khoan_{clean_school_tag}_{timestamp_str}.xlsx"
+
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name=download_filename,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+
+@app.route("/admin/users/<int:user_id>/toggle-status", methods=["POST"])
+@admin_required
+def admin_toggle_user_status(user_id):
+    """Khóa hoặc Mở khóa tài khoản người dùng."""
+    db = get_db()
+    cur = db.cursor()
+    current_user_school_id = session.get("truong_id", 1)
+    is_super = is_super_admin()
+    my_user_id = session.get("user_id")
+
+    if user_id == my_user_id:
+        flash(_("Bạn không thể tự khóa tài khoản của chính mình!"), "danger")
+        return redirect(url_for("admin_dashboard", _anchor="tab-users"))
+
+    cur.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+    target = cur.fetchone()
+    if not target:
+        flash(_("Không tìm thấy người dùng!"), "danger")
+        return redirect(url_for("admin_dashboard", _anchor="tab-users"))
+
+    if not is_super and target["truong_id"] != current_user_school_id:
+        flash(_("Bạn chỉ có quyền quản lý người dùng thuộc trường của mình!"), "danger")
+        return redirect(url_for("admin_dashboard", _anchor="tab-users"))
+
+    if target["vai_tro"] == "super_admin":
+        flash(_("Không thể khóa tài khoản Tổng quản trị viên!"), "danger")
+        return redirect(url_for("admin_dashboard", _anchor="tab-users"))
+
+    new_status = "hoat_dong" if target["trang_thai"] == "da_khoa" else "da_khoa"
+    cur.execute("UPDATE users SET trang_thai = ? WHERE id = ?", (new_status, user_id))
+    db.commit()
+
+    if new_status == "da_khoa":
+        flash(_("Đã KHÓA tài khoản của %(name)s (%(code)s).", name=target["ho_ten"], code=target["ma_hoc_sinh"]), "warning")
+    else:
+        flash(_("Đã MỞ KHÓA thành công tài khoản của %(name)s (%(code)s).", name=target["ho_ten"], code=target["ma_hoc_sinh"]), "success")
+
+    return redirect(url_for("admin_dashboard", _anchor="tab-users"))
+
+
+@app.route("/admin/users/<int:user_id>/reset-password", methods=["POST"])
+@admin_required
+def admin_reset_user_password(user_id):
+    """Đặt lại mật khẩu mới cho người dùng."""
+    db = get_db()
+    cur = db.cursor()
+    current_user_school_id = session.get("truong_id", 1)
+    is_super = is_super_admin()
+
+    cur.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+    target = cur.fetchone()
+    if not target:
+        flash(_("Không tìm thấy người dùng!"), "danger")
+        return redirect(url_for("admin_dashboard", _anchor="tab-users"))
+
+    if not is_super and target["truong_id"] != current_user_school_id:
+        flash(_("Bạn chỉ có quyền quản lý người dùng thuộc trường của mình!"), "danger")
+        return redirect(url_for("admin_dashboard", _anchor="tab-users"))
+
+    if target["vai_tro"] == "super_admin" and not is_super:
+        flash(_("Bạn không có quyền đổi mật khẩu của Tổng quản trị!"), "danger")
+        return redirect(url_for("admin_dashboard", _anchor="tab-users"))
+
+    custom_pwd = request.form.get("new_password", "").strip()
+    if custom_pwd:
+        plain_pwd = custom_pwd
+    else:
+        plain_pwd = generate_secure_random_password(8)
+
+    hashed_pwd = hash_password_safe(plain_pwd)
+    cur.execute("""
+        UPDATE users 
+        SET mat_khau = ?, mat_khau_khoi_tao = ?
+        WHERE id = ?
+    """, (hashed_pwd, plain_pwd, user_id))
+    db.commit()
+
+    flash(_("Đã đặt lại mật khẩu cho %(name)s! Mật khẩu mới là: %(pwd)s", name=target["ho_ten"], pwd=plain_pwd), "success")
+    return redirect(url_for("admin_dashboard", _anchor="tab-users"))
+
+
+@app.route("/admin/users/<int:user_id>/delete", methods=["POST"])
+@admin_required
+def admin_delete_user(user_id):
+    """Xóa tài khoản người dùng an toàn."""
+    db = get_db()
+    cur = db.cursor()
+    current_user_school_id = session.get("truong_id", 1)
+    is_super = is_super_admin()
+    my_user_id = session.get("user_id")
+
+    if user_id == my_user_id:
+        flash(_("Bạn không thể tự xóa tài khoản của chính mình!"), "danger")
+        return redirect(url_for("admin_dashboard", _anchor="tab-users"))
+
+    cur.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+    target = cur.fetchone()
+    if not target:
+        flash(_("Không tìm thấy người dùng cần xóa!"), "danger")
+        return redirect(url_for("admin_dashboard", _anchor="tab-users"))
+
+    if not is_super:
+        if target["truong_id"] != current_user_school_id:
+            flash(_("Bạn chỉ có quyền quản lý tài khoản thuộc trường của mình!"), "danger")
+            return redirect(url_for("admin_dashboard", _anchor="tab-users"))
+        if target["vai_tro"] in ["super_admin", "school_admin", "admin"]:
+            flash(_("Quản trị viên trường không thể xóa tài khoản Quản trị khác!"), "danger")
+            return redirect(url_for("admin_dashboard", _anchor="tab-users"))
+
+    if target["vai_tro"] == "super_admin":
+        flash(_("Không thể xóa tài khoản Tổng quản trị (Super Admin)!"), "danger")
+        return redirect(url_for("admin_dashboard", _anchor="tab-users"))
+
+    try:
+        for tbl in ["notifications", "violations", "password_reset_tokens", "badges", "skills", "invite_code_usage"]:
+            try:
+                cur.execute(f"DELETE FROM {tbl} WHERE user_id = ?", (user_id,))
+            except Exception:
+                pass
+        cur.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        db.commit()
+        flash(_("Đã xóa vĩnh viễn tài khoản %(name)s (%(code)s) khỏi hệ thống!", name=target["ho_ten"], code=target["ma_hoc_sinh"]), "success")
+    except Exception:
+        db.rollback()
+        cur.execute("UPDATE users SET trang_thai = 'da_khoa' WHERE id = ?", (user_id,))
+        db.commit()
+        flash(_("Tài khoản %(name)s đã có dữ liệu giao dịch liên kết. Hệ thống đã tự động chuyển sang trạng thái ĐÃ KHÓA để bảo toàn lịch sử dữ liệu!", name=target["ho_ten"]), "warning")
+
+    return redirect(url_for("admin_dashboard", _anchor="tab-users"))
 
 
 @app.route("/admin/approve-student/<int:user_id>", methods=["POST"])
@@ -5107,20 +5531,15 @@ def admin_update_school_logo(school_id):
 
     if "logo" in request.files:
         file = request.files["logo"]
-        if file and file.filename and allowed_image_file(file.filename):
-            filename = secure_filename(f"school_{school_id}_{int(time.time())}_{file.filename}")
-            upload_dir = BASE_DIR / "static" / "uploads" / "schools"
-            upload_dir.mkdir(parents=True, exist_ok=True)
-            save_path = upload_dir / filename
-            file.save(str(save_path))
-            logo_url = f"/static/uploads/schools/{filename}"
+        uploaded_logo = process_and_save_school_logo(file, school_id=school_id)
+        if uploaded_logo:
             db = get_db()
             cur = db.cursor()
-            cur.execute("UPDATE truong SET logo = ? WHERE id = ?", (logo_url, school_id))
+            cur.execute("UPDATE truong SET logo = ? WHERE id = ?", (uploaded_logo, school_id))
             db.commit()
             flash(_("Đã cập nhật logo trường thành công!"), "success")
         else:
-            flash(_("Vui lòng chọn file ảnh hợp lệ (PNG, JPG, WEBP)."), "warning")
+            flash(_("Vui lòng chọn file ảnh hợp lệ (PNG, JPG, WEBP, SVG)."), "warning")
     return redirect(url_for("admin_dashboard", _anchor="tab-schools" if is_super_admin() else None))
 
 
@@ -5167,12 +5586,9 @@ def admin_create_school():
     logo_url = "/static/img/logo_timebank_edu.png"
     if "logo" in request.files:
         file = request.files["logo"]
-        if file and file.filename and allowed_image_file(file.filename):
-            filename = secure_filename(f"school_new_{int(time.time())}_{file.filename}")
-            upload_dir = BASE_DIR / "static" / "uploads" / "schools"
-            upload_dir.mkdir(parents=True, exist_ok=True)
-            file.save(str(upload_dir / filename))
-            logo_url = f"/static/uploads/schools/{filename}"
+        uploaded_logo = process_and_save_school_logo(file, school_id=None)
+        if uploaded_logo:
+            logo_url = uploaded_logo
 
     # Tự sinh truong_id tiếp theo (không đè DEMO_SCHOOL_ID = 99)
     cur.execute("SELECT COALESCE(MAX(id), 0) FROM truong WHERE id < ?", (DEMO_SCHOOL_ID,))
@@ -5247,12 +5663,9 @@ def admin_edit_school(school_id):
     logo_url = school["logo"]
     if "logo" in request.files:
         file = request.files["logo"]
-        if file and file.filename and allowed_image_file(file.filename):
-            filename = secure_filename(f"school_{school_id}_{int(time.time())}_{file.filename}")
-            upload_dir = BASE_DIR / "static" / "uploads" / "schools"
-            upload_dir.mkdir(parents=True, exist_ok=True)
-            file.save(str(upload_dir / filename))
-            logo_url = f"/static/uploads/schools/{filename}"
+        uploaded_logo = process_and_save_school_logo(file, school_id=school_id)
+        if uploaded_logo:
+            logo_url = uploaded_logo
 
     # Cập nhật an_truong nếu chuyển sang tạm ngưng / hoặc giữ nguyên
     new_an = 1 if trang_thai == "vo_hieu_hoa" else (0 if trang_thai == "dang_su_dung" else (school["an_truong"] if "an_truong" in school.keys() else 0))

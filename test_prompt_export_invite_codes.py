@@ -98,6 +98,7 @@ class TestPromptExportInviteCodes(unittest.TestCase):
         cur = db.cursor()
         now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+        cur.execute("DELETE FROM invite_codes WHERE ma_code IN ('TBEDU-TEST-EX11', 'TBEDU-TEST-EX22')")
         cur.execute("""
             INSERT INTO invite_codes (truong_id, ma_code, loai, so_luot_toi_da, da_dung, ngay_tao, nguoi_tao)
             VALUES (1, 'TBEDU-TEST-EX11', 'ca_nhan', 1, 0, ?, 1)
@@ -174,6 +175,7 @@ class TestPromptExportInviteCodes(unittest.TestCase):
         db = get_db()
         cur = db.cursor()
         now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        cur.execute("DELETE FROM invite_codes WHERE ma_code = 'TBEDU-T2-SPECIFIC'")
         cur.execute("""
             INSERT INTO invite_codes (truong_id, ma_code, loai, so_luot_toi_da, da_dung, ngay_tao, nguoi_tao)
             VALUES (2, 'TBEDU-T2-SPECIFIC', 'ca_nhan', 1, 0, ?, 1)
