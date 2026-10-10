@@ -2362,6 +2362,24 @@ def check_invite_code():
     })
 
 
+@app.route("/api/kiem-tra-username", methods=["GET"])
+def kiem_tra_username():
+    """
+    API kiểm tra username (ma_hoc_sinh) có tồn tại hay không.
+    Trả về JSON: {"ton_tai": true/false}
+    """
+    username = request.args.get("u", "").strip()
+    if not username:
+        return jsonify({"ton_tai": False, "message": "Username trống"})
+    
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("SELECT id FROM users WHERE ma_hoc_sinh = ?", (username,))
+    exists = cur.fetchone() is not None
+    
+    return jsonify({"ton_tai": exists})
+
+
 @app.route("/register", methods=["GET", "POST"])
 def register():
     """
@@ -2405,7 +2423,7 @@ def register():
         # Kiểm tra xem mã học sinh đã tồn tại chưa
         cur.execute("SELECT id FROM users WHERE ma_hoc_sinh = ?", (ma_hoc_sinh,))
         if cur.fetchone():
-            flash(_("Mã học sinh đã tồn tại trong hệ thống. Vui lòng kiểm tra lại!"), "danger")
+            flash(_("Username đã tồn tại trong hệ thống. Vui lòng chọn tên khác!"), "danger")
             return render_template("register.html", all_schools=all_schools, schools=all_schools)
 
         assigned_truong_id = 1
@@ -3096,7 +3114,7 @@ def profile():
         # 2. Lọc ứng viên có kỹ năng 'da_duyet' thuộc lĩnh vực đó + người khác chia sẻ
         search_kw = "Toán" if "toán" in target_subject.lower() else target_subject
         cur.execute("""
-            SELECT s.*, u.ho_ten, u.lop, u.gio_ranh,
+            SELECT s.*, u.ho_ten, u.lop, u.gio_ranh, u.ma_hoc_sinh, u.truong_id,
                    COALESCE(t.ten_truong, 'Chưa phân trường') AS ten_truong,
                    ROUND(COALESCE(AVG(r.so_sao), 5.0)::numeric, 1) AS sao_tb
             FROM skills s
@@ -3107,7 +3125,10 @@ def profile():
             WHERE s.trang_thai_duyet = 'da_duyet'
               AND s.user_id != ?
               AND (s.linh_vuc LIKE ? OR s.tieu_de LIKE ?)
-            GROUP BY s.id, u.id, u.ho_ten, u.lop, u.gio_ranh, t.ten_truong
+              AND (u.truong_id != 99 OR u.truong_id IS NULL)
+              AND u.ma_hoc_sinh NOT LIKE 'demo_%'
+              AND u.ma_hoc_sinh NOT IN ('demo_quantruong', 'demo_giaovien', 'demo_hocsinh', 'demo_hocsinh_2', 'admin')
+            GROUP BY s.id, u.id, u.ho_ten, u.lop, u.gio_ranh, u.ma_hoc_sinh, u.truong_id, t.ten_truong
             ORDER BY s.id DESC
         """, (user["id"], f"%{search_kw}%", f"%{search_kw}%"))
         subject_candidates = cur.fetchall()
@@ -3146,6 +3167,16 @@ def profile():
             )
         else:
             daily_matches, is_live_rec = [], is_ai_live()
+
+        # Kiểm tra xem người học đã có yêu cầu đặt lịch cho các kỹ năng này chưa
+        if daily_matches:
+            for match in daily_matches:
+                cur.execute("""
+                    SELECT id FROM sessions 
+                    WHERE skill_id = ? AND nguoi_hoc_id = ? AND trang_thai IN ('cho_duyet', 'da_dat')
+                    LIMIT 1
+                """, (match["id"], user["id"]))
+                match["has_booking"] = cur.fetchone() is not None
 
         DAILY_RECOMMENDATION_CACHE[cache_key] = (daily_matches, is_live_rec, target_subject)
 
@@ -6473,7 +6504,7 @@ def get_ai_buddy_suggestions(db, user_id, limit=5):
     current_school_id = user["truong_id"]
 
     cur.execute("""
-        SELECT s.*, u.ho_ten, u.lop, u.gio_ranh, u.ma_hoc_sinh, t.ten_truong,
+        SELECT s.*, u.ho_ten, u.lop, u.gio_ranh, u.ma_hoc_sinh, u.truong_id, t.ten_truong,
                ROUND(COALESCE(AVG(r.so_sao), 5.0)::numeric, 1) AS sao_tb
         FROM skills s
         JOIN users u ON s.user_id = u.id
@@ -6481,7 +6512,10 @@ def get_ai_buddy_suggestions(db, user_id, limit=5):
         LEFT JOIN sessions ses ON s.id = ses.skill_id AND ses.trang_thai = 'hoan_thanh'
         LEFT JOIN ratings r ON ses.id = r.session_id AND r.nguoi_duoc_danh_gia_id = u.id
         WHERE s.trang_thai_duyet = 'da_duyet' AND s.user_id != ?
-        GROUP BY s.id, u.id, u.ho_ten, u.lop, u.gio_ranh, u.ma_hoc_sinh, t.ten_truong
+          AND (u.truong_id != 99 OR u.truong_id IS NULL)
+          AND u.ma_hoc_sinh NOT LIKE 'demo_%'
+          AND u.ma_hoc_sinh NOT IN ('demo_quantruong', 'demo_giaovien', 'demo_hocsinh', 'demo_hocsinh_2', 'admin')
+        GROUP BY s.id, u.id, u.ho_ten, u.lop, u.gio_ranh, u.ma_hoc_sinh, u.truong_id, t.ten_truong
         ORDER BY s.id DESC
     """, (user_id,))
     all_candidates = cur.fetchall()
@@ -7001,7 +7035,7 @@ def session_detail(session_id):
     
     cur.execute(
         """SELECT 
-               s.*,
+               s.*, s.truong_id as session_truong_id,
                sk.tieu_de,
                sk.linh_vuc,
                sk.mo_ta,
@@ -8089,7 +8123,7 @@ def virtual_room(session_id):
     is_teacher = (session_data["nguoi_day_id"] == user_id)
     is_learner = (session_data["nguoi_hoc_id"] == user_id)
     
-    session_truong_id = session_data["truong_id"] if "truong_id" in session_data.keys() else None
+    session_truong_id = session_data["session_truong_id"] if "session_truong_id" in session_data.keys() else (session_data["truong_id"] if "truong_id" in session_data.keys() else None)
     user_truong_id = session.get("truong_id")
     
     # Phân quyền giám sát:
@@ -8159,7 +8193,7 @@ def get_virtual_room_token(session_id):
     user_role = session.get("vai_tro", "")
     
     cur.execute(
-        """SELECT s.*, sk.tieu_de, ud.ho_ten AS ten_nguoi_day, uh.ho_ten AS ten_nguoi_hoc
+        """SELECT s.*, s.truong_id as session_truong_id, sk.tieu_de, ud.ho_ten AS ten_nguoi_day, uh.ho_ten AS ten_nguoi_hoc
            FROM sessions s
            JOIN skills sk ON s.skill_id = sk.id
            JOIN users ud ON s.nguoi_day_id = ud.id
@@ -8175,7 +8209,7 @@ def get_virtual_room_token(session_id):
     is_teacher = (session_data["nguoi_day_id"] == user_id)
     is_learner = (session_data["nguoi_hoc_id"] == user_id)
     
-    session_truong_id = session_data["truong_id"] if "truong_id" in session_data.keys() else None
+    session_truong_id = session_data["session_truong_id"] if "session_truong_id" in session_data.keys() else (session_data["truong_id"] if "truong_id" in session_data.keys() else None)
     user_truong_id = session.get("truong_id")
     is_super = is_super_admin() or (user_role == "super_admin")
     is_same_school = (session_truong_id is None or user_truong_id is None or session_truong_id == user_truong_id)

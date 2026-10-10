@@ -7757,6 +7757,33 @@ msgstr ""
 msgid "Về trang hồ sơ"
 msgstr "Về trang hồ sơ"
 
+
+msgid "Username"
+msgstr "Username"
+
+msgid "Tự đặt tên đăng nhập riêng, viết liền không dấu. Ví dụ: an.10a1"
+msgstr "Tự đặt tên đăng nhập riêng, viết liền không dấu. Ví dụ: an.10a1"
+
+msgid "Username đã tồn tại trong hệ thống. Vui lòng chọn tên khác!"
+msgstr "Username đã tồn tại trong hệ thống. Vui lòng chọn tên khác!"
+
+msgid "Đang kiểm tra..."
+msgstr "Đang kiểm tra..."
+
+msgid "Username đã có người dùng"
+msgstr "Username đã có người dùng"
+
+msgid "Username khả dụng"
+msgstr "Username khả dụng"
+
+msgid "Không thể kiểm tra lúc này"
+msgstr "Không thể kiểm tra lúc này"
+
+msgid "Tổng Quản trị viên"
+msgstr "Tổng Quản trị viên"
+
+msgid "Ban Quản trị Hệ thống"
+msgstr "Ban Quản trị Hệ thống"
 #~ msgid "Chào mừng bạn đã đến với công cụ giáo dục TIME BANK EDU."
 #~ msgstr "Chào mừng bạn đã đến với công cụ giáo dục TIME BANK EDU."
 

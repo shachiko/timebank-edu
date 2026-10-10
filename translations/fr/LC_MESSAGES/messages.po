@@ -7636,6 +7636,33 @@ msgstr ""
 msgid "Về trang hồ sơ"
 msgstr "À propos de la page de profil"
 
+
+msgid "Username"
+msgstr "Nom d'utilisateur"
+
+msgid "Tự đặt tên đăng nhập riêng, viết liền không dấu. Ví dụ: an.10a1"
+msgstr "Choisissez votre propre identifiant, sans espaces ni accents. Exemple : an.10a1"
+
+msgid "Username đã tồn tại trong hệ thống. Vui lòng chọn tên khác!"
+msgstr "Ce nom d'utilisateur existe déjà dans le système. Veuillez en choisir un autre !"
+
+msgid "Đang kiểm tra..."
+msgstr "Vérification en cours..."
+
+msgid "Username đã có người dùng"
+msgstr "Nom d'utilisateur déjà pris"
+
+msgid "Username khả dụng"
+msgstr "Nom d'utilisateur disponible"
+
+msgid "Không thể kiểm tra lúc này"
+msgstr "Impossible de vérifier pour le moment"
+
+msgid "Tổng Quản trị viên"
+msgstr "Super Administrateur"
+
+msgid "Ban Quản trị Hệ thống"
+msgstr "Administration Système"
 #~ msgid "Chào mừng bạn đã đến với công cụ giáo dục TIME BANK EDU."
 #~ msgstr "Bienvenue sur l'outil pédagogique TIME BANK EDU."
 

@@ -21,7 +21,9 @@
           <div class="flex-grow-1">
             <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
               <h3 class="fw-bold mb-0 text-dark">{{ user.ho_ten }}</h3>
-              {% if user.vai_tro == 'admin' %}
+              {% if user.vai_tro == 'super_admin' %}
+                <span class="badge bg-danger"><i class="bi bi-shield-fill-check me-1"></i> {{ _('Tổng Quản trị viên') }}</span>
+              {% elif user.vai_tro == 'admin' %}
                 <span class="badge bg-danger"><i class="bi bi-shield-fill-check me-1"></i> {{ _('Quản trị viên') }}</span>
               {% elif user.vai_tro == 'giao_vien' %}
                 <span class="badge bg-primary"><i class="bi bi-mortarboard-fill me-1"></i> {{ _('Giáo viên') }}</span>
@@ -36,7 +38,11 @@
             
             <p class="text-muted small mb-2">
               <i class="bi bi-person-vcard me-1"></i>{{ _('Mã định danh:') }}<code>{{ user.ma_hoc_sinh }}</code>
-              {% if user.lop %} • <i class="bi bi-building me-1"></i>{{ _('Lớp/Đơn vị:') }}<strong>{{ user.lop }}</strong>{% endif %}
+              {% if user.vai_tro == 'super_admin' %}
+                • <i class="bi bi-building me-1"></i>{{ _('Lớp/Đơn vị:') }}<strong>{{ _('Ban Quản trị Hệ thống') }}</strong>
+              {% elif user.lop %}
+                • <i class="bi bi-building me-1"></i>{{ _('Lớp/Đơn vị:') }}<strong>{{ user.lop }}</strong>
+              {% endif %}
               • <i class="bi bi-geo-alt me-1"></i>{{ config.ten_truong }}
             </p>
 
@@ -77,9 +83,11 @@
                 <i class="bi bi-calendar2-week me-1"></i>{{ _('Cập nhật Môn & Giờ rảnh') }}
               </button>
 
+              {% if user.vai_tro == 'hoc_sinh' %}
               <button type="button" class="btn btn-warning btn-sm rounded-pill px-3 fw-bold text-dark shadow-sm" onclick="openAiBuddySuggestions()" id="btnAiSuggestBuddiesProfile">
                 <i class="bi bi-stars text-danger me-1"></i>{{ _('AI gợi ý bạn học') }}
               </button>
+              {% endif %}
 
               {% if is_demo_user(user.ma_hoc_sinh) %}
                 <span class="badge bg-warning-subtle text-warning border border-warning-subtle py-2 px-3 rounded-pill" style="font-size: 0.8rem;">
@@ -202,7 +210,7 @@
   </div>
 
   <!-- KHỐI GỢI Ý CHO BẠN HÔM NAY (ĐIỂM CHẠM GHÉP CẶP TỰ ĐỘNG) -->
-  {% if daily_matches %}
+  {% if daily_matches and user.vai_tro == 'hoc_sinh' %}
   <div class="card border-0 shadow-sm rounded-4 bg-white mb-4 overflow-hidden border-start border-4 border-primary">
     <div class="card-header bg-white border-bottom py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
       <div>
@@ -253,9 +261,16 @@
               </div>
             </div>
             <div>
-              <a href="{{ url_for('book_skill_page', skill_id=match.id) }}" class="btn btn-brand btn-sm w-100 fw-bold">
-                <i class="bi bi-calendar-plus me-1"></i> {{ _('Đặt lịch ngay') }}
-              </a>
+              {% if match.has_booking %}
+                <button type="button" class="btn btn-secondary btn-sm w-100 fw-bold" disabled>
+                  <i class="bi bi-check2-circle me-1"></i> {{ _('Đã gửi yêu cầu') }}
+                </button>
+              {% else %}
+                <button type="button" class="btn btn-brand btn-sm w-100 fw-bold" 
+                        onclick="bookDailyMatch({{ match.id }}, '{{ match.tieu_de|escapejs }}', '{{ match.ho_ten|escapejs }}', '{{ match.linh_vuc|escapejs }}', '{{ match.gio_ranh|escapejs }}')">
+                  <i class="bi bi-calendar-plus me-1"></i> {{ _('Đăng ký học') }}
+                </button>
+              {% endif %}
             </div>
           </div>
         </div>
@@ -964,10 +979,39 @@
 
     function escapeHtml(str) {
       return (str || '').replace(/[&<>"']/g, function(m) {
-        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+        return { '&': '&', '<': '<', '>': '>', '"': '"', "'": ''' }[m];
       });
     }
 
+    // Đặt lịch học nhanh từ gợi ý AI hàng ngày
+    window.bookDailyMatch = function(skillId, skillTitle, tutorName, subject, commonSlot) {
+      // Mở modal đặt lịch nhanh
+      const modalEl = document.getElementById('modalQuickBookAiSession');
+      if (!modalEl) return;
+      
+      document.getElementById('quickBookSkillId').value = skillId;
+      document.getElementById('quickBookTutorName').value = tutorName;
+      document.getElementById('quickBookTutorNameDisplay').textContent = tutorName;
+      document.getElementById('quickBookAvatar').textContent = (tutorName || 'A')[0].toUpperCase();
+      document.getElementById('quickBookSubject').textContent = subject;
+      document.getElementById('quickBookSkillTitle').textContent = skillTitle;
+      document.getElementById('quickBookCommonSlot').textContent = commonSlot || 'Linh hoạt';
+
+      // Mặc định đặt hẹn ngày mai vào lúc 14:00
+      const now = new Date();
+      now.setDate(now.getDate() + 1);
+      now.setHours(14, 0, 0, 0);
+      const isoLocal = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+      document.getElementById('quickBookStartTime').value = isoLocal;
+
+      const alertEl = document.getElementById('quickBookAlert');
+      alertEl.classList.add('d-none');
+      alertEl.textContent = '';
+
+      const bookModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      bookModal.show();
+    };
+    
     // Gắn sự kiện khi modal được mở
     const modalEl = document.getElementById('modalStudyNeeds');
     if (modalEl) {

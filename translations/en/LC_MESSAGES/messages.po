@@ -7413,6 +7413,33 @@ msgstr "do not have authorized access to the admin console or this feature."
 msgid "Về trang hồ sơ"
 msgstr "About profile page"
 
+
+msgid "Username"
+msgstr "Username"
+
+msgid "Tự đặt tên đăng nhập riêng, viết liền không dấu. Ví dụ: an.10a1"
+msgstr "Choose your own username, no spaces or accents. Example: an.10a1"
+
+msgid "Username đã tồn tại trong hệ thống. Vui lòng chọn tên khác!"
+msgstr "Username already exists in the system. Please choose another!"
+
+msgid "Đang kiểm tra..."
+msgstr "Checking..."
+
+msgid "Username đã có người dùng"
+msgstr "Username already taken"
+
+msgid "Username khả dụng"
+msgstr "Username available"
+
+msgid "Không thể kiểm tra lúc này"
+msgstr "Unable to check at this time"
+
+msgid "Tổng Quản trị viên"
+msgstr "Super Administrator"
+
+msgid "Ban Quản trị Hệ thống"
+msgstr "System Administration"
 #~ msgid "Chào mừng bạn đã đến với công cụ giáo dục TIME BANK EDU."
 #~ msgstr "Welcome to the TIME BANK EDU educational platform."
 

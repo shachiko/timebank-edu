@@ -6999,6 +6999,33 @@ msgstr "无权访问管理控制台或此功能。"
 msgid "Về trang hồ sơ"
 msgstr "关于个人资料页"
 
+
+msgid "Username"
+msgstr "用户名"
+
+msgid "Tự đặt tên đăng nhập riêng, viết liền không dấu. Ví dụ: an.10a1"
+msgstr "自行设置专属用户名，不带空格和声调。示例: an.10a1"
+
+msgid "Username đã tồn tại trong hệ thống. Vui lòng chọn tên khác!"
+msgstr "用户名已存在于系统中。请选择其他名称！"
+
+msgid "Đang kiểm tra..."
+msgstr "正在检查..."
+
+msgid "Username đã có người dùng"
+msgstr "用户名已被使用"
+
+msgid "Username khả dụng"
+msgstr "用户名可用"
+
+msgid "Không thể kiểm tra lúc này"
+msgstr "目前无法检查"
+
+msgid "Tổng Quản trị viên"
+msgstr "超级管理员"
+
+msgid "Ban Quản trị Hệ thống"
+msgstr "系统管理部门"
 #~ msgid "Chào mừng bạn đã đến với công cụ giáo dục TIME BANK EDU."
 #~ msgstr "欢迎使用 TIME BANK EDU 校园教育工具。"
 

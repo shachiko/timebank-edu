@@ -59,11 +59,15 @@
             <!-- 2. THÔNG TIN HỌC SINH -->
             <div class="row g-3 mb-3">
               <div class="col-md-6">
-                <label for="ma_hoc_sinh" class="form-label small fw-semibold">{{ _('Mã học sinh') }} <span class="text-danger">*</span></label>
+                <label for="ma_hoc_sinh" class="form-label small fw-semibold">{{ _('Username') }} <span class="text-danger">*</span></label>
                 <div class="input-group">
                   <span class="input-group-text bg-light"><i class="bi bi-person-vcard"></i></span>
-                  <input type="text" class="form-control" id="ma_hoc_sinh" name="ma_hoc_sinh" placeholder="{{ _('VD: HS10009') }}" required value="{{ request.form.get('ma_hoc_sinh', '') }}">
+                  <input type="text" class="form-control" id="ma_hoc_sinh" name="ma_hoc_sinh" placeholder="{{ _('VD: an.10a1') }}" required value="{{ request.form.get('ma_hoc_sinh', '') }}">
                 </div>
+                <div class="form-text text-muted small mt-1">
+                  <i class="bi bi-info-circle me-1"></i> {{ _('Tự đặt tên đăng nhập riêng, viết liền không dấu. Ví dụ: an.10a1') }}
+                </div>
+                <div id="usernameFeedback" class="small mt-1"></div>
               </div>
 
               <div class="col-md-6">
@@ -87,7 +91,7 @@
               <label for="gio_ranh" class="form-label small fw-semibold">{{ _('Khung giờ rảnh dự kiến (AI hỗ trợ ghép cặp)') }}</label>
               <div class="input-group">
                 <span class="input-group-text bg-light"><i class="bi bi-clock-history"></i></span>
-                <input type="text" class="form-control" id="gio_ranh" name="gio_ranh" placeholder="{{ _('VD: Chiều thứ 4, sáng thứ 7, tối CN...') }}" value="{{ request.form.get('gio_ranh', '') }}">
+                <input type="text" class="form-control" id="gio_ranh" name="gio_ranh" placeholder="{{ _('VD: Chiều thứ 4, sáng thứ 7, tối CN...') }}" value="{{ request.form.get('gio_ranh', '') }}" autocomplete="off">
               </div>
               <div class="form-text small text-muted"><span class="badge-ai" style="font-size: 0.68rem;"><i class="bi bi-stars"></i> {{ _('Hỗ trợ bởi AI (Trí tuệ nhân tạo)') }}</span> {{ _('để tự động đề xuất lịch học thích hợp.') }}</div>
             </div>
@@ -157,16 +161,18 @@ async function validateInviteCode() {
     const res = await fetch(`/api/check-invite-code?code=${encodeURIComponent(code)}`);
     const data = await res.json();
     if (data.valid) {
+      const schoolName = data.school_name || data.ten_truong || '—';
+      const remaining = data.remaining !== undefined ? data.remaining : (data.con_lai !== undefined ? data.con_lai : '—');
       feedback.className = 'small mt-1 text-success fw-bold';
-      feedback.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i> {{ _('Mã hợp lệ! Tự gán:') }} ${data.ten_truong} ({{ _('Còn') }} ${data.con_lai} {{ _('lượt') }}). {{ _('Kích hoạt ngay!') }}`;
-      schoolSelect.value = String(data.truong_id);
+      feedback.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i> {{ _('Mã hợp lệ! Tự gán:') }} ${schoolName} ({{ _('Còn') }} ${remaining} {{ _('lượt') }}). {{ _('Kích hoạt ngay!') }}`;
+      schoolSelect.value = String(data.school_id || data.truong_id);
       schoolSelect.disabled = true; // Khóa dropdown trường
-      schoolHidden.value = String(data.truong_id);
+      schoolHidden.value = String(data.school_id || data.truong_id);
       schoolNotice.className = 'small mt-1 text-success fw-semibold';
       schoolNotice.innerHTML = `<i class="bi bi-lock-fill me-1"></i> {{ _('Trường đã tự gán & khóa theo mã mời.') }}`;
     } else {
       feedback.className = 'small mt-1 text-danger fw-bold';
-      feedback.innerHTML = `<i class="bi bi-x-circle-fill me-1"></i> ${data.message}`;
+      feedback.innerHTML = `<i class="bi bi-x-circle-fill me-1"></i> ${data.message || data.error || 'Mã mời không hợp lệ'}`;
       schoolSelect.disabled = false;
       schoolHidden.value = '';
       schoolNotice.className = 'small mt-1 text-muted';
@@ -184,6 +190,44 @@ document.getElementById('ma_code').addEventListener('input', function() {
   } else if (this.value.trim().length === 0) {
     validateInviteCode();
   }
+});
+
+// Kiểm tra username realtime (sự kiện blur + debounce 300ms)
+let usernameCheckTimeout = null;
+document.getElementById('ma_hoc_sinh').addEventListener('blur', function() {
+  const username = this.value.trim();
+  const feedback = document.getElementById('usernameFeedback');
+  
+  if (!username) {
+    feedback.className = 'small mt-1 text-muted';
+    feedback.textContent = '';
+    return;
+  }
+  
+  // Clear previous timeout
+  if (usernameCheckTimeout) clearTimeout(usernameCheckTimeout);
+  
+  // Debounce 300ms
+  usernameCheckTimeout = setTimeout(async () => {
+    feedback.className = 'small mt-1 text-info';
+    feedback.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> {{ _("Đang kiểm tra...") }}';
+    
+    try {
+      const res = await fetch(`/api/kiem-tra-username?u=${encodeURIComponent(username)}`);
+      const data = await res.json();
+      
+      if (data.ton_tai) {
+        feedback.className = 'small mt-1 text-danger fw-bold';
+        feedback.innerHTML = '<i class="bi bi-x-circle-fill me-1"></i> {{ _("Username đã có người dùng") }}';
+      } else {
+        feedback.className = 'small mt-1 text-success fw-bold';
+        feedback.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> {{ _("Username khả dụng") }}';
+      }
+    } catch (e) {
+      feedback.className = 'small mt-1 text-muted';
+      feedback.textContent = '{{ _("Không thể kiểm tra lúc này") }}';
+    }
+  }, 300);
 });
 
 // Trước khi submit, mở khóa dropdown để gửi dữ liệu form chính xác
