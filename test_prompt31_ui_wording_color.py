@@ -103,10 +103,12 @@ class TestPrompt31UIWordingAndColor(unittest.TestCase):
         with open(css_path, "r", encoding="utf-8") as f:
             css = f.read()
 
-        # Menu links có nền phân tách
+        # Navbar có nền cam kem ấm nhẹ và menu links có nền phân tách
+        self.assertIn(".navbar-custom", css)
+        self.assertTrue("#FFF8F1" in css or "#FFFDFB" in css)
         self.assertIn(".navbar-custom .nav-link", css)
-        self.assertIn("background-color: #F8FAFC", css)
-        self.assertIn("border: 1px solid #E2E8F0", css)
+        self.assertTrue("background-color: #FFFFFF" in css or "background-color: #F8FAFC" in css)
+        self.assertTrue("border: 1px solid #FED7AA" in css or "border: 1px solid #E2E8F0" in css)
 
         # Hover & Active giữ tông cam-vàng chủ đạo
         self.assertIn("background-color: #FFF7ED", css)

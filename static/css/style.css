@@ -58,12 +58,12 @@ pre, code {
 }
 
 /* ==============================================================================
-   1. NAVBAR & HEADER TRẮNG HIỆN ĐẠI (Chữ + Icon Xanh Navy, Điểm nhấn Cam)
+   1. NAVBAR & HEADER CAM KEM ẤM NHẸ (Chữ + Icon Xanh Navy & Cam, Phân tách Tương phản)
    ============================================================================== */
 .navbar-custom {
-  background: #FFFFFF !important;
-  box-shadow: 0 2px 14px rgba(27, 42, 107, 0.08);
-  border-bottom: 1px solid #E2E8F0;
+  background: linear-gradient(180deg, #FFFDFB 0%, #FFF8F1 100%) !important;
+  box-shadow: 0 4px 18px rgba(242, 101, 34, 0.08);
+  border-bottom: 1px solid #FED7AA !important;
   transition: all 0.3s ease;
 }
 
@@ -91,19 +91,19 @@ pre, code {
   font-weight: 600;
 }
 
-/* Nav Links trong header - Tách từng mục hiện đại, giữ tông cam-vàng */
+/* Nav Links trong header - Nền trắng bo tròn phân tách tương phản trên nền cam kem */
 .navbar-custom .nav-link {
   font-weight: 600;
   color: #1E293B !important;
-  background-color: #F8FAFC;
-  border: 1px solid #E2E8F0;
+  background-color: #FFFFFF;
+  border: 1px solid #FED7AA;
   padding: 0.48rem 0.95rem !important;
   border-radius: 9999px;
   transition: all 0.22s ease;
   display: inline-flex;
   align-items: center;
   font-size: 0.92rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 3px rgba(242, 101, 34, 0.05);
 }
 
 .navbar-custom .nav-link i {
@@ -115,9 +115,9 @@ pre, code {
 .navbar-custom .nav-link:focus,
 .navbar-custom .nav-item.show .nav-link {
   color: #EA580C !important;
-  background-color: #FFF7ED;
-  border-color: #FED7AA;
-  box-shadow: 0 2px 8px rgba(242, 101, 34, 0.14);
+  background-color: #FFF7ED !important;
+  border-color: #F97316 !important;
+  box-shadow: 0 3px 10px rgba(242, 101, 34, 0.16);
 }
 
 .navbar-custom .nav-link:hover i,
@@ -140,8 +140,8 @@ pre, code {
 /* Dropdown menus phong cách hiện đại */
 .navbar-custom .dropdown-menu {
   background: #FFFFFF;
-  border: 1px solid #E2E8F0 !important;
-  box-shadow: 0 10px 25px rgba(27, 42, 107, 0.12) !important;
+  border: 1px solid #FED7AA !important;
+  box-shadow: 0 10px 25px rgba(242, 101, 34, 0.12) !important;
   border-radius: 16px !important;
   padding: 8px !important;
   min-width: 210px;
@@ -183,17 +183,18 @@ pre, code {
 }
 
 .navbar-custom .navbar-toggler {
-  border: 1.5px solid #CBD5E1;
-  color: #1B2A6B;
-  background-color: #F8FAFC;
+  border: 1.5px solid #FED7AA;
+  color: #F26522;
+  background-color: #FFFFFF;
   border-radius: 10px;
   padding: 6px 10px;
   transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(242, 101, 34, 0.06);
 }
 
 .navbar-custom .navbar-toggler:hover {
-  background-color: #F1F5F9;
-  border-color: #94A3B8;
+  background-color: #FFF7ED;
+  border-color: #F97316;
 }
 
 .navbar-custom .navbar-toggler:focus {
@@ -201,12 +202,26 @@ pre, code {
   outline: none;
 }
 
+/* Bộ chọn ngôn ngữ trên navbar cam kem */
+.navbar-custom #languageSelectorDropdown {
+  background-color: #FFFFFF !important;
+  border-color: #FED7AA !important;
+  color: #1E293B !important;
+  box-shadow: 0 1px 3px rgba(242, 101, 34, 0.05);
+}
+
+.navbar-custom #languageSelectorDropdown:hover {
+  background-color: #FFF7ED !important;
+  border-color: #F97316 !important;
+  color: #EA580C !important;
+}
+
 /* User pill on navbar */
 .navbar-custom .user-pill {
-  background-color: #F8FAFC !important;
+  background-color: #FFFFFF !important;
   color: #1B2A6B !important;
-  border: 1px solid #E2E8F0;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  border: 1px solid #FED7AA;
+  box-shadow: 0 2px 6px rgba(242, 101, 34, 0.06);
   max-width: 100%;
   white-space: nowrap;
   flex-shrink: 0;
@@ -214,8 +229,8 @@ pre, code {
 }
 
 .navbar-custom .user-pill:hover {
-  background-color: #F1F5F9 !important;
-  border-color: #CBD5E1;
+  background-color: #FFF7ED !important;
+  border-color: #F97316;
 }
 
 .user-display-name {

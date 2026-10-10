@@ -939,7 +939,9 @@ Nhằm nâng cao tính sư phạm, thuần khiết và thân thiện trong môi 
   - 🇩🇪 Deutsch (`de`): *Schulkompetenz-Repository* | *Schulübergreifende Gemeinschaft*
 - Toàn bộ 5 tệp nhị phân `.mo` đã được tái biên dịch (`pybabel compile -d translations`).
 
-### 4. Kiểm Thử Giao Diện & Responsive Mobile Đạt Chuẩn:
+### 4. Kiểm Thử Giao Diện & Phối Màu Thanh Navbar:
+- **Đổ Màu Nền Thanh Menu Ngang:** Áp dụng dải màu cam kem ấm nhẹ (`#FFFDFB` $\rightarrow$ `#FFF8F1`, viền `#FED7AA`), đổ bóng nhẹ `rgba(242, 101, 34, 0.08)`.
+- **Tương Phản Menu Pills:** Các nút menu bên trong có nền trắng bo tròn (`#FFFFFF`, viền `#FED7AA`, icon cam `#F26522`), hover cam ấm `#FFF7ED`, active gradient cam-vàng, phân tách cực kỳ rõ ràng và thẩm mỹ trên nền thanh navbar.
 - **Kiểm thử Desktop:** Mở menu "Hoạt động", các mục "Kho kỹ năng học đường" và "Cộng đồng liên trường" hiển thị sắc nét, click điều hướng chính xác 100% tới `/skills` và `/community-market`.
 - **Kiểm thử Mobile (Viewport 375px x 750px):**
   - Mở thanh điều hướng Hamburger Drawer và menu con "Hoạt động".
