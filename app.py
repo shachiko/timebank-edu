@@ -555,7 +555,9 @@ class PostgresCursorWrapper:
         converted_query = query
         # Chuyển đổi '?' thành '%s' cho psycopg2 nếu có
         if "?" in converted_query:
-            converted_query = converted_query.replace("?", "%s")
+            # Escape % có sẵn thành %% TRƯỚC (psycopg2 coi % đơn là ký tự placeholder),
+            # rồi mới convert ? thành %s. Thứ tự này quan trọng.
+            converted_query = converted_query.replace("%", "%%").replace("?", "%s")
 
         # Đảm bảo hàm ROUND(expr, n) trên PostgreSQL luôn được ép kiểu ::numeric
         if "ROUND(" in converted_query.upper():
@@ -593,7 +595,8 @@ class PostgresCursorWrapper:
     def executemany(self, query, seq_of_params):
         converted_query = query
         if "?" in converted_query:
-            converted_query = converted_query.replace("?", "%s")
+            # Escape % có sẵn thành %% TRƯỚC rồi mới convert ? thành %s (lý do như trên)
+            converted_query = converted_query.replace("%", "%%").replace("?", "%s")
         return self._cur.executemany(converted_query, seq_of_params)
 
     def fetchone(self):
