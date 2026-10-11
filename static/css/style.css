@@ -671,6 +671,14 @@ pre, code {
   border: 2px solid #E0E7FF;
 }
 
+/* Nút mở/đóng Bảng vinh danh mở rộng: xoay mũi tên khi mở */
+.honor-toggle-icon {
+  transition: transform 0.2s ease;
+}
+.honor-toggle-btn[aria-expanded="true"] .honor-toggle-icon {
+  transform: rotate(180deg);
+}
+
 /* Thẻ nhiệm vụ cộng đồng: khung ảnh bìa / placeholder */
 .task-cover-container {
   width: 100%;

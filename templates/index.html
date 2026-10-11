@@ -444,31 +444,36 @@
     </div>
 
     {% if top_tutors|length > 3 %}
-    <!-- Bảng vinh danh mở rộng: các gương mặt tiêu biểu tiếp theo -->
-    <div class="text-center mt-5 mb-3">
-      <span class="badge bg-warning bg-opacity-10 text-dark fw-semibold px-3 py-2 rounded-pill">
+    <!-- Bảng vinh danh mở rộng: menu thả xuống (mặc định thu gọn cho gọn gàng) -->
+    <div class="text-center mt-5">
+      <button class="btn btn-outline-warning rounded-pill px-4 py-2 fw-semibold honor-toggle-btn" type="button"
+              data-bs-toggle="collapse" data-bs-target="#honorRollMore" aria-expanded="false" aria-controls="honorRollMore">
         <i class="bi bi-award-fill text-warning me-1"></i>{{ _('Bảng vinh danh mở rộng') }}
-      </span>
+        <span class="text-muted fw-normal ms-1">({{ _('Hạng') }} 4–{{ top_tutors|length }})</span>
+        <i class="bi bi-chevron-down ms-2 honor-toggle-icon"></i>
+      </button>
     </div>
-    <div class="row g-3">
-      {% for tutor in top_tutors %}
-      {% if loop.index > 3 %}
-      <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-        <div class="d-flex align-items-center gap-2 p-2 px-3 border rounded-4 bg-white h-100 shadow-sm">
-          <span class="badge bg-light text-dark border rounded-pill flex-shrink-0" style="min-width: 40px;">#{{ loop.index }}</span>
-          <div class="avatar-initial-circle rank-avatar-other flex-shrink-0" style="width: 38px; height: 38px; min-width: 38px; font-size: 1rem;">
-            {{ tutor.ho_ten[0] | upper }}
-          </div>
-          <div class="flex-grow-1 overflow-hidden">
-            <div class="fw-semibold text-dark text-truncate" style="font-size: 0.9rem;">{{ tutor.ho_ten }}</div>
-            <div class="text-muted text-truncate" style="font-size: 0.75rem;">
-              <i class="bi bi-clock me-1 text-success"></i>{{ tutor.so_gio_day }} {{ _('giờ') }} • {{ _('Lớp') }} {{ tutor.lop }}
+    <div class="collapse mt-3" id="honorRollMore">
+      <div class="row g-3">
+        {% for tutor in top_tutors %}
+        {% if loop.index > 3 %}
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+          <div class="d-flex align-items-center gap-2 p-2 px-3 border rounded-4 bg-white h-100 shadow-sm">
+            <span class="badge bg-light text-dark border rounded-pill flex-shrink-0" style="min-width: 40px;">#{{ loop.index }}</span>
+            <div class="avatar-initial-circle rank-avatar-other flex-shrink-0" style="width: 38px; height: 38px; min-width: 38px; font-size: 1rem;">
+              {{ tutor.ho_ten[0] | upper }}
+            </div>
+            <div class="flex-grow-1 overflow-hidden">
+              <div class="fw-semibold text-dark text-truncate" style="font-size: 0.9rem;">{{ tutor.ho_ten }}</div>
+              <div class="text-muted text-truncate" style="font-size: 0.75rem;">
+                <i class="bi bi-clock me-1 text-success"></i>{{ tutor.so_gio_day }} {{ _('giờ') }} • {{ _('Lớp') }} {{ tutor.lop }}
+              </div>
             </div>
           </div>
         </div>
+        {% endif %}
+        {% endfor %}
       </div>
-      {% endif %}
-      {% endfor %}
     </div>
     {% endif %}
   </div>

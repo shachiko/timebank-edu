@@ -3604,6 +3604,7 @@ def upload_avatar():
     - Chỉ chấp nhận jpg/jpeg/png/webp, tối đa 2MB.
     - Xác thực ảnh thật bằng Pillow (PIL).
     - Lưu ảnh dạng Base64 Data URI trực tiếp vào cột avatar (bền vững, không mất khi redeploy).
+    - Ảnh được nén & thu nhỏ tối đa 256x256 (JPEG) để nhẹ CSDL và nhanh tải trang.
     - Trả về JSON {ok: true, url}.
     """
     file = request.files.get("avatar")
@@ -3633,8 +3634,21 @@ def upload_avatar():
     except Exception:
         return jsonify({"ok": False, "error": _("Tệp tải lên không phải là ảnh hợp lệ.")}), 400
 
+    # Nén & thu nhỏ ảnh (tối đa 256x256, JPEG) để nhẹ CSDL và nhanh tải trang
+    try:
+        from PIL import Image
+        _img = Image.open(io.BytesIO(content))
+        _img = _img.convert("RGB")
+        _img.thumbnail((256, 256), Image.Resampling.LANCZOS)
+        _buf = io.BytesIO()
+        _img.save(_buf, format="JPEG", quality=85, optimize=True)
+        content = _buf.getvalue()
+        mime = "image/jpeg"
+    except Exception:
+        # Nếu nén lỗi thì dùng ảnh gốc để không chặn người dùng
+        mime = "image/jpeg" if ext in ("jpg", "jpeg") else f"image/{ext}"
+
     # Lưu ảnh dạng Base64 Data URI trực tiếp vào CSDL (bền vững, không mất khi redeploy)
-    mime = "image/jpeg" if ext in ("jpg", "jpeg") else f"image/{ext}"
     b64_str = base64.b64encode(content).decode("utf-8")
     data_uri = f"data:{mime};base64,{b64_str}"
 
