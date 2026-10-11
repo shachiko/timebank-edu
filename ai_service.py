@@ -481,24 +481,33 @@ Xuất kết quả đúng định dạng JSON sau:
 # ==============================================================================
 # 5. AI CẢNH BÁO SỚM QUẢN TRỊ (ĐIỂM CHẠM 5)
 # ==============================================================================
-def ai_admin_early_warning(db, admin_user_id):
+def ai_admin_early_warning(db, admin_user_id, truong_id=None):
     """
     Quét và phát hiện các trường hợp cần can thiệp sư phạm sớm:
     1. Học sinh 7 ngày không tham gia phiên nào (nguy cơ bị cô lập hoặc quên lịch).
     2. Cặp đôi gia sư - học sinh bị đánh giá <= 2 sao từ 2 lần trở lên (xung đột phong cách).
     Đề xuất giải pháp can thiệp sư phạm nhân văn từ AI.
+
+    Phân quyền dữ liệu:
+    - Nếu truong_id được truyền (School Admin): CHỈ quét dữ liệu thuộc trường đó.
+    - Nếu truong_id = None (Super Admin): quét toàn hệ thống (giữ nguyên hành vi cũ).
     """
     cur = db.cursor()
-    
+
+    # Bộ lọc theo trường: School Admin chỉ thấy dữ liệu thuộc trường mình
+    school_filter = "AND u.truong_id = ?" if truong_id is not None else ""
+    pair_filter = "AND u1.truong_id = ?" if truong_id is not None else ""
+    school_params = (truong_id,) if truong_id is not None else ()
+
     # 1. Quét học sinh 7 ngày không có phiên học nào
-    cur.execute("""
+    cur.execute(f"""
         SELECT u.id, u.ho_ten, u.lop, u.ma_hoc_sinh, u.so_du_gio,
                MAX(s.thoi_gian_bat_dau) AS phien_gan_nhat
         FROM users u
         LEFT JOIN sessions s ON (u.id = s.nguoi_day_id OR u.id = s.nguoi_hoc_id)
-        WHERE u.vai_tro = 'hoc_sinh'
+        WHERE u.vai_tro = 'hoc_sinh' {school_filter}
         GROUP BY u.id, u.ho_ten, u.lop, u.ma_hoc_sinh, u.so_du_gio
-    """)
+    """, school_params)
     students = cur.fetchall()
     
     inactive_students = []
@@ -530,17 +539,17 @@ def ai_admin_early_warning(db, admin_user_id):
                 pass
 
     # 2. Quét cặp đôi có từ 2 lần đánh giá <= 2 sao
-    cur.execute("""
+    cur.execute(f"""
         SELECT r.nguoi_danh_gia_id, r.nguoi_duoc_danh_gia_id,
                u1.ho_ten AS ten_nguoi_danh_gia, u2.ho_ten AS ten_nguoi_duoc_danh_gia,
                COUNT(*) AS so_lan_sao_thap
         FROM ratings r
         JOIN users u1 ON r.nguoi_danh_gia_id = u1.id
         JOIN users u2 ON r.nguoi_duoc_danh_gia_id = u2.id
-        WHERE r.so_sao <= 2
+        WHERE r.so_sao <= 2 {pair_filter}
         GROUP BY r.nguoi_danh_gia_id, r.nguoi_duoc_danh_gia_id, u1.ho_ten, u2.ho_ten
         HAVING COUNT(*) >= 2
-    """)
+    """, school_params)
     low_rated_pairs = cur.fetchall()
     
     pairs_list = []

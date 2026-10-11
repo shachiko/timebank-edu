@@ -3348,7 +3348,8 @@ def admin_dashboard():
     pending_skills_count = cur.fetchone()[0]
 
     # Điểm chạm 5: Quét và đưa ra khuyến nghị can thiệp sư phạm sớm từ AI
-    ai_warnings = ai_admin_early_warning(db, session["user_id"])
+    # School Admin chỉ thấy cảnh báo của trường mình; Super Admin thấy toàn hệ thống
+    ai_warnings = ai_admin_early_warning(db, session["user_id"], filter_school_id)
 
     # Thống kê Quiz
     quiz_sql = """
