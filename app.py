@@ -6446,7 +6446,18 @@ def skills_market():
     sql += " GROUP BY s.id, u.id, u.ho_ten, u.ma_hoc_sinh, u.lop, t.ten_truong ORDER BY s.id DESC"
     cur.execute(sql, params)
     skills = cur.fetchall()
-    
+
+    # Loại bỏ kỹ năng trùng tiêu đề: mỗi kỹ năng chỉ hiển thị 1 lần trên Chợ kỹ năng
+    unique_skills = []
+    seen_titles = set()
+    for sk in skills:
+        title_key = (sk["tieu_de"] or "").strip().lower()
+        if title_key in seen_titles:
+            continue
+        seen_titles.add(title_key)
+        unique_skills.append(sk)
+    skills = unique_skills
+
     return render_template(
         "skills_market.html",
         skills=skills,

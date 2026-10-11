@@ -7449,6 +7449,36 @@ msgstr "Secure school authentication via account and username. Sign up once to a
 
 msgid "TimeBank EDU được thiết kế theo kiến trúc vận hành độc lập — Mỗi trường học sở hữu một không gian riêng biệt, dữ liệu mỗi trường được tách bạch và quản trị riêng, bảo mật theo quy định của Bộ GD&ĐT."
 msgstr "TimeBank EDU is designed with an independent operating architecture — Each school has its own separate space, and each school's data is isolated and managed separately, secured in accordance with the Ministry of Education and Training regulations."
+
+msgid "Lý"
+msgstr "Physics"
+
+msgid "Hóa"
+msgstr "Chemistry"
+
+msgid "Văn"
+msgstr "Literature"
+
+msgid "Anh"
+msgstr "English"
+
+msgid "Tin học"
+msgstr "Informatics"
+
+msgid "Đàn"
+msgstr "Music"
+
+msgid "Vẽ"
+msgstr "Drawing"
+
+msgid "Thể thao"
+msgstr "Sports"
+
+msgid "Khác"
+msgstr "Other"
+
+msgid "Hệ thống Ngân hàng Thời gian Học đường — Trao đổi tri thức, sẻ chia kỹ năng bằng tín dụng thời gian bình đẳng."
+msgstr "School Time Bank System — Exchange knowledge and share skills through equal time credits."
 #~ msgid "Chào mừng bạn đã đến với công cụ giáo dục TIME BANK EDU."
 #~ msgstr "Welcome to the TIME BANK EDU educational platform."
 
