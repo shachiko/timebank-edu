@@ -3101,6 +3101,10 @@ msgstr ""
 msgid "Đơn vị triển khai"
 msgstr "Ausführende Organisation"
 
+#: templates/base.html:300 templates/profile.html:41
+msgid "Hệ thống TimeBank EDU"
+msgstr "TimeBank EDU System"
+
 #: templates/base.html:351
 msgid "Hệ thống TimeBank EDU Học đường"
 msgstr "Schulisches TimeBank EDU System"

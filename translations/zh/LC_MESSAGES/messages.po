@@ -2822,6 +2822,10 @@ msgstr "保留校园时间银行教学模式与技术架构的完整版权。"
 msgid "Đơn vị triển khai"
 msgstr "实施单位"
 
+#: templates/base.html:300 templates/profile.html:41
+msgid "Hệ thống TimeBank EDU"
+msgstr "TimeBank EDU 系统"
+
 #: templates/base.html:351
 msgid "Hệ thống TimeBank EDU Học đường"
 msgstr "TimeBank EDU 校园系统"
