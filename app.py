@@ -7245,6 +7245,11 @@ def wallet():
       mới nhất xếp trước (ORDER BY id DESC).
     - Tuân thủ nguyên tắc 'Append-Only': Sổ cái chỉ ghi nhận thêm dòng mới, không sửa/xóa.
     """
+    # Chỉ học sinh được dùng ví tín dụng; các vai trò khác chuyển về trang cá nhân
+    if session.get("vai_tro") != "hoc_sinh":
+        flash(_("Ví tín dụng thời gian chỉ dành cho học sinh."), "info")
+        return redirect(url_for("profile"))
+
     db = get_db()
     cur = db.cursor()
     user_id = session["user_id"]

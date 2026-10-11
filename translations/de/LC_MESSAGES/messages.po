@@ -7756,3 +7756,7 @@ msgstr "Persönliche Informationen"
 #: templates/profile.html
 msgid "Ngày sinh"
 msgstr "Geburtsdatum"
+
+#: app.py
+msgid "Ví tín dụng thời gian chỉ dành cho học sinh."
+msgstr "Das Zeitguthaben-Wallet ist nur für Schüler verfügbar."

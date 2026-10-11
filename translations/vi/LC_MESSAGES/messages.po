@@ -7925,3 +7925,7 @@ msgstr "Thông tin cá nhân"
 #: templates/profile.html
 msgid "Ngày sinh"
 msgstr "Ngày sinh"
+
+#: app.py
+msgid "Ví tín dụng thời gian chỉ dành cho học sinh."
+msgstr "Ví tín dụng thời gian chỉ dành cho học sinh."
