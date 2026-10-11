@@ -7163,3 +7163,11 @@ msgstr "图片文件为空。"
 #: templates/profile.html
 msgid "Tệp tải lên không phải là ảnh hợp lệ."
 msgstr "上传的文件不是有效图片。"
+
+#: templates/profile.html
+msgid "Thông tin cá nhân"
+msgstr "个人信息"
+
+#: templates/profile.html
+msgid "Ngày sinh"
+msgstr "出生日期"

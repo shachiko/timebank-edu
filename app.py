@@ -910,6 +910,7 @@ def migrate_postgres_schema(conn):
         ("users", "mat_khau_khoi_tao", "TEXT"),
         ("users", "dia_chi", "TEXT"),
         ("users", "avatar", "TEXT"),
+        ("users", "ngay_sinh", "TEXT"),
         # 2. skills
         ("skills", "truong_id", "INTEGER DEFAULT 1"),
         ("skills", "hien_thi_cong_dong", "INTEGER DEFAULT 0"),
@@ -1558,6 +1559,8 @@ def init_db():
             conn.execute("ALTER TABLE users ADD COLUMN dia_chi TEXT")
         if "avatar" not in u_cols:
             conn.execute("ALTER TABLE users ADD COLUMN avatar TEXT")
+        if "ngay_sinh" not in u_cols:
+            conn.execute("ALTER TABLE users ADD COLUMN ngay_sinh TEXT")
         conn.commit()
 
         # Bảng notifications (SQLite)
@@ -3371,10 +3374,10 @@ def profile():
 @login_required
 def upload_avatar():
     """
-    Upload ảnh đại diện cho người dùng (giáo viên / quản trị).
+    Upload ảnh đại diện cho người dùng (mọi vai trò).
     - Chỉ chấp nhận jpg/jpeg/png/webp, tối đa 2MB.
     - Xác thực ảnh thật bằng Pillow (PIL).
-    - Lưu vào static/uploads/avatars/{user_id}_{timestamp}.{ext} và cập nhật cột avatar.
+    - Lưu ảnh dạng Base64 Data URI trực tiếp vào cột avatar (bền vững, không mất khi redeploy).
     - Trả về JSON {ok: true, url}.
     """
     file = request.files.get("avatar")
@@ -3404,23 +3407,17 @@ def upload_avatar():
     except Exception:
         return jsonify({"ok": False, "error": _("Tệp tải lên không phải là ảnh hợp lệ.")}), 400
 
-    user_id = session["user_id"]
-    filename = f"{user_id}_{int(time.time())}.{ext}"
-    upload_dir = BASE_DIR / "static" / "uploads" / "avatars"
-    upload_dir.mkdir(parents=True, exist_ok=True)
-    try:
-        with open(upload_dir / filename, "wb") as f_out:
-            f_out.write(content)
-    except Exception as e:
-        app.logger.warning(f"Không thể lưu ảnh đại diện: {e}")
-        return jsonify({"ok": False, "error": _("Tải ảnh thất bại. Vui lòng thử lại.")}), 500
+    # Lưu ảnh dạng Base64 Data URI trực tiếp vào CSDL (bền vững, không mất khi redeploy)
+    mime = "image/jpeg" if ext in ("jpg", "jpeg") else f"image/{ext}"
+    b64_str = base64.b64encode(content).decode("utf-8")
+    data_uri = f"data:{mime};base64,{b64_str}"
 
-    url = f"/static/uploads/avatars/{filename}"
+    user_id = session["user_id"]
     db = get_db()
     cur = db.cursor()
-    cur.execute("UPDATE users SET avatar = ? WHERE id = ?", (url, user_id))
+    cur.execute("UPDATE users SET avatar = ? WHERE id = ?", (data_uri, user_id))
     db.commit()
-    return jsonify({"ok": True, "url": url})
+    return jsonify({"ok": True, "url": data_uri})
 
 
 @app.route("/profile/update-info", methods=["POST"])
@@ -3435,15 +3432,21 @@ def update_profile_info():
     email = (data.get("email") or "").strip()
     so_dien_thoai = (data.get("so_dien_thoai") or "").strip()
     dia_chi = (data.get("dia_chi") or "").strip()
+    ngay_sinh = (data.get("ngay_sinh") or "").strip()
 
     if not ho_ten:
         return jsonify({"ok": False, "error": _("Họ tên không được để trống.")}), 400
 
+    # Chuẩn hóa ngày sinh về DD-MM-YYYY (input type=date gửi lên YYYY-MM-DD)
+    if ngay_sinh and re.match(r"^\d{4}-\d{2}-\d{2}$", ngay_sinh):
+        _ns_y, _ns_m, _ns_d = ngay_sinh.split("-")
+        ngay_sinh = f"{_ns_d}-{_ns_m}-{_ns_y}"
+
     db = get_db()
     cur = db.cursor()
     cur.execute(
-        "UPDATE users SET ho_ten = ?, email = ?, so_dien_thoai = ?, dia_chi = ? WHERE id = ?",
-        (ho_ten, email, so_dien_thoai, dia_chi, session["user_id"])
+        "UPDATE users SET ho_ten = ?, email = ?, so_dien_thoai = ?, dia_chi = ?, ngay_sinh = ? WHERE id = ?",
+        (ho_ten, email, so_dien_thoai, dia_chi, ngay_sinh, session["user_id"])
     )
     db.commit()
     session["ho_ten"] = ho_ten
@@ -3452,7 +3455,8 @@ def update_profile_info():
         "ho_ten": ho_ten,
         "email": email,
         "so_dien_thoai": so_dien_thoai,
-        "dia_chi": dia_chi
+        "dia_chi": dia_chi,
+        "ngay_sinh": ngay_sinh
     })
 
 

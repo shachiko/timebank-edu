@@ -7800,3 +7800,11 @@ msgstr "Le fichier image est vide."
 #: templates/profile.html
 msgid "Tệp tải lên không phải là ảnh hợp lệ."
 msgstr "Le fichier téléchargé n'est pas une image valide."
+
+#: templates/profile.html
+msgid "Thông tin cá nhân"
+msgstr "Informations personnelles"
+
+#: templates/profile.html
+msgid "Ngày sinh"
+msgstr "Date de naissance"

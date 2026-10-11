@@ -7748,3 +7748,11 @@ msgstr "Die Bilddatei ist leer."
 #: templates/profile.html
 msgid "Tệp tải lên không phải là ảnh hợp lệ."
 msgstr "Die hochgeladene Datei ist kein gültiges Bild."
+
+#: templates/profile.html
+msgid "Thông tin cá nhân"
+msgstr "Persönliche Informationen"
+
+#: templates/profile.html
+msgid "Ngày sinh"
+msgstr "Geburtsdatum"

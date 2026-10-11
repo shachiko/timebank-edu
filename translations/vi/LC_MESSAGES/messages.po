@@ -7917,3 +7917,11 @@ msgstr "Tệp ảnh rỗng."
 #: templates/profile.html
 msgid "Tệp tải lên không phải là ảnh hợp lệ."
 msgstr "Tệp tải lên không phải là ảnh hợp lệ."
+
+#: templates/profile.html
+msgid "Thông tin cá nhân"
+msgstr "Thông tin cá nhân"
+
+#: templates/profile.html
+msgid "Ngày sinh"
+msgstr "Ngày sinh"

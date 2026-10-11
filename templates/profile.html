@@ -10,7 +10,6 @@
       <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
         <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-3">
           <div class="position-relative">
-            {% if not is_student_profile %}
             <div class="profile-avatar-wrap" id="avatarWrap" title="{{ _('Bấm để đổi ảnh đại diện') }}">
               {% if user.avatar %}
               <img src="{{ user.avatar }}" alt="{{ user.ho_ten }}" class="avatar-img rounded-circle border border-2 border-white shadow-sm" style="width: 72px; height: 72px; object-fit: cover;">
@@ -22,11 +21,6 @@
               <span class="profile-avatar-overlay"><i class="bi bi-camera-fill"></i></span>
             </div>
             <input type="file" id="avatarInput" accept="image/png,image/jpeg,image/jpg,image/webp" class="d-none">
-            {% else %}
-            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold fs-2" style="width: 72px; height: 72px;">
-              {{ user.ho_ten[0] | upper }}
-            </div>
-            {% endif %}
             <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-success border border-white p-1">
               <span class="visually-hidden">{{ _('Trực tuyến') }}</span>
             </span>
@@ -68,14 +62,6 @@
               {% endif %}
               • <i class="bi bi-geo-alt me-1"></i>{{ config.ten_truong }}
             </p>
-
-            {% if not is_student_profile %}
-            <div class="small text-secondary mb-2" id="profileContactBlock">
-              <div class="mb-1"><i class="bi bi-envelope-fill me-1 text-primary"></i>{{ _('Email:') }} <span id="infoEmail">{{ user.email if user.email else '—' }}</span></div>
-              <div class="mb-1"><i class="bi bi-telephone-fill me-1 text-success"></i>{{ _('Số điện thoại:') }} <span id="infoPhone">{{ user.so_dien_thoai if user.so_dien_thoai else '—' }}</span></div>
-              <div class="mb-1"><i class="bi bi-geo-alt-fill me-1 text-danger"></i>{{ _('Địa chỉ:') }} <span id="infoAddress">{{ user.dia_chi if user.dia_chi else '—' }}</span></div>
-            </div>
-            {% endif %}
 
             {% if current_role == 'hoc_sinh' %}
             <!-- VIỆC 1: Hiển thị Môn cần hỗ trợ -->
@@ -122,12 +108,6 @@
               </button>
               {% endif %}
 
-              {% if not is_student_profile %}
-              <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#modalEditInfo" id="btnEditInfo">
-                <i class="bi bi-pencil-square me-1"></i>{{ _('Chỉnh sửa') }}
-              </button>
-              {% endif %}
-
               {% if is_demo_user(user.ma_hoc_sinh) %}
                 <span class="badge bg-warning-subtle text-warning border border-warning-subtle py-2 px-3 rounded-pill" style="font-size: 0.8rem;">
                   <i class="bi bi-shield-lock-fill me-1"></i>{{ _('Tài khoản Demo (Không thể đổi mật khẩu)') }}
@@ -165,6 +145,48 @@
         <div class="small text-white-50 mt-auto pt-2 border-top border-white border-opacity-25">
           <i class="bi bi-shield-lock me-1"></i> {{ _('Được bảo chứng bởi Ví tín dụng minh bạch') }}
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- THẺ THÔNG TIN CÁ NHÂN (hiển thị cho mọi vai trò) -->
+  <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-person-vcard text-primary me-2"></i>{{ _('Thông tin cá nhân') }}</h5>
+      <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#modalEditInfo" id="btnEditInfo">
+        <i class="bi bi-pencil-square me-1"></i>{{ _('Chỉnh sửa') }}
+      </button>
+    </div>
+    <div class="row g-3">
+      <div class="col-md-6 col-lg-4">
+        <div class="text-muted small">{{ _('Họ và tên') }}</div>
+        <div class="fw-semibold text-dark" id="infoFullName">{{ user.ho_ten }}</div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="text-muted small">{{ _('Lớp') }}</div>
+        <div class="fw-semibold {{ 'text-dark' if user.lop else 'text-muted fst-italic' }}">{{ user.lop if user.lop else _('Chưa cập nhật') }}</div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="text-muted small">{{ _('Trường') }}</div>
+        <div class="fw-semibold text-dark">
+          {% if current_role == 'super_admin' %}{{ _('Hệ thống TimeBank EDU') }}{% elif user.ten_truong %}{{ user.ten_truong }}{% else %}<span class="text-muted fst-italic">{{ _('Chưa cập nhật') }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="text-muted small">{{ _('Số điện thoại') }}</div>
+        <div class="fw-semibold {{ 'text-dark' if user.so_dien_thoai else 'text-muted fst-italic' }}" id="infoPhone">{{ user.so_dien_thoai if user.so_dien_thoai else _('Chưa cập nhật') }}</div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="text-muted small">{{ _('Email') }}</div>
+        <div class="fw-semibold {{ 'text-dark' if user.email else 'text-muted fst-italic' }}" id="infoEmail">{{ user.email if user.email else _('Chưa cập nhật') }}</div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="text-muted small">{{ _('Ngày sinh') }}</div>
+        <div class="fw-semibold {{ 'text-dark' if user.ngay_sinh else 'text-muted fst-italic' }}" id="infoDob">{{ user.ngay_sinh if user.ngay_sinh else _('Chưa cập nhật') }}</div>
+      </div>
+      <div class="col-12">
+        <div class="text-muted small">{{ _('Địa chỉ') }}</div>
+        <div class="fw-semibold {{ 'text-dark' if user.dia_chi else 'text-muted fst-italic' }}" id="infoAddress">{{ user.dia_chi if user.dia_chi else _('Chưa cập nhật') }}</div>
       </div>
     </div>
   </div>
@@ -1204,7 +1226,6 @@
   })();
 </script>
 
-{% if not is_student_profile %}
 <!-- MODAL CHỈNH SỬA THÔNG TIN CÁ NHÂN -->
 <div class="modal fade" id="modalEditInfo" tabindex="-1" aria-labelledby="modalEditInfoLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
@@ -1228,6 +1249,10 @@
           <div class="mb-3">
             <label for="editPhone" class="form-label small fw-bold">{{ _('Số điện thoại') }}</label>
             <input type="text" class="form-control rounded-3" id="editPhone" name="so_dien_thoai" value="{{ user.so_dien_thoai if user.so_dien_thoai else '' }}">
+          </div>
+          <div class="mb-3">
+            <label for="editNgaySinh" class="form-label small fw-bold">{{ _('Ngày sinh') }}</label>
+            <input type="date" class="form-control rounded-3" id="editNgaySinh" name="ngay_sinh" value="{% if user.ngay_sinh and user.ngay_sinh.split('-')|length == 3 %}{{ user.ngay_sinh.split('-')[2] }}-{{ user.ngay_sinh.split('-')[1] }}-{{ user.ngay_sinh.split('-')[0] }}{% endif %}">
           </div>
           <div class="mb-2">
             <label for="editAddress" class="form-label small fw-bold">{{ _('Địa chỉ') }}</label>
@@ -1313,6 +1338,7 @@
           ho_ten: document.getElementById('editHoTen').value.trim(),
           email: document.getElementById('editEmail').value.trim(),
           so_dien_thoai: document.getElementById('editPhone').value.trim(),
+          ngay_sinh: document.getElementById('editNgaySinh').value.trim(),
           dia_chi: document.getElementById('editAddress').value.trim()
         };
         if (!payload.ho_ten) {
@@ -1330,15 +1356,27 @@
         .then(function(r) { return r.json(); })
         .then(function(data) {
           if (data && data.ok) {
+            var emptyLabel = {{ _('Chưa cập nhật')|tojson }};
             var setTxt = function(id, val) {
               var el = document.getElementById(id);
-              if (el) el.textContent = (val && val.length) ? val : '—';
+              if (!el) return;
+              if (val && val.length) {
+                el.textContent = val;
+                el.classList.remove('text-muted', 'fst-italic');
+                el.classList.add('text-dark');
+              } else {
+                el.textContent = emptyLabel;
+                el.classList.add('text-muted', 'fst-italic');
+              }
             };
             setTxt('infoEmail', data.email);
             setTxt('infoPhone', data.so_dien_thoai);
+            setTxt('infoDob', data.ngay_sinh);
             setTxt('infoAddress', data.dia_chi);
-            var nameEl = document.getElementById('profileFullName');
+            var nameEl = document.getElementById('infoFullName');
             if (nameEl) nameEl.textContent = data.ho_ten;
+            var nameHdr = document.getElementById('profileFullName');
+            if (nameHdr) nameHdr.textContent = data.ho_ten;
             var modalEl = document.getElementById('modalEditInfo');
             var mi = bootstrap.Modal.getInstance(modalEl);
             if (mi) mi.hide();
@@ -1356,7 +1394,6 @@
     }
   })();
 </script>
-{% endif %}
 
 {% endblock %}
 
