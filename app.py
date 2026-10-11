@@ -416,7 +416,7 @@ def set_language(lang_code):
 # ĐỊNH NGHĨA TRƯỜNG DEMO & RBAC PHÂN QUYỀN (PROMPT 23)
 # ==============================================================================
 DEMO_SCHOOL_ID = 99
-DEMO_SCHOOL_NAME = "Trường Demo - Dành cho Giám Khảo"
+DEMO_SCHOOL_NAME = "Trường Demo"
 
 
 def is_demo_user(ma_hoc_sinh):
@@ -1717,6 +1717,16 @@ def seed_demo_school_and_accounts(conn):
                 "INSERT INTO truong (id, ten_truong, logo, trang_thai, an_truong) VALUES (?, ?, ?, ?, 1)",
                 (DEMO_SCHOOL_ID, DEMO_SCHOOL_NAME, "/static/img/logo_timebank_edu.png", "dang_thi_diem")
             )
+            conn.commit()
+        except Exception:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+    else:
+        # Đồng bộ tên hiển thị công khai của Trường Demo (bỏ cụm '- Dành cho Giám Khảo')
+        try:
+            cur.execute("UPDATE truong SET ten_truong = ? WHERE id = ?", (DEMO_SCHOOL_NAME, DEMO_SCHOOL_ID))
             conn.commit()
         except Exception:
             try:
@@ -6408,6 +6418,8 @@ def skills_market():
         LEFT JOIN sessions ses ON s.id = ses.skill_id AND ses.trang_thai = 'hoan_thanh'
         LEFT JOIN ratings r ON ses.id = r.session_id AND r.nguoi_duoc_danh_gia_id = u.id
         WHERE s.trang_thai_duyet = 'da_duyet'
+          AND (s.truong_id IS NULL OR s.truong_id <> 99)
+          AND (u.ma_hoc_sinh IS NULL OR u.ma_hoc_sinh NOT LIKE 'demo_%')
     """
     params = []
 
