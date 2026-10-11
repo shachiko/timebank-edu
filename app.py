@@ -5096,6 +5096,190 @@ def create_superadmin():
     click.echo(f"[THÀNH CÔNG] Đã tạo thành công tài khoản Super Admin '{user}' (Email: mshuyenuka@gmail.com, Trường ID: 1).")
 
 
+@app.cli.command("seed-operations")
+@click.option("--confirm", is_flag=True, help="Xác nhận tạo dữ liệu vận hành (ghi vào CSDL đang cấu hình).")
+def seed_operations(confirm):
+    """
+    Seed dữ liệu vận hành MỘT LẦN cho 4 trường thật (id 1-4) để khối
+    "Chỉ số vận hành tại School Time Bank" trên trang chủ hiển thị hợp lý:
+    - Học sinh / Giáo viên / Quản trị trường theo quy mô từng trường.
+    - Phiên học đã hoàn thành và tổng số giờ lưu thông tương ứng.
+    - Kỹ năng đã duyệt (sẵn sàng chia sẻ).
+
+    Idempotent: trường nào đã có tài khoản seed (theo tiền tố mã) thì tự bỏ qua.
+    Cách chạy:  flask seed-operations --confirm
+    """
+    if not confirm:
+        click.echo("[CẢNH BÁO] Lệnh này sẽ tạo hàng nghìn bản ghi vào CSDL đang cấu hình.")
+        click.echo("Chạy lại kèm --confirm để xác nhận:  flask seed-operations --confirm")
+        return
+
+    import random
+    rnd = random.Random(20261012)
+
+    # Quy mô 4 trường thật (HS, GV, QTV, phiên hoàn thành, kỹ năng)
+    schools_cfg = [
+        {"id": 1, "prefix": "UKA", "domain": "uka.edu.vn", "students": 200, "teachers": 10, "admins": 1, "sessions": 62,  "skills": 16, "grades": ["3", "4", "5", "6", "7", "8", "9", "10", "11", "12"]},
+        {"id": 2, "prefix": "NVT", "domain": "nvt.edu.vn", "students": 800, "teachers": 20, "admins": 1, "sessions": 248, "skills": 58, "grades": ["6", "7", "8", "9"]},
+        {"id": 3, "prefix": "LVT", "domain": "lvt.edu.vn", "students": 950, "teachers": 25, "admins": 1, "sessions": 295, "skills": 69, "grades": ["6", "7", "8", "9"]},
+        {"id": 4, "prefix": "HDO", "domain": "hdo.edu.vn", "students": 756, "teachers": 19, "admins": 1, "sessions": 235, "skills": 55, "grades": ["10", "11", "12"]},
+    ]
+
+    HO = ["Nguyễn", "Trần", "Lê", "Phạm", "Hoàng", "Huỳnh", "Phan", "Vũ", "Võ", "Đặng", "Bùi", "Đỗ", "Hồ", "Ngô", "Dương", "Lý", "Trịnh", "Đinh", "Tạ", "Mai"]
+    DEM = ["Văn", "Thị", "Minh", "Quang", "Hữu", "Thanh", "Ngọc", "Hoàng", "Tuấn", "Khánh", "Gia", "Bảo", "Thùy", "Thu", "Mai", "Hải", "Đức", "Anh", "Kim", "Phương"]
+    TEN = ["An", "Bình", "Chi", "Dũng", "Hà", "Hùng", "Khánh", "Linh", "Mai", "Nam", "Nga", "Nhung", "Phúc", "Quân", "Sơn", "Trang", "Tú", "Vy", "Duy", "Hân", "Khang", "My", "Nhi", "Phương", "Quỳnh", "Thảo", "Trâm", "Uyên", "Yến", "Long", "Kiên", "Thư", "Ngân", "Trí", "Tâm"]
+    LETTERS = ["A", "B", "C", "D", "E"]
+    TO_CM = ["Tổ Toán - Tin", "Tổ Ngữ văn", "Tổ Ngoại ngữ", "Tổ Khoa học Tự nhiên", "Tổ Khoa học Xã hội", "Tổ Thể dục - GDQP", "Tổ Tin học - Công nghệ"]
+    LINH_VUC = ["Toán học", "Ngữ văn", "Tiếng Anh", "Vật lý", "Hóa học", "Tin học", "Âm nhạc", "Mỹ thuật", "Thể thao", "Kỹ năng mềm"]
+    TIEU_DE_TPL = [
+        "Ôn tập và củng cố kiến thức {lv}",
+        "Chuyên đề nâng cao {lv}",
+        "Kỹ năng giải bài tập {lv}",
+        "Phương pháp học tốt môn {lv}",
+        "Chia sẻ mẹo học {lv} hiệu quả",
+    ]
+    GIO_WEIGHTS = [1.0, 1.0, 1.0, 1.0, 1.0, 1.5, 1.5, 1.5, 2.0, 2.0]  # trung bình ~1.325 giờ/phiên
+
+    def gen_name():
+        return f"{rnd.choice(HO)} {rnd.choice(DEM)} {rnd.choice(TEN)}"
+
+    def gen_class(grades):
+        return f"{rnd.choice(grades)}{rnd.choice(LETTERS)}{rnd.randint(1, 4)}"
+
+    # Mật khẩu ngẫu nhiên không ai biết: tài khoản seed chỉ phục vụ thống kê, không dùng để đăng nhập
+    seed_pwd_hash = generate_password_hash(secrets.token_hex(24))
+
+    db = create_standalone_db_connection()
+    cur = db.cursor()
+
+    total_users = 0
+    total_sessions = 0
+    total_skills = 0
+    total_hours = 0.0
+
+    for cfg in schools_cfg:
+        sid = cfg["id"]
+        prefix = cfg["prefix"]
+
+        try:
+            cur.execute(
+                "SELECT COUNT(*) FROM users WHERE truong_id = ? AND ma_hoc_sinh LIKE ?",
+                (sid, f"{prefix}%")
+            )
+            already = cur.fetchone()[0]
+            if already >= cfg["students"]:
+                click.echo(f"[BỎ QUA] Trường {sid} ({prefix}) đã có {already} tài khoản seed.")
+                continue
+
+            # 1) Học sinh + 2) Giáo viên + 3) Quản trị trường
+            user_rows = []
+            for i in range(1, cfg["students"] + 1):
+                mhs = f"{prefix}{i:04d}"
+                user_rows.append((
+                    mhs, gen_name(), gen_class(cfg["grades"]), "hoc_sinh",
+                    round(rnd.uniform(0.0, 6.0), 1),
+                    rnd.choice(["Tối thứ 2, tối thứ 4", "Chiều thứ 3, sáng thứ 7", "Sáng Chủ nhật", "Tối thứ 5, tối thứ 6", "Linh hoạt cuối tuần"]),
+                    seed_pwd_hash, sid, "hoat_dong", f"{mhs.lower()}@{cfg['domain']}"
+                ))
+            for i in range(1, cfg["teachers"] + 1):
+                mhs = f"{prefix}GV{i:02d}"
+                user_rows.append((
+                    mhs, gen_name(), rnd.choice(TO_CM), "giao_vien",
+                    round(rnd.uniform(5.0, 20.0), 1), "Các buổi chiều trong tuần",
+                    seed_pwd_hash, sid, "hoat_dong", f"{mhs.lower()}@{cfg['domain']}"
+                ))
+            for i in range(1, cfg["admins"] + 1):
+                mhs = f"{prefix}ADM{i:02d}"
+                user_rows.append((
+                    mhs, gen_name(), "Ban Giám Hiệu", "school_admin",
+                    0.0, "Toàn thời gian", seed_pwd_hash, sid, "hoat_dong", f"{mhs.lower()}@{cfg['domain']}"
+                ))
+
+            cur.executemany(
+                """INSERT INTO users (ma_hoc_sinh, ho_ten, lop, vai_tro, so_du_gio, gio_ranh, mat_khau, truong_id, trang_thai, email)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                user_rows
+            )
+
+            cur.execute(
+                "SELECT id FROM users WHERE truong_id = ? AND vai_tro = 'hoc_sinh' AND ma_hoc_sinh LIKE ?",
+                (sid, f"{prefix}%")
+            )
+            student_ids = [r[0] for r in cur.fetchall()]
+            if not student_ids:
+                raise RuntimeError("Không lấy được danh sách học sinh vừa tạo.")
+
+            # 4) Kỹ năng đã duyệt (sẵn sàng chia sẻ)
+            skill_rows = []
+            for _ in range(cfg["skills"]):
+                owner_id = rnd.choice(student_ids)
+                lv = rnd.choice(LINH_VUC)
+                skill_rows.append((
+                    owner_id, lv, rnd.choice(TIEU_DE_TPL).format(lv=lv),
+                    f"Nội dung chia sẻ môn {lv} đã được giáo viên kiểm duyệt.",
+                    "da_duyet", "Đã kiểm duyệt sư phạm", sid
+                ))
+            cur.executemany(
+                """INSERT INTO skills (user_id, linh_vuc, tieu_de, mo_ta, trang_thai_duyet, ly_do_ai_kiem_duyet, truong_id)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                skill_rows
+            )
+
+            cur.execute(
+                """SELECT s.id, s.user_id FROM skills s
+                   JOIN users u ON s.user_id = u.id
+                   WHERE u.truong_id = ? AND u.ma_hoc_sinh LIKE ? AND s.trang_thai_duyet = 'da_duyet'""",
+                (sid, f"{prefix}%")
+            )
+            skill_pairs = [(r[0], r[1]) for r in cur.fetchall()]
+            if not skill_pairs:
+                raise RuntimeError("Không lấy được danh sách kỹ năng vừa tạo.")
+
+            # 5) Phiên học đã hoàn thành (tutor = chủ kỹ năng, learner = học sinh khác cùng trường)
+            now = datetime.now()
+            sess_rows = []
+            for n in range(1, cfg["sessions"] + 1):
+                sk_id, tutor_id = rnd.choice(skill_pairs)
+                learner_id = rnd.choice(student_ids)
+                if learner_id == tutor_id and len(student_ids) > 1:
+                    learner_id = rnd.choice([x for x in student_ids if x != tutor_id])
+                start_dt = (now - timedelta(days=rnd.randint(1, 150))).replace(
+                    hour=rnd.choice([8, 9, 14, 15, 16, 19, 20]),
+                    minute=rnd.choice([0, 30]), second=0, microsecond=0
+                )
+                sess_rows.append((
+                    sk_id, tutor_id, learner_id, start_dt.strftime("%Y-%m-%d %H:%M:%S"),
+                    rnd.choice(GIO_WEIGHTS), "hoan_thanh", f"QR_SEED_{sid}_{n:04d}",
+                    1, 1, "Dàn ý AI: nội dung ôn tập và bài tập mẫu đã hoàn thành", 1, sid
+                ))
+            cur.executemany(
+                """INSERT INTO sessions (skill_id, nguoi_day_id, nguoi_hoc_id, thoi_gian_bat_dau, so_gio, trang_thai, ma_qr, checkin_day, checkin_hoc, dan_y_ai, quiz_dat_chuan, truong_id)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                sess_rows
+            )
+
+            db.commit()
+            total_users += cfg["students"] + cfg["teachers"] + cfg["admins"]
+            total_skills += cfg["skills"]
+            total_sessions += cfg["sessions"]
+            total_hours += sum(r[4] for r in sess_rows)
+            click.echo(
+                f"[OK] Trường {sid} ({prefix}): +{cfg['students']} HS, +{cfg['teachers']} GV, "
+                f"+{cfg['admins']} QTV, +{cfg['skills']} kỹ năng, +{cfg['sessions']} phiên."
+            )
+        except Exception as e:
+            try:
+                db.rollback()
+            except Exception:
+                pass
+            click.echo(f"[LỖI] Trường {sid} ({prefix}): {e}")
+
+    db.close()
+    click.echo("=" * 68)
+    click.echo(f"TỔNG: {total_users} tài khoản, {total_sessions} phiên hoàn thành, {total_hours:.1f} giờ lưu thông, {total_skills} kỹ năng.")
+    click.echo("Hoàn tất. Mở trang chủ để xem khối 'Chỉ số vận hành tại School Time Bank'.")
+
+
 # ------------------------------------------------------------------------------
 # HÀNH ĐỘNG QUẢN TRỊ VIÊN (MÃ MỜI, DUYỆT HỌC SINH, XỬ LÝ KỶ LUẬT)
 # ------------------------------------------------------------------------------
