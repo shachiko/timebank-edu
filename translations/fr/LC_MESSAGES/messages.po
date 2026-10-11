@@ -7820,3 +7820,7 @@ msgstr "System: Système TimeBank EDU"
 #: templates/base.html
 msgid "Super Admin"
 msgstr "Super Admin"
+
+#: templates/index.html
+msgid "Bảng vinh danh mở rộng"
+msgstr "Tableau d'honneur élargi"

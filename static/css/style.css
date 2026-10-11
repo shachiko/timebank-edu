@@ -665,6 +665,12 @@ pre, code {
   border: 2.5px solid #FED7AA;
 }
 
+/* Avatar cho Bảng vinh danh mở rộng (hạng 4 trở đi) */
+.rank-avatar-other {
+  background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
+  border: 2px solid #E0E7FF;
+}
+
 /* Thẻ nhiệm vụ cộng đồng: khung ảnh bìa / placeholder */
 .task-cover-container {
   width: 100%;

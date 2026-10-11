@@ -7768,3 +7768,7 @@ msgstr "System: TimeBank EDU System"
 #: templates/base.html
 msgid "Super Admin"
 msgstr "Super Admin"
+
+#: templates/index.html
+msgid "Bảng vinh danh mở rộng"
+msgstr "Erweiterte Ehrenliste"

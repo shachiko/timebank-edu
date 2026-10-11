@@ -7183,3 +7183,7 @@ msgstr "System: TimeBank EDU 系统"
 #: templates/base.html
 msgid "Super Admin"
 msgstr "Super Admin"
+
+#: templates/index.html
+msgid "Bảng vinh danh mở rộng"
+msgstr "扩展荣誉榜"
