@@ -7666,6 +7666,12 @@ msgstr "Administration Système"
 
 msgid "Khu vực này chỉ dành cho Quản trị viên."
 msgstr "Cette zone est réservée aux Administrateurs uniquement."
+
+msgid "Định danh học đường an toàn qua tài khoản và username. Đăng ký một lần là có thể truy cập tất cả các buổi học kỹ năng liên trường."
+msgstr "Identification scolaire sécurisée via compte et nom d'utilisateur. Une inscription suffit pour accéder à toutes les séances inter-écoles."
+
+msgid "TimeBank EDU được thiết kế theo kiến trúc vận hành độc lập — Mỗi trường học sở hữu một không gian riêng biệt, dữ liệu mỗi trường được tách bạch và quản trị riêng, bảo mật theo quy định của Bộ GD&ĐT."
+msgstr "TimeBank EDU est conçu selon une architecture de fonctionnement indépendante — Chaque école dispose d'un espace distinct, et les données de chaque école sont isolées et gérées séparément, sécurisées conformément aux réglementations du Ministère de l'Éducation et de la Formation."
 #~ msgid "Chào mừng bạn đã đến với công cụ giáo dục TIME BANK EDU."
 #~ msgstr "Bienvenue sur l'outil pédagogique TIME BANK EDU."
 

@@ -7029,6 +7029,12 @@ msgstr "系统管理部门"
 
 msgid "Khu vực này chỉ dành cho Quản trị viên."
 msgstr "该区域仅限管理员访问。"
+
+msgid "Định danh học đường an toàn qua tài khoản và username. Đăng ký một lần là có thể truy cập tất cả các buổi học kỹ năng liên trường."
+msgstr "通过账号与用户名进行安全的校园身份验证。注册一次即可参加所有跨校技能课程。"
+
+msgid "TimeBank EDU được thiết kế theo kiến trúc vận hành độc lập — Mỗi trường học sở hữu một không gian riêng biệt, dữ liệu mỗi trường được tách bạch và quản trị riêng, bảo mật theo quy định của Bộ GD&ĐT."
+msgstr "TimeBank EDU 采用独立运营架构设计——每所学校拥有独立空间，各校数据相互隔离、独立管理，并按照教育培训部规定保障安全。"
 #~ msgid "Chào mừng bạn đã đến với công cụ giáo dục TIME BANK EDU."
 #~ msgstr "欢迎使用 TIME BANK EDU 校园教育工具。"
 
