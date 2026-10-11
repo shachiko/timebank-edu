@@ -7688,3 +7688,115 @@ msgstr "TimeBank EDU est conçu selon une architecture de fonctionnement indépe
 #~ msgid "độc lập (không chạm dữ liệu thật):"
 #~ msgstr "isolé (sans impacter les données réelles) :"
 
+
+#: templates/profile.html
+msgid "Số điện thoại:"
+msgstr "Téléphone :"
+
+#: templates/profile.html
+msgid "Địa chỉ:"
+msgstr "Adresse :"
+
+#: templates/profile.html
+msgid "Số điện thoại"
+msgstr "Numéro de téléphone"
+
+#: templates/profile.html
+msgid "Địa chỉ"
+msgstr "Adresse"
+
+#: templates/profile.html
+msgid "Email"
+msgstr "E-mail"
+
+#: templates/profile.html
+msgid "Chỉnh sửa thông tin cá nhân"
+msgstr "Modifier les informations personnelles"
+
+#: templates/profile.html
+msgid "Họ tên không được để trống."
+msgstr "Le nom complet est obligatoire."
+
+#: templates/profile.html
+msgid "Bấm để đổi ảnh đại diện"
+msgstr "Cliquez pour changer l'avatar"
+
+#: templates/profile.html
+msgid "Số kỹ năng đã duyệt"
+msgstr "Compétences approuvées"
+
+#: templates/profile.html
+msgid "Đã kiểm duyệt sư phạm"
+msgstr "Validé pédagogiquement"
+
+#: templates/profile.html
+msgid "Số phiên đã giám sát"
+msgstr "Sessions supervisées"
+
+#: templates/profile.html
+msgid "Phiên học do bạn phụ trách"
+msgstr "Sessions dont vous êtes responsable"
+
+#: templates/profile.html
+msgid "Tổng số tài khoản trường"
+msgstr "Total des comptes de l'école"
+
+#: templates/profile.html
+msgid "Tài khoản đang hoạt động"
+msgstr "Comptes actifs"
+
+#: templates/profile.html
+msgid "Chờ kiểm duyệt sư phạm"
+msgstr "En attente de validation pédagogique"
+
+#: templates/profile.html
+msgid "Phiên học trong tháng"
+msgstr "Sessions ce mois-ci"
+
+#: templates/profile.html
+msgid "Trong tháng hiện tại"
+msgstr "Dans le mois en cours"
+
+#: templates/profile.html
+msgid "Tổng số trường"
+msgstr "Total des écoles"
+
+#: templates/profile.html
+msgid "Đơn vị tham gia hệ thống"
+msgstr "Établissements inscrits"
+
+#: templates/profile.html
+msgid "Tổng số tài khoản"
+msgstr "Total des comptes"
+
+#: templates/profile.html
+msgid "Tổng số phiên học"
+msgstr "Total des sessions"
+
+#: templates/profile.html
+msgid "Ảnh vượt quá 2MB. Vui lòng chọn ảnh nhỏ hơn."
+msgstr "L'image dépasse 2 Mo. Veuillez choisir une image plus petite."
+
+#: templates/profile.html
+msgid "Tải ảnh thất bại. Vui lòng thử lại."
+msgstr "Échec du téléchargement de l'image. Veuillez réessayer."
+
+#: templates/profile.html
+msgid "Cập nhật thất bại. Vui lòng thử lại."
+msgstr "Échec de la mise à jour. Veuillez réessayer."
+
+#: templates/profile.html
+msgid "Vui lòng chọn ảnh đại diện."
+msgstr "Veuillez sélectionner une image d'avatar."
+
+#: templates/profile.html
+msgid "Chỉ chấp nhận ảnh JPG, PNG hoặc WEBP."
+msgstr "Seules les images JPG, PNG ou WEBP sont acceptées."
+
+#: templates/profile.html
+msgid "Tệp ảnh rỗng."
+msgstr "Le fichier image est vide."
+
+#: templates/profile.html
+msgid "Tệp tải lên không phải là ảnh hợp lệ."
+msgstr "Le fichier téléchargé n'est pas une image valide."

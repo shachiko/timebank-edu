@@ -7495,3 +7495,115 @@ msgstr "School Time Bank System — Exchange knowledge and share skills through 
 #~ msgid "độc lập (không chạm dữ liệu thật):"
 #~ msgstr "sandbox (without affecting production data):"
 
+
+#: templates/profile.html
+msgid "Số điện thoại:"
+msgstr "Phone:"
+
+#: templates/profile.html
+msgid "Địa chỉ:"
+msgstr "Address:"
+
+#: templates/profile.html
+msgid "Số điện thoại"
+msgstr "Phone number"
+
+#: templates/profile.html
+msgid "Địa chỉ"
+msgstr "Address"
+
+#: templates/profile.html
+msgid "Email"
+msgstr "Email"
+
+#: templates/profile.html
+msgid "Chỉnh sửa thông tin cá nhân"
+msgstr "Edit personal information"
+
+#: templates/profile.html
+msgid "Họ tên không được để trống."
+msgstr "Full name is required."
+
+#: templates/profile.html
+msgid "Bấm để đổi ảnh đại diện"
+msgstr "Click to change avatar"
+
+#: templates/profile.html
+msgid "Số kỹ năng đã duyệt"
+msgstr "Approved skills"
+
+#: templates/profile.html
+msgid "Đã kiểm duyệt sư phạm"
+msgstr "Pedagogically reviewed"
+
+#: templates/profile.html
+msgid "Số phiên đã giám sát"
+msgstr "Sessions supervised"
+
+#: templates/profile.html
+msgid "Phiên học do bạn phụ trách"
+msgstr "Sessions you are in charge of"
+
+#: templates/profile.html
+msgid "Tổng số tài khoản trường"
+msgstr "Total school accounts"
+
+#: templates/profile.html
+msgid "Tài khoản đang hoạt động"
+msgstr "Active accounts"
+
+#: templates/profile.html
+msgid "Chờ kiểm duyệt sư phạm"
+msgstr "Pending pedagogical review"
+
+#: templates/profile.html
+msgid "Phiên học trong tháng"
+msgstr "Sessions this month"
+
+#: templates/profile.html
+msgid "Trong tháng hiện tại"
+msgstr "In the current month"
+
+#: templates/profile.html
+msgid "Tổng số trường"
+msgstr "Total schools"
+
+#: templates/profile.html
+msgid "Đơn vị tham gia hệ thống"
+msgstr "Units in the system"
+
+#: templates/profile.html
+msgid "Tổng số tài khoản"
+msgstr "Total accounts"
+
+#: templates/profile.html
+msgid "Tổng số phiên học"
+msgstr "Total sessions"
+
+#: templates/profile.html
+msgid "Ảnh vượt quá 2MB. Vui lòng chọn ảnh nhỏ hơn."
+msgstr "Image exceeds 2MB. Please choose a smaller image."
+
+#: templates/profile.html
+msgid "Tải ảnh thất bại. Vui lòng thử lại."
+msgstr "Failed to upload image. Please try again."
+
+#: templates/profile.html
+msgid "Cập nhật thất bại. Vui lòng thử lại."
+msgstr "Update failed. Please try again."
+
+#: templates/profile.html
+msgid "Vui lòng chọn ảnh đại diện."
+msgstr "Please select an avatar image."
+
+#: templates/profile.html
+msgid "Chỉ chấp nhận ảnh JPG, PNG hoặc WEBP."
+msgstr "Only JPG, PNG or WEBP images are accepted."
+
+#: templates/profile.html
+msgid "Tệp ảnh rỗng."
+msgstr "The image file is empty."
+
+#: templates/profile.html
+msgid "Tệp tải lên không phải là ảnh hợp lệ."
+msgstr "The uploaded file is not a valid image."

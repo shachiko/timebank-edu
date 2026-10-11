@@ -7051,3 +7051,115 @@ msgstr "TimeBank EDU 采用独立运营架构设计——每所学校拥有独�
 #~ msgid "độc lập (không chạm dữ liệu thật):"
 #~ msgstr "独立沙盒（不影响真实数据）："
 
+
+#: templates/profile.html
+msgid "Số điện thoại:"
+msgstr "电话："
+
+#: templates/profile.html
+msgid "Địa chỉ:"
+msgstr "地址："
+
+#: templates/profile.html
+msgid "Số điện thoại"
+msgstr "电话号码"
+
+#: templates/profile.html
+msgid "Địa chỉ"
+msgstr "地址"
+
+#: templates/profile.html
+msgid "Email"
+msgstr "电子邮箱"
+
+#: templates/profile.html
+msgid "Chỉnh sửa thông tin cá nhân"
+msgstr "编辑个人信息"
+
+#: templates/profile.html
+msgid "Họ tên không được để trống."
+msgstr "姓名不能为空。"
+
+#: templates/profile.html
+msgid "Bấm để đổi ảnh đại diện"
+msgstr "点击更换头像"
+
+#: templates/profile.html
+msgid "Số kỹ năng đã duyệt"
+msgstr "已批准技能"
+
+#: templates/profile.html
+msgid "Đã kiểm duyệt sư phạm"
+msgstr "已通过教学审核"
+
+#: templates/profile.html
+msgid "Số phiên đã giám sát"
+msgstr "已监督课时"
+
+#: templates/profile.html
+msgid "Phiên học do bạn phụ trách"
+msgstr "由你负责的课时"
+
+#: templates/profile.html
+msgid "Tổng số tài khoản trường"
+msgstr "学校账户总数"
+
+#: templates/profile.html
+msgid "Tài khoản đang hoạt động"
+msgstr "活跃账户"
+
+#: templates/profile.html
+msgid "Chờ kiểm duyệt sư phạm"
+msgstr "等待教学审核"
+
+#: templates/profile.html
+msgid "Phiên học trong tháng"
+msgstr "本月课时"
+
+#: templates/profile.html
+msgid "Trong tháng hiện tại"
+msgstr "本月"
+
+#: templates/profile.html
+msgid "Tổng số trường"
+msgstr "学校总数"
+
+#: templates/profile.html
+msgid "Đơn vị tham gia hệ thống"
+msgstr "系统内单位"
+
+#: templates/profile.html
+msgid "Tổng số tài khoản"
+msgstr "账户总数"
+
+#: templates/profile.html
+msgid "Tổng số phiên học"
+msgstr "课时总数"
+
+#: templates/profile.html
+msgid "Ảnh vượt quá 2MB. Vui lòng chọn ảnh nhỏ hơn."
+msgstr "图片超过2MB。请选择更小的图片。"
+
+#: templates/profile.html
+msgid "Tải ảnh thất bại. Vui lòng thử lại."
+msgstr "图片上传失败。请重试。"
+
+#: templates/profile.html
+msgid "Cập nhật thất bại. Vui lòng thử lại."
+msgstr "更新失败。请重试。"
+
+#: templates/profile.html
+msgid "Vui lòng chọn ảnh đại diện."
+msgstr "请选择头像图片。"
+
+#: templates/profile.html
+msgid "Chỉ chấp nhận ảnh JPG, PNG hoặc WEBP."
+msgstr "仅接受 JPG、PNG 或 WEBP 图片。"
+
+#: templates/profile.html
+msgid "Tệp ảnh rỗng."
+msgstr "图片文件为空。"
+
+#: templates/profile.html
+msgid "Tệp tải lên không phải là ảnh hợp lệ."
+msgstr "上传的文件不是有效图片。"

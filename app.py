@@ -908,6 +908,8 @@ def migrate_postgres_schema(conn):
         ("users", "ghi_chu", "TEXT"),
         ("users", "mon_can_ho_tro", "TEXT"),
         ("users", "mat_khau_khoi_tao", "TEXT"),
+        ("users", "dia_chi", "TEXT"),
+        ("users", "avatar", "TEXT"),
         # 2. skills
         ("skills", "truong_id", "INTEGER DEFAULT 1"),
         ("skills", "hien_thi_cong_dong", "INTEGER DEFAULT 0"),
@@ -1552,6 +1554,10 @@ def init_db():
             conn.execute("ALTER TABLE users ADD COLUMN mon_can_ho_tro TEXT")
         if "mat_khau_khoi_tao" not in u_cols:
             conn.execute("ALTER TABLE users ADD COLUMN mat_khau_khoi_tao TEXT")
+        if "dia_chi" not in u_cols:
+            conn.execute("ALTER TABLE users ADD COLUMN dia_chi TEXT")
+        if "avatar" not in u_cols:
+            conn.execute("ALTER TABLE users ADD COLUMN avatar TEXT")
         conn.commit()
 
         # Bảng notifications (SQLite)
@@ -3276,6 +3282,61 @@ def profile():
     is_community_member = (hours_taught >= community_threshold)
     hours_needed = max(0.0, community_threshold - hours_taught)
 
+    # ------------------------------------------------------------------
+    # THỐNG KÊ THEO VAI TRÒ (Redesign trang Profile theo vai trò - 12/10/2026)
+    # ------------------------------------------------------------------
+    current_role_val = user["vai_tro"]
+    is_student_profile = (current_role_val == "hoc_sinh")
+
+    approved_skills_count = sum(
+        1 for s in my_skills
+        if ("trang_thai_duyet" in s.keys() and s["trang_thai_duyet"] == "da_duyet")
+    )
+    supervised_sessions = 0
+    school_user_count = 0
+    school_pending_skills = 0
+    school_month_sessions = 0
+    total_schools = 0
+    total_users = 0
+    total_sessions = 0
+
+    if current_role_val == "giao_vien":
+        cur.execute("SELECT COUNT(*) FROM sessions WHERE nguoi_day_id = ?", (user["id"],))
+        _row = cur.fetchone()
+        supervised_sessions = _row[0] if _row else 0
+    elif current_role_val in ("school_admin", "admin"):
+        u_truong_id = user["truong_id"] if "truong_id" in user.keys() else None
+        if u_truong_id is None:
+            u_truong_id = session.get("truong_id")
+        cur.execute("SELECT COUNT(*) FROM users WHERE truong_id = ?", (u_truong_id,))
+        _row = cur.fetchone()
+        school_user_count = _row[0] if _row else 0
+        cur.execute(
+            """SELECT COUNT(*) FROM skills s
+               JOIN users u ON s.user_id = u.id
+               WHERE u.truong_id = ? AND s.trang_thai_duyet = 'cho_duyet'""",
+            (u_truong_id,)
+        )
+        _row = cur.fetchone()
+        school_pending_skills = _row[0] if _row else 0
+        _thang_prefix = datetime.now().strftime("%Y-%m") + "%"
+        cur.execute(
+            "SELECT COUNT(*) FROM sessions WHERE truong_id = ? AND thoi_gian_bat_dau LIKE ?",
+            (u_truong_id, _thang_prefix)
+        )
+        _row = cur.fetchone()
+        school_month_sessions = _row[0] if _row else 0
+    elif current_role_val == "super_admin":
+        cur.execute("SELECT COUNT(*) FROM truong")
+        _row = cur.fetchone()
+        total_schools = _row[0] if _row else 0
+        cur.execute("SELECT COUNT(*) FROM users")
+        _row = cur.fetchone()
+        total_users = _row[0] if _row else 0
+        cur.execute("SELECT COUNT(*) FROM sessions")
+        _row = cur.fetchone()
+        total_sessions = _row[0] if _row else 0
+
     return render_template(
         "profile.html",
         user=user,
@@ -3293,8 +3354,106 @@ def profile():
         rating_count=rating_count,
         community_threshold=community_threshold,
         is_community_member=is_community_member,
-        hours_needed=hours_needed
+        hours_needed=hours_needed,
+        is_student_profile=is_student_profile,
+        approved_skills_count=approved_skills_count,
+        supervised_sessions=supervised_sessions,
+        school_user_count=school_user_count,
+        school_pending_skills=school_pending_skills,
+        school_month_sessions=school_month_sessions,
+        total_schools=total_schools,
+        total_users=total_users,
+        total_sessions=total_sessions
     )
+
+
+@app.route("/profile/upload-avatar", methods=["POST"])
+@login_required
+def upload_avatar():
+    """
+    Upload ảnh đại diện cho người dùng (giáo viên / quản trị).
+    - Chỉ chấp nhận jpg/jpeg/png/webp, tối đa 2MB.
+    - Xác thực ảnh thật bằng Pillow (PIL).
+    - Lưu vào static/uploads/avatars/{user_id}_{timestamp}.{ext} và cập nhật cột avatar.
+    - Trả về JSON {ok: true, url}.
+    """
+    file = request.files.get("avatar")
+    if not file or not getattr(file, "filename", "").strip():
+        return jsonify({"ok": False, "error": _("Vui lòng chọn ảnh đại diện.")}), 400
+
+    raw_name = file.filename.strip()
+    ext = raw_name.rsplit(".", 1)[1].lower() if "." in raw_name else ""
+    if ext not in ("jpg", "jpeg", "png", "webp"):
+        return jsonify({"ok": False, "error": _("Chỉ chấp nhận ảnh JPG, PNG hoặc WEBP.")}), 400
+
+    try:
+        file.seek(0)
+    except Exception:
+        pass
+    content = file.read()
+    if not content:
+        return jsonify({"ok": False, "error": _("Tệp ảnh rỗng.")}), 400
+    if len(content) > 2 * 1024 * 1024:
+        return jsonify({"ok": False, "error": _("Ảnh vượt quá 2MB. Vui lòng chọn ảnh nhỏ hơn.")}), 400
+
+    # Xác thực đây là ảnh thật (không chỉ dựa vào phần mở rộng)
+    try:
+        from PIL import Image
+        _verify_img = Image.open(io.BytesIO(content))
+        _verify_img.verify()
+    except Exception:
+        return jsonify({"ok": False, "error": _("Tệp tải lên không phải là ảnh hợp lệ.")}), 400
+
+    user_id = session["user_id"]
+    filename = f"{user_id}_{int(time.time())}.{ext}"
+    upload_dir = BASE_DIR / "static" / "uploads" / "avatars"
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        with open(upload_dir / filename, "wb") as f_out:
+            f_out.write(content)
+    except Exception as e:
+        app.logger.warning(f"Không thể lưu ảnh đại diện: {e}")
+        return jsonify({"ok": False, "error": _("Tải ảnh thất bại. Vui lòng thử lại.")}), 500
+
+    url = f"/static/uploads/avatars/{filename}"
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("UPDATE users SET avatar = ? WHERE id = ?", (url, user_id))
+    db.commit()
+    return jsonify({"ok": True, "url": url})
+
+
+@app.route("/profile/update-info", methods=["POST"])
+@login_required
+def update_profile_info():
+    """
+    Cập nhật thông tin cá nhân cơ bản: họ tên, email, số điện thoại, địa chỉ.
+    Nhận JSON (hoặc form) và trả về JSON {ok: true, ...}.
+    """
+    data = request.get_json(silent=True) or request.form
+    ho_ten = (data.get("ho_ten") or "").strip()
+    email = (data.get("email") or "").strip()
+    so_dien_thoai = (data.get("so_dien_thoai") or "").strip()
+    dia_chi = (data.get("dia_chi") or "").strip()
+
+    if not ho_ten:
+        return jsonify({"ok": False, "error": _("Họ tên không được để trống.")}), 400
+
+    db = get_db()
+    cur = db.cursor()
+    cur.execute(
+        "UPDATE users SET ho_ten = ?, email = ?, so_dien_thoai = ?, dia_chi = ? WHERE id = ?",
+        (ho_ten, email, so_dien_thoai, dia_chi, session["user_id"])
+    )
+    db.commit()
+    session["ho_ten"] = ho_ten
+    return jsonify({
+        "ok": True,
+        "ho_ten": ho_ten,
+        "email": email,
+        "so_dien_thoai": so_dien_thoai,
+        "dia_chi": dia_chi
+    })
 
 
 @app.route("/admin")

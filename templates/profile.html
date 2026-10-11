@@ -10,9 +10,23 @@
       <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
         <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-3">
           <div class="position-relative">
+            {% if not is_student_profile %}
+            <div class="profile-avatar-wrap" id="avatarWrap" title="{{ _('Bấm để đổi ảnh đại diện') }}">
+              {% if user.avatar %}
+              <img src="{{ user.avatar }}" alt="{{ user.ho_ten }}" class="avatar-img rounded-circle border border-2 border-white shadow-sm" style="width: 72px; height: 72px; object-fit: cover;">
+              {% else %}
+              <div class="avatar-placeholder bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold fs-2" style="width: 72px; height: 72px;">
+                {{ user.ho_ten[0] | upper }}
+              </div>
+              {% endif %}
+              <span class="profile-avatar-overlay"><i class="bi bi-camera-fill"></i></span>
+            </div>
+            <input type="file" id="avatarInput" accept="image/png,image/jpeg,image/jpg,image/webp" class="d-none">
+            {% else %}
             <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold fs-2" style="width: 72px; height: 72px;">
               {{ user.ho_ten[0] | upper }}
             </div>
+            {% endif %}
             <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-success border border-white p-1">
               <span class="visually-hidden">{{ _('Trực tuyến') }}</span>
             </span>
@@ -20,7 +34,7 @@
 
           <div class="flex-grow-1">
             <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
-              <h3 class="fw-bold mb-0 text-dark">{{ user.ho_ten }}</h3>
+              <h3 class="fw-bold mb-0 text-dark" id="profileFullName">{{ user.ho_ten }}</h3>
               {% set current_role = user.vai_tro or session.get('vai_tro') or vai_tro %}
               {% if current_role == 'super_admin' %}
                 <span class="badge bg-danger"><i class="bi bi-shield-fill-check me-1"></i> {{ _('Tổng Quản trị viên') }}</span>
@@ -54,6 +68,14 @@
               {% endif %}
               • <i class="bi bi-geo-alt me-1"></i>{{ config.ten_truong }}
             </p>
+
+            {% if not is_student_profile %}
+            <div class="small text-secondary mb-2" id="profileContactBlock">
+              <div class="mb-1"><i class="bi bi-envelope-fill me-1 text-primary"></i>{{ _('Email:') }} <span id="infoEmail">{{ user.email if user.email else '—' }}</span></div>
+              <div class="mb-1"><i class="bi bi-telephone-fill me-1 text-success"></i>{{ _('Số điện thoại:') }} <span id="infoPhone">{{ user.so_dien_thoai if user.so_dien_thoai else '—' }}</span></div>
+              <div class="mb-1"><i class="bi bi-geo-alt-fill me-1 text-danger"></i>{{ _('Địa chỉ:') }} <span id="infoAddress">{{ user.dia_chi if user.dia_chi else '—' }}</span></div>
+            </div>
+            {% endif %}
 
             {% if current_role == 'hoc_sinh' %}
             <!-- VIỆC 1: Hiển thị Môn cần hỗ trợ -->
@@ -100,6 +122,12 @@
               </button>
               {% endif %}
 
+              {% if not is_student_profile %}
+              <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#modalEditInfo" id="btnEditInfo">
+                <i class="bi bi-pencil-square me-1"></i>{{ _('Chỉnh sửa') }}
+              </button>
+              {% endif %}
+
               {% if is_demo_user(user.ma_hoc_sinh) %}
                 <span class="badge bg-warning-subtle text-warning border border-warning-subtle py-2 px-3 rounded-pill" style="font-size: 0.8rem;">
                   <i class="bi bi-shield-lock-fill me-1"></i>{{ _('Tài khoản Demo (Không thể đổi mật khẩu)') }}
@@ -141,6 +169,144 @@
     </div>
   </div>
 
+  {% if not is_student_profile %}
+  <!-- THẺ THỐNG KÊ THEO VAI TRÒ (giáo viên / quản trị trường / tổng quản trị) -->
+  <div class="row g-3 mb-4">
+    {% if current_role == 'giao_vien' %}
+    <div class="col-sm-6 col-lg-3">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <span class="text-muted small">{{ _('Số kỹ năng đã duyệt') }}</span>
+            <div class="d-flex align-items-baseline gap-1">
+              <h3 class="fw-bold mb-0 text-primary">{{ approved_skills_count }}</h3>
+              <span class="text-muted small">{{ _('kỹ năng') }}</span>
+            </div>
+            <small class="text-muted">{{ _('Đã kiểm duyệt sư phạm') }}</small>
+          </div>
+          <div class="p-3 bg-primary bg-opacity-10 text-primary rounded-3"><i class="bi bi-patch-check-fill fs-4"></i></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <span class="text-muted small">{{ _('Số phiên đã giám sát') }}</span>
+            <div class="d-flex align-items-baseline gap-1">
+              <h3 class="fw-bold mb-0 text-success">{{ supervised_sessions }}</h3>
+              <span class="text-muted small">{{ _('phiên') }}</span>
+            </div>
+            <small class="text-muted">{{ _('Phiên học do bạn phụ trách') }}</small>
+          </div>
+          <div class="p-3 bg-success bg-opacity-10 text-success rounded-3"><i class="bi bi-easel2-fill fs-4"></i></div>
+        </div>
+      </div>
+    </div>
+    {% elif current_role in ('school_admin', 'admin') %}
+    <div class="col-sm-6 col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <span class="text-muted small">{{ _('Tổng số tài khoản trường') }}</span>
+            <div class="d-flex align-items-baseline gap-1">
+              <h3 class="fw-bold mb-0 text-primary">{{ school_user_count }}</h3>
+            </div>
+            <small class="text-muted">{{ _('Tài khoản đang hoạt động') }}</small>
+          </div>
+          <div class="p-3 bg-primary bg-opacity-10 text-primary rounded-3"><i class="bi bi-people-fill fs-4"></i></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <span class="text-muted small">{{ _('Kỹ năng chờ duyệt') }}</span>
+            <div class="d-flex align-items-baseline gap-1">
+              <h3 class="fw-bold mb-0 text-warning">{{ school_pending_skills }}</h3>
+            </div>
+            <small class="text-muted">{{ _('Chờ kiểm duyệt sư phạm') }}</small>
+          </div>
+          <div class="p-3 bg-warning bg-opacity-10 text-warning rounded-3"><i class="bi bi-hourglass-split fs-4"></i></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <span class="text-muted small">{{ _('Phiên học trong tháng') }}</span>
+            <div class="d-flex align-items-baseline gap-1">
+              <h3 class="fw-bold mb-0 text-success">{{ school_month_sessions }}</h3>
+              <span class="text-muted small">{{ _('phiên') }}</span>
+            </div>
+            <small class="text-muted">{{ _('Trong tháng hiện tại') }}</small>
+          </div>
+          <div class="p-3 bg-success bg-opacity-10 text-success rounded-3"><i class="bi bi-calendar2-check-fill fs-4"></i></div>
+        </div>
+      </div>
+    </div>
+    {% elif current_role == 'super_admin' %}
+    <div class="col-sm-6 col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <span class="text-muted small">{{ _('Tổng số trường') }}</span>
+            <div class="d-flex align-items-baseline gap-1">
+              <h3 class="fw-bold mb-0 text-primary">{{ total_schools }}</h3>
+            </div>
+            <small class="text-muted">{{ _('Đơn vị tham gia hệ thống') }}</small>
+          </div>
+          <div class="p-3 bg-primary bg-opacity-10 text-primary rounded-3"><i class="bi bi-buildings-fill fs-4"></i></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <span class="text-muted small">{{ _('Tổng số tài khoản') }}</span>
+            <div class="d-flex align-items-baseline gap-1">
+              <h3 class="fw-bold mb-0 text-success">{{ total_users }}</h3>
+            </div>
+            <small class="text-muted">{{ _('Toàn hệ thống') }}</small>
+          </div>
+          <div class="p-3 bg-success bg-opacity-10 text-success rounded-3"><i class="bi bi-person-badge-fill fs-4"></i></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <span class="text-muted small">{{ _('Tổng số phiên học') }}</span>
+            <div class="d-flex align-items-baseline gap-1">
+              <h3 class="fw-bold mb-0 text-info">{{ total_sessions }}</h3>
+            </div>
+            <small class="text-muted">{{ _('Toàn hệ thống') }}</small>
+          </div>
+          <div class="p-3 bg-info bg-opacity-10 text-info rounded-3"><i class="bi bi-camera-video-fill fs-4"></i></div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Lối tắt quản trị nhanh -->
+  <div class="d-flex flex-wrap gap-2 mb-4">
+    <a href="{{ url_for('skills_approval') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+      <i class="bi bi-check2-circle me-1"></i>{{ _('Khu vực Duyệt Kỹ Năng') }}
+    </a>
+    {% if current_role in ('school_admin', 'super_admin', 'admin') %}
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-danger btn-sm rounded-pill px-3">
+      <i class="bi bi-gear-fill me-1"></i>{{ _('Bảng điều khiển Quản trị (Admin)') }}
+    </a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% if is_student_profile %}
   <!-- THỐNG KÊ HOẠT ĐỘNG SƯ PHẠM CỦA HỌC SINH (MILESTONE M4-LITE) -->
   <div class="row g-3 mb-4">
     <!-- 1. Giờ đã dạy -->
@@ -219,6 +385,7 @@
       </div>
     </div>
   </div>
+  {% endif %}
 
   <!-- KHỐI GỢI Ý CHO BẠN HÔM NAY (ĐIỂM CHẠM GHÉP CẶP TỰ ĐỘNG) -->
   {% if daily_matches and (user.vai_tro == 'hoc_sinh' or session.get('vai_tro') == 'hoc_sinh' or vai_tro == 'hoc_sinh') %}
@@ -291,6 +458,7 @@
   </div>
   {% endif %}
 
+  {% if is_student_profile %}
   <div class="row g-4">
     <!-- Cột 1: Lịch sử biến động ví tín dụng -->
     <div class="col-lg-8">
@@ -456,6 +624,7 @@
       {% endif %}
     </div>
       </div>
+  {% endif %}
     </div>
   </div>
 </div>
@@ -1034,6 +1203,160 @@
     document.addEventListener('DOMContentLoaded', populateSavedState);
   })();
 </script>
+
+{% if not is_student_profile %}
+<!-- MODAL CHỈNH SỬA THÔNG TIN CÁ NHÂN -->
+<div class="modal fade" id="modalEditInfo" tabindex="-1" aria-labelledby="modalEditInfoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title fw-bold" id="modalEditInfoLabel">
+          <i class="bi bi-person-lines-fill me-2"></i>{{ _('Chỉnh sửa thông tin cá nhân') }}
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="{{ _('Đóng') }}"></button>
+      </div>
+      <form id="formEditInfo" action="{{ url_for('update_profile_info') }}" method="POST">
+        <div class="modal-body p-4">
+          <div class="mb-3">
+            <label for="editHoTen" class="form-label small fw-bold">{{ _('Họ và tên') }}<span class="text-danger">*</span></label>
+            <input type="text" class="form-control rounded-3" id="editHoTen" name="ho_ten" value="{{ user.ho_ten }}" required>
+          </div>
+          <div class="mb-3">
+            <label for="editEmail" class="form-label small fw-bold">{{ _('Email') }}</label>
+            <input type="email" class="form-control rounded-3" id="editEmail" name="email" value="{{ user.email if user.email else '' }}">
+          </div>
+          <div class="mb-3">
+            <label for="editPhone" class="form-label small fw-bold">{{ _('Số điện thoại') }}</label>
+            <input type="text" class="form-control rounded-3" id="editPhone" name="so_dien_thoai" value="{{ user.so_dien_thoai if user.so_dien_thoai else '' }}">
+          </div>
+          <div class="mb-2">
+            <label for="editAddress" class="form-label small fw-bold">{{ _('Địa chỉ') }}</label>
+            <input type="text" class="form-control rounded-3" id="editAddress" name="dia_chi" value="{{ user.dia_chi if user.dia_chi else '' }}">
+          </div>
+          <div class="alert alert-danger py-2 small d-none mb-0 mt-3" id="editInfoAlert"></div>
+        </div>
+        <div class="modal-footer bg-light p-3">
+          <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">{{ _('Hủy') }}</button>
+          <button type="submit" class="btn btn-primary rounded-pill px-4 fw-semibold" id="btnSaveInfo">{{ _('Lưu thay đổi') }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+  .profile-avatar-wrap { position: relative; cursor: pointer; display: inline-block; line-height: 0; }
+  .profile-avatar-overlay {
+    position: absolute; inset: 0; border-radius: 50%;
+    background: rgba(0, 0, 0, 0.45); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.2s ease; font-size: 1.1rem;
+  }
+  .profile-avatar-wrap:hover .profile-avatar-overlay { opacity: 1; }
+  .profile-avatar-wrap.is-loading { opacity: 0.6; pointer-events: none; }
+</style>
+
+<script>
+  (function() {
+    // === Upload ảnh đại diện (AJAX, không reload) ===
+    var wrap = document.getElementById('avatarWrap');
+    var input = document.getElementById('avatarInput');
+    if (wrap && input) {
+      wrap.addEventListener('click', function() { input.click(); });
+      input.addEventListener('change', function() {
+        var f = this.files && this.files[0];
+        if (!f) return;
+        if (f.size > 2 * 1024 * 1024) {
+          alert({{ _('Ảnh vượt quá 2MB. Vui lòng chọn ảnh nhỏ hơn.')|tojson }});
+          input.value = '';
+          return;
+        }
+        var fd = new FormData();
+        fd.append('avatar', f);
+        wrap.classList.add('is-loading');
+        fetch({{ url_for('upload_avatar')|tojson }}, {
+          method: 'POST',
+          body: fd,
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data && data.ok && data.url) {
+            var img = wrap.querySelector('.avatar-img');
+            if (!img) {
+              img = document.createElement('img');
+              img.className = 'avatar-img rounded-circle border border-2 border-white shadow-sm';
+              img.style.width = '72px';
+              img.style.height = '72px';
+              img.style.objectFit = 'cover';
+              var ph = wrap.querySelector('.avatar-placeholder');
+              if (ph) { ph.replaceWith(img); } else { wrap.insertBefore(img, wrap.firstChild); }
+            }
+            img.src = data.url + '?t=' + Date.now();
+          } else {
+            alert((data && data.error) ? data.error : {{ _('Tải ảnh thất bại. Vui lòng thử lại.')|tojson }});
+          }
+        })
+        .catch(function() { alert({{ _('Tải ảnh thất bại. Vui lòng thử lại.')|tojson }}); })
+        .finally(function() { wrap.classList.remove('is-loading'); input.value = ''; });
+      });
+    }
+
+    // === Chỉnh sửa thông tin cá nhân (AJAX) ===
+    var formInfo = document.getElementById('formEditInfo');
+    if (formInfo) {
+      formInfo.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var alertEl = document.getElementById('editInfoAlert');
+        var btn = document.getElementById('btnSaveInfo');
+        var payload = {
+          ho_ten: document.getElementById('editHoTen').value.trim(),
+          email: document.getElementById('editEmail').value.trim(),
+          so_dien_thoai: document.getElementById('editPhone').value.trim(),
+          dia_chi: document.getElementById('editAddress').value.trim()
+        };
+        if (!payload.ho_ten) {
+          alertEl.textContent = {{ _('Họ tên không được để trống.')|tojson }};
+          alertEl.classList.remove('d-none');
+          return;
+        }
+        alertEl.classList.add('d-none');
+        btn.disabled = true;
+        fetch(formInfo.action, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+          body: JSON.stringify(payload)
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data && data.ok) {
+            var setTxt = function(id, val) {
+              var el = document.getElementById(id);
+              if (el) el.textContent = (val && val.length) ? val : '—';
+            };
+            setTxt('infoEmail', data.email);
+            setTxt('infoPhone', data.so_dien_thoai);
+            setTxt('infoAddress', data.dia_chi);
+            var nameEl = document.getElementById('profileFullName');
+            if (nameEl) nameEl.textContent = data.ho_ten;
+            var modalEl = document.getElementById('modalEditInfo');
+            var mi = bootstrap.Modal.getInstance(modalEl);
+            if (mi) mi.hide();
+          } else {
+            alertEl.textContent = (data && data.error) ? data.error : {{ _('Cập nhật thất bại. Vui lòng thử lại.')|tojson }};
+            alertEl.classList.remove('d-none');
+          }
+        })
+        .catch(function() {
+          alertEl.textContent = {{ _('Cập nhật thất bại. Vui lòng thử lại.')|tojson }};
+          alertEl.classList.remove('d-none');
+        })
+        .finally(function() { btn.disabled = false; });
+      });
+    }
+  })();
+</script>
+{% endif %}
 
 {% endblock %}
 

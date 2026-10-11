@@ -7805,3 +7805,115 @@ msgstr "TimeBank EDU được thiết kế theo kiến trúc vận hành độc 
 #~ msgid "độc lập (không chạm dữ liệu thật):"
 #~ msgstr "độc lập (không chạm dữ liệu thật):"
 
+
+#: templates/profile.html
+msgid "Số điện thoại:"
+msgstr "Số điện thoại:"
+
+#: templates/profile.html
+msgid "Địa chỉ:"
+msgstr "Địa chỉ:"
+
+#: templates/profile.html
+msgid "Số điện thoại"
+msgstr "Số điện thoại"
+
+#: templates/profile.html
+msgid "Địa chỉ"
+msgstr "Địa chỉ"
+
+#: templates/profile.html
+msgid "Email"
+msgstr "Email"
+
+#: templates/profile.html
+msgid "Chỉnh sửa thông tin cá nhân"
+msgstr "Chỉnh sửa thông tin cá nhân"
+
+#: templates/profile.html
+msgid "Họ tên không được để trống."
+msgstr "Họ tên không được để trống."
+
+#: templates/profile.html
+msgid "Bấm để đổi ảnh đại diện"
+msgstr "Bấm để đổi ảnh đại diện"
+
+#: templates/profile.html
+msgid "Số kỹ năng đã duyệt"
+msgstr "Số kỹ năng đã duyệt"
+
+#: templates/profile.html
+msgid "Đã kiểm duyệt sư phạm"
+msgstr "Đã kiểm duyệt sư phạm"
+
+#: templates/profile.html
+msgid "Số phiên đã giám sát"
+msgstr "Số phiên đã giám sát"
+
+#: templates/profile.html
+msgid "Phiên học do bạn phụ trách"
+msgstr "Phiên học do bạn phụ trách"
+
+#: templates/profile.html
+msgid "Tổng số tài khoản trường"
+msgstr "Tổng số tài khoản trường"
+
+#: templates/profile.html
+msgid "Tài khoản đang hoạt động"
+msgstr "Tài khoản đang hoạt động"
+
+#: templates/profile.html
+msgid "Chờ kiểm duyệt sư phạm"
+msgstr "Chờ kiểm duyệt sư phạm"
+
+#: templates/profile.html
+msgid "Phiên học trong tháng"
+msgstr "Phiên học trong tháng"
+
+#: templates/profile.html
+msgid "Trong tháng hiện tại"
+msgstr "Trong tháng hiện tại"
+
+#: templates/profile.html
+msgid "Tổng số trường"
+msgstr "Tổng số trường"
+
+#: templates/profile.html
+msgid "Đơn vị tham gia hệ thống"
+msgstr "Đơn vị tham gia hệ thống"
+
+#: templates/profile.html
+msgid "Tổng số tài khoản"
+msgstr "Tổng số tài khoản"
+
+#: templates/profile.html
+msgid "Tổng số phiên học"
+msgstr "Tổng số phiên học"
+
+#: templates/profile.html
+msgid "Ảnh vượt quá 2MB. Vui lòng chọn ảnh nhỏ hơn."
+msgstr "Ảnh vượt quá 2MB. Vui lòng chọn ảnh nhỏ hơn."
+
+#: templates/profile.html
+msgid "Tải ảnh thất bại. Vui lòng thử lại."
+msgstr "Tải ảnh thất bại. Vui lòng thử lại."
+
+#: templates/profile.html
+msgid "Cập nhật thất bại. Vui lòng thử lại."
+msgstr "Cập nhật thất bại. Vui lòng thử lại."
+
+#: templates/profile.html
+msgid "Vui lòng chọn ảnh đại diện."
+msgstr "Vui lòng chọn ảnh đại diện."
+
+#: templates/profile.html
+msgid "Chỉ chấp nhận ảnh JPG, PNG hoặc WEBP."
+msgstr "Chỉ chấp nhận ảnh JPG, PNG hoặc WEBP."
+
+#: templates/profile.html
+msgid "Tệp ảnh rỗng."
+msgstr "Tệp ảnh rỗng."
+
+#: templates/profile.html
+msgid "Tệp tải lên không phải là ảnh hợp lệ."
+msgstr "Tệp tải lên không phải là ảnh hợp lệ."
