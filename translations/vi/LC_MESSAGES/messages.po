@@ -7929,3 +7929,11 @@ msgstr "Ngày sinh"
 #: app.py
 msgid "Ví tín dụng thời gian chỉ dành cho học sinh."
 msgstr "Ví tín dụng thời gian chỉ dành cho học sinh."
+
+#: templates/base.html
+msgid "System: Hệ thống TimeBank EDU"
+msgstr "System: Hệ thống TimeBank EDU"
+
+#: templates/base.html
+msgid "Super Admin"
+msgstr "Super Admin"

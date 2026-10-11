@@ -7175,3 +7175,11 @@ msgstr "出生日期"
 #: app.py
 msgid "Ví tín dụng thời gian chỉ dành cho học sinh."
 msgstr "时间信用钱包仅面向学生。"
+
+#: templates/base.html
+msgid "System: Hệ thống TimeBank EDU"
+msgstr "System: TimeBank EDU 系统"
+
+#: templates/base.html
+msgid "Super Admin"
+msgstr "Super Admin"

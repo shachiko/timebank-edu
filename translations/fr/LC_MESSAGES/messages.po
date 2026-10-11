@@ -7812,3 +7812,11 @@ msgstr "Date de naissance"
 #: app.py
 msgid "Ví tín dụng thời gian chỉ dành cho học sinh."
 msgstr "Le portefeuille de crédits temps est réservé aux élèves."
+
+#: templates/base.html
+msgid "System: Hệ thống TimeBank EDU"
+msgstr "System: Système TimeBank EDU"
+
+#: templates/base.html
+msgid "Super Admin"
+msgstr "Super Admin"

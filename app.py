@@ -967,6 +967,23 @@ def migrate_postgres_schema(conn):
     except Exception as e:
         app.logger.warning(f"Lỗi cập nhật an_truong cho Trường Demo: {e}")
 
+    # Migration dữ liệu: chuẩn hóa tên hiển thị Super Admin (MsHuyentbedu) — 12/10/2026
+    # Tương thích cả PostgreSQL và SQLite (dùng cú pháp ? chung).
+    try:
+        _exec(
+            """UPDATE users SET ho_ten = ?, lop = ?
+               WHERE LOWER(ma_hoc_sinh) = LOWER(?)
+                 AND (ho_ten LIKE ? OR lop = ?)""",
+            ("Super Admin", "Super Admin", "MsHuyentbedu", "%Cô Huyền%", "Ban Điều Hành Quốc Gia")
+        )
+        conn.commit()
+    except Exception as e:
+        app.logger.warning(f"Lỗi migrate tên hiển thị Super Admin: {e}")
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+
     # 4. Cập nhật CHECK vai_tro của bảng users để chấp nhận 'super_admin' và 'school_admin'
     if is_sqlite:
         # Trong SQLite, nếu bảng users cũ có CHECK constraint chặn super_admin
@@ -1563,6 +1580,18 @@ def init_db():
             conn.execute("ALTER TABLE users ADD COLUMN ngay_sinh TEXT")
         conn.commit()
 
+        # Migration dữ liệu: chuẩn hóa tên hiển thị Super Admin (MsHuyentbedu) — 12/10/2026
+        try:
+            conn.execute(
+                """UPDATE users SET ho_ten = ?, lop = ?
+                   WHERE LOWER(ma_hoc_sinh) = LOWER(?)
+                     AND (ho_ten LIKE ? OR lop = ?)""",
+                ("Super Admin", "Super Admin", "MsHuyentbedu", "%Cô Huyền%", "Ban Điều Hành Quốc Gia")
+            )
+            conn.commit()
+        except Exception as e:
+            app.logger.warning(f"Lỗi migrate tên hiển thị Super Admin (SQLite): {e}")
+
         # Bảng notifications (SQLite)
         conn.execute("""
             CREATE TABLE IF NOT EXISTS notifications (
@@ -1785,7 +1814,7 @@ def seed_demo_school_and_accounts(conn):
     # Tài khoản 'admin' là Tổng Quản trị viên (super_admin) của toàn hệ thống, KHÔNG thuộc trường nào
     try:
         cur.execute("""
-            UPDATE users SET vai_tro = 'super_admin', truong_id = NULL, lop = 'Ban Quản trị Hệ thống'
+            UPDATE users SET vai_tro = 'super_admin', truong_id = NULL, lop = 'Super Admin'
             WHERE ma_hoc_sinh = 'admin'
         """)
         conn.commit()
@@ -1874,8 +1903,8 @@ def auto_create_superadmin_from_env(conn=None):
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             super_user,
-            "Tổng Quản trị viên (Cô Huyền)",
-            "Ban Điều Hành Quốc Gia",
+            "Super Admin",
+            "Super Admin",
             "super_admin",
             999.0,
             "Toàn thời gian",
@@ -1975,7 +2004,7 @@ def seed_demo_data(conn):
 
     # 1. Thêm người dùng mẫu (tài khoản 'admin' là Tổng Quản trị viên toàn hệ thống, không thuộc trường nào)
     users = [
-        ('admin', 'Quản trị viên Hệ thống (Demo)', 'Ban Quản trị Hệ thống', 'super_admin', 100.0, 'Toàn thời gian', default_pass_hash, None, 'hoat_dong'),
+        ('admin', 'Quản trị viên Hệ thống (Demo)', 'Super Admin', 'super_admin', 100.0, 'Toàn thời gian', default_pass_hash, None, 'hoat_dong'),
         ('GV001', 'Thầy Nguyễn Văn Đức', 'Tổ Toán - Tin', 'giao_vien', 10.0, 'Các buổi chiều trong tuần', default_pass_hash, 1, 'hoat_dong'),
         ('HS12001', 'Nguyễn Hoàng An', '12A1', 'hoc_sinh', 3.5, 'Chiều thứ 3, sáng thứ 7', default_pass_hash, 1, 'hoat_dong'),
         ('HS11002', 'Trần Thanh Bình', '11B2', 'hoc_sinh', 2.5, 'Sáng Chủ nhật, tối thứ 5', default_pass_hash, 1, 'hoat_dong'),
@@ -5053,8 +5082,8 @@ def create_superadmin():
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         user,
-        "Tổng Quản trị viên (Cô Huyền)",
-        "Ban Điều Hành Quốc Gia",
+        "Super Admin",
+        "Super Admin",
         "super_admin",
         999.0,
         "Toàn thời gian",

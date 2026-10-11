@@ -7760,3 +7760,11 @@ msgstr "Geburtsdatum"
 #: app.py
 msgid "Ví tín dụng thời gian chỉ dành cho học sinh."
 msgstr "Das Zeitguthaben-Wallet ist nur für Schüler verfügbar."
+
+#: templates/base.html
+msgid "System: Hệ thống TimeBank EDU"
+msgstr "System: TimeBank EDU System"
+
+#: templates/base.html
+msgid "Super Admin"
+msgstr "Super Admin"

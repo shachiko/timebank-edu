@@ -298,7 +298,7 @@
                   <div class="px-3 py-2 border-bottom mb-1">
                     <div class="fw-bold text-dark">{{ current_user.ho_ten }}</div>
                     {% if current_user.vai_tro == 'super_admin' %}
-                    <small class="text-muted d-block fw-normal" style="font-size: 0.8em;">🏫 {{ _('Hệ thống TimeBank EDU') }}</small>
+                    <small class="text-muted d-block fw-normal" style="font-size: 0.8em;">🏫 {{ _('System: Hệ thống TimeBank EDU') }}</small>
                     {% else %}
                     <small class="text-muted d-block fw-normal" style="font-size: 0.8em;">🏫 {{ current_user.ten_truong if current_user.ten_truong else _('Chưa phân trường') }}</small>
                     {% endif %}

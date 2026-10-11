@@ -46,7 +46,7 @@
               {% endif %}
             </div>
             {% if user.vai_tro == 'super_admin' %}
-            <small class="text-muted d-block fw-normal mb-1" style="font-size: 0.85em;">🏫 {{ _('Hệ thống TimeBank EDU') }}</small>
+            <small class="text-muted d-block fw-normal mb-1" style="font-size: 0.85em;">🏫 {{ _('System: Hệ thống TimeBank EDU') }}</small>
             {% else %}
             <small class="text-muted d-block fw-normal mb-1" style="font-size: 0.85em;">🏫 {{ user.ten_truong if user.ten_truong else _('Chưa phân trường') }}</small>
             {% endif %}
@@ -54,8 +54,8 @@
             <p class="text-muted small mb-2">
               <i class="bi bi-person-vcard me-1"></i>{{ _('Mã định danh:') }}<code>{{ user.ma_hoc_sinh }}</code>
               {% if current_role == 'super_admin' %}
-                • <i class="bi bi-building me-1"></i>{{ _('Lớp/Đơn vị:') }}<strong>{{ _('Ban Quản trị Hệ thống') }}</strong>
-              {% elif user.lop and user.lop != 'Ban Điều Hành Quốc Gia' %}
+                • <i class="bi bi-building me-1"></i>{{ _('Lớp/Đơn vị:') }}<strong>{{ _('Super Admin') }}</strong>
+              {% elif user.lop and user.lop != 'Super Admin' %}
                 • <i class="bi bi-building me-1"></i>{{ _('Lớp/Đơn vị:') }}<strong>{{ user.lop }}</strong>
               {% else %}
                 • <i class="bi bi-building me-1"></i>{{ _('Lớp/Đơn vị:') }}<strong>—</strong>
@@ -171,7 +171,7 @@
       <div class="col-md-6 col-lg-4">
         <div class="text-muted small">{{ _('Trường') }}</div>
         <div class="fw-semibold text-dark">
-          {% if current_role == 'super_admin' %}{{ _('Hệ thống TimeBank EDU') }}{% elif user.ten_truong %}{{ user.ten_truong }}{% else %}<span class="text-muted fst-italic">{{ _('Chưa cập nhật') }}</span>{% endif %}
+          {% if current_role == 'super_admin' %}{{ _('System: Hệ thống TimeBank EDU') }}{% elif user.ten_truong %}{{ user.ten_truong }}{% else %}<span class="text-muted fst-italic">{{ _('Chưa cập nhật') }}</span>{% endif %}
         </div>
       </div>
       <div class="col-md-6 col-lg-4">
