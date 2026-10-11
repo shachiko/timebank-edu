@@ -1762,12 +1762,12 @@ def seed_demo_school_and_accounts(conn):
                 except Exception:
                     pass
 
-    # Hạ quyền tài khoản 'admin' cũ: từ super_admin -> school_admin của Trường Demo
+    # Tài khoản 'admin' là Tổng Quản trị viên (super_admin) của toàn hệ thống, KHÔNG thuộc trường nào
     try:
         cur.execute("""
-            UPDATE users SET vai_tro = 'school_admin', truong_id = ?, lop = 'Ban Giám Hiệu Demo'
+            UPDATE users SET vai_tro = 'super_admin', truong_id = NULL, lop = 'Ban Quản trị Hệ thống'
             WHERE ma_hoc_sinh = 'admin'
-        """, (DEMO_SCHOOL_ID,))
+        """)
         conn.commit()
     except Exception:
         try:
@@ -1908,7 +1908,7 @@ def reset_demo_school_data(db):
     cur.execute("UPDATE users SET so_du_gio = 10.0, mat_khau = ?, trang_thai = 'hoat_dong', vai_tro = 'giao_vien' WHERE ma_hoc_sinh = 'demo_giaovien'", (demo_pass_hash,))
     cur.execute("UPDATE users SET so_du_gio = 3.0, mat_khau = ?, trang_thai = 'hoat_dong', vai_tro = 'hoc_sinh' WHERE ma_hoc_sinh = 'demo_hocsinh'", (demo_pass_hash,))
     cur.execute("UPDATE users SET so_du_gio = 2.0, mat_khau = ?, trang_thai = 'hoat_dong', vai_tro = 'hoc_sinh' WHERE ma_hoc_sinh = 'demo_hocsinh_2'", (demo_pass_hash,))
-    cur.execute("UPDATE users SET so_du_gio = 100.0, mat_khau = ?, trang_thai = 'hoat_dong', vai_tro = 'school_admin', truong_id = ? WHERE ma_hoc_sinh = 'admin'", (admin_pass_hash, DEMO_SCHOOL_ID))
+    cur.execute("UPDATE users SET so_du_gio = 100.0, mat_khau = ?, trang_thai = 'hoat_dong', vai_tro = 'super_admin', truong_id = NULL WHERE ma_hoc_sinh = 'admin'", (admin_pass_hash,))
 
     db.commit()
 
@@ -1953,9 +1953,9 @@ def seed_demo_data(conn):
         else:
             cur.execute("UPDATE truong SET an_truong = 1 WHERE id = ?", (DEMO_SCHOOL_ID,))
 
-    # 1. Thêm người dùng mẫu (admin hạ quyền thành school_admin của Trường Demo)
+    # 1. Thêm người dùng mẫu (tài khoản 'admin' là Tổng Quản trị viên toàn hệ thống, không thuộc trường nào)
     users = [
-        ('admin', 'Quản trị viên Hệ thống (Demo)', 'Ban Giám Hiệu Demo', 'school_admin', 100.0, 'Toàn thời gian', default_pass_hash, DEMO_SCHOOL_ID, 'hoat_dong'),
+        ('admin', 'Quản trị viên Hệ thống (Demo)', 'Ban Quản trị Hệ thống', 'super_admin', 100.0, 'Toàn thời gian', default_pass_hash, None, 'hoat_dong'),
         ('GV001', 'Thầy Nguyễn Văn Đức', 'Tổ Toán - Tin', 'giao_vien', 10.0, 'Các buổi chiều trong tuần', default_pass_hash, 1, 'hoat_dong'),
         ('HS12001', 'Nguyễn Hoàng An', '12A1', 'hoc_sinh', 3.5, 'Chiều thứ 3, sáng thứ 7', default_pass_hash, 1, 'hoat_dong'),
         ('HS11002', 'Trần Thanh Bình', '11B2', 'hoc_sinh', 2.5, 'Sáng Chủ nhật, tối thứ 5', default_pass_hash, 1, 'hoat_dong'),
@@ -7134,7 +7134,7 @@ def session_detail(session_id):
         
     is_teacher = (session_data["nguoi_day_id"] == user_id)
     is_learner = (session_data["nguoi_hoc_id"] == user_id)
-    is_admin = (user_role in ("admin", "giao_vien"))
+    is_admin = (user_role in ("admin", "giao_vien", "super_admin", "school_admin"))
     
     # Bảo mật: Không cho học sinh ngoài cuộc xem chi tiết phiên của người khác
     if not (is_teacher or is_learner or is_admin):
