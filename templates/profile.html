@@ -21,13 +21,14 @@
           <div class="flex-grow-1">
             <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
               <h3 class="fw-bold mb-0 text-dark">{{ user.ho_ten }}</h3>
-              {% if user.vai_tro == 'super_admin' %}
+              {% set current_role = user.vai_tro or session.get('vai_tro') or vai_tro %}
+              {% if current_role == 'super_admin' %}
                 <span class="badge bg-danger"><i class="bi bi-shield-fill-check me-1"></i> {{ _('Tổng Quản trị viên') }}</span>
-              {% elif user.vai_tro == 'admin' %}
+              {% elif current_role == 'admin' %}
                 <span class="badge bg-danger"><i class="bi bi-shield-fill-check me-1"></i> {{ _('Quản trị viên') }}</span>
-              {% elif user.vai_tro == 'school_admin' %}
+              {% elif current_role == 'school_admin' %}
                 <span class="badge bg-warning text-dark"><i class="bi bi-shield-fill me-1"></i> {{ _('Quản trị trường') }}</span>
-              {% elif user.vai_tro == 'giao_vien' %}
+              {% elif current_role == 'giao_vien' %}
                 <span class="badge bg-primary"><i class="bi bi-mortarboard-fill me-1"></i> {{ _('Giáo viên') }}</span>
               {% else %}
                 <span class="badge bg-success"><i class="bi bi-person-fill me-1"></i> {{ _('Học sinh') }}</span>
@@ -40,14 +41,17 @@
             
             <p class="text-muted small mb-2">
               <i class="bi bi-person-vcard me-1"></i>{{ _('Mã định danh:') }}<code>{{ user.ma_hoc_sinh }}</code>
-              {% if user.vai_tro == 'super_admin' %}
+              {% if current_role == 'super_admin' %}
                 • <i class="bi bi-building me-1"></i>{{ _('Lớp/Đơn vị:') }}<strong>{{ _('Ban Quản trị Hệ thống') }}</strong>
-              {% elif user.lop %}
+              {% elif user.lop and user.lop != 'Ban Điều Hành Quốc Gia' %}
                 • <i class="bi bi-building me-1"></i>{{ _('Lớp/Đơn vị:') }}<strong>{{ user.lop }}</strong>
+              {% else %}
+                • <i class="bi bi-building me-1"></i>{{ _('Lớp/Đơn vị:') }}<strong>—</strong>
               {% endif %}
               • <i class="bi bi-geo-alt me-1"></i>{{ config.ten_truong }}
             </p>
 
+            {% if current_role == 'hoc_sinh' %}
             <!-- VIỆC 1: Hiển thị Môn cần hỗ trợ -->
             <div class="p-3 bg-light rounded-3 my-2 border">
               <div class="d-flex justify-content-between align-items-center mb-1">
@@ -79,13 +83,14 @@
                 <strong>{{ user.gio_ranh if user.gio_ranh else _('Chưa cập nhật lịch rảnh') }}</strong>
               </div>
             </div>
+            {% endif %}
 
             <div class="mt-3 d-flex flex-wrap align-items-center gap-2">
+              {% if current_role == 'hoc_sinh' %}
               <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#modalStudyNeeds" id="btnEditStudyNeeds">
                 <i class="bi bi-calendar2-week me-1"></i>{{ _('Cập nhật Môn & Giờ rảnh') }}
               </button>
 
-              {% if user.vai_tro == 'hoc_sinh' %}
               <button type="button" class="btn btn-warning btn-sm rounded-pill px-3 fw-bold text-dark shadow-sm" onclick="openAiBuddySuggestions()" id="btnAiSuggestBuddiesProfile">
                 <i class="bi bi-stars text-danger me-1"></i>{{ _('AI gợi ý bạn học') }}
               </button>
@@ -212,7 +217,7 @@
   </div>
 
   <!-- KHỐI GỢI Ý CHO BẠN HÔM NAY (ĐIỂM CHẠM GHÉP CẶP TỰ ĐỘNG) -->
-  {% if daily_matches and user.vai_tro == 'hoc_sinh' %}
+  {% if daily_matches and (user.vai_tro == 'hoc_sinh' or session.get('vai_tro') == 'hoc_sinh' or vai_tro == 'hoc_sinh') %}
   <div class="card border-0 shadow-sm rounded-4 bg-white mb-4 overflow-hidden border-start border-4 border-primary">
     <div class="card-header bg-white border-bottom py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
       <div>
@@ -397,7 +402,8 @@
         </div>
       </div>
 
-      <!-- Khối AI Tóm tắt phản hồi học sinh (Điểm chạm 4) -->
+      <!-- Khối AI Tóm tắt phản hồi học sinh (Điểm chạm 4 - chỉ dành cho học sinh) -->
+      {% if current_role == 'hoc_sinh' %}
       <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-chat-heart-fill text-danger me-2"></i>{{ _('AI Tóm Tắt Phản Hồi') }}</h6>
@@ -443,6 +449,7 @@
           </div>
         {% endif %}
       </div>
+      {% endif %}
     </div>
       </div>
     </div>

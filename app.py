@@ -2376,9 +2376,13 @@ def check_invite_code():
     return jsonify({
         "valid": True,
         "school_id": row["truong_id"],
+        "truong_id": row["truong_id"],
         "school_name": row["ten_truong"],
+        "ten_truong": row["ten_truong"],
         "loai": row["loai"],
-        "remaining": remaining
+        "remaining": remaining,
+        "con_lai": remaining,
+        "luot_con_lai": remaining
     })
 
 
@@ -3085,136 +3089,150 @@ def profile():
     )
     my_skills = cur.fetchall()
 
-    # Điểm chạm 4: AI Tóm tắt phản hồi học sinh dành cho bạn gia sư (Gemini Pro)
-    cur.execute(
-        """SELECT so_sao, nhan_xet FROM ratings 
-           WHERE nguoi_duoc_danh_gia_id = ? 
-           ORDER BY id DESC LIMIT 20""",
-        (user["id"],)
-    )
-    user_ratings = cur.fetchall()
-    ai_feedback, _unused = ai_summarize_feedback(db, user["id"], user_ratings)
+    # Điểm chạm 4: AI Tóm tắt phản hồi học sinh dành cho bạn gia sư (Gemini Pro - chỉ dành cho học sinh)
+    ai_feedback = None
+    if user["vai_tro"] == "hoc_sinh":
+        cur.execute(
+            """SELECT so_sao, nhan_xet FROM ratings 
+               WHERE nguoi_duoc_danh_gia_id = ? 
+               ORDER BY id DESC LIMIT 20""",
+            (user["id"],)
+        )
+        user_ratings = cur.fetchall()
+        ai_feedback, _unused = ai_summarize_feedback(db, user["id"], user_ratings)
 
-    # Điểm chạm ghép cặp tự động: "Gợi ý cho bạn hôm nay" (Cache theo ngày)
-    today_str = datetime.now().strftime("%Y-%m-%d")
-    cache_key = (user["id"], today_str)
+    # Điểm chạm ghép cặp tự động: "Gợi ý cho bạn hôm nay" (Cache theo ngày - chỉ dành cho học sinh)
+    daily_matches = []
+    is_live_rec = False
+    target_subject = ""
 
-    if cache_key in DAILY_RECOMMENDATION_CACHE:
-        daily_matches, is_live_rec, target_subject = DAILY_RECOMMENDATION_CACHE[cache_key]
-    else:
-        # 1. Tự suy ra môn HS đang cần học: ưu tiên từ mục 'mon_can_ho_tro', sau đó từ lịch sử học
-        if study_needs:
-            target_subject = study_needs[0]["mon"]
+    if user["vai_tro"] == "hoc_sinh":
+        today_str = datetime.now().strftime("%Y-%m-%d")
+        cache_key = (user["id"], today_str)
+
+        if cache_key in DAILY_RECOMMENDATION_CACHE:
+            daily_matches, is_live_rec, target_subject = DAILY_RECOMMENDATION_CACHE[cache_key]
         else:
-            cur.execute("""
-                SELECT sk.linh_vuc, COUNT(*) AS so_luong
-                FROM sessions s
-                JOIN skills sk ON s.skill_id = sk.id
-                WHERE s.nguoi_hoc_id = ?
-                GROUP BY sk.linh_vuc
-                ORDER BY so_luong DESC, MAX(s.id) DESC
-                LIMIT 1
-            """, (user["id"],))
-            learned_sub = cur.fetchone()
-
-            if learned_sub and learned_sub["linh_vuc"]:
-                target_subject = learned_sub["linh_vuc"]
+            # 1. Tự suy ra môn HS đang cần học: ưu tiên từ mục 'mon_can_ho_tro', sau đó từ lịch sử học
+            if study_needs:
+                target_subject = study_needs[0]["mon"]
             else:
                 cur.execute("""
-                    SELECT linh_vuc, COUNT(*) AS so_luong
-                    FROM skills
-                    WHERE trang_thai_duyet = 'da_duyet'
-                    GROUP BY linh_vuc
-                    ORDER BY so_luong DESC, MAX(id) DESC
+                    SELECT sk.linh_vuc, COUNT(*) AS so_luong
+                    FROM sessions s
+                    JOIN skills sk ON s.skill_id = sk.id
+                    WHERE s.nguoi_hoc_id = ?
+                    GROUP BY sk.linh_vuc
+                    ORDER BY so_luong DESC, MAX(s.id) DESC
                     LIMIT 1
-                """)
-                pop_sub = cur.fetchone()
-                target_subject = pop_sub["linh_vuc"] if pop_sub else "Toán học"
+                """, (user["id"],))
+                learned_sub = cur.fetchone()
 
-        # 2. Lọc ứng viên có kỹ năng 'da_duyet' thuộc lĩnh vực đó + người khác chia sẻ
-        search_kw = "Toán" if "toán" in target_subject.lower() else target_subject
-        cur.execute("""
-            SELECT s.id, s.truong_id, s.user_id, s.linh_vuc, s.tieu_de, s.mo_ta,
-                   s.trang_thai_duyet, s.ly_do_ai_kiem_duyet,
-                   s.hien_thi_cong_dong, s.trang_thai_cong_dong,
-                   s.nguoi_duyet_cong_dong_id, s.ngay_duyet_cong_dong,
-                   u.ho_ten, u.lop, u.gio_ranh, u.ma_hoc_sinh, u.truong_id AS u_truong_id,
-                   t.ten_truong,
-                   ROUND(COALESCE(AVG(r.so_sao), 5.0)::numeric, 1) AS sao_tb
-            FROM skills s
-            JOIN users u ON s.user_id = u.id
-            LEFT JOIN truong t ON u.truong_id = t.id
-            LEFT JOIN sessions ses ON s.id = ses.skill_id AND ses.trang_thai = 'hoan_thanh'
-            LEFT JOIN ratings r ON ses.id = r.session_id AND r.nguoi_duoc_danh_gia_id = u.id
-            WHERE s.trang_thai_duyet = 'da_duyet'
-              AND s.user_id != ?
-              AND (s.linh_vuc LIKE ? OR s.tieu_de LIKE ?)
-              AND (u.truong_id != 99 OR u.truong_id IS NULL)
-              AND (s.truong_id != 99 OR s.truong_id IS NULL)
-              AND u.ma_hoc_sinh NOT LIKE 'demo_%'
-              AND u.ma_hoc_sinh NOT IN ('demo_quantruong', 'demo_giaovien', 'demo_hocsinh', 'demo_hocsinh_2', 'admin')
-            GROUP BY s.id, s.truong_id, s.user_id, s.linh_vuc, s.tieu_de, s.mo_ta,
-                     s.trang_thai_duyet, s.ly_do_ai_kiem_duyet,
-                     s.hien_thi_cong_dong, s.trang_thai_cong_dong,
-                     s.nguoi_duyet_cong_dong_id, s.ngay_duyet_cong_dong,
-                     u.id, u.ho_ten, u.lop, u.gio_ranh, u.ma_hoc_sinh, u.truong_id, t.ten_truong
-            ORDER BY s.id DESC
-        """, (user["id"], f"%{search_kw}%", f"%{search_kw}%"))
-        subject_candidates = [dict(r) for r in cur.fetchall()]
-        # Chuẩn hóa ten_truong fallback ở Python-side (tránh COALESCE trong GROUP BY)
-        for c in subject_candidates:
-            if not c.get("ten_truong"):
-                c["ten_truong"] = "Chưa phân trường"
+                if learned_sub and learned_sub["linh_vuc"]:
+                    target_subject = learned_sub["linh_vuc"]
+                else:
+                    cur.execute("""
+                        SELECT linh_vuc, COUNT(*) AS so_luong
+                        FROM skills
+                        WHERE trang_thai_duyet = 'da_duyet'
+                          AND (truong_id != ? OR truong_id IS NULL)
+                        GROUP BY linh_vuc
+                        ORDER BY so_luong DESC, MAX(id) DESC
+                        LIMIT 1
+                    """, (DEMO_SCHOOL_ID,))
+                    pop_sub = cur.fetchone()
+                    target_subject = pop_sub["linh_vuc"] if pop_sub else "Toán học"
 
-        # 3. So khớp giờ rảnh đơn giản (chuỗi) với giờ rảnh của HS đang xem
-        user_ranh = user["gio_ranh"] or ""
-
-        def match_schedule(u_ranh, c_ranh):
-            if not u_ranh or not c_ranh:
-                return True
-            u_l = u_ranh.lower()
-            c_l = c_ranh.lower()
-            keywords = ["thứ 2", "thứ 3", "thứ 4", "thứ 5", "thứ 6", "thứ 7", "chủ nhật", "sáng", "chiều", "tối"]
-            matched_kws = [k for k in keywords if k in u_l]
-            if matched_kws:
-                return any(k in c_l for k in matched_kws)
-            parts = [p.strip() for p in re.split(r'[,;\s]+', u_l) if len(p.strip()) >= 3]
-            return any(p in c_l for p in parts)
-
-        overlapping_candidates = [c for c in subject_candidates if match_schedule(user_ranh, c["gio_ranh"])]
-
-        # Nếu danh sách trùng giờ rảnh < 3 người, bổ sung thêm các ứng viên cùng môn còn lại để đủ 3
-        chosen_candidates = list(overlapping_candidates)
-        if len(chosen_candidates) < 3:
-            existing_ids = {c["id"] for c in chosen_candidates}
+            # 2. Lọc ứng viên có kỹ năng 'da_duyet' thuộc lĩnh vực đó + người khác chia sẻ
+            search_kw = "Toán" if "toán" in target_subject.lower() else target_subject
+            cur.execute("""
+                SELECT s.id, s.truong_id, s.user_id, s.linh_vuc, s.tieu_de, s.mo_ta,
+                       s.trang_thai_duyet, s.ly_do_ai_kiem_duyet,
+                       s.hien_thi_cong_dong, s.trang_thai_cong_dong,
+                       s.nguoi_duyet_cong_dong_id, s.ngay_duyet_cong_dong,
+                       u.ho_ten, u.lop, u.gio_ranh, u.ma_hoc_sinh, u.truong_id AS u_truong_id,
+                       t.ten_truong,
+                       ROUND(COALESCE(AVG(r.so_sao), 5.0)::numeric, 1) AS sao_tb
+                FROM skills s
+                JOIN users u ON s.user_id = u.id
+                LEFT JOIN truong t ON u.truong_id = t.id
+                LEFT JOIN sessions ses ON s.id = ses.skill_id AND ses.trang_thai = 'hoan_thanh'
+                LEFT JOIN ratings r ON ses.id = r.session_id AND r.nguoi_duoc_danh_gia_id = u.id
+                WHERE s.trang_thai_duyet = 'da_duyet'
+                  AND s.user_id != ?
+                  AND (s.linh_vuc LIKE ? OR s.tieu_de LIKE ?)
+                  AND (u.truong_id != 99 OR u.truong_id IS NULL)
+                  AND (s.truong_id != 99 OR s.truong_id IS NULL)
+                  AND u.ma_hoc_sinh NOT LIKE 'demo_%'
+                  AND u.ma_hoc_sinh NOT IN ('demo_quantruong', 'demo_giaovien', 'demo_hocsinh', 'demo_hocsinh_2', 'admin')
+                GROUP BY s.id, s.truong_id, s.user_id, s.linh_vuc, s.tieu_de, s.mo_ta,
+                         s.trang_thai_duyet, s.ly_do_ai_kiem_duyet,
+                         s.hien_thi_cong_dong, s.trang_thai_cong_dong,
+                         s.nguoi_duyet_cong_dong_id, s.ngay_duyet_cong_dong,
+                         u.id, u.ho_ten, u.lop, u.gio_ranh, u.ma_hoc_sinh, u.truong_id, t.ten_truong
+                ORDER BY s.id DESC
+            """, (user["id"], f"%{search_kw}%", f"%{search_kw}%"))
+            all_cands = [dict(r) for r in cur.fetchall()]
+            subject_candidates = [
+                c for c in all_cands
+                if c.get("truong_id") != DEMO_SCHOOL_ID
+                and c.get("u_truong_id") != DEMO_SCHOOL_ID
+                and not is_demo_user(c.get("ma_hoc_sinh"))
+            ]
+            # Chuẩn hóa ten_truong fallback ở Python-side (tránh COALESCE trong GROUP BY)
             for c in subject_candidates:
-                if c["id"] not in existing_ids:
-                    chosen_candidates.append(c)
-                if len(chosen_candidates) >= 3:
-                    break
+                if not c.get("ten_truong"):
+                    c["ten_truong"] = "Chưa phân trường"
 
-        # 4. Gọi ai_matchmake có sẵn
-        if chosen_candidates:
-            daily_matches, is_live_rec = ai_matchmake(
-                db, user["id"], target_subject, "Cần củng cố", user_ranh, chosen_candidates
-            )
-        else:
-            daily_matches, is_live_rec = [], is_ai_live()
+            # 3. So khớp giờ rảnh đơn giản (chuỗi) với giờ rảnh của HS đang xem
+            user_ranh = user["gio_ranh"] or ""
 
-        # Đảm bảo daily_matches là list of dict (không phải sqlite3.Row/DictRow - immutable)
-        daily_matches = [dict(m) if not isinstance(m, dict) else m for m in daily_matches]
+            def match_schedule(u_ranh, c_ranh):
+                if not u_ranh or not c_ranh:
+                    return True
+                u_l = u_ranh.lower()
+                c_l = c_ranh.lower()
+                keywords = ["thứ 2", "thứ 3", "thứ 4", "thứ 5", "thứ 6", "thứ 7", "chủ nhật", "sáng", "chiều", "tối"]
+                matched_kws = [k for k in keywords if k in u_l]
+                if matched_kws:
+                    return any(k in c_l for k in matched_kws)
+                parts = [p.strip() for p in re.split(r'[,;\s]+', u_l) if len(p.strip()) >= 3]
+                return any(p in c_l for p in parts)
 
-        # Kiểm tra xem người học đã có yêu cầu đặt lịch cho các kỹ năng này chưa
-        if daily_matches:
-            for match in daily_matches:
-                cur.execute("""
-                    SELECT id FROM sessions 
-                    WHERE skill_id = ? AND nguoi_hoc_id = ? AND trang_thai IN ('cho_duyet', 'da_dat')
-                    LIMIT 1
-                """, (match["id"], user["id"]))
-                match["has_booking"] = cur.fetchone() is not None
+            overlapping_candidates = [c for c in subject_candidates if match_schedule(user_ranh, c["gio_ranh"])]
 
-        DAILY_RECOMMENDATION_CACHE[cache_key] = (daily_matches, is_live_rec, target_subject)
+            # Nếu danh sách trùng giờ rảnh < 3 người, bổ sung thêm các ứng viên cùng môn còn lại để đủ 3
+            chosen_candidates = list(overlapping_candidates)
+            if len(chosen_candidates) < 3:
+                existing_ids = {c["id"] for c in chosen_candidates}
+                for c in subject_candidates:
+                    if c["id"] not in existing_ids:
+                        chosen_candidates.append(c)
+                    if len(chosen_candidates) >= 3:
+                        break
+
+            # 4. Gọi ai_matchmake có sẵn
+            if chosen_candidates:
+                daily_matches, is_live_rec = ai_matchmake(
+                    db, user["id"], target_subject, "Cần củng cố", user_ranh, chosen_candidates
+                )
+            else:
+                daily_matches, is_live_rec = [], is_ai_live()
+
+            # Đảm bảo daily_matches là list of dict (không phải sqlite3.Row/DictRow - immutable)
+            daily_matches = [dict(m) if not isinstance(m, dict) else m for m in daily_matches]
+
+            # Kiểm tra xem người học đã có yêu cầu đặt lịch cho các kỹ năng này chưa
+            if daily_matches:
+                for match in daily_matches:
+                    cur.execute("""
+                        SELECT id FROM sessions 
+                        WHERE skill_id = ? AND nguoi_hoc_id = ? AND trang_thai IN ('cho_duyet', 'da_dat')
+                        LIMIT 1
+                    """, (match["id"], user["id"]))
+                    match["has_booking"] = cur.fetchone() is not None
+
+            DAILY_RECOMMENDATION_CACHE[cache_key] = (daily_matches, is_live_rec, target_subject)
 
     # Milestone M4-lite: Thống kê cá nhân học sinh: Giờ đã dạy, Giờ đã học, Sao trung bình
     cur.execute(
@@ -3250,6 +3268,7 @@ def profile():
     return render_template(
         "profile.html",
         user=user,
+        vai_tro=user["vai_tro"],
         study_needs=study_needs,
         ledger_entries=ledger_entries,
         my_skills=my_skills,
@@ -6572,6 +6591,12 @@ def get_ai_buddy_suggestions(db, user_id, limit=5):
     scored_candidates = []
     for c in all_candidates:
         c_dict = dict(c)
+        if (
+            c_dict.get("truong_id") == DEMO_SCHOOL_ID
+            or c_dict.get("u_truong_id") == DEMO_SCHOOL_ID
+            or is_demo_user(c_dict.get("ma_hoc_sinh"))
+        ):
+            continue
         score = 0
         c_text = f"{c_dict['linh_vuc']} {c_dict['tieu_de']} {c_dict['mo_ta'] or ''}".lower()
 
@@ -6693,7 +6718,10 @@ def ai_matchmake_view():
                 GROUP BY s.id, u.id, u.ho_ten, u.lop, u.gio_ranh
                 ORDER BY s.id DESC
             """, (user_id, current_user_school_id))
-            candidates = cur.fetchall()
+            candidates = [
+                c for c in cur.fetchall()
+                if c["truong_id"] != DEMO_SCHOOL_ID and not is_demo_user(c.get("ma_hoc_sinh", ""))
+            ]
             
             matches, is_live = ai_matchmake(db, user_id, mon_hoc, trinh_do, gio_ranh, candidates)
             
