@@ -290,6 +290,23 @@ def format_date_filter(value):
         return str(value)
 
 
+@app.template_filter("escapejs")
+def escapejs_filter(value):
+    """
+    Bộ lọc Jinja2 escape chuỗi để dùng an toàn trong JavaScript string literals.
+    Escape: backslash, single/double quotes, newline, carriage return, tab.
+    """
+    if value is None:
+        return ""
+    return (str(value)
+            .replace("\\", "\\\\")
+            .replace("'", "\\'")
+            .replace('"', '\\"')
+            .replace("\n", "\\n")
+            .replace("\r", "\\r")
+            .replace("\t", "\\t"))
+
+
 @app.context_processor
 def inject_template_globals():
     """
@@ -3114,8 +3131,12 @@ def profile():
         # 2. Lọc ứng viên có kỹ năng 'da_duyet' thuộc lĩnh vực đó + người khác chia sẻ
         search_kw = "Toán" if "toán" in target_subject.lower() else target_subject
         cur.execute("""
-            SELECT s.*, u.ho_ten, u.lop, u.gio_ranh, u.ma_hoc_sinh, u.truong_id,
-                   COALESCE(t.ten_truong, 'Chưa phân trường') AS ten_truong,
+            SELECT s.id, s.truong_id, s.user_id, s.linh_vuc, s.tieu_de, s.mo_ta,
+                   s.trang_thai_duyet, s.ly_do_ai_kiem_duyet,
+                   s.hien_thi_cong_dong, s.trang_thai_cong_dong,
+                   s.nguoi_duyet_cong_dong_id, s.ngay_duyet_cong_dong,
+                   u.ho_ten, u.lop, u.gio_ranh, u.ma_hoc_sinh, u.truong_id AS u_truong_id,
+                   t.ten_truong,
                    ROUND(COALESCE(AVG(r.so_sao), 5.0)::numeric, 1) AS sao_tb
             FROM skills s
             JOIN users u ON s.user_id = u.id
@@ -3126,12 +3147,21 @@ def profile():
               AND s.user_id != ?
               AND (s.linh_vuc LIKE ? OR s.tieu_de LIKE ?)
               AND (u.truong_id != 99 OR u.truong_id IS NULL)
+              AND (s.truong_id != 99 OR s.truong_id IS NULL)
               AND u.ma_hoc_sinh NOT LIKE 'demo_%'
               AND u.ma_hoc_sinh NOT IN ('demo_quantruong', 'demo_giaovien', 'demo_hocsinh', 'demo_hocsinh_2', 'admin')
-            GROUP BY s.id, u.id, u.ho_ten, u.lop, u.gio_ranh, u.ma_hoc_sinh, u.truong_id, t.ten_truong
+            GROUP BY s.id, s.truong_id, s.user_id, s.linh_vuc, s.tieu_de, s.mo_ta,
+                     s.trang_thai_duyet, s.ly_do_ai_kiem_duyet,
+                     s.hien_thi_cong_dong, s.trang_thai_cong_dong,
+                     s.nguoi_duyet_cong_dong_id, s.ngay_duyet_cong_dong,
+                     u.id, u.ho_ten, u.lop, u.gio_ranh, u.ma_hoc_sinh, u.truong_id, t.ten_truong
             ORDER BY s.id DESC
         """, (user["id"], f"%{search_kw}%", f"%{search_kw}%"))
-        subject_candidates = cur.fetchall()
+        subject_candidates = [dict(r) for r in cur.fetchall()]
+        # Chuẩn hóa ten_truong fallback ở Python-side (tránh COALESCE trong GROUP BY)
+        for c in subject_candidates:
+            if not c.get("ten_truong"):
+                c["ten_truong"] = "Chưa phân trường"
 
         # 3. So khớp giờ rảnh đơn giản (chuỗi) với giờ rảnh của HS đang xem
         user_ranh = user["gio_ranh"] or ""
@@ -3167,6 +3197,9 @@ def profile():
             )
         else:
             daily_matches, is_live_rec = [], is_ai_live()
+
+        # Đảm bảo daily_matches là list of dict (không phải sqlite3.Row/DictRow - immutable)
+        daily_matches = [dict(m) if not isinstance(m, dict) else m for m in daily_matches]
 
         # Kiểm tra xem người học đã có yêu cầu đặt lịch cho các kỹ năng này chưa
         if daily_matches:
@@ -6504,7 +6537,12 @@ def get_ai_buddy_suggestions(db, user_id, limit=5):
     current_school_id = user["truong_id"]
 
     cur.execute("""
-        SELECT s.*, u.ho_ten, u.lop, u.gio_ranh, u.ma_hoc_sinh, u.truong_id, t.ten_truong,
+        SELECT s.id, s.truong_id, s.user_id, s.linh_vuc, s.tieu_de, s.mo_ta,
+               s.trang_thai_duyet, s.ly_do_ai_kiem_duyet,
+               s.hien_thi_cong_dong, s.trang_thai_cong_dong,
+               s.nguoi_duyet_cong_dong_id, s.ngay_duyet_cong_dong,
+               u.ho_ten, u.lop, u.gio_ranh, u.ma_hoc_sinh, u.truong_id AS u_truong_id,
+               t.ten_truong,
                ROUND(COALESCE(AVG(r.so_sao), 5.0)::numeric, 1) AS sao_tb
         FROM skills s
         JOIN users u ON s.user_id = u.id
@@ -6513,9 +6551,14 @@ def get_ai_buddy_suggestions(db, user_id, limit=5):
         LEFT JOIN ratings r ON ses.id = r.session_id AND r.nguoi_duoc_danh_gia_id = u.id
         WHERE s.trang_thai_duyet = 'da_duyet' AND s.user_id != ?
           AND (u.truong_id != 99 OR u.truong_id IS NULL)
+          AND (s.truong_id != 99 OR s.truong_id IS NULL)
           AND u.ma_hoc_sinh NOT LIKE 'demo_%'
           AND u.ma_hoc_sinh NOT IN ('demo_quantruong', 'demo_giaovien', 'demo_hocsinh', 'demo_hocsinh_2', 'admin')
-        GROUP BY s.id, u.id, u.ho_ten, u.lop, u.gio_ranh, u.ma_hoc_sinh, u.truong_id, t.ten_truong
+        GROUP BY s.id, s.truong_id, s.user_id, s.linh_vuc, s.tieu_de, s.mo_ta,
+                 s.trang_thai_duyet, s.ly_do_ai_kiem_duyet,
+                 s.hien_thi_cong_dong, s.trang_thai_cong_dong,
+                 s.nguoi_duyet_cong_dong_id, s.ngay_duyet_cong_dong,
+                 u.id, u.ho_ten, u.lop, u.gio_ranh, u.ma_hoc_sinh, u.truong_id, t.ten_truong
         ORDER BY s.id DESC
     """, (user_id,))
     all_candidates = cur.fetchall()

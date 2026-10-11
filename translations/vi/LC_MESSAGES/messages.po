@@ -7784,6 +7784,9 @@ msgstr "Tổng Quản trị viên"
 
 msgid "Ban Quản trị Hệ thống"
 msgstr "Ban Quản trị Hệ thống"
+
+msgid "Khu vực này chỉ dành cho Quản trị viên."
+msgstr "Khu vực này chỉ dành cho Quản trị viên."
 #~ msgid "Chào mừng bạn đã đến với công cụ giáo dục TIME BANK EDU."
 #~ msgstr "Chào mừng bạn đã đến với công cụ giáo dục TIME BANK EDU."
 

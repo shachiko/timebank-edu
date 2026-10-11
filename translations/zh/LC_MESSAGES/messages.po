@@ -7026,6 +7026,9 @@ msgstr "超级管理员"
 
 msgid "Ban Quản trị Hệ thống"
 msgstr "系统管理部门"
+
+msgid "Khu vực này chỉ dành cho Quản trị viên."
+msgstr "该区域仅限管理员访问。"
 #~ msgid "Chào mừng bạn đã đến với công cụ giáo dục TIME BANK EDU."
 #~ msgstr "欢迎使用 TIME BANK EDU 校园教育工具。"
 

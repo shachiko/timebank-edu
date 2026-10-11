@@ -7611,6 +7611,9 @@ msgstr "Super Administrator"
 
 msgid "Ban Quản trị Hệ thống"
 msgstr "Systemverwaltung"
+
+msgid "Khu vực này chỉ dành cho Quản trị viên."
+msgstr "Dieser Bereich ist nur für Administratoren zugänglich."
 #~ msgid "Chào mừng bạn đã đến với công cụ giáo dục TIME BANK EDU."
 #~ msgstr "Willkommen bei der Bildungsplattform TIME BANK EDU."
 
