@@ -2695,11 +2695,13 @@ def _growth_one_day(db, ngay, pwd_hash):
         so_gio_tong += so_gio
         so_phien_tao += 1
 
-    cur.execute(
-        """INSERT INTO daily_growth_log (ngay, so_hoc_sinh, so_phien, so_gio, so_ky_nang)
-           VALUES (?, ?, ?, ?, ?)""",
-        (ngay, so_hoc_sinh, so_phien_tao, so_gio_tong, so_ky_nang)
-    )
+    sql_log = """INSERT INTO daily_growth_log (ngay, so_hoc_sinh, so_phien, so_gio, so_ky_nang)
+                 VALUES (?, ?, ?, ?, ?)"""
+    if isinstance(db, PostgresConnectionWrapper):
+        # PostgreSQL: bảng này lấy "ngay" làm khóa chính và KHÔNG có cột id,
+        # nên phải nêu rõ RETURNING để wrapper không tự thêm "RETURNING id".
+        sql_log += " RETURNING ngay"
+    cur.execute(sql_log, (ngay, so_hoc_sinh, so_phien_tao, so_gio_tong, so_ky_nang))
 
 
 def apply_daily_demo_growth(db):
