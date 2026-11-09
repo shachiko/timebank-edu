@@ -2542,8 +2542,13 @@ def get_realtime_stats(db, truong_id=None):
 # ==============================================================================
 DEMO_GROWTH_ENABLED = os.getenv("DEMO_GROWTH", "1").strip().lower() not in ("0", "false", "off", "no")
 
+# Dấu phiên bản build: dùng cho endpoint /healthz để xác nhận bản mới đã lên production
+BUILD_TAG = "2026-11-09-growth-v1"
+
 # Cache theo tiến trình: mỗi ngày chỉ kiểm tra cơ sở dữ liệu một lần
 _growth_checked_day = None
+_growth_last_day = None
+_growth_last_error = None
 
 _GROWTH_HO = ["Nguyễn", "Trần", "Lê", "Phạm", "Hoàng", "Vũ", "Đặng", "Bùi", "Đỗ", "Ngô", "Dương", "Lý"]
 _GROWTH_DEM = ["Văn", "Thị", "Minh", "Gia", "Khánh", "Thanh", "Ngọc", "Thu", "Hải", "Quang", "Tuấn", "Phương"]
@@ -2584,7 +2589,7 @@ def _growth_ensure_table(db):
             so_phien INTEGER DEFAULT 0,
             so_gio REAL DEFAULT 0,
             so_ky_nang INTEGER DEFAULT 0,
-            thoi_gian_tao TEXT DEFAULT CURRENT_TIMESTAMP
+            thoi_gian_tao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
     db.commit()
@@ -2703,7 +2708,7 @@ def apply_daily_demo_growth(db):
     Render gói free sẽ ngủ khi không có truy cập nên không thể dùng cron/thread;
     hàm này chạy ngay trong request đầu tiên của ngày, đảm bảo "sau 00h" luôn có số mới.
     """
-    global _growth_checked_day
+    global _growth_checked_day, _growth_last_day, _growth_last_error
     if not DEMO_GROWTH_ENABLED:
         return
     today = _growth_today()
@@ -2735,12 +2740,56 @@ def apply_daily_demo_growth(db):
             db.commit()
             app.logger.info(f"Đã bù tăng trưởng chỉ số demo cho {len(danh_sach_ngay)} ngày.")
         _growth_checked_day = today
+        _growth_last_day = today
+        _growth_last_error = None
     except Exception as e:
         try:
             db.rollback()
         except Exception:
             pass
+        _growth_last_error = str(e)
         app.logger.warning(f"Bỏ qua tăng trưởng chỉ số demo hôm nay ({e})")
+
+
+@app.route("/healthz")
+def healthz():
+    """
+    Endpoint chẩn đoán nhanh cho production (không lộ dữ liệu nhạy cảm):
+    cho biết bản build đang chạy, kết nối cơ sở dữ liệu, và tình trạng
+    tăng trưởng chỉ số theo ngày (có lỗi hay không, ngày cuối đã ghi).
+    """
+    info = {
+        "build": BUILD_TAG,
+        "postgres_configured": is_postgres_configured(),
+        "demo_growth_enabled": DEMO_GROWTH_ENABLED,
+        "today_vn": _growth_today(),
+        "growth_checked_day": _growth_checked_day,
+        "growth_last_day": _growth_last_day,
+        "growth_last_error": _growth_last_error,
+    }
+    try:
+        db = get_db()
+        cur = db.cursor()
+        cur.execute("SELECT 1")
+        cur.fetchone()
+        info["db"] = "ok"
+
+        # Chạy thử tăng trưởng ngay tại đây để lộ lỗi (nếu có) thay vì nuốt im lặng
+        apply_daily_demo_growth(db)
+        info["growth_checked_day"] = _growth_checked_day
+        info["growth_last_day"] = _growth_last_day
+        info["growth_last_error"] = _growth_last_error
+
+        _growth_ensure_table(db)
+        cur.execute("SELECT COUNT(*), MAX(ngay), COALESCE(SUM(so_hoc_sinh), 0) FROM daily_growth_log")
+        row = cur.fetchone()
+        info["growth_log_count"] = row[0]
+        info["growth_log_max_ngay"] = row[1]
+        info["growth_log_tong_hoc_sinh"] = row[2]
+        info["stats"] = get_realtime_stats(db)
+    except Exception as e:
+        info["db"] = f"error: {e}"
+    return jsonify(info)
 
 
 def get_top_tutors(db, limit=3, truong_id=None):
