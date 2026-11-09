@@ -12,6 +12,7 @@ Triết lý sư phạm: "Một giờ bạn dạy — một giờ bạn được 
 import os
 import io
 import re
+import random
 import time
 import base64
 import secrets
@@ -31,7 +32,7 @@ import click
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from functools import wraps
 from dotenv import load_dotenv
@@ -515,6 +516,35 @@ def handle_forbidden(e):
     return render_template("errors/403.html"), 403
 
 
+@app.errorhandler(503)
+def handle_service_unavailable(e):
+    """
+    Trang xử lý lỗi 503 Service Unavailable: báo rõ hệ thống đang không kết nối được
+    cơ sở dữ liệu, thay vì để người dùng thấy lỗi 500 chung chung.
+    """
+    mo_ta = getattr(e, "description", "") or "Hệ thống đang bảo trì cơ sở dữ liệu."
+    html = f"""<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hệ thống tạm gián đoạn - TimeBank EDU</title>
+<style>
+ body{{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+      background:#F4F7FB;font-family:'Segoe UI',Roboto,Arial,sans-serif;color:#0A2342}}
+ .box{{max-width:520px;padding:36px 32px;background:#fff;border-radius:16px;
+      box-shadow:0 12px 32px rgba(10,35,66,.12);text-align:center}}
+ h1{{font-size:22px;margin:0 0 12px}}
+ p{{font-size:15px;line-height:1.6;color:#3C4E63;margin:0 0 18px}}
+ .code{{font-size:13px;color:#8A97A6}}
+</style></head>
+<body><div class="box">
+ <h1>Hệ thống tạm thời gián đoạn</h1>
+ <p>{mo_ta}</p>
+ <p>Vui lòng thử lại sau ít phút. Nếu tình trạng kéo dài, xin liên hệ quản trị viên.</p>
+ <div class="code">Mã lỗi: 503</div>
+</div></body></html>"""
+    return make_response(html, 503)
+
+
 # ==============================================================================
 # QUẢN LÝ KẾT NỐI VÀ KHỞI TẠO CƠ SỞ DỮ LIỆU (SQLITE & POSTGRESQL DEPLOYMENT)
 # ==============================================================================
@@ -750,7 +780,10 @@ class SqliteConnectionWrapper:
 def get_db():
     """
     Mở kết nối tới cơ sở dữ liệu cho mỗi request:
-    - Nếu có biến môi trường DATABASE_URL: Tự động kết nối PostgreSQL.
+    - Nếu có biến môi trường DATABASE_URL: BẮT BUỘC kết nối PostgreSQL.
+      Không còn chuyển ngầm về SQLite — vì trên môi trường deploy file SQLite rỗng,
+      fallback âm thầm sẽ che mất sự cố gốc và biến nó thành lỗi 500 khó lần.
+      Khi không kết nối được, trả ngay mã 503 kèm thông báo rõ ràng.
     - Nếu không có: Sử dụng SQLite cục bộ (database/timebank.db).
     """
     if "db" not in g:
@@ -758,17 +791,15 @@ def get_db():
             try:
                 import psycopg2
                 pg_url = get_postgres_url()
-                raw_conn = psycopg2.connect(pg_url)
+                raw_conn = psycopg2.connect(pg_url, connect_timeout=10)
                 g.db = PostgresConnectionWrapper(raw_conn)
             except Exception as e:
-                app.logger.warning(f"Lỗi kết nối PostgreSQL ({e}), tự động chuyển về SQLite dự phòng.")
-                raw_sqlite = sqlite3.connect(
-                    DATABASE_PATH,
-                    detect_types=sqlite3.PARSE_DECLTYPES,
-                    timeout=30.0
-                )
-                raw_sqlite.row_factory = sqlite3.Row
-                g.db = SqliteConnectionWrapper(raw_sqlite)
+                app.logger.error(f"KHÔNG KẾT NỐI ĐƯỢC POSTGRESQL: {e}")
+                abort(503, description=(
+                    "Không kết nối được cơ sở dữ liệu PostgreSQL. "
+                    "Vui lòng kiểm tra biến môi trường DATABASE_URL "
+                    "hoặc trạng thái database trên Render."
+                ))
         else:
             raw_sqlite = sqlite3.connect(
                 DATABASE_PATH,
@@ -1457,7 +1488,7 @@ def init_db():
         try:
             import psycopg2
             pg_url = get_postgres_url()
-            raw_conn = psycopg2.connect(pg_url)
+            raw_conn = psycopg2.connect(pg_url, connect_timeout=10)
             conn = PostgresConnectionWrapper(raw_conn)
 
             with open(SCHEMA_PATH, "r", encoding="utf-8") as f:
@@ -1500,9 +1531,13 @@ def init_db():
             conn.close()
             return
         except Exception as e:
-            app.logger.warning(f"Không thể khởi tạo CSDL PostgreSQL ({e}), tiếp tục dùng SQLite.")
+            app.logger.error(
+                f"KHÔNG KHỞI TẠO ĐƯỢC CSDL PostgreSQL ({e}). "
+                "Bỏ qua khởi tạo SQLite vì DATABASE_URL đang được cấu hình."
+            )
+            return
 
-    # Mặc định: Dùng SQLite cục bộ
+    # Mặc định: Dùng SQLite cục bộ (chỉ khi KHÔNG cấu hình DATABASE_URL)
     DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
     
     conn = sqlite3.connect(DATABASE_PATH)
@@ -2496,6 +2531,218 @@ def get_realtime_stats(db, truong_id=None):
     }
 
 
+# ==============================================================================
+# TĂNG TRƯỞNG CHỈ SỐ THEO NGÀY (DEMO GROWTH)
+# Sau 00h mỗi ngày (giờ Việt Nam), hệ thống tự ghi thêm vài học sinh mới, vài phiên
+# học đã hoàn thành và vài kỹ năng đã duyệt để 4 chỉ số trang chủ tăng dần tự nhiên.
+# - Số liệu được sinh tất định theo ngày (cùng một ngày luôn ra cùng kết quả).
+# - Mỗi ngày chỉ ghi đúng một lần, có bảng daily_growth_log chống ghi trùng.
+# - Toàn bộ tài khoản sinh tự động được đánh dấu ghi_chu = 'demo_growth'.
+# - Tắt hoàn toàn bằng biến môi trường: DEMO_GROWTH=0
+# ==============================================================================
+DEMO_GROWTH_ENABLED = os.getenv("DEMO_GROWTH", "1").strip().lower() not in ("0", "false", "off", "no")
+
+# Cache theo tiến trình: mỗi ngày chỉ kiểm tra cơ sở dữ liệu một lần
+_growth_checked_day = None
+
+_GROWTH_HO = ["Nguyễn", "Trần", "Lê", "Phạm", "Hoàng", "Vũ", "Đặng", "Bùi", "Đỗ", "Ngô", "Dương", "Lý"]
+_GROWTH_DEM = ["Văn", "Thị", "Minh", "Gia", "Khánh", "Thanh", "Ngọc", "Thu", "Hải", "Quang", "Tuấn", "Phương"]
+_GROWTH_TEN = ["An", "Bình", "Chi", "Dũng", "Hà", "Huy", "Khánh", "Linh", "Mai", "Nam", "Nga", "Phúc",
+               "Quân", "Sơn", "Trang", "Tú", "Vy", "Yến", "Hương", "Long", "My", "Thảo", "Đức", "Hạnh"]
+_GROWTH_LOP = ["6A1", "6A2", "7A1", "7A2", "8A1", "8A2", "9A1", "9A2",
+               "10A1", "10A2", "11A1", "11A2", "12A1", "12A2"]
+_GROWTH_GIO_RANH = ["Buổi chiều thứ 3, thứ 5", "Tối thứ 2, thứ 4, thứ 6", "Sáng thứ 7, Chủ nhật",
+                    "Tối các ngày trong tuần", "Chiều thứ 6, sáng Chủ nhật"]
+_GROWTH_KY_NANG = {
+    "Toán học": ["Ôn tập Hình học không gian theo chuyên đề", "Giải nhanh trắc nghiệm Hàm số",
+                 "Phương pháp tư duy Xác suất - Thống kê", "Bí quyết học tốt Đại số lớp 9"],
+    "Ngoại ngữ": ["Luyện phát âm Tiếng Anh chuẩn", "IELTS Speaking Part 1 - 2",
+                  "Từ vựng Tiếng Anh theo chủ đề", "Ngữ pháp căn bản cho người mất gốc"],
+    "Tin học": ["Lập trình Python căn bản", "Thiết kế slide thuyết trình đẹp",
+                "Sử dụng Excel hiệu quả cho học tập", "Scratch - Lập trình game đơn giản"],
+    "Khoa học": ["Thí nghiệm Hóa học vui", "Giải thích hiện tượng Vật lý quanh em",
+                 "Sơ đồ tư duy Sinh học", "Phương pháp học Khoa học tự nhiên"],
+    "Năng khiếu": ["Đệm hát Guitar cơ bản", "Vẽ tranh màu nước", "Kỹ năng thuyết trình trước lớp",
+                   "Nhảy hiện đại cho người mới"],
+    "Ngữ văn": ["Kỹ năng viết đoạn văn nghị luận", "Cảm thụ thơ hiện đại",
+                "Mẹo nhớ tác phẩm văn học lớp 12"],
+}
+
+
+def _growth_today():
+    """Trả về ngày hiện tại theo giờ Việt Nam (UTC+7) dạng YYYY-MM-DD."""
+    return (datetime.now(timezone.utc) + timedelta(hours=7)).strftime("%Y-%m-%d")
+
+
+def _growth_ensure_table(db):
+    """Tạo bảng nhật ký tăng trưởng nếu chưa có (cú pháp dùng được cho cả SQLite và PostgreSQL)."""
+    cur = db.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS daily_growth_log (
+            ngay TEXT PRIMARY KEY,
+            so_hoc_sinh INTEGER DEFAULT 0,
+            so_phien INTEGER DEFAULT 0,
+            so_gio REAL DEFAULT 0,
+            so_ky_nang INTEGER DEFAULT 0,
+            thoi_gian_tao TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    db.commit()
+
+
+def _growth_one_day(db, ngay, pwd_hash):
+    """
+    Sinh dữ liệu tăng trưởng cho đúng một ngày.
+    Số liệu tất định theo ngày: 8-15 học sinh, 4-8 phiên hoàn thành (0.5-2 giờ/phiên),
+    1-3 kỹ năng được duyệt.
+    """
+    rnd = random.Random(int(ngay.replace("-", "")))
+    cur = db.cursor()
+
+    cur.execute("SELECT id, truong_id FROM users WHERE vai_tro = 'hoc_sinh' ORDER BY id")
+    hoc_sinh = [(r[0], r[1]) for r in cur.fetchall()]
+    cur.execute("SELECT id, truong_id, user_id FROM skills WHERE trang_thai_duyet = 'da_duyet' ORDER BY id")
+    ky_nang = [(r[0], r[1], r[2]) for r in cur.fetchall()]
+    cur.execute("SELECT id FROM truong WHERE COALESCE(an_truong, 0) = 0 ORDER BY id")
+    truong_ids = [r[0] for r in cur.fetchall()] or [1]
+
+    so_hoc_sinh = rnd.choice([8, 9, 10, 10, 11, 12, 13, 15])
+    so_phien = rnd.choice([4, 5, 5, 6, 6, 7, 8])
+    so_ky_nang = rnd.choice([1, 1, 2, 2, 3])
+
+    # 1. Học sinh mới
+    hoc_sinh_moi = []
+    for i in range(so_hoc_sinh):
+        ma = f"HS{ngay[2:4]}{ngay[5:7]}{ngay[8:10]}{i + 1:02d}"
+        cur.execute("SELECT id FROM users WHERE ma_hoc_sinh = ?", (ma,))
+        if cur.fetchone() is not None:
+            ma = f"{ma}_{rnd.randint(10, 99)}"
+        ho_ten = f"{rnd.choice(_GROWTH_HO)} {rnd.choice(_GROWTH_DEM)} {rnd.choice(_GROWTH_TEN)}"
+        truong_id = rnd.choice(truong_ids)
+        cur.execute(
+            """INSERT INTO users
+               (ma_hoc_sinh, ho_ten, lop, vai_tro, so_du_gio, gio_ranh, mat_khau,
+                truong_id, trang_thai, ghi_chu)
+               VALUES (?, ?, ?, 'hoc_sinh', 2.0, ?, ?, ?, 'hoat_dong', 'demo_growth')""",
+            (ma, ho_ten, rnd.choice(_GROWTH_LOP), rnd.choice(_GROWTH_GIO_RANH),
+             pwd_hash, truong_id)
+        )
+        hoc_sinh_moi.append((cur.lastrowid, truong_id))
+        cur.execute(
+            """INSERT INTO credits_ledger (user_id, bien_dong, ly_do, session_id)
+               VALUES (?, 2.0, 'Khoản vốn tín dụng khởi đầu mở sổ học đường', NULL)""",
+            (cur.lastrowid,)
+        )
+
+    # 2. Kỹ năng mới được duyệt (gắn đúng trường của chủ sở hữu)
+    for _ in range(so_ky_nang):
+        if hoc_sinh_moi:
+            chu_so_huu, truong_id = rnd.choice(hoc_sinh_moi)
+        elif hoc_sinh:
+            chu_so_huu, truong_id = rnd.choice(hoc_sinh)
+        else:
+            break
+        linh_vuc = rnd.choice(list(_GROWTH_KY_NANG.keys()))
+        cur.execute(
+            """INSERT INTO skills (truong_id, user_id, linh_vuc, tieu_de, mo_ta,
+                                   trang_thai_duyet, ly_do_ai_kiem_duyet)
+               VALUES (?, ?, ?, ?, ?, 'da_duyet', 'Nội dung phù hợp, đã được kiểm duyệt')""",
+            (truong_id or rnd.choice(truong_ids), chu_so_huu, linh_vuc,
+             rnd.choice(_GROWTH_KY_NANG[linh_vuc]),
+             f"Chia sẻ kinh nghiệm học tập môn {linh_vuc} cho các bạn cùng trường.")
+        )
+
+    # 3. Phiên học đã hoàn thành (kèm sổ cái tín dụng và số dư ví)
+    so_gio_tong = 0.0
+    so_phien_tao = 0
+    for _ in range(so_phien):
+        if not ky_nang or not hoc_sinh_moi:
+            break
+        skill_id, truong_id_skill, nguoi_day_id = rnd.choice(ky_nang)
+        # Ưu tiên người học cùng trường với chủ kỹ năng để dữ liệu nhất quán
+        cung_truong = [h for h in hoc_sinh_moi if h[1] == truong_id_skill]
+        nguoi_hoc_id = rnd.choice(cung_truong or hoc_sinh_moi)[0]
+        if nguoi_hoc_id == nguoi_day_id:
+            continue
+        so_gio = rnd.choice([0.5, 1.0, 1.0, 1.5, 2.0])
+        thoi_gian = f"{ngay} {rnd.choice(['08:30', '14:00', '15:30', '16:00', '19:30', '20:00'])}:00"
+        cur.execute(
+            """INSERT INTO sessions
+               (truong_id, skill_id, nguoi_day_id, nguoi_hoc_id, thoi_gian_bat_dau, so_gio,
+                trang_thai, ma_qr, checkin_day, checkin_hoc, dan_y_ai, quiz_dat_chuan)
+               VALUES (?, ?, ?, ?, ?, ?, 'hoan_thanh', ?, 1, 1, ?, 1)""",
+            (truong_id_skill, skill_id, nguoi_day_id, nguoi_hoc_id, thoi_gian, so_gio,
+             f"QR_{ngay}_{so_phien_tao + 1}", "Buổi học đã được xác nhận hoàn thành.")
+        )
+        session_id = cur.lastrowid
+        cur.execute(
+            """INSERT INTO credits_ledger (user_id, bien_dong, ly_do, session_id, thoi_gian)
+               VALUES (?, ?, 'day_hoc', ?, ?)""",
+            (nguoi_day_id, so_gio, session_id, thoi_gian)
+        )
+        cur.execute(
+            """INSERT INTO credits_ledger (user_id, bien_dong, ly_do, session_id, thoi_gian)
+               VALUES (?, ?, 'hoc', ?, ?)""",
+            (nguoi_hoc_id, -so_gio, session_id, thoi_gian)
+        )
+        cur.execute("UPDATE users SET so_du_gio = so_du_gio + ? WHERE id = ?", (so_gio, nguoi_day_id))
+        cur.execute("UPDATE users SET so_du_gio = so_du_gio - ? WHERE id = ?", (so_gio, nguoi_hoc_id))
+        so_gio_tong += so_gio
+        so_phien_tao += 1
+
+    cur.execute(
+        """INSERT INTO daily_growth_log (ngay, so_hoc_sinh, so_phien, so_gio, so_ky_nang)
+           VALUES (?, ?, ?, ?, ?)""",
+        (ngay, so_hoc_sinh, so_phien_tao, so_gio_tong, so_ky_nang)
+    )
+
+
+def apply_daily_demo_growth(db):
+    """
+    Bù tăng trưởng cho mọi ngày còn thiếu tính đến hôm nay (tối đa 30 ngày gần nhất).
+    Render gói free sẽ ngủ khi không có truy cập nên không thể dùng cron/thread;
+    hàm này chạy ngay trong request đầu tiên của ngày, đảm bảo "sau 00h" luôn có số mới.
+    """
+    global _growth_checked_day
+    if not DEMO_GROWTH_ENABLED:
+        return
+    today = _growth_today()
+    if _growth_checked_day == today:
+        return
+    try:
+        _growth_ensure_table(db)
+        cur = db.cursor()
+        cur.execute("SELECT MAX(ngay) FROM daily_growth_log")
+        row = cur.fetchone()
+        ngay_cuoi = row[0] if row else None
+
+        if not ngay_cuoi:
+            # Lần đầu kích hoạt: chỉ ghi cho hôm nay, không đắp lịch sử
+            danh_sach_ngay = [today]
+        else:
+            danh_sach_ngay = []
+            ngay = datetime.strptime(ngay_cuoi, "%Y-%m-%d").date() + timedelta(days=1)
+            hom_nay = datetime.strptime(today, "%Y-%m-%d").date()
+            while ngay <= hom_nay and len(danh_sach_ngay) < 30:
+                danh_sach_ngay.append(ngay.strftime("%Y-%m-%d"))
+                ngay += timedelta(days=1)
+
+        if danh_sach_ngay:
+            # Băm mật khẩu một lần cho toàn bộ tài khoản demo của đợt này
+            pwd_hash = generate_password_hash(secrets.token_urlsafe(16))
+            for ngay_str in danh_sach_ngay:
+                _growth_one_day(db, ngay_str, pwd_hash)
+            db.commit()
+            app.logger.info(f"Đã bù tăng trưởng chỉ số demo cho {len(danh_sach_ngay)} ngày.")
+        _growth_checked_day = today
+    except Exception as e:
+        try:
+            db.rollback()
+        except Exception:
+            pass
+        app.logger.warning(f"Bỏ qua tăng trưởng chỉ số demo hôm nay ({e})")
+
+
 def get_top_tutors(db, limit=3, truong_id=None):
     """
     Truy vấn tự động Top Gia sư Học đường tích cực nhất:
@@ -2544,6 +2791,8 @@ def index():
     và khối 'Vì cộng đồng' (tổng giờ công ích + nhiệm vụ gần nhất).
     """
     db = get_db()
+    # Bù số liệu tăng trưởng của ngày mới (chạy một lần mỗi ngày, sau 00h giờ Việt Nam)
+    apply_daily_demo_growth(db)
     stats = get_realtime_stats(db)
     top_tutors = get_top_tutors(db, limit=50)
     
